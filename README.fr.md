@@ -81,6 +81,8 @@ flowchart LR
 
 ### 🖥️ Les neuf domaines du programme en un coup d'œil
 
+![Écosystème local d'agents IA et d'EDI en 1 clic](docs/images/ssccc_agents_ide_ecosystem.jpg)
+
 | Domaine | Contenu et fonction |
 | :--- | :--- |
 | **1. Vue de la grappe** | Mémoire cumulée, nœuds actifs, vitesse du lien de données, topologie visuelle et barre de répartition `iogpu.wired_limit_mb`. |
@@ -148,6 +150,9 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 | **M1–M2 Ultra / M3 Ultra** | **800 – 819 Go/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 Go** (≥ 96 Go RAM) |
 
 ### 2. Thunderbolt 5 RDMA (`JACCL`), protection mémoire et répartition pondérée
+
+![Thunderbolt 5 RDMA JACCL et protection mémoire](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+
 - **RDMA macOS sur Thunderbolt 5 :** Avec `rdma_ctl enable` (macOS 26.2+) et le moteur `JACCL` (`mlx.distributed`), la latence inter-nœuds chute de `~300 µs` (TCP/IP) à **`~3 µs`** avec **`3,5–3,8 Go/s`** de débit tenseur soutenu.
 - **Ne jamais allouer 100 % de la RAM :** `iogpu.wired_limit_mb` préserve la fluidité de macOS et de WindowServer.
 - **Répartition proportionnelle des couches :** chaque Mac reçoit une part calculée sur sa mémoire utilisable (`Couches_i = Total × Utilisable_i / TotalUtilisable`).
@@ -157,6 +162,8 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 ## 🔄 Mises à jour pilotées par GitHub et contrôle automatique de version
 
+![Mises à jour pilotées par GitHub et contrôle automatique de version](docs/images/ssccc_github_auto_updater.jpg)
+
 1. **Résolution GitHub multi-sources :** Au lancement (après `1,2 s`) puis toutes les **30 minutes** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` interroge `main/version.json`, `releases/latest` et `commits/main` (SHA court).
 2. **Invite de mise à jour (`UpdatePromptSheet`, `⌘U`) :** Lorsqu'une version, un numéro de compilation ou un SHA `main` plus récent est détecté, l'application propose pour les dépôts locaux `git pull --ff-only origin main` + `swift build` + relance en un clic (`scripts/run_ssccc.sh`), ou ouvre le téléchargement GitHub pour les paquets autonomes.
 3. **Automatisation CI (`.github/workflows/auto-version-control.yml`) :** Chaque *push* sur `main` exécute `scripts/bump_version.py --part patch --sync-git`, synchronise `version.json` et `ClusterModels.swift`, lance les 12 tests et crée le tag `vX.Y.Z`.
@@ -164,6 +171,8 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 ---
 
 ## 🎙️ Audio-Party de grappe et collaboration WAN en direct
+
+![Audio-Party de grappe et collaboration WAN en direct](docs/images/ssccc_audio_party_collab.jpg)
 
 - **Audio temps réel (`AVAudioEngine`, 16 kHz PCM16) :** Relié au point `/ws/wan-audio` juste à côté du chat (`/ws/wan/{room_id}`), avec modes **Appuyer-pour-parler / Micro ouvert**, **Muet / Sourd**, vumètre et rôles de nœuds (`Passerelle rang 0`, `Nœud WAN`).
 
@@ -184,7 +193,11 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
    - Selon le modèle GPipe $\Phi_{\text{bulle}} = \frac{N - 1}{M + N - 1}$ et le seuil critique $B^* = \lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \rceil$, le micro-lotissement $M \to B^*$ associé à la compression **FP8 / INT4 / Top-K** (*Petals / SWARM*) maintient la charge vocale et tensorielle sous $1\%$ du débit montant.
 3. **Protocole reproductible ($T = 0,0$) :** Activez le pont hybride, rejoignez l'**Audio-Party** (`Opus 16 kbps`, $<0,02\%$ du lien), lancez `N = 20` essais (`T = 0,0`) dans le laboratoire **Internet-WAN** et exportez le **manifeste JSON**, le **CSV** et le **tableau LaTeX (`booktabs`)** avec `CI₉₅`, `Goodput%`, `J/jeton`, `EDP` et `gCO₂eq/1M jetons`.
 
+![Laboratoire scientifique 6 onglets et historique](docs/images/ssccc_history_telemetry_lab.jpg)
+
 ### 🥇 Catégories de record & cas d'usage
+
+![Cas d'usage et publics cibles de SS-CCC](docs/images/ssccc_use_cases_showcase.jpg)
 - **Catégories :** plus grande mémoire unifiée cumulée (`To`), plus grand nombre de Mac couplés ($N \ge 32\text{–}256+$), meilleur débit utile transcontinental et meilleure efficacité énergétique (`J/jeton`).
 - **Cas d'usage :** recherche en systèmes d'IA (courbes Roofline, *DiLoCo* vs DDP, articles LaTeX/BibTeX), travaux pratiques universitaires sur parc mixte MacBook/Mac mini, studios logiciels alimentant **OpenCode / Cursor / Xcode** sans frais infonuagiques, secteurs juridiques/médicaux sous tunnel chiffré **WireGuard**, hackathons mondiaux en **Audio-Party** et audits **Green-AI**.
 

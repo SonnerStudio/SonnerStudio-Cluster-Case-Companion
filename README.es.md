@@ -81,6 +81,8 @@ flowchart LR
 
 ### 🖥️ Las nueve áreas del programa de un vistazo
 
+![Ecosistema local de agentes de IA e IDEs en 1 clic](docs/images/ssccc_agents_ide_ecosystem.jpg)
+
 | Área | Contenido y función |
 | :--- | :--- |
 | **1. Resumen de agrupación** | Memoria conjunta, nodos activos, velocidad del enlace de datos, topología visual y barra de asignación `iogpu.wired_limit_mb`. |
@@ -148,6 +150,9 @@ SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, 
 | **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (≥ 96 GB RAM) |
 
 ### 2. Thunderbolt 5 RDMA (`JACCL`), protección de memoria y reparto ponderado
+
+![Thunderbolt 5 RDMA JACCL y protección de memoria](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+
 - **RDMA en macOS sobre Thunderbolt 5:** Con `rdma_ctl enable` (macOS 26.2+) y el motor `JACCL` (`mlx.distributed`), la latencia entre nodos baja de `~300 µs` (TCP/IP) a **`~3 µs`** con **`3,5–3,8 GB/s`** de caudal sostenido.
 - **Nunca asignar el 100 % de la RAM:** `iogpu.wired_limit_mb` protege la estabilidad de macOS y WindowServer.
 - **Reparto proporcional de capas:** cada Mac recibe capas según su memoria utilizable (`Capas_i = Total × Utilizable_i / TotalUtilizable`).
@@ -157,6 +162,8 @@ SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, 
 
 ## 🔄 Actualizaciones controladas desde GitHub y control automático de versiones
 
+![Actualizaciones desde GitHub y control automático de versiones](docs/images/ssccc_github_auto_updater.jpg)
+
 1. **Comprobación multifuente en GitHub:** Al iniciar (tras `1,2 s`) y cada **30 minutos** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` consulta `main/version.json`, `releases/latest` y `commits/main` (SHA corto).
 2. **Aviso en la aplicación (`UpdatePromptSheet`, `⌘U`):** Si detecta una versión, compilación o SHA más reciente, ofrece para instalaciones desde código `git pull --ff-only origin main` + `swift build` + reinicio en un clic (`scripts/run_ssccc.sh`), o descarga directa desde GitHub Releases.
 3. **Automatización CI (`.github/workflows/auto-version-control.yml`):** Cada *push* a `main` ejecuta `scripts/bump_version.py --part patch --sync-git`, sincroniza `version.json` y `ClusterModels.swift`, pasa los 12 tests y etiqueta `vX.Y.Z`.
@@ -164,6 +171,8 @@ SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, 
 ---
 
 ## 🎙️ Audio-Party de agrupación y colaboración WAN en directo
+
+![Audio-Party de agrupación y colaboración WAN en directo](docs/images/ssccc_audio_party_collab.jpg)
 
 - **Voz en tiempo real (`AVAudioEngine`, 16 kHz PCM16):** Conectada a `/ws/wan-audio` junto al chat (`/ws/wan/{room_id}`), con modos **Pulsar para hablar / Micrófono abierto**, **Silenciar / Ensordecer**, medidor de nivel y roles (`Pasarela rango 0`, `Nodo WAN`).
 
@@ -184,7 +193,11 @@ Invitamos a universidades, grupos de investigación y entusiastas de Apple Silic
    - Con $\Phi_{\text{burbuja}} = \frac{N - 1}{M + N - 1}$ y el lote crítico $B^* = \lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \rceil$, el uso de micro-lotes $M \to B^*$ junto con compresión **FP8 / INT4 / Top-K** (*Petals / SWARM*) mantiene el tráfico por debajo del $1\%$ del enlace ascendente.
 3. **Protocolo reproducible ($T = 0,0$):** Activa el puente híbrido, únete a la **Audio-Party** (`Opus 16 kbps`, $<0,02\%$ del enlace), ejecuta `N = 20` ensayos (`T = 0,0`) en modo **Internet-WAN** y exporta el **manifiesto JSON**, **CSV** y la **tabla LaTeX (`booktabs`)** con `IC₉₅`, `Goodput%`, `J/token`, `EDP` y `gCO₂eq/1M tokens`.
 
+![Laboratorio científico de 6 pestañas e historial](docs/images/ssccc_history_telemetry_lab.jpg)
+
 ### 🥇 Categorías de récord y casos de uso
+
+![Casos de uso y públicos de SS-CCC](docs/images/ssccc_use_cases_showcase.jpg)
 - **Categorías:** mayor memoria unificada total (`TB`), mayor número de Mac acoplados simultáneamente ($N \ge 32\text{–}256+$), mayor caudal útil transcontinental y menor consumo (`J/token`).
 - **Casos de uso:** investigación en sistemas de IA (curvas Roofline, *DiLoCo* frente a DDP, artículos LaTeX/BibTeX), laboratorios universitarios que unen portátiles y Mac mini, estudios de programación para **OpenCode / Cursor / Xcode** sin coste en la nube, entornos médicos o legales bajo túnel **WireGuard**, maratones globales coordinados por **Audio-Party** y auditorías **Green-AI**.
 

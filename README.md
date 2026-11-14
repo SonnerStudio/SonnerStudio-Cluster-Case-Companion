@@ -79,6 +79,8 @@ flowchart LR
 
 ### 🖥️ Program Modules at a Glance
 
+![SS-CCC 1-Click Local AI Agents & IDE Ecosystem](docs/images/ssccc_agents_ide_ecosystem.jpg)
+
 | Sidebar Tab | Purpose |
 | :--- | :--- |
 | **1. Cluster Overview** | Live memory pool bar, active M1–M9+ topology, and pairwise Thunderbolt/RDMA link throughput |
@@ -155,6 +157,9 @@ SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1–M
 | **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (≥ 96 GB RAM) |
 
 ### 2. Thunderbolt 5 RDMA (`JACCL`) & Memory Safety
+
+![Thunderbolt 5 RDMA JACCL & Unified Memory Safety](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+
 - **macOS RDMA over Thunderbolt 5:** With `rdma_ctl enable` (macOS 26.2+) and Apple's `JACCL` (`mlx.distributed`) backend, node-to-node latency drops from `~300 µs` (TCP/IP) to **`~3 µs`**, delivering **`3.5–3.8 GB/s`** sustained MLX tensor throughput over direct point-to-point links.
 - **Never allocate 100% of RAM:** SS-CCC enforces `iogpu.wired_limit_mb` reserves so macOS and WindowServer stay responsive.
 - **Proportional Layer Split:** Each Mac receives layers proportional to its usable memory (`Layers_i = TotalLayers × Usable_i / TotalUsable`).
@@ -163,6 +168,8 @@ SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1–M
 ---
 
 ## 🔄 GitHub-Controlled Program Updates & Automatic Version Control
+
+![GitHub-Controlled Program Updates & Automatic Version Control](docs/images/ssccc_github_auto_updater.jpg)
 
 SS-CCC includes an integrated, **GitHub-driven update and version-control pipeline** so every local installation stays synchronized with upstream improvements without manual polling:
 
@@ -181,6 +188,8 @@ SS-CCC includes an integrated, **GitHub-driven update and version-control pipeli
 ---
 
 ## 🎙️ Cluster Audio-Party & Live WAN Collaboration
+
+![Cluster Audio-Party & Live WAN Collaboration](docs/images/ssccc_audio_party_collab.jpg)
 
 - **Console-Style Voice Coordination:** Built directly alongside the text chat in **Internet Cluster**, **Cluster Audio-Party** uses Apple's native `AVAudioEngine` (`16 kHz PCM16`) over `/ws/wan-audio` for low-latency team voice communication.
 - **Tactical Controls:** Switch between **Push-to-Talk** and **Open-Mic** with configurable noise gate, instant **Mute / Deafen**, active speaker level meters, and live participant roles (`Rank 0 Gateway`, `WAN Worker`).
@@ -210,6 +219,8 @@ We invite universities, AI research labs, developer communities, and Apple Silic
    3. **Execute Trials:** Switch **Science & Roofline** to **Internet-WAN**, select `N = 20` trials (`1` warmup discarded, `temperature = 0.0`), and define your target SLO (`TTFT ≤ 2500 ms`, `TPOT ≤ 100 ms/tok`).
    4. **Archive Verification:** Export and publish the **JSON Reproducibility Manifest**, **CSV trial log**, and **LaTeX (`booktabs`) table** containing `hardware_fingerprint`, `TTFT/TPOT (p50/p95/p99 ± CI₉₅)`, `CV%`, `Goodput%`, `J/token`, `EDP`, and `gCO₂eq/1M tokens`.
 
+![6-Tab Science Lab & Per-Position History Recording](docs/images/ssccc_history_telemetry_lab.jpg)
+
 ### 🥇 Official Record Categories
 - **Largest Unified Memory Pool:** Highest combined usable VRAM (`GB` / `TB`) across coupled local + WAN Macs.
 - **Most Simultaneous Coupled Macs ($N$):** Largest active mesh (`32–256+` nodes) sustaining a valid `N = 20` trial run.
@@ -219,6 +230,8 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 ---
 
 ## 🎯 Use Cases & Who SS-CCC Is Built For
+
+![SS-CCC Real-World Use Cases & Target Audiences](docs/images/ssccc_use_cases_showcase.jpg)
 
 | User Group | Real-World Use Case with SS-CCC |
 | :--- | :--- |

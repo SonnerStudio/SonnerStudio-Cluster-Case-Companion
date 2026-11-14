@@ -79,6 +79,8 @@ flowchart LR
 
 ### 🖥️ Die neun Programmbereiche im Überblick
 
+![SS-CCC 1-Klick-Ökosystem für lokale KI-Agenten und Entwicklungsumgebungen](docs/images/ssccc_agents_ide_ecosystem.jpg)
+
 | Menüpunkt | Aufgabe & Inhalt |
 | :--- | :--- |
 | **1. Verbund-Übersicht** | Gesamtspeicher-Balken, aktive M1–M9+-Topologie und paarweise Thunderbolt-/RDMA-Übertragungsraten |
@@ -155,6 +157,9 @@ SS-CCC unterstützt **jeden Mac mit Apple-Silicon-Chip** (**M1–M6** sowie zuku
 | **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (ab 96 GB RAM) |
 
 ### 2. Thunderbolt-5-RDMA (`JACCL`) & Speicherschutz
+
+![Thunderbolt 5 RDMA JACCL & Speicherschutz](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+
 - **macOS RDMA über Thunderbolt 5:** Mit `rdma_ctl enable` (ab macOS 26.2) und Apples `JACCL`-Backend (`mlx.distributed`) sinkt die Knoten-zu-Knoten-Latenz von `~300 µs` (TCP/IP) auf **`~3 µs`** bei **`3,5–3,8 GB/s`** dauerhaftem Tensor-Durchsatz über Punkt-zu-Punkt-Kabel.
 - **Niemals 100 % des RAM freigeben:** SS-CCC schützt den Betriebssystem-Anteil über `iogpu.wired_limit_mb`, damit macOS und WindowServer jederzeit flüssig bleiben.
 - **Anteilige Schichtenverteilung:** Jeder Mac erhält genau den Anteil an Modellschichten, der seinem nutzbaren Speicher entspricht (`Schichten_i = Gesamtschichten × Nutzbar_i / GesamtNutzbar`).
@@ -163,6 +168,8 @@ SS-CCC unterstützt **jeden Mac mit Apple-Silicon-Chip** (**M1–M6** sowie zuku
 ---
 
 ## 🔄 GitHub-gesteuerte Updatefunktion & automatische Versionskontrolle
+
+![GitHub-gesteuerte Updatefunktion & automatische Versionskontrolle](docs/images/ssccc_github_auto_updater.jpg)
 
 SS-CCC verfügt über eine integrierte, **über GitHub gesteuerte Update- und Versionskontroll-Pipeline**, damit jede Installation automatisch auf dem neuesten Stand bleibt:
 
@@ -181,6 +188,8 @@ SS-CCC verfügt über eine integrierte, **über GitHub gesteuerte Update- und Ve
 ---
 
 ## 🎙️ Verbund-Audio-Party & Echtzeit-Zusammenarbeit
+
+![Verbund-Audio-Party & Echtzeit-Zusammenarbeit](docs/images/ssccc_audio_party_collab.jpg)
 
 - **Sprachchat im Konsolen-Stil:** Direkt neben dem Text-Chat nutzt die **Audio-Party** Apples `AVAudioEngine` (`16 kHz PCM16`) über den eigenen WebSocket-Endpunkt `/ws/wan-audio`.
 - **Steuerung für verteilte Teams:** Umschaltbar zwischen **Push-to-Talk** und **Open-Mic** mit Rauschunterdrückung, **Stumm / Taub**-Schaltern, Live-Pegelanzeige und Knoten-Rollen (`Rang-0-Gateway`, `WAN-Worker`).
@@ -210,6 +219,8 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
    3. **Messreihe fahren:** Im Bereich **Forschung & Grenzkurve** auf **Internet-WAN** umschalten, `N = 20` Messläufe (`1` Aufwärmlauf verworfen, `T = 0,0`) starten und SLO-Ziele (`TTFT ≤ 2500 ms`, `TPOT ≤ 100 ms/tok`) prüfen.
    4. **Nachweis sichern:** **JSON-Manifest**, **CSV-Messreihe** und **LaTeX-Tabelle (`booktabs`)** samt `hardware_fingerprint`, `TTFT/TPOT (p50/p95/p99 ± CI₉₅)`, `CV%`, `Goodput%`, `J/Token`, `EDP` und `gCO₂eq/1M Token` veröffentlichen.
 
+![6-Reiter-Forschungslabor & Verlaufsaufzeichnung](docs/images/ssccc_history_telemetry_lab.jpg)
+
 ### 🥇 Offizielle Rekord-Kategorien
 - **Größter gemeinsamer Arbeitsspeicher:** Höchster nutzbarer Gesamtspeicher (`GB` / `TB`) über gekoppelte Lokal- und WAN-Macs.
 - **Meiste gleichzeitig gekoppelte Macs ($N$):** Größter aktiver Verbund (`32–256+` Rechner) mit gültiger `N = 20`-Messreihe.
@@ -219,6 +230,8 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 ---
 
 ## 🎯 Anwendungsfälle & Zielgruppen
+
+![SS-CCC Anwendungsfälle & Zielgruppen](docs/images/ssccc_use_cases_showcase.jpg)
 
 | Anwendergruppe | Konkreter Einsatz mit SS-CCC |
 | :--- | :--- |
