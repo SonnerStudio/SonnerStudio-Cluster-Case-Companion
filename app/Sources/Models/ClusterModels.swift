@@ -186,6 +186,7 @@ enum ScienceLabTab: String, CaseIterable, Identifiable {
     case memoryKv = "Speicher & KV-Analyse"
     case energetics = "Energie, CO₂ & Kosten"
     case trialsExport = "Messreihen & Export"
+    case historyLog = "Verlaufsaufzeichnung"
 
     var id: String { rawValue }
 
@@ -196,8 +197,40 @@ enum ScienceLabTab: String, CaseIterable, Identifiable {
         case .memoryKv: return "memorychip.fill"
         case .energetics: return "bolt.fill"
         case .trialsExport: return "tablecells.fill"
+        case .historyLog: return "clock.arrow.circlepath"
         }
     }
+}
+
+enum ScienceHistoryPosition: String, CaseIterable, Identifiable {
+    case globalAll = "Global (Alle Messwerte)"
+    case throughput = "Durchsatz (tok/s)"
+    case latency = "Latenz (TTFT / TPOT)"
+    case energetics = "Energie & CO₂ (J/tok)"
+    case wanNetwork = "WAN-RTT & Blase"
+    case memoryPool = "Speicher & Kontext"
+
+    var id: String { rawValue }
+}
+
+struct ScienceHistoryEntry: Identifiable {
+    let id = UUID()
+    let timestamp: String
+    let positionFilter: ScienceHistoryPosition
+    let scopeLabel: String
+    let modelName: String
+    let nodeCount: Int
+    let usableVramGB: Double
+    let ttftMs: Double
+    let tpotMs: Double
+    let tokPerSec: Double
+    let wanRttMs: Double
+    let bubblePercent: Double
+    let joulesPerToken: Double
+    let edpJouleSec: Double
+    let co2PerMillionTok: Double
+    let bottleneckRegime: String
+    let note: String
 }
 
 enum ActivationCompressionMode: String, CaseIterable, Identifiable {

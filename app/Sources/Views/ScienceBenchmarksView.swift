@@ -29,6 +29,8 @@ struct ScienceBenchmarksView: View {
                     energeticsTabContent
                 case .trialsExport:
                     trialsExportTabContent
+                case .historyLog:
+                    historyLogTabContent
                 }
             }
             .padding(24)
@@ -39,37 +41,74 @@ struct ScienceBenchmarksView: View {
 
     private var headerAndScopeCard: some View {
         SolarisCard(accent: SolarisTheme.amber) {
-            HStack(alignment: .top, spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(vm.t("sci_title"))
-                        .font(SolarisTheme.sectionTitle)
-                        .foregroundColor(SolarisTheme.textPrimary)
-                    Text(vm.t("sci_sub"))
-                        .font(SolarisTheme.bodyLarge)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(vm.t("sci_title"))
+                    .font(SolarisTheme.sectionTitle)
+                    .foregroundColor(SolarisTheme.textPrimary)
+                Text(vm.t("sci_sub"))
+                    .font(SolarisTheme.bodyLarge)
+                    .foregroundColor(SolarisTheme.textSecondary)
+            }
+
+            Divider().opacity(0.25)
+
+            // Full-width Scope Selector (no clipping of "Vergleich (Lokal vs. WAN)") + Quick History Capture
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    Text(vm.t("sci_scope_label") + ":")
+                        .font(SolarisTheme.bodyBold)
                         .foregroundColor(SolarisTheme.textSecondary)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 6) {
-                    Text(vm.t("sci_scope_label"))
-                        .font(Font.caption)
-                        .foregroundColor(SolarisTheme.textSecondary)
-                    Picker("", selection: $vm.sciScope) {
+
+                    HStack(spacing: 8) {
                         ForEach(ScienceScope.allCases) { scope in
-                            Text(scope.rawValue).tag(scope)
+                            let isSelected = vm.sciScope == scope
+                            Button {
+                                vm.sciScope = scope
+                            } label: {
+                                Text(scope.rawValue)
+                                    .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                                    .foregroundColor(isSelected ? .black : SolarisTheme.textPrimary)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 7)
+                                    .fixedSize(horizontal: true, vertical: false)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                            .fill(isSelected ? SolarisTheme.mint : SolarisTheme.cardElevated)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                                    .stroke(isSelected ? SolarisTheme.mint : Color.white.opacity(0.10), lineWidth: 1)
+                                            )
+                                    )
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 390)
 
-                    HStack(spacing: 10) {
-                        Text("\(vm.activeScienceNodes.count) Knoten · \(Int(vm.activeTotalUsableVramGB)) GB nutzbar")
-                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                            .foregroundColor(vm.isWanScienceActive ? SolarisTheme.mint : SolarisTheme.amberGlow)
-                        Text("·")
+                    Spacer()
+
+                    Button {
+                        vm.recordScienceHistory(position: .globalAll, note: "Schnappschuss (\(vm.sciScope.rawValue))")
+                    } label: {
+                        Label("Verlauf aufzeichnen (\(vm.sciHistoryEntries.count))", systemImage: "record.circle")
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(SolarisTheme.amber)
+                }
+
+                HStack(spacing: 10) {
+                    Text("\(vm.activeScienceNodes.count) Knoten · \(Int(vm.activeTotalUsableVramGB)) GB nutzbar")
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .foregroundColor(vm.isWanScienceActive ? SolarisTheme.mint : SolarisTheme.amberGlow)
+                    Text("·")
+                        .foregroundColor(SolarisTheme.textSecondary)
+                    Text(vm.activeBottleneckRegime)
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .foregroundColor(SolarisTheme.coral)
+                    Spacer()
+                    if let last = vm.sciHistoryEntries.last {
+                        Text("Letzter Verlauf: \(last.timestamp) (\(last.note))")
+                            .font(.system(size: 11, design: .monospaced))
                             .foregroundColor(SolarisTheme.textSecondary)
-                        Text(vm.activeBottleneckRegime)
-                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                            .foregroundColor(SolarisTheme.coral)
                     }
                 }
             }
@@ -96,7 +135,7 @@ struct ScienceBenchmarksView: View {
     }
 
     private var tabBarCard: some View {
-        HStack(spacing: 10) {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
             ForEach(ScienceLabTab.allCases) { tab in
                 let selected = vm.sciActiveTab == tab
                 Button {
@@ -106,10 +145,11 @@ struct ScienceBenchmarksView: View {
                         Image(systemName: tab.icon)
                         Text(tabLabel(for: tab))
                             .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                     }
                     .font(.system(size: 13, weight: selected ? .bold : .medium))
                     .foregroundColor(selected ? .black : SolarisTheme.textPrimary)
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity)
                     .background(
@@ -133,6 +173,7 @@ struct ScienceBenchmarksView: View {
         case .memoryKv: return vm.t("sci_tab_memory")
         case .energetics: return vm.t("sci_tab_energy")
         case .trialsExport: return vm.t("sci_tab_trials")
+        case .historyLog: return vm.t("sci_tab_history")
         }
     }
 
@@ -155,17 +196,18 @@ struct ScienceBenchmarksView: View {
                         .cornerRadius(6)
                 }
 
-                // Workload Pickers
-                HStack(spacing: 16) {
+                // Workload Pickers (2x2 Grid with labelsHidden for clean spacing)
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Batch-Größe (B)")
                             .font(Font.caption)
                             .foregroundColor(SolarisTheme.textSecondary)
                         Picker("Batch", selection: $vm.sciBatchSize) {
                             ForEach(batchOptions, id: \.self) { b in
-                                Text("\(b)").tag(b)
+                                Text("B=\(b)").tag(b)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.segmented)
                     }
 
@@ -175,9 +217,10 @@ struct ScienceBenchmarksView: View {
                             .foregroundColor(SolarisTheme.textSecondary)
                         Picker("Micro", selection: $vm.sciMicroBatches) {
                             ForEach(microBatchOptions, id: \.self) { m in
-                                Text("\(m)").tag(m)
+                                Text("M=\(m)").tag(m)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.segmented)
                     }
 
@@ -190,11 +233,12 @@ struct ScienceBenchmarksView: View {
                                 Text(p >= 1024 ? "\(p / 1024)k" : "\(p)").tag(p)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.segmented)
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Gewichte")
+                        Text("Gewichts-Genauigkeit")
                             .font(Font.caption)
                             .foregroundColor(SolarisTheme.textSecondary)
                         Picker("Bits", selection: $vm.sciWeightBits) {
@@ -202,6 +246,7 @@ struct ScienceBenchmarksView: View {
                                 Text(bits == 16 ? "FP16" : "\(bits)-Bit").tag(bits)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.segmented)
                     }
                 }
@@ -322,6 +367,7 @@ struct ScienceBenchmarksView: View {
                     }
                     .font(.system(size: 13, design: .monospaced))
                     .foregroundColor(SolarisTheme.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
@@ -368,6 +414,7 @@ struct ScienceBenchmarksView: View {
                         .foregroundColor(SolarisTheme.textPrimary)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 if vm.activeScienceNodes.count > 16 {
                     Text("… plus \(vm.activeScienceNodes.count - 16) weitere WAN-Knoten im Verbund.")
                         .font(Font.caption)
@@ -396,6 +443,7 @@ struct ScienceBenchmarksView: View {
                                 Text(mode.rawValue).tag(mode)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.menu)
                         Text(vm.sciActivationCompression.qualityNote)
                             .font(Font.caption)
@@ -505,6 +553,7 @@ struct ScienceBenchmarksView: View {
                             Text("H = \(h) Schritte").tag(h)
                         }
                     }
+                    .labelsHidden()
                     .pickerStyle(.segmented)
                     .frame(width: 340)
                 }
@@ -564,6 +613,7 @@ struct ScienceBenchmarksView: View {
                                 Text("\(g) tok").tag(g)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.segmented)
                     }
 
@@ -576,6 +626,7 @@ struct ScienceBenchmarksView: View {
                                 Text(kv.rawValue).tag(kv)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.segmented)
                     }
                 }
@@ -664,6 +715,7 @@ struct ScienceBenchmarksView: View {
                 }
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(SolarisTheme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
@@ -687,6 +739,7 @@ struct ScienceBenchmarksView: View {
                                 Text(region.rawValue).tag(region)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.menu)
                     }
 
@@ -757,6 +810,7 @@ struct ScienceBenchmarksView: View {
                 }
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(SolarisTheme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
@@ -781,6 +835,7 @@ struct ScienceBenchmarksView: View {
                             Text("N=\(count)").tag(count)
                         }
                     }
+                    .labelsHidden()
                     .pickerStyle(.segmented)
                     .frame(width: 190)
 
@@ -876,6 +931,7 @@ struct ScienceBenchmarksView: View {
                             }
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundColor(SolarisTheme.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .frame(maxHeight: 190)
                         .padding(10)
@@ -960,6 +1016,178 @@ struct ScienceBenchmarksView: View {
                         topic: "Energie pro Token (J/tok), EDP & CO₂-Bilanzierung",
                         application: "Phasenbezogene Messung von J/Token, Wh/1M Token und gCO₂eq im Verbund."
                     )
+                }
+            }
+        }
+    }
+
+    // MARK: - Tab 6: Verlaufsaufzeichnung (Einzel-Position & Global)
+
+    private var historyLogTabContent: some View {
+        let entries = vm.filteredScienceHistory
+
+        return VStack(alignment: .leading, spacing: 20) {
+            SolarisCard(accent: SolarisTheme.amber) {
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Verlaufsaufzeichnung: Einzel-Positionen & Global-Snapshots")
+                            .font(SolarisTheme.cardTitle)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Text("Zeichnet automatisch nach jeder Messreihe oder manuell für einzelne Mess-Positionen (Durchsatz, Latenz, Energie, WAN, Speicher) sowie global den Zeitverlauf auf.")
+                            .font(Font.caption)
+                            .foregroundColor(SolarisTheme.textSecondary)
+                    }
+                    Spacer()
+                    Toggle("Auto-Aufzeichnung", isOn: $vm.sciAutoRecordHistory)
+                        .toggleStyle(.switch)
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                }
+
+                // Position filter & recording actions
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Aufzeichnungs- & Filter-Position")
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+
+                    HStack(spacing: 8) {
+                        ForEach(ScienceHistoryPosition.allCases) { pos in
+                            let selected = vm.sciHistoryPositionFilter == pos
+                            Button {
+                                vm.sciHistoryPositionFilter = pos
+                            } label: {
+                                Text(pos.rawValue)
+                                    .font(.system(size: 12, weight: selected ? .bold : .medium))
+                                    .fixedSize(horizontal: true, vertical: false)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                            .fill(selected ? SolarisTheme.amber : SolarisTheme.cardElevated)
+                                    )
+                                    .foregroundColor(selected ? .black : SolarisTheme.textPrimary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    HStack(spacing: 10) {
+                        Button {
+                            vm.recordScienceHistory(position: vm.sciHistoryPositionFilter, note: "Einzel-Position")
+                        } label: {
+                            Label("Einzel-Position aufzeichnen", systemImage: "record.circle")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(SolarisTheme.amber)
+                        .foregroundColor(.black)
+
+                        Button {
+                            vm.recordScienceHistory(position: .globalAll, note: "Global-Snapshot")
+                        } label: {
+                            Label("Global aufzeichnen", systemImage: "globe")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(SolarisTheme.mint)
+
+                        if !vm.sciHistoryEntries.isEmpty {
+                            Button {
+                                copyToClipboard(vm.exportScienceHistoryCSV(), label: "Verlauf als CSV kopiert (\(entries.count) Einträge).")
+                            } label: {
+                                Label("Verlauf CSV kopieren", systemImage: "doc.on.doc")
+                            }
+                            .buttonStyle(.bordered)
+
+                            Button(role: .destructive) {
+                                vm.clearScienceHistory()
+                            } label: {
+                                Label("Verlauf leeren", systemImage: "trash")
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
+                        Spacer()
+
+                        Text("\(entries.count) / \(vm.sciHistoryEntries.count) Einträge")
+                            .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                            .foregroundColor(SolarisTheme.textSecondary)
+                    }
+                }
+            }
+
+            // Trend Chart Card
+            SolarisCard(accent: SolarisTheme.mint) {
+                HStack {
+                    Text("Zeitverlauf (\(vm.sciHistoryPositionFilter.rawValue))")
+                        .font(SolarisTheme.cardTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Spacer()
+                    HStack(spacing: 14) {
+                        Label("Durchsatz (tok/s)", systemImage: "circle.fill")
+                            .foregroundColor(SolarisTheme.amberGlow)
+                        Label("Energie (J/tok)", systemImage: "circle.fill")
+                            .foregroundColor(SolarisTheme.emerald)
+                    }
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                }
+
+                if entries.isEmpty {
+                    Text("Noch keine Verlaufsdaten vorhanden. Starte eine Messreihe oder klicke auf „Einzel-Position aufzeichnen“ bzw. „Global aufzeichnen“.")
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                        .padding(.vertical, 24)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                } else {
+                    HistoryTimelineCanvasView(entries: entries)
+                        .frame(height: 190)
+                }
+            }
+
+            // Chronological Table Card
+            if !entries.isEmpty {
+                SolarisCard {
+                    Text("Protokollierte Messpunkte (\(entries.count))")
+                        .font(SolarisTheme.cardTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+
+                    ScrollView {
+                        Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 8) {
+                            GridRow {
+                                Text("Zeit").foregroundColor(SolarisTheme.textSecondary)
+                                Text("Position").foregroundColor(SolarisTheme.textSecondary)
+                                Text("Bereich").foregroundColor(SolarisTheme.textSecondary)
+                                Text("Modell").foregroundColor(SolarisTheme.textSecondary)
+                                Text("Tok/s").foregroundColor(SolarisTheme.textSecondary)
+                                Text("TTFT").foregroundColor(SolarisTheme.textSecondary)
+                                Text("TPOT").foregroundColor(SolarisTheme.textSecondary)
+                                Text("J/tok").foregroundColor(SolarisTheme.textSecondary)
+                                Text("Engpass").foregroundColor(SolarisTheme.textSecondary)
+                            }
+                            .font(SolarisTheme.bodyBold)
+                            Divider().gridCellUnsizedAxes(.horizontal)
+                            ForEach(entries.reversed()) { entry in
+                                GridRow {
+                                    Text(entry.timestamp)
+                                    Text(entry.positionFilter.rawValue)
+                                        .foregroundColor(SolarisTheme.amberGlow)
+                                    Text(entry.scopeLabel)
+                                    Text(entry.modelName)
+                                        .lineLimit(1)
+                                    Text(String(format: "%.1f", entry.tokPerSec))
+                                        .foregroundColor(SolarisTheme.mint)
+                                    Text(String(format: "%.1f ms", entry.ttftMs))
+                                    Text(String(format: "%.1f ms", entry.tpotMs))
+                                    Text(String(format: "%.2f", entry.joulesPerToken))
+                                        .foregroundColor(SolarisTheme.emerald)
+                                    Text(entry.bottleneckRegime)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(SolarisTheme.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 240)
                 }
             }
         }
@@ -1231,5 +1459,79 @@ private struct LiteratureRow: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(SolarisTheme.cardElevated)
         )
+    }
+}
+
+private struct HistoryTimelineCanvasView: View {
+    let entries: [ScienceHistoryEntry]
+
+    var body: some View {
+        GeometryReader { _ in
+            Canvas { context, size in
+                let padL: CGFloat = 48
+                let padR: CGFloat = 48
+                let padT: CGFloat = 14
+                let padB: CGFloat = 24
+                let plotW = max(20, size.width - padL - padR)
+                let plotH = max(20, size.height - padT - padB)
+
+                let maxTps = max(10.0, entries.map(\.tokPerSec).max() ?? 10.0) * 1.15
+                let maxJ = max(1.0, entries.map(\.joulesPerToken).max() ?? 1.0) * 1.15
+
+                for frac in [0.0, 0.5, 1.0] {
+                    let y = padT + plotH * CGFloat(1.0 - frac)
+                    var grid = Path()
+                    grid.move(to: CGPoint(x: padL, y: y))
+                    grid.addLine(to: CGPoint(x: padL + plotW, y: y))
+                    context.stroke(grid, with: .color(Color.white.opacity(0.08)), lineWidth: 1)
+
+                    let tpsVal = Int((maxTps * frac).rounded())
+                    context.draw(
+                        Text("\(tpsVal)").font(.system(size: 9, design: .monospaced)).foregroundColor(SolarisTheme.amberGlow),
+                        at: CGPoint(x: padL - 22, y: y)
+                    )
+                    let jVal = String(format: "%.1fJ", maxJ * frac)
+                    context.draw(
+                        Text(jVal).font(.system(size: 9, design: .monospaced)).foregroundColor(SolarisTheme.emerald),
+                        at: CGPoint(x: padL + plotW + 24, y: y)
+                    )
+                }
+
+                let count = entries.count
+                var tpsPath = Path()
+                var jPath = Path()
+
+                for (idx, item) in entries.enumerated() {
+                    let xNorm = count == 1 ? 0.5 : CGFloat(idx) / CGFloat(count - 1)
+                    let x = padL + xNorm * plotW
+                    let yTps = padT + plotH * CGFloat(1.0 - min(1.0, item.tokPerSec / maxTps))
+                    let yJ = padT + plotH * CGFloat(1.0 - min(1.0, item.joulesPerToken / maxJ))
+
+                    if idx == 0 {
+                        tpsPath.move(to: CGPoint(x: x, y: yTps))
+                        jPath.move(to: CGPoint(x: x, y: yJ))
+                    } else {
+                        tpsPath.addLine(to: CGPoint(x: x, y: yTps))
+                        jPath.addLine(to: CGPoint(x: x, y: yJ))
+                    }
+
+                    context.fill(Path(ellipseIn: CGRect(x: x - 3.5, y: yTps - 3.5, width: 7, height: 7)), with: .color(SolarisTheme.amberGlow))
+                    context.fill(Path(ellipseIn: CGRect(x: x - 3, y: yJ - 3, width: 6, height: 6)), with: .color(SolarisTheme.emerald))
+                }
+
+                if count >= 2 {
+                    context.stroke(tpsPath, with: .color(SolarisTheme.amberGlow), lineWidth: 2.2)
+                    context.stroke(jPath, with: .color(SolarisTheme.emerald), lineWidth: 2.0)
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(SolarisTheme.cardElevated)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+            )
+        }
     }
 }

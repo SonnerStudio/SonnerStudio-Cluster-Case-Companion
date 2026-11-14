@@ -553,6 +553,12 @@ enum L10n {
         case ("sci_tab_trials", .es): return "Ensayos, estadística y exportación"
         case ("sci_tab_trials", .pt): return "Ensaios, estatística e exportação"
 
+        case ("sci_tab_history", .de): return "Verlaufsaufzeichnung"
+        case ("sci_tab_history", .en): return "History Log"
+        case ("sci_tab_history", .fr): return "Historique"
+        case ("sci_tab_history", .es): return "Historial"
+        case ("sci_tab_history", .pt): return "Histórico"
+
         // API & Console
         case ("api_openai", .de): return "OpenAI-verträglicher Endpunkt"
         case ("api_openai", .en): return "OpenAI-Compatible Endpoint"

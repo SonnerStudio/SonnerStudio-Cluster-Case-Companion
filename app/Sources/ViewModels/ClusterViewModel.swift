@@ -77,6 +77,9 @@ final class ClusterViewModel: ObservableObject {
     @Published var isRunningBenchmark: Bool = false
     @Published var sciStatusMessage: String = ""
     @Published var sciExportFeedback: String = ""
+    @Published var sciHistoryEntries: [ScienceHistoryEntry] = []
+    @Published var sciHistoryPositionFilter: ScienceHistoryPosition = .globalAll
+    @Published var sciAutoRecordHistory: Bool = true
 
     // Internet WAN Cluster & Participant Chat State
     @Published var wanRoomCode: String = "SSCCC-WAN-\(String(UUID().uuidString.prefix(8)))"
@@ -1667,7 +1670,53 @@ final class ClusterViewModel: ObservableObject {
             )
             isRunningBenchmark = false
             sciStatusMessage = t("sci_bench_done")
+            if sciAutoRecordHistory {
+                recordScienceHistory(position: .globalAll, note: "Messreihe (\(collected.count) Läufe, T=0,0)")
+            }
         }
+    }
+
+    func recordScienceHistory(position: ScienceHistoryPosition? = nil, note: String = "") {
+        let pos = position ?? sciHistoryPositionFilter
+        let s = sciSummary
+        let entry = ScienceHistoryEntry(
+            timestamp: currentClockTime(),
+            positionFilter: pos,
+            scopeLabel: sciScope.rawValue,
+            modelName: selectedModel.displayName,
+            nodeCount: activeScienceNodes.count,
+            usableVramGB: activeTotalUsableVramGB,
+            ttftMs: s?.ttftP50Ms ?? activeTTFTMs,
+            tpotMs: s?.tpotP50Ms ?? activeTPOTMs,
+            tokPerSec: s?.meanTokensPerSec ?? activeTokPerSec,
+            wanRttMs: activeStepRttMs,
+            bubblePercent: activePipelineBubbleFraction * 100.0,
+            joulesPerToken: s?.joulesPerToken ?? activeJoulesPerToken,
+            edpJouleSec: s?.edpJoulesSec ?? activeEDPJoulesSec,
+            co2PerMillionTok: s?.co2GramsPerMillionTok ?? activeCO2GramsPerMillionTokens,
+            bottleneckRegime: activeBottleneckRegime,
+            note: note.isEmpty ? pos.rawValue : note
+        )
+        sciHistoryEntries.append(entry)
+    }
+
+    func clearScienceHistory() {
+        sciHistoryEntries.removeAll()
+    }
+
+    var filteredScienceHistory: [ScienceHistoryEntry] {
+        if sciHistoryPositionFilter == .globalAll {
+            return sciHistoryEntries
+        }
+        return sciHistoryEntries.filter { $0.positionFilter == sciHistoryPositionFilter || $0.positionFilter == .globalAll }
+    }
+
+    func exportScienceHistoryCSV() -> String {
+        var lines = ["timestamp,position,scope,model,nodes,usable_vram_gb,ttft_ms,tpot_ms,tok_per_sec,wan_rtt_ms,bubble_pct,j_per_tok,edp_js,co2_g_per_1m,bottleneck,note"]
+        for h in filteredScienceHistory {
+            lines.append("\(h.timestamp),\(h.positionFilter.rawValue),\(h.scopeLabel),\(h.modelName),\(h.nodeCount),\(String(format: "%.1f", h.usableVramGB)),\(String(format: "%.1f", h.ttftMs)),\(String(format: "%.2f", h.tpotMs)),\(String(format: "%.2f", h.tokPerSec)),\(String(format: "%.2f", h.wanRttMs)),\(String(format: "%.1f", h.bubblePercent)),\(String(format: "%.2f", h.joulesPerToken)),\(String(format: "%.3f", h.edpJouleSec)),\(String(format: "%.1f", h.co2PerMillionTok)),\"\(h.bottleneckRegime)\",\"\(h.note)\"")
+        }
+        return lines.joined(separator: "\n")
     }
 
     private static func stdDev(_ values: [Double], mean: Double) -> Double {
