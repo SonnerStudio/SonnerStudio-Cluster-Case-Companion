@@ -50,12 +50,25 @@ flowchart LR
 
 ## ✨ Hauptfunktionen
 
-- **52-GB-Speicherkopplung für ungleiche Rechner:** Speichergewichtete Schichtenverteilung (`~71 %` der Schichten samt Einbettung und Ausgabekopf auf dem M5 Max mit `460 GB/s`, `~29 %` auf dem M4 mit `120 GB/s`) mit sicherer `iogpu.wired_limit_mb`-Begrenzung.
-- **Native macOS-Oberfläche (*Solaris-Telemetrie-Labor*):**
-  - **Verbund-Übersicht & Gerätevergleich:** Direkte Auslesung (`sysctl`, `sw_vers`, `ibv_devices`, `ipconfig`) mit Balkenvergleich.
-  - **Modell-Werkstatt:** Anteilige Schichtenaufteilung, KV-Speicher-Verkleinerung (`FP16 / 8-Bit / 4-Bit`) sowie direkte Anbindung an **oMLX**, **Ollama** und **llama.cpp**.
-  - **Agenten & Entwicklungsumgebungen (Ein-Klick-Einrichtung):** Sofortige Einrichtung für **OpenCode**, **Hermes Agent** und **Google Antigravity**.
-  - **Mehrsprachige Oberfläche:** Sprachumschalter im linken Seitenmenü (Deutsch, Englisch, Französisch, Spanisch, Portugiesisch).
+- **Alle Apple-Silicon-Macs (M1–M6) im Verbund:** Kopple beliebige **Mac mini, MacBook Air/Pro, iMac, Mac Studio oder Mac Pro** von **M1 bis M6** (Basis, Pro, Max, Ultra). Der schnellste Rechner übernimmt selbsttätig **Rang 0 (Leitrechner)**; die Schutzgrenze `iogpu.wired_limit_mb` hält macOS jederzeit flüssig.
+- **Vollständige Hardware- & Sensor-Auslesung:** Liest `sysctl`, `sw_vers`, `system_profiler`, `ibv_devices`, `ipconfig`, `ioreg` und `ProcessInfo.thermalState` aus — inklusive **CPU-Leistungs-/Effizienzkernen, GPU-Kernen, Neural Engine (16/32 ANE-Kerne), NVMe-SSD-Gesamt- und Freispeicher, Temperatur/Thermik sowie Leistungsaufnahme**.
+- **Alle Thunderbolt-Klassen (TB3 / TB4 / TB5) & Direktspeicherzugriff:** Berechnet paarweise Übertragungsraten dynamisch (`TB3/USB4: 26–32 Gbps`, `TB4: 30–37 Gbps`, `TB5: 65–80 Gbps`, `TB5 RDMA: 75–110 Gbps`) samt `MLX_METAL_FAST_SYNCH=1` (45× schnellere GPU/CPU-Abstimmung).
+- **Modell-Werkstatt & örtliche Dienste:** Gewichtete Schichtenverteilung auf beliebig viele Rechner, KV-Verdichtung (`FP16 / 8-Bit / 4-Bit`) sowie unmittelbare Anbindung an **oMLX**, **Ollama** und **llama.cpp**.
+- **6× Ein-Klick-Einrichtung für Agenten & Werkzeuge:** Sofortige Einrichtung für **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** und **Apple Xcode**.
+- **SonnerStudio-Gelb (`#FFD400`) & fünfsprachiges Handbuch:** Vollständige Oberfläche samt durchsuchbarer Hilfe (`⌘?`) auf **Deutsch, Englisch, Französisch, Spanisch und Portugiesisch**.
+
+### 🖥️ Die acht Programmbereiche im Überblick
+
+| Menüpunkt | Aufgabe & Inhalt |
+| :--- | :--- |
+| **1. Verbund-Übersicht** | Gesamtspeicher-Balken, aktive M1–M6-Topologie und paarweise Thunderbolt-/RDMA-Übertragungsraten |
+| **2. Geräte & Vergleich** | Beliebige M1–M6-Macs hinzufügen/entfernen, CPU/GPU/ANE/SSD/Thermik/Strom auslesen und vergleichen |
+| **3. Modell-Werkstatt** | MLX-Modelle wählen, anteilige Schichtenverteilung prüfen, KV-Speicher regeln, oMLX / Ollama / llama.cpp starten |
+| **4. Netzwerk & Direktspeicher** | Mischbetrieb / TB / LAN / RDMA umschalten, `FAST_SYNCH=1` setzen und TB3/TB4/TB5-Klassen einsehen |
+| **5. Agenten & Werkzeuge** | Ein-Klick-Einrichtung für OpenCode, Hermes Agent, Antigravity, Cursor, VS Code und Xcode |
+| **6. Forschung & Grenzkurve** | Wissenschaftliche Grundlagen (Splitwise/DistServe, KV-Mathematik, Hardware-Grenzkurven) |
+| **7. Schnittstelle & Konsole** | OpenAI- (`/v1`) & Ollama-Endpunkte (`/api/tags`) prüfen und Verbund-Anfragen direkt testen |
+| **8. Hilfe & Handbuch** | Durchsuchbares Handbuch in fünf Sprachen (`⌘?`) zu Verbund, Speicherschutz, Netzwerk und Agenten |
 
 ---
 

@@ -50,12 +50,27 @@ flowchart LR
 
 ## ✨ Funciones principales
 
-- **Unión heterogénea de 52 GB:** Reparto proporcional de capas (`~71 %` en el M5 Max a `460 GB/s`, `~29 %` en el M4 a `120 GB/s`) con protección segura de `iogpu.wired_limit_mb`.
-- **Interfaz nativa macOS:**
-  - **Resumen y comparación de equipos:** Lectura directa (`sysctl`, `sw_vers`, `ibv_devices`, `ipconfig`) con comparación visual.
-  - **Taller de modelos:** Reparto de capas, compresión de caché KV (`FP16 / 8-bit / 4-bit`) y enlace directo con **oMLX**, **Ollama** y **llama.cpp**.
-  - **Agentes y entornos (un clic):** Configuración directa para **OpenCode**, **Hermes Agent** y **Google Antigravity**.
-  - **Interfaz multilingüe:** Selector de idioma en el menú lateral izquierdo.
+- **Unión universal Apple Silicon (M1 – M6):** Conecta libremente varios Mac (Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro) de las generaciones M1 a M6 en una agrupación común con cálculo automático del ancho de banda de memoria (`68 GB/s` a `819+ GB/s`).
+- **Telemetría completa de equipo y sensores:** Lectura directa mediante `sysctl`, `sw_vers`, `system_profiler`, `ioreg`, `pmset` e `ibv_devices`: núcleos CPU (P/E), núcleos GPU, núcleos del motor neuronal (16 / 32 núcleos ANE), espacio SSD total/libre, estado térmico, temperatura de batería (`°C`) y consumo eléctrico (`W`).
+- **Clases Thunderbolt 3 / 4 / 5 y RDMA:** Detección y clasificación automáticas para chips M1–M6 (TB3 `40 Gbps`, TB4 `40 Gbps`, TB5 `80/120 Gbps`, además de RDMA sobre Thunderbolt 5), con plano de control LAN/Wi-Fi separado y plano de datos Thunderbolt aislado.
+- **Reparto ponderado de capas y protección `iogpu.wired_limit_mb`:** Distribución proporcional según el ancho de banda de memoria (p. ej., `~71 %` en el M5 Max a `460 GB/s`, `~29 %` en el M4 a `120 GB/s`) manteniendo una reserva segura del sistema para macOS.
+- **Taller de modelos (MLX, oMLX, Ollama y llama.cpp):** Compresión de caché KV (`FP16 / 8-bit / 4-bit`), selección de motores y ajuste de distribución de capas en la agrupación.
+- **Agentes y entornos en un clic:** Configuración inmediata para **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** y **Xcode**.
+- **Modo de simulación conmutable y tema amarillo SonnerStudio (`#FFD400`):** El nodo simulado Mac Studio (M5 Max / 36 GB) puede activarse o desactivarse en cualquier momento desde la barra lateral sin alterar la telemetría real.
+- **Interfaz multilingüe y centro de ayuda integrado:** Cambio inmediato entre inglés, alemán, francés, español y portugués, además de un centro de ayuda con búsqueda directa dentro de la aplicación.
+
+### 🖥️ Las ocho áreas del programa de un vistazo
+
+| Área | Contenido y función |
+| :--- | :--- |
+| **1. Resumen de agrupación** | Memoria conjunta, nodos activos, velocidad del enlace de datos, topología visual y barra de asignación `iogpu.wired_limit_mb`. |
+| **2. Equipos y comparación** | Telemetría en directo de cada Mac (CPU, GPU, ANE, RAM, ancho de banda, SSD, temperatura, potencia) y adición de Mac M1–M6. |
+| **3. Taller de modelos** | Reparto proporcional de capas, ajuste de caché KV y enlace con **oMLX**, **Ollama** y **llama.cpp**. |
+| **4. Red y RDMA** | Matriz de clases Thunderbolt 3/4/5 para M1–M6, estado RDMA y enrutamiento del puente LAN/Thunderbolt. |
+| **5. Agentes y entornos** | Configuración en un clic para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** y **Xcode**. |
+| **6. Ciencia y Roofline** | Análisis de intensidad aritmética, cuellos de botella de memoria/cómputo y estrategia prellenado-decodificación. |
+| **7. API y consola** | Puntos de acceso compatibles con OpenAI / Ollama / oMLX, registro de actividad y órdenes de arranque listas para copiar. |
+| **8. Ayuda y documentación** | Manual integrado con búsqueda de texto completo, vista general de arquitectura y guía paso a paso. |
 
 ---
 

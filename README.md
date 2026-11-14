@@ -50,12 +50,25 @@ flowchart LR
 
 ## ✨ Key Capabilities
 
-- **52 GB Heterogeneous Memory Coupling:** Memory-weighted pipeline parallelism (`~71%` layers + embeddings/LM-head on M5 Max `460 GB/s`, `~29%` layers on M4 `120 GB/s`) with safe `iogpu.wired_limit_mb` guards.
-- **Native SwiftUI Studio (*Solaris Telemetry Lab*):**
-  - **Cluster Overview & Device Comparison:** Live `sysctl` / `sw_vers` / `ibv_devices` / `ipconfig` telemetry with side-by-side comparison.
-  - **Model Studio:** Proportional layer sharding, KV-cache quantization (`FP16 / 8-bit / 4-bit`), and direct integration for **oMLX**, **Ollama**, and **llama.cpp**.
-  - **Agents & IDEs (1-Click Setup):** Instant configuration export for **OpenCode**, **Hermes Agent**, and **Google Antigravity**.
-  - **Multilingual UI:** Built-in language switcher in the left sidebar (DE, EN, FR, ES, PT).
+- **Universal Apple Silicon Clustering (M1–M6):** Combine any **Mac mini, MacBook Air/Pro, iMac, Mac Studio, or Mac Pro** across **M1 through M6** (Base, Pro, Max, Ultra). The fastest node by memory bandwidth automatically assumes **Rank 0 (Coordinator)**, with safe `iogpu.wired_limit_mb` macOS memory guards.
+- **Full System & Sensor Telemetry:** Reads `sysctl`, `sw_vers`, `system_profiler`, `ibv_devices`, `ipconfig`, `ioreg`, and `ProcessInfo.thermalState` — displaying **CPU P/E cores, GPU cores, Neural Engine (16/32 ANE cores), NVMe SSD capacity & free space, thermal state / temperature, and power draw** side by side.
+- **All Thunderbolt Classes (TB3 / TB4 / TB5) & RDMA:** Dynamically negotiates pairwise link speeds across M1–M6 (`TB3/USB4: 26–32 Gbps`, `TB4: 30–37 Gbps`, `TB5: 65–80 Gbps`, `TB5 RDMA: 75–110 Gbps`) with `MLX_METAL_FAST_SYNCH=1` (45× faster GPU/CPU sync).
+- **Model Studio & Local Runtimes:** Memory-weighted layer sharding across `1..N` nodes, KV-cache quantization (`FP16 / 8-bit / 4-bit`), and direct launching/bridging for **oMLX**, **Ollama**, and **llama.cpp**.
+- **6× 1-Click Agent & IDE Integrations:** Instant configuration export for **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code**, and **Apple Xcode**.
+- **SonnerStudio Yellow (`#FFD400`) UI & 5-Language Built-In Manual:** Full interface and searchable Help Center (`⌘?`) in **English, German, French, Spanish, and Portuguese**.
+
+### 🖥️ Program Modules at a Glance
+
+| Sidebar Tab | Purpose |
+| :--- | :--- |
+| **1. Cluster Overview** | Live memory pool bar, active M1–M6 topology, and pairwise Thunderbolt/RDMA link throughput |
+| **2. Devices & Compare** | Add/remove any M1–M6 Mac, inspect CPU/GPU/ANE/SSD/thermal/power telemetry, and compare bars |
+| **3. Model Studio** | Select MLX models, preview proportional layer splits, tune KV cache, and launch oMLX / Ollama / llama.cpp |
+| **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, and inspect TB3/TB4/TB5 classes |
+| **5. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
+| **6. Science & Roofline** | OSDI '24 Splitwise / DistServe principles, KV-cache math, and hardware bandwidth rooflines |
+| **7. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
+| **8. Help & Documentation** | Searchable 5-language user manual (`⌘?`) covering clustering, safety limits, networking, and agents |
 
 ---
 
