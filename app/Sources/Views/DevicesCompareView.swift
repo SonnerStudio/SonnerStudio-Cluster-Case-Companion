@@ -144,6 +144,20 @@ struct DevicesCompareView: View {
                             rightValue: secondary.bandwidthGBs
                         )
                         ComparisonBarRow(
+                            label: "GPU-Kerne",
+                            leftLabel: "\(primary.gpuCores) Kerne",
+                            rightLabel: "\(secondary.gpuCores) Kerne",
+                            leftValue: Double(primary.gpuCores),
+                            rightValue: Double(secondary.gpuCores)
+                        )
+                        ComparisonBarRow(
+                            label: "Neural Engine",
+                            leftLabel: "\(primary.neuralEngineCores) ANE-Kerne",
+                            rightLabel: "\(secondary.neuralEngineCores) ANE-Kerne",
+                            leftValue: Double(primary.neuralEngineCores),
+                            rightValue: Double(secondary.neuralEngineCores)
+                        )
+                        ComparisonBarRow(
                             label: "SSD-Kapazität",
                             leftLabel: "\(primary.ssdTotalGB) GB",
                             rightLabel: "\(secondary.ssdTotalGB) GB",
@@ -192,8 +206,12 @@ private struct DeviceDetailCard: View {
 
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 9) {
                 GridRow {
-                    Text("Chip / CPU:").foregroundColor(SolarisTheme.textSecondary)
-                    Text(node.chip).foregroundColor(SolarisTheme.textPrimary)
+                    Text("Chip / Modell:").foregroundColor(SolarisTheme.textSecondary)
+                    Text("\(node.chip) · \(node.modelIdentifier)").foregroundColor(SolarisTheme.textPrimary)
+                }
+                GridRow {
+                    Text("CPU / GPU / ANE:").foregroundColor(SolarisTheme.textSecondary)
+                    Text("\(node.cpuTopology) · \(node.gpuCores) GPU · \(node.neuralEngineCores) Neural Engine").foregroundColor(SolarisTheme.textPrimary)
                 }
                 GridRow {
                     Text("Betriebssystem:").foregroundColor(SolarisTheme.textSecondary)
@@ -221,7 +239,15 @@ private struct DeviceDetailCard: View {
                 }
                 GridRow {
                     Text("SSD-Speicher:").foregroundColor(SolarisTheme.textSecondary)
-                    Text("\(node.ssdTotalGB) GB NVMe").foregroundColor(SolarisTheme.textPrimary)
+                    Text("\(node.ssdTotalGB) GB NVMe (\(node.ssdFreeGB) GB frei)").foregroundColor(SolarisTheme.textPrimary)
+                }
+                GridRow {
+                    Text("Temperatur / Thermik:").foregroundColor(SolarisTheme.textSecondary)
+                    Text(node.thermalLabel).foregroundColor(SolarisTheme.textPrimary)
+                }
+                GridRow {
+                    Text("Stromverbrauch:").foregroundColor(SolarisTheme.textSecondary)
+                    Text(node.powerLabel).foregroundColor(SolarisTheme.textPrimary)
                 }
             }
             .font(SolarisTheme.bodyLarge)

@@ -125,8 +125,12 @@ struct ClusterNodeModel: Identifiable, Hashable {
     let id: String
     let name: String
     let role: String
+    let modelIdentifier: String
     let chip: String
     let cpuCores: Int
+    let cpuTopology: String
+    let gpuCores: Int
+    let neuralEngineCores: Int
     let osVersion: String
     let totalRamGB: Double
     let usableVramGB: Double
@@ -137,6 +141,9 @@ struct ClusterNodeModel: Identifiable, Hashable {
     let tbIP: String
     let lanIP: String
     let ssdTotalGB: Int
+    let ssdFreeGB: Int
+    let thermalLabel: String
+    let powerLabel: String
     let isSimulated: Bool
 }
 
@@ -241,6 +248,22 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
         }
     }
 
+    var aneCores: Int {
+        switch self {
+        case .m1Ultra, .m2Ultra, .m3Ultra: return 32
+        default: return 16
+        }
+    }
+
+    var typicalPowerLabel: String {
+        switch self {
+        case .m1, .m2, .m3, .m4, .m5, .m6: return "10–45 W (Netzteil)"
+        case .m1Pro, .m2Pro, .m3Pro, .m4Pro, .m5Pro, .m6Pro: return "20–95 W (Netzteil)"
+        case .m1Max, .m2Max, .m3Max, .m4Max, .m5Max, .m6Max: return "30–145 W (Netzteil)"
+        case .m1Ultra, .m2Ultra, .m3Ultra: return "45–215 W (Netzteil)"
+        }
+    }
+
     var bandwidthGBs: Double {
         switch self {
         case .m1: return 68.0
@@ -312,6 +335,22 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
             return 3
         }
         return 4
+    }
+
+    static func inferGPUCores(from chipName: String) -> Int {
+        let lower = chipName.lowercased()
+        if lower.contains("m3 ultra") { return 80 }
+        if lower.contains("m2 ultra") { return 76 }
+        if lower.contains("m1 ultra") { return 64 }
+        if lower.contains("m3 max") || lower.contains("m4 max") { return 40 }
+        if lower.contains("max") { return 32 }
+        if lower.contains("m5 pro") || lower.contains("m6 pro") { return 20 }
+        if lower.contains("pro") { return 18 }
+        return 10
+    }
+
+    static func inferANECores(from chipName: String) -> Int {
+        chipName.lowercased().contains("ultra") ? 32 : 16
     }
 
     static func linkTransferStats(genA: Int, genB: Int, mode: TransportMode) -> (rangeLabel: String, nominalGbps: Double, badge: String) {

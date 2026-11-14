@@ -23,13 +23,21 @@ final class ClusterViewModel: ObservableObject {
     @Published var serviceAvailability: [RuntimeService: Bool] = [:]
 
     @Published var localChipName: String = "Apple M4"
+    @Published var localModelIdentifier: String = "Mac16,10"
     @Published var localOSVersion: String = "macOS 27.0.1"
     @Published var localCPUCores: Int = ProcessInfo.processInfo.processorCount
+    @Published var localCPUTopology: String = "4P + 6E"
+    @Published var localGPUCores: Int = 10
+    @Published var localANECores: Int = 16
     @Published var localRamGB: Double = Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824.0
     @Published var localWiredLimitMB: Int = 0
     @Published var localLanIP: String = "192.168.1.20"
     @Published var localTbIP: String = "10.99.1.2"
     @Published var localRdmaActive: Bool = false
+    @Published var localSsdTotalGB: Int = 256
+    @Published var localSsdFreeGB: Int = 120
+    @Published var localThermalLabel: String = "Nominal (Kühl)"
+    @Published var localPowerLabel: String = "10–45 W (Netzteil)"
     @Published var lastProbeTimestamp: String = "Gerade ausgelesen"
 
     @Published var promptInput: String = "Erkläre kurz, wie 36 GB + 16 GB per Pipeline Parallelism gekoppelt werden."
@@ -108,6 +116,9 @@ final class ClusterViewModel: ObservableObject {
         let chip = runShell("/usr/sbin/sysctl", ["-n", "machdep.cpu.brand_string"])
         if !chip.isEmpty { localChipName = chip }
 
+        let modelId = runShell("/usr/sbin/sysctl", ["-n", "hw.model"])
+        if !modelId.isEmpty { localModelIdentifier = modelId }
+
         let os = runShell("/usr/bin/sw_vers", ["-productVersion"])
         if !os.isEmpty { localOSVersion = "macOS \(os)" }
 
@@ -115,7 +126,63 @@ final class ClusterViewModel: ObservableObject {
         localWiredLimitMB = Int(wiredRaw) ?? 0
 
         localCPUCores = ProcessInfo.processInfo.processorCount
+        let pCores = Int(runShell("/usr/sbin/sysctl", ["-n", "hw.perflevel0.physicalcpu"])) ?? 0
+        let eCores = Int(runShell("/usr/sbin/sysctl", ["-n", "hw.perflevel1.physicalcpu"])) ?? 0
+        if pCores > 0 || eCores > 0 {
+            localCPUTopology = "\(pCores)P + \(eCores)E"
+        }
+
         localRamGB = (Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824.0).rounded()
+
+        // GPU-Kerne aus system_profiler SPDisplaysDataType auslesen (mit Chip-Fallback)
+        let displays = runShell("/usr/sbin/system_profiler", ["SPDisplaysDataType"])
+        if let line = displays.components(separatedBy: .newlines).first(where: { $0.contains("Total Number of Cores:") }),
+           let numStr = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines),
+           let parsedGPU = Int(numStr) {
+            localGPUCores = parsedGPU
+        } else {
+            localGPUCores = AppleSiliconChipFamily.inferGPUCores(from: localChipName)
+        }
+        localANECores = AppleSiliconChipFamily.inferANECores(from: localChipName)
+
+        // Echte SSD-Größe & freier Speicher
+        if let attrs = try? FileManager.default.attributesOfFileSystem(forPath: "/"),
+           let totalBytes = (attrs[.systemSize] as? NSNumber)?.doubleValue,
+           let freeBytes = (attrs[.systemFreeSize] as? NSNumber)?.doubleValue {
+            localSsdTotalGB = max(1, Int((totalBytes / 1_000_000_000.0).rounded()))
+            localSsdFreeGB = max(0, Int((freeBytes / 1_000_000_000.0).rounded()))
+        }
+
+        // Thermischer Zustand & Akku-/Leistungsdaten
+        let thermState: String
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: thermState = "Nominal (Kühl)"
+        case .fair: thermState = "Erhöht (Fair)"
+        case .serious: thermState = "Hoch (Drosselung möglich)"
+        case .critical: thermState = "Kritisch (Heiß)"
+        @unknown default: thermState = "Unbekannt"
+        }
+
+        let battOut = runShell("/usr/sbin/ioreg", ["-r", "-c", "AppleSmartBattery"])
+        if !battOut.isEmpty,
+           let tempLine = battOut.components(separatedBy: .newlines).first(where: { $0.contains("\"Temperature\"") }),
+           let rawTemp = tempLine.components(separatedBy: "=").last?.trimmingCharacters(in: .whitespacesAndNewlines),
+           let deciKelvin = Double(rawTemp) {
+            // AppleSmartBattery Temperature is typically in 0.01 °C (e.g. 3120 -> 31.2 °C) or deciKelvin
+            let celsius = deciKelvin > 2000 ? (deciKelvin / 100.0) : (deciKelvin / 10.0)
+            localThermalLabel = String(format: "%.1f °C · %@", celsius, thermState)
+        } else {
+            localThermalLabel = thermState
+        }
+
+        if let wattsLine = battOut.components(separatedBy: .newlines).first(where: { $0.contains("\"AdapterPower\"") || $0.contains("\"SystemPowerIn\"") }),
+           let rawW = wattsLine.components(separatedBy: "=").last?.trimmingCharacters(in: .whitespacesAndNewlines),
+           let mw = Double(rawW), mw > 0 {
+            localPowerLabel = String(format: "%.1f W (live)", mw > 500 ? mw / 1000.0 : mw)
+        } else {
+            let bw = AppleSiliconChipFamily.inferBandwidth(from: localChipName)
+            localPowerLabel = bw >= 400 ? "30–145 W (Netzteil)" : (bw >= 200 ? "20–95 W (Netzteil)" : "10–45 W (Netzteil)")
+        }
 
         let ibv = runShell("/usr/bin/ibv_devices", [])
         localRdmaActive = ibv.contains("rdma_en")
@@ -183,8 +250,12 @@ final class ClusterViewModel: ObservableObject {
             id: "custom-\(UUID().uuidString.prefix(8))",
             name: name,
             role: "Worker (Rank \(index - 1))",
+            modelIdentifier: formFactor.rawValue,
             chip: "\(chip.rawValue) · \(chip.cpuCores)-Core CPU / \(chip.gpuCores)-Core GPU",
             cpuCores: chip.cpuCores,
+            cpuTopology: "\(chip.cpuCores) Kerne",
+            gpuCores: chip.gpuCores,
+            neuralEngineCores: chip.aneCores,
             osVersion: "macOS (Apple Silicon)",
             totalRamGB: ramGB,
             usableVramGB: usable,
@@ -195,6 +266,9 @@ final class ClusterViewModel: ObservableObject {
             tbIP: "10.99.1.\(index)",
             lanIP: "192.168.1.\(20 + index)",
             ssdTotalGB: 512,
+            ssdFreeGB: 320,
+            thermalLabel: "Nominal (Zielwert)",
+            powerLabel: chip.typicalPowerLabel,
             isSimulated: false
         )
         customNodes.append(node)
@@ -216,8 +290,12 @@ final class ClusterViewModel: ObservableObject {
                     id: "studio-m5-max",
                     name: "Mac Studio M5 Max",
                     role: "Coordinator (Rank 0)",
+                    modelIdentifier: "MacStudio (M5 Max)",
                     chip: "Apple M5 Max · 18-Core CPU / 32-Core GPU",
                     cpuCores: 18,
+                    cpuTopology: "12P + 6E",
+                    gpuCores: 32,
+                    neuralEngineCores: 16,
                     osVersion: "macOS 27.x (Ziel)",
                     totalRamGB: 36.0,
                     usableVramGB: 30.0,
@@ -228,6 +306,9 @@ final class ClusterViewModel: ObservableObject {
                     tbIP: "10.99.1.1",
                     lanIP: "192.168.1.10",
                     ssdTotalGB: 512,
+                    ssdFreeGB: 380,
+                    thermalLabel: "Nominal (Kühl)",
+                    powerLabel: "30–145 W (Netzteil)",
                     isSimulated: true
                 )
             )
@@ -237,8 +318,12 @@ final class ClusterViewModel: ObservableObject {
             id: "local-host",
             name: Host.current().localizedName ?? "Lokaler Apple Silicon Mac",
             role: (simulateMacStudio || !customNodes.isEmpty) ? "Worker" : "Standalone (Rank 0)",
+            modelIdentifier: localModelIdentifier,
             chip: "\(localChipName) · \(localCPUCores) CPU-Kerne",
             cpuCores: localCPUCores,
+            cpuTopology: localCPUTopology,
+            gpuCores: localGPUCores,
+            neuralEngineCores: localANECores,
             osVersion: localOSVersion,
             totalRamGB: localRamGB,
             usableVramGB: localUsable,
@@ -248,7 +333,10 @@ final class ClusterViewModel: ObservableObject {
             rdmaEnabled: localRdmaActive,
             tbIP: localTbIP,
             lanIP: localLanIP,
-            ssdTotalGB: 256,
+            ssdTotalGB: localSsdTotalGB,
+            ssdFreeGB: localSsdFreeGB,
+            thermalLabel: localThermalLabel,
+            powerLabel: localPowerLabel,
             isSimulated: false
         )
         rawList.append(localNode)
@@ -261,8 +349,12 @@ final class ClusterViewModel: ObservableObject {
                 id: n.id,
                 name: n.name,
                 role: sorted.count == 1 ? "Standalone (Rank 0)" : (idx == 0 ? "Coordinator (Rank 0)" : "Worker (Rank \(idx))"),
+                modelIdentifier: n.modelIdentifier,
                 chip: n.chip,
                 cpuCores: n.cpuCores,
+                cpuTopology: n.cpuTopology,
+                gpuCores: n.gpuCores,
+                neuralEngineCores: n.neuralEngineCores,
                 osVersion: n.osVersion,
                 totalRamGB: n.totalRamGB,
                 usableVramGB: n.usableVramGB,
@@ -273,6 +365,9 @@ final class ClusterViewModel: ObservableObject {
                 tbIP: n.tbIP,
                 lanIP: n.lanIP,
                 ssdTotalGB: n.ssdTotalGB,
+                ssdFreeGB: n.ssdFreeGB,
+                thermalLabel: n.thermalLabel,
+                powerLabel: n.powerLabel,
                 isSimulated: n.isSimulated
             )
         }
