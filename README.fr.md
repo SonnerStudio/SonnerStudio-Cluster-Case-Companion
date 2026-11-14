@@ -102,11 +102,14 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 | Famille de puces | Débit mémoire | Thunderbolt | Réserve macOS conseillée |
 | :--- | :--- | :--- | :--- |
-| **M1 / M2 / M3** (Base) | 68 – 100 Go/s | TB 4 | **4 Go** (≤ 24 Go RAM) |
-| **M4 / M5 / M6** (Base) | 120 – 180 Go/s | TB 4 / TB 5 | **4 Go** (≤ 24 Go RAM) |
-| **M1–M6 Pro** | 150 – 273 Go/s | TB 4 / TB 5 | **4 – 6 Go** |
-| **M1–M6 Max** | 400 – 546 Go/s | TB 4 / TB 5 | **6 Go** (32–64 Go RAM) |
-| **M1–M3 Ultra** | 800 Go/s | TB 4 | **8 Go** (≥ 96 Go RAM) |
+| **M1 / M2** (Base) | 68 – 100 Go/s | TB 3 / USB4 (26–32 Gbps) | **4 Go** (≤ 24 Go RAM) |
+| **M3 / M4** (Base) | 100 – 120 Go/s | TB 4 (30–37 Gbps) | **4 Go** (≤ 24 Go RAM) |
+| **M5 / M6** (Base) | 153 – 180 Go/s | TB 5 (65–80 Gbps) | **4 Go** (≤ 24 Go RAM) |
+| **M1–M3 Pro** | 150 – 200 Go/s | TB 4 (30–37 Gbps) | **4 – 6 Go** |
+| **M4–M6 Pro** | 273 – 310 Go/s | TB 5 (65–80 Gbps) | **4 – 6 Go** |
+| **M1–M3 Max** | 400 Go/s | TB 4 (30–37 Gbps) | **6 Go** (32–64 Go RAM) |
+| **M4–M6 Max** | 460 – 580 Go/s | TB 5 (65–80 Gbps) | **6 Go** (32–64 Go RAM) |
+| **M1–M2 Ultra** / **M3 Ultra** | 800 Go/s | TB 4 / TB 5 | **8 Go** (≥ 96 Go RAM) |
 
 ### 2. Protection mémoire et répartition pondérée
 - **Ne jamais allouer 100 % de la RAM :** `iogpu.wired_limit_mb` préserve la fluidité de macOS et de WindowServer.

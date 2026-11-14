@@ -103,11 +103,11 @@ enum L10n {
         case (.models, .es): return "MLX, oMLX, Ollama y llama.cpp"
         case (.models, .pt): return "MLX, oMLX, Ollama e llama.cpp"
 
-        case (.network, .de): return "TB4/5, Direktspeicher & Hybrid"
-        case (.network, .en): return "TB4/5, RDMA & Hybrid"
-        case (.network, .fr): return "TB4/5, Accès direct & Hybride"
-        case (.network, .es): return "TB4/5, Acceso directo e híbrido"
-        case (.network, .pt): return "TB4/5, Acesso direto e híbrido"
+        case (.network, .de): return "TB3/4/5, Direktspeicher & Hybrid"
+        case (.network, .en): return "TB3/4/5, RDMA & Hybrid"
+        case (.network, .fr): return "TB3/4/5, Accès direct & Hybride"
+        case (.network, .es): return "TB3/4/5, Acceso directo e híbrido"
+        case (.network, .pt): return "TB3/4/5, Acesso direto e híbrido"
 
         case (.agents, .de): return "Lokale Agenten & Werkzeuge"
         case (.agents, .en): return "Local Agents, IDEs & SDKs"
@@ -384,11 +384,11 @@ enum L10n {
         case ("net_title", .es): return "Modo de transporte (LAN/Wi-Fi + Thunderbolt)"
         case ("net_title", .pt): return "Modo de transporte (LAN/Wi-Fi + Thunderbolt)"
 
-        case ("net_sub", .de): return "Wähle, wie Aktivierungs-Felder zwischen Mac Studio M5 Max (TB5) und Mac mini M4 (TB4) übertragen werden."
-        case ("net_sub", .en): return "Choose how activation tensors are transferred between Mac Studio M5 Max (TB5) and Mac mini M4 (TB4)."
-        case ("net_sub", .fr): return "Choisissez comment les tenseurs transitent entre Mac Studio M5 Max (TB5) et Mac mini M4 (TB4)."
-        case ("net_sub", .es): return "Elige cómo se transfieren los tensores entre Mac Studio M5 Max (TB5) y Mac mini M4 (TB4)."
-        case ("net_sub", .pt): return "Escolha como os tensores circulam entre o Mac Studio M5 Max (TB5) e o Mac mini M4 (TB4)."
+        case ("net_sub", .de): return "Wähle, wie Aktivierungs-Felder zwischen M1–M6-Macs (Thunderbolt 3, 4 und 5) übertragen werden."
+        case ("net_sub", .en): return "Choose how activation tensors are transferred across M1–M6 Macs (Thunderbolt 3, 4, and 5)."
+        case ("net_sub", .fr): return "Choisissez le mode de transfert entre Mac M1–M6 (Thunderbolt 3, 4 et 5)."
+        case ("net_sub", .es): return "Elige cómo se transfieren los tensores entre Mac M1–M6 (Thunderbolt 3, 4 y 5)."
+        case ("net_sub", .pt): return "Escolha como os tensores circulam entre Mac M1–M6 (Thunderbolt 3, 4 e 5)."
 
         case ("net_fast_synch", .de): return "MLX_METAL_FAST_SYNCH=1 einschalten"
         case ("net_fast_synch", .en): return "Enable MLX_METAL_FAST_SYNCH=1"

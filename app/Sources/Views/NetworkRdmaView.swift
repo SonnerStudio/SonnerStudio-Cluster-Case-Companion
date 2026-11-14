@@ -52,6 +52,54 @@ struct NetworkRdmaView: View {
                     }
                 }
 
+                // Thunderbolt-Klassen der Generationen M1–M6
+                SolarisCard(accent: SolarisTheme.mint) {
+                    HStack {
+                        Text("Thunderbolt-Klassen (M1–M6) & Übertragungsraten")
+                            .font(SolarisTheme.sectionTitle)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Spacer()
+                        Text("\(vm.effectiveLinkStats.badge) · \(vm.effectiveLinkStats.rangeLabel)")
+                            .font(SolarisTheme.bodyBold)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Capsule().fill(SolarisTheme.amber.opacity(0.20)))
+                            .foregroundColor(SolarisTheme.amberGlow)
+                    }
+
+                    Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 10) {
+                        GridRow {
+                            Text("Klasse").foregroundColor(SolarisTheme.textSecondary)
+                            Text("Mac-Generationen").foregroundColor(SolarisTheme.textSecondary)
+                            Text("Nenn- / Nutzrate").foregroundColor(SolarisTheme.textSecondary)
+                            Text("RDMA / JACCL").foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        .font(SolarisTheme.bodyBold)
+
+                        Divider().gridCellUnsizedAxes(.horizontal)
+
+                        GridRow {
+                            Text("Thunderbolt 3 / USB4").foregroundColor(SolarisTheme.mint)
+                            Text("M1 & M2 (Basis)").foregroundColor(SolarisTheme.textPrimary)
+                            Text("40 Gbps (26–32 Gbps real)").foregroundColor(SolarisTheme.textPrimary)
+                            Text("Opt-In (IP/Bridge)").foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        GridRow {
+                            Text("Thunderbolt 4").foregroundColor(SolarisTheme.amberGlow)
+                            Text("M1–M3 Pro/Max/Ultra, M4 (Basis)").foregroundColor(SolarisTheme.textPrimary)
+                            Text("40 Gbps (30–37 Gbps real)").foregroundColor(SolarisTheme.textPrimary)
+                            Text("Opt-In (34–38 Gbps)").foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        GridRow {
+                            Text("Thunderbolt 5").foregroundColor(SolarisTheme.emerald)
+                            Text("M3 Ultra, M4 Pro/Max, M5–M6 Max").foregroundColor(SolarisTheme.textPrimary)
+                            Text("80–120 Gbps (65–80 Gbps real)").foregroundColor(SolarisTheme.textPrimary)
+                            Text("Nativ (75–110 Gbps)").foregroundColor(SolarisTheme.emerald)
+                        }
+                    }
+                    .font(SolarisTheme.bodyLarge)
+                }
+
                 // MLX Performance & RDMA Hinweise
                 SolarisCard {
                     Toggle(isOn: $vm.fastSynchEnabled) {

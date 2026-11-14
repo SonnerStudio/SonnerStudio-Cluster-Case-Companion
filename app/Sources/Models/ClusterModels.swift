@@ -30,7 +30,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .overview: return "Verbund-Speicher & Topologie"
         case .devices: return "Alle M-Macs & Vergleich"
         case .models: return "MLX, oMLX, Ollama & llama.cpp"
-        case .network: return "TB4/5, RDMA & Hybrid"
+        case .network: return "TB3/4/5, RDMA & Hybrid"
         case .agents: return "Lokale Agenten, IDEs & SDKs"
         case .science: return "arXiv, Splitwise & Tuning"
         case .console: return "OpenAI / Ollama / oMLX API"
@@ -262,6 +262,7 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
 
     var thunderboltGen: Int {
         switch self {
+        case .m1, .m2: return 3
         case .m3Ultra, .m4Pro, .m4Max, .m5, .m5Pro, .m5Max, .m6, .m6Pro, .m6Max: return 5
         default: return 4
         }
@@ -306,6 +307,10 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
             || lower.contains("m4 pro") || lower.contains("m4 max") {
             return 5
         }
+        if (lower.contains("m1") || lower.contains("m2"))
+            && !lower.contains("pro") && !lower.contains("max") && !lower.contains("ultra") {
+            return 3
+        }
         return 4
     }
 
@@ -318,6 +323,12 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
             return mode == .rdmaExperimental
                 ? ("75–110 Gbps", 85.0, "TB5 RDMA")
                 : ("65–80 Gbps", 72.0, "TB5")
+        }
+        if minGen <= 3 {
+            let badge = (genA != genB) ? "TB3/4/5" : "TB3"
+            return mode == .rdmaExperimental
+                ? ("28–33 Gbps", 30.0, "\(badge) RDMA")
+                : ("26–32 Gbps", 29.0, badge)
         }
         let badge = (genA != genB) ? "TB4/5" : "TB4"
         return mode == .rdmaExperimental
