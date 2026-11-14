@@ -99,13 +99,43 @@ struct MainStudioWindow: View {
                     Text(vm.t("language_label"))
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundColor(SolarisTheme.textSecondary)
-                    Picker("", selection: $vm.language) {
+                    Menu {
                         ForEach(AppLanguage.allCases) { lang in
-                            Text(lang.shortLabel).tag(lang)
+                            Button {
+                                vm.language = lang
+                            } label: {
+                                if vm.language == lang {
+                                    Label(lang.shortLabel, systemImage: "checkmark")
+                                } else {
+                                    Text(lang.shortLabel)
+                                }
+                            }
                         }
+                    } label: {
+                        HStack {
+                            Text(vm.language.shortLabel)
+                                .font(SolarisTheme.bodyBold)
+                                .foregroundColor(SolarisTheme.textPrimary)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(SolarisTheme.cardElevated.opacity(0.90))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                                )
+                        )
+                        .contentShape(Rectangle())
                     }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
+                    .menuStyle(.borderlessButton)
+                    .frame(maxWidth: .infinity)
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
