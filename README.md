@@ -73,8 +73,9 @@ flowchart LR
 - **Live Model Studio & Runtime Readiness:** Discovers real installed/running models from **oMLX**, **Ollama**, **llama.cpp**, local `.gguf` files, and `~/.cache/huggingface/hub` (no mock profiles when empty; displays a live runtime readiness check & setup commands instead), with memory-weighted layer sharding and KV-cache quantization (`FP16 / 8-bit / 4-bit`).
 - **6× 1-Click Agent & IDE Integrations:** Instant configuration export for **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code**, and **Apple Xcode**.
 - **Global Internet WAN Cluster & Participant Chat (`/ws/wan/{room_id}`):** Connect any Apple Silicon Macs worldwide into large distributed clusters over encrypted tunnels (Tailscale / WireGuard, libp2p / DERP P2P relay, or manual endpoint) with built-in real-time participant chat.
-- **5-Tab Science & Internet-WAN Research Lab:** Switch seamlessly between **Local (TB/RDMA)**, **Internet WAN**, and **Side-by-Side Comparison** across 5 dedicated tabs: **Roofline & Bottleneck** (effective WAN ceiling, $B^*$ critical batch), **WAN Topology & Scaling** ($N=1\dots128$ scaling curves, *Petals/SWARM* activation compression, straggler simulation, *DiLoCo* vs. DDP), **Memory & KV Analysis**, **Energy, CO₂ & Cost** (`J/token`, `EDP`, regional `gCO₂eq/kWh`), and **Trials, Stats & Export** (`CI₉₅`, `CV%`, `Goodput%`, `CSV / JSON / LaTeX / 8-paper BibTeX`).
-- **SonnerStudio Yellow (`#FFD400`) UI, 5-Language Manual & Global Test Suite (`tests/`):** Full interface and searchable Help Center (`⌘?`) in **English, German, French, Spanish, and Portuguese**, verified by `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
+- **6-Tab Science & Internet-WAN Research Lab + History Recording:** Switch seamlessly between **Local (TB/RDMA)**, **Internet WAN**, and **Side-by-Side Comparison** across 6 dedicated tabs: **Roofline & Bottleneck** (effective WAN ceiling, $B^*$ critical batch), **WAN Topology & Scaling** ($N=1\dots128$ scaling curves, *Petals/SWARM* activation compression, straggler simulation, *DiLoCo* vs. DDP), **Memory & KV Analysis**, **Energy, CO₂ & Cost** (`J/token`, `EDP`, regional `gCO₂eq/kWh`), **Trials, Stats & Export** (`CI₉₅`, `CV%`, `Goodput%`, `CSV / JSON / LaTeX / 8-paper BibTeX`), and **History Recording** (per-position or global snapshots, auto-recording, dual-line trend chart, and CSV export).
+- **GitHub-Controlled Program Updates & Automatic Version Control:** Checks `version.json`, GitHub Releases, and `commits/main` SHA automatically on launch and every 30 minutes (`⌘U` or header pill). Displays an in-app update prompt with changelog, 1-click `git pull` + `swift build` + relaunch for source installs, and browser download for packaged releases — backed by `scripts/bump_version.py` and `.github/workflows/auto-version-control.yml`.
+- **SonnerStudio Yellow (`#FFD400`) UI, 5-Language Manual & Global Test Suite (`tests/`):** Full interface and searchable 9-chapter Help Center (`⌘?`) in **English, German, French, Spanish, and Portuguese**, verified by `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 
 ### 🖥️ Program Modules at a Glance
 
@@ -86,9 +87,9 @@ flowchart LR
 | **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, and inspect TB3/TB4/TB5 classes |
 | **5. Internet Cluster, Audio-Party & Chat** | Couple local TB/RDMA Macs with global WAN peers (Tailscale/WireGuard/libp2p/DERP), coordinate via Xbox/PS-style Audio-Party & Chat (`/ws/wan-audio`, `/ws/wan`) |
 | **6. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
-| **7. Science & Roofline** | 5-tab Local & Internet-WAN research lab: Log-Log Roofline (`P = min(β·I, π_eff)`), `N=1..128` scaling, *Petals/SWARM* & *DiLoCo*, KV memory equation, `J/tok` / `EDP` / `CO₂`, `CI₉₅` & `Goodput%` trials, and `CSV / JSON / LaTeX / BibTeX` export |
+| **7. Science & Roofline** | 6-tab Local & Internet-WAN research lab: Log-Log Roofline (`P = min(β·I, π_eff)`), `N=1..128` scaling, *Petals/SWARM* & *DiLoCo*, KV memory equation, `J/tok` / `EDP` / `CO₂`, `CI₉₅` & `Goodput%` trials, `CSV / JSON / LaTeX / BibTeX` export, and per-position/global **History Recording** |
 | **8. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
-| **9. Help & Documentation** | Searchable 5-language user manual (`⌘?`) covering clustering, safety limits, networking, and agents |
+| **9. Help & Documentation** | Searchable 9-chapter, 5-language user manual (`⌘?`) covering M1–M12+ clustering, safety limits, WAN coupling, Audio-Party, Science Lab, and agents |
 
 ---
 
