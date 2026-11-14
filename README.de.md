@@ -65,6 +65,26 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ---
 
+## 📚 Ausgewählte Dokumentation (vollständig im Hilfe-Bereich der App)
+
+### 1. Alle Apple Mac mit M-Prozessor im Verbund (M1–M5)
+SS-CCC unterstützt **jeden Mac mit Apple-Silicon-Chip** (**M1, M2, M3, M4, M5** — Basis, Pro, Max und Ultra) über alle Bauformen hinweg (**Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio und Mac Pro**). Unter **Geräte & Vergleich** lassen sich beliebig viele M-Macs zum Verbund hinzufügen; der Rechner mit dem höchsten Speicherdurchsatz übernimmt selbsttätig **Rang 0 (Leitrechner)**.
+
+| Chip-Familie | Speicherdurchsatz | Thunderbolt | Empfohlene macOS-Schutzreserve |
+| :--- | :--- | :--- | :--- |
+| **M1 / M2 / M3** (Basis) | 68 – 100 GB/s | TB 4 | **4 GB** (bis 24 GB RAM) |
+| **M4 / M5** (Basis) | 120 – 153 GB/s | TB 4 / TB 5 | **4 GB** (bis 24 GB RAM) |
+| **M1–M5 Pro** | 150 – 273 GB/s | TB 4 / TB 5 | **4 – 6 GB** |
+| **M1–M5 Max** | 400 – 546 GB/s | TB 4 / TB 5 | **6 GB** (32–64 GB RAM) |
+| **M1–M3 Ultra** | 800 GB/s | TB 4 | **8 GB** (ab 96 GB RAM) |
+
+### 2. Speicherschutz & Gewichtetes Schichten-Aufteilen
+- **Niemals 100 % des RAM freigeben:** SS-CCC schützt den Betriebssystem-Anteil über `iogpu.wired_limit_mb`, damit macOS und WindowServer jederzeit flüssig bleiben.
+- **Anteilige Schichtenverteilung:** Jeder Mac erhält genau den Anteil an Modellschichten, der seinem nutzbaren Speicher entspricht (`Schichten_i = Gesamtschichten × Nutzbar_i / GesamtNutzbar`).
+- **KV-Verdichtung & schnelle GPU-Abstimmung:** `--kv-bits 4` + `--prefill-step-size 512` ermöglichen über 64k Zeichenblöcke, während `MLX_METAL_FAST_SYNCH=1` die Abstimmungszeit um Faktor **45×** (~180 µs → ~4 µs) senkt.
+
+---
+
 ## 📄 Lizenz
 
 Veröffentlicht unter der [MIT-Lizenz](LICENSE.md).

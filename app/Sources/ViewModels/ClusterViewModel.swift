@@ -35,6 +35,12 @@ final class ClusterViewModel: ObservableObject {
     @Published var promptInput: String = "Erkläre kurz, wie 36 GB + 16 GB per Pipeline Parallelism gekoppelt werden."
     @Published var consoleOutput: String = "Bereit. Starte den Python-Daemon (uvicorn core.api.gateway:app --port 8000) oder teste direkt im Vorschau-Modus."
     @Published var isSendingPrompt: Bool = false
+    @Published var customNodes: [ClusterNodeModel] = []
+    @Published var newFormFactor: MacFormFactor = .macBookPro
+    @Published var newChip: AppleSiliconChipFamily = .m3Max
+    @Published var newRamGB: Double = 36.0
+    @Published var newCustomName: String = ""
+    @Published var helpSearchText: String = ""
 
     let modelPresets: [ModelPreset] = [
         ModelPreset(
@@ -168,48 +174,108 @@ final class ClusterViewModel: ObservableObject {
         L10n.tabSubtitle(tab, language)
     }
 
+    func addCustomNode(formFactor: MacFormFactor, chip: AppleSiliconChipFamily, ramGB: Double, customName: String) {
+        let index = customNodes.count + (simulateMacStudio ? 3 : 2)
+        let trimmed = customName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = trimmed.isEmpty ? "\(formFactor.rawValue) \(chip.rawValue.replacingOccurrences(of: "Apple ", with: ""))" : trimmed
+        let usable = AppleSiliconChipFamily.usableVramGB(for: ramGB)
+        let node = ClusterNodeModel(
+            id: "custom-\(UUID().uuidString.prefix(8))",
+            name: name,
+            role: "Worker (Rank \(index - 1))",
+            chip: "\(chip.rawValue) · \(chip.cpuCores)-Core CPU / \(chip.gpuCores)-Core GPU",
+            cpuCores: chip.cpuCores,
+            osVersion: "macOS (Apple Silicon)",
+            totalRamGB: ramGB,
+            usableVramGB: usable,
+            wiredLimitMB: Int(usable * 1024),
+            bandwidthGBs: chip.bandwidthGBs,
+            thunderboltGen: chip.thunderboltGen,
+            rdmaEnabled: chip.thunderboltGen >= 5,
+            tbIP: "10.99.1.\(index)",
+            lanIP: "192.168.1.\(20 + index)",
+            ssdTotalGB: 512,
+            isSimulated: false
+        )
+        customNodes.append(node)
+    }
+
+    func removeCustomNode(id: String) {
+        customNodes.removeAll { $0.id == id }
+    }
+
     var nodes: [ClusterNodeModel] {
-        let localUsable = localRamGB >= 32 ? (localRamGB - 6.0) : max(8.0, localRamGB - 4.0)
-        let mini = ClusterNodeModel(
-            id: "mini-m4",
-            name: Host.current().localizedName ?? "Mac mini M4",
-            role: simulateMacStudio ? "Worker (Rank 1)" : "Standalone (Rank 0)",
+        let localUsable = AppleSiliconChipFamily.usableVramGB(for: localRamGB)
+        let localBandwidth = AppleSiliconChipFamily.inferBandwidth(from: localChipName)
+        let localTbGen = localChipName.lowercased().contains("m5") || localChipName.lowercased().contains("m4 max") || localChipName.lowercased().contains("m4 pro") ? 5 : 4
+
+        var rawList: [ClusterNodeModel] = []
+        if simulateMacStudio {
+            rawList.append(
+                ClusterNodeModel(
+                    id: "studio-m5-max",
+                    name: "Mac Studio M5 Max",
+                    role: "Coordinator (Rank 0)",
+                    chip: "Apple M5 Max · 18-Core CPU / 32-Core GPU",
+                    cpuCores: 18,
+                    osVersion: "macOS 27.x (Ziel)",
+                    totalRamGB: 36.0,
+                    usableVramGB: 30.0,
+                    wiredLimitMB: 30720,
+                    bandwidthGBs: 460.0,
+                    thunderboltGen: 5,
+                    rdmaEnabled: false,
+                    tbIP: "10.99.1.1",
+                    lanIP: "192.168.1.10",
+                    ssdTotalGB: 512,
+                    isSimulated: true
+                )
+            )
+        }
+
+        let localNode = ClusterNodeModel(
+            id: "local-host",
+            name: Host.current().localizedName ?? "Lokaler Apple Silicon Mac",
+            role: (simulateMacStudio || !customNodes.isEmpty) ? "Worker" : "Standalone (Rank 0)",
             chip: "\(localChipName) · \(localCPUCores) CPU-Kerne",
             cpuCores: localCPUCores,
             osVersion: localOSVersion,
             totalRamGB: localRamGB,
             usableVramGB: localUsable,
             wiredLimitMB: localWiredLimitMB,
-            bandwidthGBs: localChipName.lowercased().contains("max") ? 460.0 : 120.0,
-            thunderboltGen: localChipName.lowercased().contains("max") ? 5 : 4,
+            bandwidthGBs: localBandwidth,
+            thunderboltGen: localTbGen,
             rdmaEnabled: localRdmaActive,
             tbIP: localTbIP,
             lanIP: localLanIP,
             ssdTotalGB: 256,
             isSimulated: false
         )
-        if simulateMacStudio {
-            let studio = ClusterNodeModel(
-                id: "studio-m5-max",
-                name: "Mac Studio M5 Max",
-                role: "Coordinator (Rank 0)",
-                chip: "Apple M5 Max · 18-Core CPU / 32-Core GPU",
-                cpuCores: 18,
-                osVersion: "macOS 27.x (Ziel)",
-                totalRamGB: 36.0,
-                usableVramGB: 30.0,
-                wiredLimitMB: 30720,
-                bandwidthGBs: 460.0,
-                thunderboltGen: 5,
-                rdmaEnabled: false,
-                tbIP: "10.99.1.1",
-                lanIP: "192.168.1.10",
-                ssdTotalGB: 512,
-                isSimulated: true
+        rawList.append(localNode)
+        rawList.append(contentsOf: customNodes)
+
+        // Sort by memory bandwidth descending so fastest M-series chip takes Rank 0
+        let sorted = rawList.sorted { $0.bandwidthGBs > $1.bandwidthGBs }
+        return sorted.enumerated().map { idx, n in
+            ClusterNodeModel(
+                id: n.id,
+                name: n.name,
+                role: sorted.count == 1 ? "Standalone (Rank 0)" : (idx == 0 ? "Coordinator (Rank 0)" : "Worker (Rank \(idx))"),
+                chip: n.chip,
+                cpuCores: n.cpuCores,
+                osVersion: n.osVersion,
+                totalRamGB: n.totalRamGB,
+                usableVramGB: n.usableVramGB,
+                wiredLimitMB: n.wiredLimitMB,
+                bandwidthGBs: n.bandwidthGBs,
+                thunderboltGen: n.thunderboltGen,
+                rdmaEnabled: n.rdmaEnabled,
+                tbIP: n.tbIP,
+                lanIP: n.lanIP,
+                ssdTotalGB: n.ssdTotalGB,
+                isSimulated: n.isSimulated
             )
-            return [studio, mini]
         }
-        return [mini]
     }
 
     var totalPhysicalRamGB: Double {
@@ -222,40 +288,56 @@ final class ClusterViewModel: ObservableObject {
 
     var shardingSplit: LayerSplitResult {
         let total = selectedModel.totalLayers
-        let usable = totalUsableVramGB
+        let usable = max(totalUsableVramGB, 1.0)
         let required = selectedModel.estimatedGB + kvCacheReserveGB
         let fits = required <= usable
 
-        if simulateMacStudio {
-            let studioShare = 30.0 / 42.0
-            let studioLayers = Int((Double(total) * studioShare).rounded())
-            let miniLayers = max(0, total - studioLayers)
-            return LayerSplitResult(
-                studioLayers: studioLayers,
-                miniLayers: miniLayers,
-                studioPercent: Double(studioLayers) / Double(total) * 100.0,
-                miniPercent: Double(miniLayers) / Double(total) * 100.0,
-                totalRequiredGB: required,
-                totalUsableGB: usable,
-                fits: fits
-            )
-        } else {
-            return LayerSplitResult(
-                studioLayers: 0,
-                miniLayers: total,
-                studioPercent: 0,
-                miniPercent: 100,
-                totalRequiredGB: required,
-                totalUsableGB: usable,
-                fits: fits
+        let activeNodes = nodes
+        var allocatedSum = 0
+        var allocations: [NodeLayerAllocation] = []
+
+        for (index, node) in activeNodes.enumerated() {
+            let layers: Int
+            if index == activeNodes.count - 1 {
+                layers = max(0, total - allocatedSum)
+            } else {
+                let share = node.usableVramGB / usable
+                layers = max(0, min(total - allocatedSum, Int((Double(total) * share).rounded())))
+            }
+            allocatedSum += layers
+            let pct = total > 0 ? (Double(layers) / Double(total) * 100.0) : 0.0
+            allocations.append(
+                NodeLayerAllocation(
+                    id: node.id,
+                    nodeName: node.name,
+                    layers: layers,
+                    percent: pct,
+                    usableGB: node.usableVramGB
+                )
             )
         }
+
+        let firstLayers = allocations.first?.layers ?? total
+        let restLayers = max(0, total - firstLayers)
+        let firstPct = total > 0 ? (Double(firstLayers) / Double(total) * 100.0) : 100.0
+        let restPct = max(0.0, 100.0 - firstPct)
+
+        return LayerSplitResult(
+            studioLayers: activeNodes.count > 1 ? firstLayers : 0,
+            miniLayers: activeNodes.count > 1 ? restLayers : total,
+            studioPercent: activeNodes.count > 1 ? firstPct : 0,
+            miniPercent: activeNodes.count > 1 ? restPct : 100,
+            nodeAllocations: allocations,
+            totalRequiredGB: required,
+            totalUsableGB: usable,
+            fits: fits
+        )
     }
 
     var activeLinkHeadline: String {
         switch transportMode {
         case .autoHybrid:
-            return simulateMacStudio ? "TB4/5 Bridge (30–37 Gbps) + LAN/WLAN Control" : "Lokal (1 Node)"
+            return nodes.count > 1 ? "TB4/5 Bridge (30–37 Gbps) + LAN/WLAN Control" : "Lokal (1 Node)"
         case .thunderboltOnly:
             return "Thunderbolt Point-to-Point (10.99.1.x)"
         case .lanWlanOnly:

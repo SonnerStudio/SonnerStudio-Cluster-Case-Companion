@@ -22,6 +22,14 @@ struct SSCCCApp: App {
         }
         .defaultSize(width: 1280, height: 820)
         .windowStyle(.titleBar)
+        .commands {
+            CommandGroup(replacing: .help) {
+                Button(vm.tabTitle(.help)) {
+                    vm.selectedTab = .help
+                }
+                .keyboardShortcut("?", modifiers: [.command])
+            }
+        }
     }
 }
 
@@ -202,6 +210,8 @@ struct MainStudioWindow: View {
                         ScienceBenchmarksView(vm: vm)
                     case .console:
                         ApiConsoleView(vm: vm)
+                    case .help:
+                        HelpDocsView(vm: vm)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

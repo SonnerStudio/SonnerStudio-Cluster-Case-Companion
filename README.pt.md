@@ -56,6 +56,26 @@ flowchart LR
 
 ---
 
+## 📚 Documentação selecionada (incluída na ajuda do programa)
+
+### 1. Todos os Mac com processador M em conjunto (M1–M5)
+O SS-CCC suporta **qualquer Mac com processador Apple Silicon** (**M1, M2, M3, M4, M5** — Base, Pro, Max e Ultra): **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio e Mac Pro**. Em **Dispositivos e Comparação**, adicione quantos Mac desejar; o equipamento com maior largura de banda assume automaticamente o **nível 0 (coordenador)**.
+
+| Família de chip | Largura de banda | Thunderbolt | Reserva recomendada para macOS |
+| :--- | :--- | :--- | :--- |
+| **M1 / M2 / M3** (Base) | 68 – 100 GB/s | TB 4 | **4 GB** (≤ 24 GB RAM) |
+| **M4 / M5** (Base) | 120 – 153 GB/s | TB 4 / TB 5 | **4 GB** (≤ 24 GB RAM) |
+| **M1–M5 Pro** | 150 – 273 GB/s | TB 4 / TB 5 | **4 – 6 GB** |
+| **M1–M5 Max** | 400 – 546 GB/s | TB 4 / TB 5 | **6 GB** (32–64 GB RAM) |
+| **M1–M3 Ultra** | 800 GB/s | TB 4 | **8 GB** (≥ 96 GB RAM) |
+
+### 2. Proteção de memória e repartição ponderada
+- **Nunca alocar 100 % da RAM:** `iogpu.wired_limit_mb` protege a fluidez do macOS e do WindowServer.
+- **Repartição proporcional de camadas:** cada Mac recebe camadas consoante a sua memória utilizável (`Camadas_i = Total × Utilizável_i / TotalUtilizável`).
+- **Cache KV de 4 bits e sincronização rápida:** `--kv-bits 4` e `MLX_METAL_FAST_SYNCH=1` (45× mais rápido, ~180 µs → ~4 µs).
+
+---
+
 ## 📄 Licença
 
 Publicado sob a [Licença MIT](LICENSE.md).

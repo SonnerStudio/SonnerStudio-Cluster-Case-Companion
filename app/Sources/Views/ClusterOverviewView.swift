@@ -18,7 +18,7 @@ struct ClusterOverviewView: View {
                     MetricTile(
                         title: vm.t("kpi_nodes"),
                         value: "\(vm.nodes.count)",
-                        subtitle: vm.simulateMacStudio ? "Studio + Mac mini M4" : "Mac mini M4",
+                        subtitle: vm.nodes.map(\.name).joined(separator: " + "),
                         accent: SolarisTheme.mint,
                         icon: "desktopcomputer"
                     )
@@ -44,8 +44,8 @@ struct ClusterOverviewView: View {
                         }
                         Spacer()
                         Label(
-                            vm.simulateMacStudio ? "52 GB Verbund aktiv" : "16 GB Einzelbetrieb",
-                            systemImage: vm.simulateMacStudio ? "link.circle.fill" : "circle.dashed"
+                            vm.nodes.count > 1 ? "\(Int(vm.totalPhysicalRamGB)) GB Verbund aktiv" : "\(Int(vm.totalPhysicalRamGB)) GB Einzelbetrieb",
+                            systemImage: vm.nodes.count > 1 ? "link.circle.fill" : "circle.dashed"
                         )
                         .font(SolarisTheme.bodyBold)
                         .padding(.horizontal, 14)
@@ -80,25 +80,21 @@ struct ClusterOverviewView: View {
 
                     GeometryReader { geo in
                         let total = max(vm.totalPhysicalRamGB, 1)
+                        let palette: [Color] = [SolarisTheme.amber, SolarisTheme.mint, SolarisTheme.emerald, Color.cyan, Color.purple]
                         HStack(spacing: 4) {
-                            if vm.simulateMacStudio {
+                            ForEach(Array(vm.nodes.enumerated()), id: \.element.id) { idx, node in
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(SolarisTheme.amber)
-                                    .frame(width: geo.size.width * (30.0 / total))
+                                    .fill(palette[idx % palette.count])
+                                    .frame(width: max(42, geo.size.width * (node.usableVramGB / total) - 4))
                                     .overlay(
-                                        Text("Studio: 30 GB (58%)")
+                                        Text("\(node.name): \(Int(node.usableVramGB)) GB")
                                             .font(SolarisTheme.bodyBold)
                                             .foregroundColor(.black)
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.7)
+                                            .padding(.horizontal, 4)
                                     )
                             }
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(SolarisTheme.mint)
-                                .frame(width: geo.size.width * (12.0 / total))
-                                .overlay(
-                                    Text("Mini: 12 GB")
-                                        .font(SolarisTheme.bodyBold)
-                                        .foregroundColor(.black)
-                                )
                             RoundedRectangle(cornerRadius: 8)
                                 .fill(Color.white.opacity(0.15))
                                 .overlay(

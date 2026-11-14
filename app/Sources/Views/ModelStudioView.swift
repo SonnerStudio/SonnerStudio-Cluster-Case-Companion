@@ -79,26 +79,25 @@ struct ModelStudioView: View {
                         .foregroundColor(split.fits ? SolarisTheme.emerald : SolarisTheme.coral)
                     }
 
-                    // Visueller Layer-Split Balken
+                    // Visueller Layer-Split Balken für alle aktiven M-Series Nodes
                     GeometryReader { geo in
+                        let palette: [Color] = [SolarisTheme.amber, SolarisTheme.mint, SolarisTheme.emerald, Color.cyan, Color.purple]
                         HStack(spacing: 4) {
-                            if split.studioLayers > 0 {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(SolarisTheme.amber)
-                                    .frame(width: geo.size.width * (split.studioPercent / 100.0))
-                                    .overlay(
-                                        Text("Mac Studio: Layer 0–\(split.studioLayers - 1) (\(split.studioLayers) Layer · \(String(format: "%.0f", split.studioPercent))%)")
-                                            .font(SolarisTheme.bodyBold)
-                                            .foregroundColor(.black)
-                                    )
+                            ForEach(Array(split.nodeAllocations.enumerated()), id: \.element.id) { idx, alloc in
+                                if alloc.layers > 0 {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(palette[idx % palette.count])
+                                        .frame(width: max(50, geo.size.width * (alloc.percent / 100.0) - 4))
+                                        .overlay(
+                                            Text("\(alloc.nodeName): \(alloc.layers)L (\(String(format: "%.0f", alloc.percent))%)")
+                                                .font(SolarisTheme.bodyBold)
+                                                .foregroundColor(.black)
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.7)
+                                                .padding(.horizontal, 4)
+                                        )
+                                }
                             }
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(SolarisTheme.mint)
-                                .overlay(
-                                    Text("Mac mini: \(split.miniLayers) Layer (\(String(format: "%.0f", split.miniPercent))%)")
-                                        .font(SolarisTheme.bodyBold)
-                                        .foregroundColor(.black)
-                                )
                         }
                     }
                     .frame(height: 44)

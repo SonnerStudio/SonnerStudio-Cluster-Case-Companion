@@ -3,6 +3,8 @@ import SwiftUI
 struct DevicesCompareView: View {
     @ObservedObject var vm: ClusterViewModel
 
+    private let ramChoices: [Double] = [8, 16, 24, 32, 36, 48, 64, 96, 128, 192]
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
@@ -31,8 +33,80 @@ struct DevicesCompareView: View {
                     }
                 }
 
+                // Beliebigen Apple Mac mit M-Prozessor (M1–M5) zum Verbund hinzufügen
+                SolarisCard(accent: SolarisTheme.emerald) {
+                    Text(vm.t("dev_add_title"))
+                        .font(SolarisTheme.sectionTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text(vm.t("dev_add_sub"))
+                        .font(SolarisTheme.bodyLarge)
+                        .foregroundColor(SolarisTheme.textSecondary)
+
+                    HStack(spacing: 12) {
+                        Picker("", selection: $vm.newFormFactor) {
+                            ForEach(MacFormFactor.allCases) { f in
+                                Text(f.rawValue).tag(f)
+                            }
+                        }
+                        .frame(width: 150)
+
+                        Picker("", selection: $vm.newChip) {
+                            ForEach(AppleSiliconChipFamily.allCases) { chip in
+                                Text(chip.rawValue).tag(chip)
+                            }
+                        }
+                        .frame(width: 170)
+
+                        Picker("", selection: $vm.newRamGB) {
+                            ForEach(ramChoices, id: \.self) { ram in
+                                Text("\(Int(ram)) GB").tag(ram)
+                            }
+                        }
+                        .frame(width: 110)
+
+                        TextField(vm.t("dev_add_name_ph"), text: $vm.newCustomName)
+                            .textFieldStyle(.roundedBorder)
+
+                        Button {
+                            vm.addCustomNode(
+                                formFactor: vm.newFormFactor,
+                                chip: vm.newChip,
+                                ramGB: vm.newRamGB,
+                                customName: vm.newCustomName
+                            )
+                            vm.newCustomName = ""
+                        } label: {
+                            Label(vm.t("dev_add_btn"), systemImage: "plus.circle.fill")
+                                .font(SolarisTheme.bodyBold)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.emerald))
+                                .foregroundColor(.black)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    if !vm.customNodes.isEmpty {
+                        HStack(spacing: 10) {
+                            ForEach(vm.customNodes) { custom in
+                                Button {
+                                    vm.removeCustomNode(id: custom.id)
+                                } label: {
+                                    Label("\(custom.name) (\(Int(custom.totalRamGB)) GB) ×", systemImage: "trash")
+                                        .font(.system(size: 12.5, weight: .semibold))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(Capsule().fill(SolarisTheme.coral.opacity(0.22)))
+                                        .foregroundColor(SolarisTheme.coral)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+
                 // Einzelkarten pro Gerät nebeneinander
-                HStack(alignment: .top, spacing: 18) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 340), spacing: 18)], spacing: 18) {
                     ForEach(vm.nodes) { node in
                         DeviceDetailCard(node: node)
                     }

@@ -65,6 +65,26 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ---
 
+## 📚 Selected Documentation (Built Into the App's Help Center)
+
+### 1. Universal Apple Silicon M-Series Clustering (M1–M5)
+SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1, M2, M3, M4, M5** — Base, Pro, Max, Ultra) across **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio, and Mac Pro**. Under **Devices & Compare**, you can add any number of Macs to the cluster; the node with the highest memory bandwidth automatically takes **Rank 0 (Coordinator)**.
+
+| Mac / Chip Family | Memory Bandwidth | Thunderbolt | Recommended macOS Reserve |
+| :--- | :--- | :--- | :--- |
+| **M1 / M2 / M3** (Base) | 68 – 100 GB/s | TB 4 | **4 GB** (≤ 24 GB RAM) |
+| **M4 / M5** (Base) | 120 – 153 GB/s | TB 4 / TB 5 | **4 GB** (≤ 24 GB RAM) |
+| **M1–M5 Pro** | 150 – 273 GB/s | TB 4 / TB 5 | **4 – 6 GB** |
+| **M1–M5 Max** | 400 – 546 GB/s | TB 4 / TB 5 | **6 GB** (32–64 GB RAM) |
+| **M1–M3 Ultra** | 800 GB/s | TB 4 | **8 GB** (≥ 96 GB RAM) |
+
+### 2. Memory Safety & Weighted Layer Sharding
+- **Never allocate 100% of RAM:** SS-CCC enforces `iogpu.wired_limit_mb` reserves so macOS and WindowServer stay responsive.
+- **Proportional Layer Split:** Each Mac receives layers proportional to its usable memory (`Layers_i = TotalLayers × Usable_i / TotalUsable`).
+- **KV-Cache & Fast Metal Sync:** Use `--kv-bits 4` + `--prefill-step-size 512` for 64k+ context windows, and `MLX_METAL_FAST_SYNCH=1` to cut Metal sync overhead by **45×** (~180 µs → ~4 µs).
+
+---
+
 ## 📄 License
 
 Published under the [MIT License](LICENSE.md).
