@@ -150,10 +150,12 @@ struct MainStudioWindow: View {
                 .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))
 
                 // Simulations-Schalter (bis Mac Studio per UPS eintrifft)
-                HStack(alignment: .center, spacing: 10) {
-                    Button {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
                         vm.simulateMacStudio.toggle()
-                    } label: {
+                    }
+                } label: {
+                    HStack(alignment: .center, spacing: 10) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(vm.t("sim_toggle"))
                                 .font(SolarisTheme.bodyBold)
@@ -163,17 +165,31 @@ struct MainStudioWindow: View {
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
 
-                    Toggle("", isOn: $vm.simulateMacStudio)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .tint(SolarisTheme.amber)
+                        // Reiner SwiftUI-Schalter (zuverlässig auf gesamter Fläche klickbar)
+                        ZStack(alignment: vm.simulateMacStudio ? .trailing : .leading) {
+                            Capsule()
+                                .fill(vm.simulateMacStudio ? SolarisTheme.amber : Color.white.opacity(0.22))
+                                .frame(width: 42, height: 24)
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 18, height: 18)
+                                .padding(3)
+                        }
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(SolarisTheme.cardBg.opacity(0.84))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(vm.simulateMacStudio ? SolarisTheme.amber.opacity(0.45) : SolarisTheme.borderSubtle, lineWidth: 1)
+                            )
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))
+                .buttonStyle(.plain)
             }
             .padding(18)
             .frame(width: 280)
@@ -272,5 +288,6 @@ private struct SolarisBackgroundLayer: View {
                 }
             }
         }
+        .allowsHitTesting(false)
     }
 }
