@@ -242,11 +242,11 @@ enum L10n {
         case ("dev_compare", .es): return "Comparación directa"
         case ("dev_compare", .pt): return "Comparação direta"
 
-        case ("dev_add_title", .de): return "Weiteren Apple Mac mit M-Prozessor (M1–M5) hinzufügen"
-        case ("dev_add_title", .en): return "Add Any Apple Silicon Mac (M1–M5) to Cluster"
-        case ("dev_add_title", .fr): return "Ajouter un autre Mac à puce M (M1–M5)"
-        case ("dev_add_title", .es): return "Añadir otro Mac con procesador M (M1–M5)"
-        case ("dev_add_title", .pt): return "Adicionar outro Mac com processador M (M1–M5)"
+        case ("dev_add_title", .de): return "Weiteren Apple Mac mit M-Prozessor (M1–M6) hinzufügen"
+        case ("dev_add_title", .en): return "Add Any Apple Silicon Mac (M1–M6) to Cluster"
+        case ("dev_add_title", .fr): return "Ajouter un autre Mac à puce M (M1–M6)"
+        case ("dev_add_title", .es): return "Añadir otro Mac con procesador M (M1–M6)"
+        case ("dev_add_title", .pt): return "Adicionar outro Mac com processador M (M1–M6)"
 
         case ("dev_add_sub", .de): return "Alle Mac mini, MacBook Air/Pro, iMac, Mac Studio und Mac Pro mit M-Chip lassen sich zu einem Verbund zusammenschalten."
         case ("dev_add_sub", .en): return "Any Mac mini, MacBook Air/Pro, iMac, Mac Studio, or Mac Pro with an M-series chip can join the cluster."
@@ -273,11 +273,11 @@ enum L10n {
         case ("help_title", .es): return "Manual detallado y documentación"
         case ("help_title", .pt): return "Manual detalhado e documentação"
 
-        case ("help_sub", .de): return "Alle Grundlagen zu M1–M5-Verbünden, Speicherschutz, Thunderbolt, Laufzeiten und KI-Agenten in der gewählten Sprache."
-        case ("help_sub", .en): return "Complete guide to M1–M5 clustering, memory safety, Thunderbolt bridging, runtimes, and AI agents in your selected language."
-        case ("help_sub", .fr): return "Guide complet sur les grappes M1–M5, la sécurité mémoire, Thunderbolt, les moteurs locaux et les agents."
-        case ("help_sub", .es): return "Guía completa sobre conjuntos M1–M5, seguridad de memoria, Thunderbolt, motores locales y agentes."
-        case ("help_sub", .pt): return "Guia completo sobre conjuntos M1–M5, segurança de memória, Thunderbolt, motores locais e agentes."
+        case ("help_sub", .de): return "Alle Grundlagen zu M1–M6-Verbünden, Speicherschutz, Thunderbolt, Laufzeiten und KI-Agenten in der gewählten Sprache."
+        case ("help_sub", .en): return "Complete guide to M1–M6 clustering, memory safety, Thunderbolt bridging, runtimes, and AI agents in your selected language."
+        case ("help_sub", .fr): return "Guide complet sur les grappes M1–M6, la sécurité mémoire, Thunderbolt, les moteurs locaux et les agents."
+        case ("help_sub", .es): return "Guía completa sobre conjuntos M1–M6, seguridad de memoria, Thunderbolt, motores locales y agentes."
+        case ("help_sub", .pt): return "Guia completo sobre conjuntos M1–M6, segurança de memória, Thunderbolt, motores locais e agentes."
 
         case ("help_search_ph", .de): return "Handbuch durchsuchen (z. B. Thunderbolt, oMLX, M1, Reserve)..."
         case ("help_search_ph", .en): return "Search documentation (e.g., Thunderbolt, oMLX, M1, reserve)..."

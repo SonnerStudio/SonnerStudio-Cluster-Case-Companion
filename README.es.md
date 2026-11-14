@@ -58,15 +58,15 @@ flowchart LR
 
 ## 📚 Documentación seleccionada (incluida en la ayuda del programa)
 
-### 1. Todos los Mac con procesador M en conjunto (M1–M5)
-SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, M5** — Base, Pro, Max y Ultra): **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio y Mac Pro**. En **Equipos y comparación** puedes añadir tantos Mac como necesites; el equipo con mayor ancho de banda asume automáticamente el **rango 0 (coordinador)**.
+### 1. Todos los Mac con procesador M en conjunto (M1–M6)
+SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, M5, M6** — Base, Pro, Max y Ultra): **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio y Mac Pro**. En **Equipos y comparación** puedes añadir tantos Mac como necesites; el equipo con mayor ancho de banda asume automáticamente el **rango 0 (coordinador)**.
 
 | Familia de chip | Ancho de banda | Thunderbolt | Reserva recomendada para macOS |
 | :--- | :--- | :--- | :--- |
 | **M1 / M2 / M3** (Base) | 68 – 100 GB/s | TB 4 | **4 GB** (≤ 24 GB RAM) |
-| **M4 / M5** (Base) | 120 – 153 GB/s | TB 4 / TB 5 | **4 GB** (≤ 24 GB RAM) |
-| **M1–M5 Pro** | 150 – 273 GB/s | TB 4 / TB 5 | **4 – 6 GB** |
-| **M1–M5 Max** | 400 – 546 GB/s | TB 4 / TB 5 | **6 GB** (32–64 GB RAM) |
+| **M4 / M5 / M6** (Base) | 120 – 180 GB/s | TB 4 / TB 5 | **4 GB** (≤ 24 GB RAM) |
+| **M1–M6 Pro** | 150 – 273 GB/s | TB 4 / TB 5 | **4 – 6 GB** |
+| **M1–M6 Max** | 400 – 546 GB/s | TB 4 / TB 5 | **6 GB** (32–64 GB RAM) |
 | **M1–M3 Ultra** | 800 GB/s | TB 4 | **8 GB** (≥ 96 GB RAM) |
 
 ### 2. Protección de memoria y reparto ponderado

@@ -58,15 +58,15 @@ flowchart LR
 
 ## 📚 Extraits de la documentation (intégrés dans l'aide de l'application)
 
-### 1. Tous les Mac à puce Apple M en grappe (M1–M5)
-SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M2, M3, M4, M5** — Base, Pro, Max et Ultra) : **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio et Mac Pro**. Sous **Appareils et comparaison**, ajoutez autant de Mac que souhaité ; celui offrant le plus haut débit mémoire prend automatiquement le **rang 0 (maître)**.
+### 1. Tous les Mac à puce Apple M en grappe (M1–M6)
+SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M2, M3, M4, M5, M6** — Base, Pro, Max et Ultra) : **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio et Mac Pro**. Sous **Appareils et comparaison**, ajoutez autant de Mac que souhaité ; celui offrant le plus haut débit mémoire prend automatiquement le **rang 0 (maître)**.
 
 | Famille de puces | Débit mémoire | Thunderbolt | Réserve macOS conseillée |
 | :--- | :--- | :--- | :--- |
 | **M1 / M2 / M3** (Base) | 68 – 100 Go/s | TB 4 | **4 Go** (≤ 24 Go RAM) |
-| **M4 / M5** (Base) | 120 – 153 Go/s | TB 4 / TB 5 | **4 Go** (≤ 24 Go RAM) |
-| **M1–M5 Pro** | 150 – 273 Go/s | TB 4 / TB 5 | **4 – 6 Go** |
-| **M1–M5 Max** | 400 – 546 Go/s | TB 4 / TB 5 | **6 Go** (32–64 Go RAM) |
+| **M4 / M5 / M6** (Base) | 120 – 180 Go/s | TB 4 / TB 5 | **4 Go** (≤ 24 Go RAM) |
+| **M1–M6 Pro** | 150 – 273 Go/s | TB 4 / TB 5 | **4 – 6 Go** |
+| **M1–M6 Max** | 400 – 546 Go/s | TB 4 / TB 5 | **6 Go** (32–64 Go RAM) |
 | **M1–M3 Ultra** | 800 Go/s | TB 4 | **8 Go** (≥ 96 Go RAM) |
 
 ### 2. Protection mémoire et répartition pondérée

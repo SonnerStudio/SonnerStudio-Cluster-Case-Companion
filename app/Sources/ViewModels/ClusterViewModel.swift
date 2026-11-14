@@ -207,7 +207,7 @@ final class ClusterViewModel: ObservableObject {
     var nodes: [ClusterNodeModel] {
         let localUsable = AppleSiliconChipFamily.usableVramGB(for: localRamGB)
         let localBandwidth = AppleSiliconChipFamily.inferBandwidth(from: localChipName)
-        let localTbGen = localChipName.lowercased().contains("m5") || localChipName.lowercased().contains("m4 max") || localChipName.lowercased().contains("m4 pro") ? 5 : 4
+        let localTbGen = localChipName.lowercased().contains("m6") || localChipName.lowercased().contains("m5") || localChipName.lowercased().contains("m4 max") || localChipName.lowercased().contains("m4 pro") ? 5 : 4
 
         var rawList: [ClusterNodeModel] = []
         if simulateMacStudio {

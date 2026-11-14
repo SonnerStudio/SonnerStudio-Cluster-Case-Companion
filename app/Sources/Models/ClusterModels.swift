@@ -209,16 +209,19 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
     case m5 = "Apple M5"
     case m5Pro = "Apple M5 Pro"
     case m5Max = "Apple M5 Max"
+    case m6 = "Apple M6"
+    case m6Pro = "Apple M6 Pro"
+    case m6Max = "Apple M6 Max"
 
     var id: String { rawValue }
 
     var cpuCores: Int {
         switch self {
         case .m1, .m2, .m3: return 8
-        case .m1Pro, .m2Pro, .m1Max, .m2Max, .m4, .m5: return 10
+        case .m1Pro, .m2Pro, .m1Max, .m2Max, .m4, .m5, .m6: return 10
         case .m3Pro, .m4Pro: return 12
-        case .m3Max, .m4Max, .m5Pro: return 16
-        case .m5Max: return 18
+        case .m3Max, .m4Max, .m5Pro, .m6Pro: return 16
+        case .m5Max, .m6Max: return 18
         case .m1Ultra: return 20
         case .m2Ultra: return 24
         case .m3Ultra: return 32
@@ -227,10 +230,10 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
 
     var gpuCores: Int {
         switch self {
-        case .m1, .m2, .m3, .m4, .m5: return 10
+        case .m1, .m2, .m3, .m4, .m5, .m6: return 10
         case .m1Pro, .m2Pro, .m3Pro, .m4Pro: return 18
-        case .m5Pro: return 20
-        case .m1Max, .m2Max, .m5Max: return 32
+        case .m5Pro, .m6Pro: return 20
+        case .m1Max, .m2Max, .m5Max, .m6Max: return 32
         case .m3Max, .m4Max: return 40
         case .m1Ultra: return 64
         case .m2Ultra: return 76
@@ -244,28 +247,31 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
         case .m2, .m3: return 100.0
         case .m4: return 120.0
         case .m5: return 153.0
+        case .m6: return 180.0
         case .m3Pro: return 150.0
         case .m1Pro, .m2Pro: return 200.0
         case .m4Pro, .m5Pro: return 273.0
+        case .m6Pro: return 310.0
         case .m1Max, .m2Max, .m3Max: return 400.0
         case .m5Max: return 460.0
         case .m4Max: return 546.0
+        case .m6Max: return 580.0
         case .m1Ultra, .m2Ultra, .m3Ultra: return 800.0
         }
     }
 
     var thunderboltGen: Int {
         switch self {
-        case .m4Pro, .m4Max, .m5, .m5Pro, .m5Max: return 5
+        case .m4Pro, .m4Max, .m5, .m5Pro, .m5Max, .m6, .m6Pro, .m6Max: return 5
         default: return 4
         }
     }
 
     var defaultRamGB: Double {
         switch self {
-        case .m1, .m2, .m3, .m4, .m5: return 16.0
-        case .m1Pro, .m2Pro, .m3Pro, .m4Pro, .m5Pro: return 24.0
-        case .m1Max, .m2Max, .m3Max, .m4Max, .m5Max: return 36.0
+        case .m1, .m2, .m3, .m4, .m5, .m6: return 16.0
+        case .m1Pro, .m2Pro, .m3Pro, .m4Pro, .m5Pro, .m6Pro: return 24.0
+        case .m1Max, .m2Max, .m3Max, .m4Max, .m5Max, .m6Max: return 36.0
         case .m1Ultra, .m2Ultra, .m3Ultra: return 128.0
         }
     }
@@ -279,12 +285,15 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
     static func inferBandwidth(from chipName: String) -> Double {
         let lower = chipName.lowercased()
         if lower.contains("ultra") { return 800.0 }
+        if lower.contains("m6 max") { return 580.0 }
         if lower.contains("m4 max") { return 546.0 }
         if lower.contains("m5 max") { return 460.0 }
         if lower.contains("max") { return 400.0 }
+        if lower.contains("m6 pro") { return 310.0 }
         if lower.contains("m4 pro") || lower.contains("m5 pro") { return 273.0 }
         if lower.contains("m3 pro") { return 150.0 }
         if lower.contains("pro") { return 200.0 }
+        if lower.contains("m6") { return 180.0 }
         if lower.contains("m5") { return 153.0 }
         if lower.contains("m4") { return 120.0 }
         if lower.contains("m2") || lower.contains("m3") { return 100.0 }

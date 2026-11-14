@@ -33,7 +33,7 @@ struct DevicesCompareView: View {
                     }
                 }
 
-                // Beliebigen Apple Mac mit M-Prozessor (M1–M5) zum Verbund hinzufügen
+                // Beliebigen Apple Mac mit M-Prozessor (M1–M6) zum Verbund hinzufügen
                 SolarisCard(accent: SolarisTheme.emerald) {
                     Text(vm.t("dev_add_title"))
                         .font(SolarisTheme.sectionTitle)

@@ -67,15 +67,15 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📚 Ausgewählte Dokumentation (vollständig im Hilfe-Bereich der App)
 
-### 1. Alle Apple Mac mit M-Prozessor im Verbund (M1–M5)
-SS-CCC unterstützt **jeden Mac mit Apple-Silicon-Chip** (**M1, M2, M3, M4, M5** — Basis, Pro, Max und Ultra) über alle Bauformen hinweg (**Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio und Mac Pro**). Unter **Geräte & Vergleich** lassen sich beliebig viele M-Macs zum Verbund hinzufügen; der Rechner mit dem höchsten Speicherdurchsatz übernimmt selbsttätig **Rang 0 (Leitrechner)**.
+### 1. Alle Apple Mac mit M-Prozessor im Verbund (M1–M6)
+SS-CCC unterstützt **jeden Mac mit Apple-Silicon-Chip** (**M1, M2, M3, M4, M5, M6** — Basis, Pro, Max und Ultra) über alle Bauformen hinweg (**Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio und Mac Pro**). Unter **Geräte & Vergleich** lassen sich beliebig viele M-Macs zum Verbund hinzufügen; der Rechner mit dem höchsten Speicherdurchsatz übernimmt selbsttätig **Rang 0 (Leitrechner)**.
 
 | Chip-Familie | Speicherdurchsatz | Thunderbolt | Empfohlene macOS-Schutzreserve |
 | :--- | :--- | :--- | :--- |
 | **M1 / M2 / M3** (Basis) | 68 – 100 GB/s | TB 4 | **4 GB** (bis 24 GB RAM) |
-| **M4 / M5** (Basis) | 120 – 153 GB/s | TB 4 / TB 5 | **4 GB** (bis 24 GB RAM) |
-| **M1–M5 Pro** | 150 – 273 GB/s | TB 4 / TB 5 | **4 – 6 GB** |
-| **M1–M5 Max** | 400 – 546 GB/s | TB 4 / TB 5 | **6 GB** (32–64 GB RAM) |
+| **M4 / M5 / M6** (Basis) | 120 – 180 GB/s | TB 4 / TB 5 | **4 GB** (bis 24 GB RAM) |
+| **M1–M6 Pro** | 150 – 273 GB/s | TB 4 / TB 5 | **4 – 6 GB** |
+| **M1–M6 Max** | 400 – 546 GB/s | TB 4 / TB 5 | **6 GB** (32–64 GB RAM) |
 | **M1–M3 Ultra** | 800 GB/s | TB 4 | **8 GB** (ab 96 GB RAM) |
 
 ### 2. Speicherschutz & Gewichtetes Schichten-Aufteilen
