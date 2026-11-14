@@ -50,13 +50,13 @@ flowchart LR
 
 ## ✨ Fonctionnalités principales
 
-- **Couplage universel Apple Silicon (M1 – M6) :** Réunit librement plusieurs Mac (Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro) de la gamme M1 à M6 dans une grappe commune avec calcul automatique de la bande passante mémoire (`68 Go/s` à `819+ Go/s`).
+- **Couplage universel Apple Silicon (M1 – M9+) :** Réunit librement plusieurs Mac (Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro) des générations M1 à M6 ainsi que les futures puces **M7, M8, M9+** dans une grappe commune avec calcul automatique de la bande passante mémoire.
 - **Télémétrie matérielle et capteurs complets :** Lecture en direct via `sysctl`, `sw_vers`, `system_profiler`, `ioreg`, `pmset` et `ibv_devices` : cœurs CPU (P/E), cœurs GPU, cœurs du moteur neuronal (16 / 32 cœurs ANE), capacité totale/libre du SSD, niveau thermique, température de batterie (`°C`) et consommation électrique (`W`).
-- **Classes Thunderbolt 3 / 4 / 5 et RDMA :** Détection et classement automatiques pour les puces M1–M6 (TB3 `40 Gbit/s`, TB4 `40 Gbit/s`, TB5 `80/120 Gbit/s` ainsi que RDMA via Thunderbolt 5), avec plan de contrôle LAN/Wi-Fi séparé et plan de données Thunderbolt isolé.
-- **Répartition pondérée des couches et protection `iogpu.wired_limit_mb` :** Découpage proportionnel des couches selon la bande passante mémoire (ex. `~71 %` sur le M5 Max à `460 Go/s`, `~29 %` sur le M4 à `120 Go/s`) tout en préservant une réserve système sûre pour macOS.
-- **Atelier de modèles (MLX, oMLX, Ollama et llama.cpp) :** Compression du cache KV (`FP16 / 8-bit / 4-bit`), choix des moteurs et réglage de la distribution des couches sur la grappe.
+- **Classes Thunderbolt 3 / 4 / 5 et RDMA :** Détection et classement automatiques pour les puces M1–M9+ (TB3 `40 Gbit/s`, TB4 `40 Gbit/s`, TB5 `80/120 Gbit/s` ainsi que RDMA via Thunderbolt 5), avec plan de contrôle LAN/Wi-Fi séparé et plan de données Thunderbolt isolé.
+- **Répartition pondérée des couches et protection `iogpu.wired_limit_mb` :** Découpage proportionnel des couches selon la bande passante mémoire de chaque nœud actif tout en préservant une réserve système sûre pour macOS.
+- **Détection réelle des modèles (oMLX, Ollama et llama.cpp) :** Lecture directe des modèles disponibles sur **oMLX**, **Ollama**, **llama.cpp**, `.gguf` locaux et cache MLX (sans profils fictifs lorsque la liste est vide, avec vérification d'état et commandes d'installation copiables).
 - **Agents et environnements en un clic :** Configuration directe pour **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**.
-- **Mode simulation commutable et thème jaune SonnerStudio (`#FFD400`) :** Le nœud simulé Mac Studio (M5 Max / 36 Go) peut être activé ou désactivé à tout moment depuis la barre latérale sans affecter la télémétrie réelle.
+- **Mode simulation commutable, thème jaune SonnerStudio (`#FFD400`) et suite de tests (`tests/`) :** Le nœud simulé de démonstration reste activable dans la barre latérale ; l'ensemble est vérifié par `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 - **Interface multilingue et centre d'aide intégré :** Changement immédiat entre l'anglais, l'allemand, le français, l'espagnol et le portugais ainsi qu'un centre d'aide consultable par recherche directement dans l'application.
 
 ### 🖥️ Les huit domaines du programme en un coup d'œil
@@ -64,9 +64,9 @@ flowchart LR
 | Domaine | Contenu et fonction |
 | :--- | :--- |
 | **1. Vue de la grappe** | Mémoire cumulée, nœuds actifs, vitesse du lien de données, topologie visuelle et barre de répartition `iogpu.wired_limit_mb`. |
-| **2. Appareils et comparaison** | Télémétrie en direct de chaque Mac (CPU, GPU, ANE, RAM, bande passante, SSD, température, puissance) et ajout de Mac M1–M6. |
-| **3. Atelier de modèles** | Découpage proportionnel des couches, réglage du cache KV et liaison avec **oMLX**, **Ollama** et **llama.cpp**. |
-| **4. Réseau et RDMA** | Matrice des classes Thunderbolt 3/4/5 pour M1–M6, état RDMA et routage du pont LAN/Thunderbolt. |
+| **2. Appareils et comparaison** | Télémétrie en direct de chaque Mac (CPU, GPU, ANE, RAM, bande passante, SSD, température, puissance) et ajout de Mac M1–M9+. |
+| **3. Atelier de modèles** | Découverte réelle (oMLX, Ollama, llama.cpp, GGUF), vérification d'état, découpage des couches et réglage du cache KV. |
+| **4. Réseau et RDMA** | Matrice des classes Thunderbolt 3/4/5 pour M1–M9+, état RDMA et routage du pont LAN/Thunderbolt. |
 | **5. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
 | **6. Science et Roofline** | Courbe logarithmique interactive (`P = min(β·I, π)`), points d'inflexion, formule GPipe, TTFT/TPOT, bilan `J/jeton`, essais reproductibles (`T=0,0`, `p50/p95/p99`) et export CSV/JSON/BibTeX |
 | **7. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |

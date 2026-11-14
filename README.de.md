@@ -50,20 +50,20 @@ flowchart LR
 
 ## ✨ Hauptfunktionen
 
-- **Alle Apple-Silicon-Macs (M1–M6) im Verbund:** Kopple beliebige **Mac mini, MacBook Air/Pro, iMac, Mac Studio oder Mac Pro** von **M1 bis M6** (Basis, Pro, Max, Ultra). Der schnellste Rechner übernimmt selbsttätig **Rang 0 (Leitrechner)**; die Schutzgrenze `iogpu.wired_limit_mb` hält macOS jederzeit flüssig.
+- **Alle Apple-Silicon-Macs (M1–M9+) im Verbund:** Kopple beliebige **Mac mini, MacBook Air/Pro, iMac, Mac Studio oder Mac Pro** von **M1 bis M6** sowie künftige **M7-, M8-, M9+-Generationen** (Basis, Pro, Max, Ultra). Der schnellste Rechner übernimmt selbsttätig **Rang 0 (Leitrechner)**; die Schutzgrenze `iogpu.wired_limit_mb` hält macOS jederzeit flüssig.
 - **Vollständige Hardware- & Sensor-Auslesung:** Liest `sysctl`, `sw_vers`, `system_profiler`, `ibv_devices`, `ipconfig`, `ioreg` und `ProcessInfo.thermalState` aus — inklusive **CPU-Leistungs-/Effizienzkernen, GPU-Kernen, Neural Engine (16/32 ANE-Kerne), NVMe-SSD-Gesamt- und Freispeicher, Temperatur/Thermik sowie Leistungsaufnahme**.
 - **Alle Thunderbolt-Klassen (TB3 / TB4 / TB5) & Direktspeicherzugriff:** Berechnet paarweise Übertragungsraten dynamisch (`TB3/USB4: 26–32 Gbps`, `TB4: 30–37 Gbps`, `TB5: 65–80 Gbps`, `TB5 RDMA: 75–110 Gbps`) samt `MLX_METAL_FAST_SYNCH=1` (45× schnellere GPU/CPU-Abstimmung).
-- **Modell-Werkstatt & örtliche Dienste:** Gewichtete Schichtenverteilung auf beliebig viele Rechner, KV-Verdichtung (`FP16 / 8-Bit / 4-Bit`) sowie unmittelbare Anbindung an **oMLX**, **Ollama** und **llama.cpp**.
+- **Echte Modell-Erkennung & Dienstprüfung:** Liest vorhandene und laufende Modelle unmittelbar aus **oMLX**, **Ollama**, **llama.cpp**, örtlichen `.gguf`-Dateien sowie `~/.cache/huggingface/hub` ein (keine Platzhalter-Profile bei leerem Stand, sondern direkte Laufzeitprüfung & kopierbare Einrichtungsbefehle), samt gewichteter Schichtenverteilung und KV-Verdichtung (`FP16 / 8-Bit / 4-Bit`).
 - **6× Ein-Klick-Einrichtung für Agenten & Werkzeuge:** Sofortige Einrichtung für **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** und **Apple Xcode**.
-- **SonnerStudio-Gelb (`#FFD400`) & fünfsprachiges Handbuch:** Vollständige Oberfläche samt durchsuchbarer Hilfe (`⌘?`) auf **Deutsch, Englisch, Französisch, Spanisch und Portugiesisch**.
+- **SonnerStudio-Gelb (`#FFD400`), fünfsprachiges Handbuch & Prüfsammlung (`tests/`):** Vollständige Oberfläche samt durchsuchbarer Hilfe (`⌘?`) auf **Deutsch, Englisch, Französisch, Spanisch und Portugiesisch**, abgesichert durch `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 
 ### 🖥️ Die acht Programmbereiche im Überblick
 
 | Menüpunkt | Aufgabe & Inhalt |
 | :--- | :--- |
-| **1. Verbund-Übersicht** | Gesamtspeicher-Balken, aktive M1–M6-Topologie und paarweise Thunderbolt-/RDMA-Übertragungsraten |
-| **2. Geräte & Vergleich** | Beliebige M1–M6-Macs hinzufügen/entfernen, CPU/GPU/ANE/SSD/Thermik/Strom auslesen und vergleichen |
-| **3. Modell-Werkstatt** | MLX-Modelle wählen, anteilige Schichtenverteilung prüfen, KV-Speicher regeln, oMLX / Ollama / llama.cpp starten |
+| **1. Verbund-Übersicht** | Gesamtspeicher-Balken, aktive M1–M9+-Topologie und paarweise Thunderbolt-/RDMA-Übertragungsraten |
+| **2. Geräte & Vergleich** | Beliebige M1–M9+-Macs hinzufügen/entfernen, CPU/GPU/ANE/SSD/Thermik/Strom auslesen und vergleichen |
+| **3. Modell-Werkstatt** | Echte Modelle aus oMLX / Ollama / llama.cpp einlesen, Dienstbereitschaft prüfen, anteilige Schichtenverteilung & KV-Speicher regeln |
 | **4. Netzwerk & Direktspeicher** | Mischbetrieb / TB / LAN / RDMA umschalten, `FAST_SYNCH=1` setzen und TB3/TB4/TB5-Klassen einsehen |
 | **5. Agenten & Werkzeuge** | Ein-Klick-Einrichtung für OpenCode, Hermes Agent, Antigravity, Cursor, VS Code und Xcode |
 | **6. Forschung & Grenzkurve** | Interaktives Log-Log-Grenzkurvendiagramm (`P = min(β·I, π)`), Knickpunkte, GPipe-Blasenformel, TTFT/TPOT, `J/Token`-Energiebilanz, reproduzierbare Messreihen (`T=0,0`, `p50/p95/p99`) und CSV/JSON/BibTeX-Ausgabe |
