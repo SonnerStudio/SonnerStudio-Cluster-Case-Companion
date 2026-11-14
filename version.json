@@ -1,13 +1,13 @@
 {
-  "version": "1.6.5",
+  "version": "1.6.6",
   "build": 160,
-  "tag": "v1.6.5",
+  "tag": "v1.6.6",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• Merge remote-tracking branch 'origin/main' (698e0e8)\n• docs(readme): add 6 new custom-generated technical & showcase graphics across all 5 READMEs (85ee341)\n• chore(release): auto-bump v1.6.4 (build 160) [skip ci] (6ef9f82)\n• Merge remote-tracking branch 'origin/main' (6e64e4b)\n• docs(readme): comprehensively expand all 5 READMEs with TB5 RDMA/JACCL specs, GitHub updater, Audio-Party, repo structure & dev status (c820030)",
+  "notes": "• Merge remote-tracking branch 'origin/main' (55e815a)\n• docs(readme): add operational guide, model loading flow & theoretical sizing data (a42eec6)\n• chore(release): auto-bump v1.6.5 (build 160) [skip ci] (02204fb)\n• Merge remote-tracking branch 'origin/main' (698e0e8)\n• docs(readme): add 6 new custom-generated technical & showcase graphics across all 5 READMEs (85ee341)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "698e0e8",
-  "updated_at": "2026-11-14T18:12:48Z"
+  "commit_sha": "55e815a",
+  "updated_at": "2026-11-14T18:24:02Z"
 }
