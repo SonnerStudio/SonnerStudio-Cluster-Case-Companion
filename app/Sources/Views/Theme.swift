@@ -8,9 +8,9 @@ enum SolarisTheme {
     static let cardElevated = Color(red: 0.114, green: 0.137, blue: 0.184)    // #1D232F
     static let borderSubtle = Color.white.opacity(0.10)
 
-    // Akzentfarben: Sonnen-Amber (Studio/TB) & Cyan-Mint (Mini/Worker)
-    static let amber = Color(red: 0.961, green: 0.620, blue: 0.043)           // #F59E0B
-    static let amberGlow = Color(red: 1.000, green: 0.720, blue: 0.220)
+    // Akzentfarben: SonnerStudio-Gelb (Studio/TB) & Cyan-Mint (Mini/Worker)
+    static let amber = Color(red: 1.000, green: 0.831, blue: 0.000)           // #FFD400 SonnerStudio-Gelb
+    static let amberGlow = Color(red: 1.000, green: 0.894, blue: 0.302)       // #FFE44D SonnerStudio-Hellgelb
     static let mint = Color(red: 0.176, green: 0.831, blue: 0.749)            // #2DD4BF
     static let emerald = Color(red: 0.063, green: 0.725, blue: 0.506)         // #10B981
     static let coral = Color(red: 0.957, green: 0.369, blue: 0.369)           // #F45E5E
