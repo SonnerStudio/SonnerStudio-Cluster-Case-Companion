@@ -36,11 +36,11 @@
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_cluster.jpg" alt="Глобальный Интернет-кластер Mac и живой чат" width="100%"/><br/>
+      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="Глобальный Интернет-кластер Mac и живой чат" width="100%"/><br/>
       <sub><b>Глобальный Интернет-кластер Mac (WAN), гибридная связка и чат участников</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline.jpg" alt="Научный Roofline и телеметрия Splitwise" width="100%"/><br/>
+      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="Научный Roofline и телеметрия Splitwise" width="100%"/><br/>
       <sub><b>Анализ Roofline (Williams), фазы Splitwise, энергия (Дж/ток) и p50/p95/p99</b></sub>
     </td>
   </tr>
@@ -53,7 +53,7 @@ SS-CCC связывает локальные кластеры Thunderbolt с р�
 ## 🏗️ Гибридная архитектура (Управление, Thunderbolt и WAN)
 
 <div align="center">
-  <img src="docs/images/ssccc_architecture_diagram.jpg" alt="Гибридная архитектура SS-CCC" width="100%"/>
+  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="Гибридная архитектура SS-CCC" width="100%"/>
 </div>
 
 - **Плоскость управления (LAN / Wi-Fi):** обнаружение узлов, OpenAI/Anthropic/Ollama-совместимые эндпоинты (`:8000`) и телеметрия.

@@ -36,11 +36,11 @@
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_cluster.jpg" alt="全球互联网 Mac 集群与实时聊天" width="100%"/><br/>
+      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="全球互联网 Mac 集群与实时聊天" width="100%"/><br/>
       <sub><b>全球互联网 Mac 集群 (WAN)、混合耦合与参与者聊天</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline.jpg" alt="科学 Roofline 与 Splitwise 遥测" width="100%"/><br/>
+      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="科学 Roofline 与 Splitwise 遥测" width="100%"/><br/>
       <sub><b>Roofline 分析 (Williams)、Splitwise 阶段解耦、能耗 (J/tok) 与 p50/p95/p99</b></sub>
     </td>
   </tr>
@@ -53,7 +53,7 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 ## 🏗️ 混合架构（控制平面、Thunderbolt 与 WAN）
 
 <div align="center">
-  <img src="docs/images/ssccc_architecture_diagram.jpg" alt="SS-CCC 混合架构图" width="100%"/>
+  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC 混合架构图" width="100%"/>
 </div>
 
 - **控制平面 (LAN / Wi-Fi):** 节点发现、OpenAI/Anthropic/Ollama 兼容接口 (`:8000`) 与健康监测。

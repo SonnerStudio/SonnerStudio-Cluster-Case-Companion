@@ -36,11 +36,11 @@
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_cluster.jpg" alt="世界規模インターネット Mac クラスター" width="100%"/><br/>
+      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="世界規模インターネット Mac クラスター" width="100%"/><br/>
       <sub><b>世界規模インターネット Mac クラスター (WAN)、ハイブリッド連携 & 参加者チャット</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline.jpg" alt="科学 Roofline & Splitwise テレメトリ" width="100%"/><br/>
+      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="科学 Roofline & Splitwise テレメトリ" width="100%"/><br/>
       <sub><b>Roofline 分析 (Williams)、Splitwise フェーズ分離、エネルギー効率 (J/tok) & p50/p95/p99</b></sub>
     </td>
   </tr>
@@ -53,7 +53,7 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 ## 🏗️ ハイブリッド構成（制御プレーン・Thunderbolt・WAN）
 
 <div align="center">
-  <img src="docs/images/ssccc_architecture_diagram.jpg" alt="SS-CCC ハイブリッド構成図" width="100%"/>
+  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC ハイブリッド構成図" width="100%"/>
 </div>
 
 - **制御プレーン (LAN / Wi-Fi):** ノード探索、OpenAI/Anthropic/Ollama 互換 API (`:8000`)、ヘルス監視。
