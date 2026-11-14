@@ -749,3 +749,51 @@ struct AudioPartyMember: Identifiable, Hashable {
     var volumePercent: Double
     let voicePingMs: Double
 }
+
+// MARK: - GitHub Program Update Models
+
+enum AppReleaseMetadata {
+    static let githubOwner = "SonnerStudio"
+    static let githubRepo = "SonnerStudio-Cluster-Case-Companion"
+    static let manifestRawURL = "https://raw.githubusercontent.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/main/version.json"
+    static let latestReleaseAPIURL = "https://api.github.com/repos/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest"
+    static let releasesPageURL = "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases"
+
+    static var currentVersion: String {
+        if let bundleVer = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+           !bundleVer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return bundleVer
+        }
+        return "1.6.0"
+    }
+
+    static var currentBuild: Int {
+        if let buildStr = Bundle.main.infoDictionary?["CFBundleVersion"] as? String,
+           let num = Int(buildStr) {
+            return num
+        }
+        return 160
+    }
+}
+
+struct GitHubUpdateInfo: Equatable {
+    let version: String
+    let build: Int
+    let tag: String
+    let title: String
+    let notes: String
+    let mandatory: Bool
+    let releaseURL: String
+    let downloadURL: String
+    let sourceLabel: String
+}
+
+enum AppUpdateStatus: Equatable {
+    case idle
+    case checking
+    case upToDate
+    case updateAvailable
+    case updating
+    case updatedNeedsRestart
+    case failed(String)
+}

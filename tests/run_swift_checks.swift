@@ -56,16 +56,17 @@ for lang in AppLanguage.allCases {
     check(!ms.contains("36 GB + 16 GB"), "ms_sub for \(lang) must be neutral, got: \(ms)")
     let ov = L10n.tabSubtitle(.overview, lang)
     check(!ov.contains("52 GB") && !ov.contains("52 Go"), "overview subtitle for \(lang) must be neutral, got: \(ov)")
-    for sciKey in ["sci_scope_label", "sci_tab_roofline", "sci_tab_wan", "sci_tab_memory", "sci_tab_energy", "sci_tab_trials", "sci_tab_history"] {
+    for sciKey in ["sci_scope_label", "sci_tab_roofline", "sci_tab_wan", "sci_tab_memory", "sci_tab_energy", "sci_tab_trials", "sci_tab_history", "upd_check_btn", "upd_prompt_title"] {
         let val = L10n.text(sciKey, lang)
         check(val != sciKey && !val.isEmpty, "Missing \(sciKey) for \(lang)")
     }
 }
 
-// 7. Science WAN / Compression / Carbon / History enums
+// 7. Science WAN / Compression / Carbon / History / Update enums
 check(ActivationCompressionMode.fp8Quantized.bytesPerElement < ActivationCompressionMode.fp16Raw.bytesPerElement, "FP8 compression reduces payload")
 check(CarbonRegionProfile.norway.gco2PerKwh < CarbonRegionProfile.germany.gco2PerKwh, "Norway hydro CO2 < Germany grid")
 check(ScienceLabTab.allCases.count == 6, "Science Lab has 6 dedicated tabs")
 check(ScienceHistoryPosition.allCases.count == 6, "Science History has 6 position filters")
+check(!AppReleaseMetadata.currentVersion.isEmpty && AppReleaseMetadata.currentBuild > 0, "Release metadata must be populated")
 
 print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, 5-language localization) passed!")

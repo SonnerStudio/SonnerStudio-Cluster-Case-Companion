@@ -621,6 +621,97 @@ enum L10n {
         case ("wan_chat_title", .es): return "Chat de participantes e intercambio de telemetría"
         case ("wan_chat_title", .pt): return "Conversa dos participantes e partilha de telemetria"
 
+        // GitHub Program Updates
+        case ("upd_check_btn", .de): return "Updates prüfen"
+        case ("upd_check_btn", .en): return "Check Updates"
+        case ("upd_check_btn", .fr): return "Vérifier les mises à jour"
+        case ("upd_check_btn", .es): return "Buscar actualizaciones"
+        case ("upd_check_btn", .pt): return "Procurar atualizações"
+
+        case ("upd_available_pill", .de): return "Update v%@ verfügbar"
+        case ("upd_available_pill", .en): return "Update v%@ available"
+        case ("upd_available_pill", .fr): return "Mise à jour v%@ disponible"
+        case ("upd_available_pill", .es): return "Actualización v%@ disponible"
+        case ("upd_available_pill", .pt): return "Atualização v%@ disponível"
+
+        case ("upd_prompt_title", .de): return "Programm-Aktualisierung über GitHub verfügbar"
+        case ("upd_prompt_title", .en): return "GitHub Software Update Available"
+        case ("upd_prompt_title", .fr): return "Mise à jour du programme disponible sur GitHub"
+        case ("upd_prompt_title", .es): return "Actualización del programa disponible en GitHub"
+        case ("upd_prompt_title", .pt): return "Atualização do programa disponível no GitHub"
+
+        case ("upd_prompt_subtitle", .de): return "Über das GitHub-Repository von SonnerStudio steht eine neuere Version von SS-CCC bereit."
+        case ("upd_prompt_subtitle", .en): return "A newer version of SS-CCC is ready from the SonnerStudio GitHub repository."
+        case ("upd_prompt_subtitle", .fr): return "Une nouvelle version de SS-CCC est disponible depuis le dépôt GitHub de SonnerStudio."
+        case ("upd_prompt_subtitle", .es): return "Hay una versión más reciente de SS-CCC disponible en el repositorio GitHub de SonnerStudio."
+        case ("upd_prompt_subtitle", .pt): return "Está disponível uma nova versão do SS-CCC no repositório GitHub da SonnerStudio."
+
+        case ("upd_current_ver", .de): return "Installierte Version"
+        case ("upd_current_ver", .en): return "Installed Version"
+        case ("upd_current_ver", .fr): return "Version installée"
+        case ("upd_current_ver", .es): return "Versión instalada"
+        case ("upd_current_ver", .pt): return "Versão instalada"
+
+        case ("upd_latest_ver", .de): return "Neue GitHub-Version"
+        case ("upd_latest_ver", .en): return "New GitHub Version"
+        case ("upd_latest_ver", .fr): return "Nouvelle version GitHub"
+        case ("upd_latest_ver", .es): return "Nueva versión en GitHub"
+        case ("upd_latest_ver", .pt): return "Nova versão no GitHub"
+
+        case ("upd_notes_title", .de): return "Neuerungen & Änderungsprotokoll"
+        case ("upd_notes_title", .en): return "What's New & Changelog"
+        case ("upd_notes_title", .fr): return "Nouveautés et journal des modifications"
+        case ("upd_notes_title", .es): return "Novedades y registro de cambios"
+        case ("upd_notes_title", .pt): return "Novidades e registo de alterações"
+
+        case ("upd_install_git_btn", .de): return "Über GitHub aktualisieren & neu bauen"
+        case ("upd_install_git_btn", .en): return "Update via GitHub & Rebuild"
+        case ("upd_install_git_btn", .fr): return "Mettre à jour via GitHub et recompiler"
+        case ("upd_install_git_btn", .es): return "Actualizar desde GitHub y recompilar"
+        case ("upd_install_git_btn", .pt): return "Atualizar via GitHub e recompilar"
+
+        case ("upd_open_github_btn", .de): return "Auf GitHub öffnen"
+        case ("upd_open_github_btn", .en): return "Open on GitHub"
+        case ("upd_open_github_btn", .fr): return "Ouvrir sur GitHub"
+        case ("upd_open_github_btn", .es): return "Abrir en GitHub"
+        case ("upd_open_github_btn", .pt): return "Abrir no GitHub"
+
+        case ("upd_later_btn", .de): return "Später erinnern"
+        case ("upd_later_btn", .en): return "Remind Me Later"
+        case ("upd_later_btn", .fr): return "Me le rappeler plus tard"
+        case ("upd_later_btn", .es): return "Recordar más tarde"
+        case ("upd_later_btn", .pt): return "Lembrar mais tarde"
+
+        case ("upd_skip_btn", .de): return "Version überspringen"
+        case ("upd_skip_btn", .en): return "Skip Version"
+        case ("upd_skip_btn", .fr): return "Ignorer cette version"
+        case ("upd_skip_btn", .es): return "Omitir esta versión"
+        case ("upd_skip_btn", .pt): return "Ignorar esta versão"
+
+        case ("upd_up_to_date", .de): return "Aktuell (v%@)"
+        case ("upd_up_to_date", .en): return "Up to date (v%@)"
+        case ("upd_up_to_date", .fr): return "À jour (v%@)"
+        case ("upd_up_to_date", .es): return "Al día (v%@)"
+        case ("upd_up_to_date", .pt): return "Atualizado (v%@)"
+
+        case ("upd_checking", .de): return "Prüfe GitHub…"
+        case ("upd_checking", .en): return "Checking GitHub…"
+        case ("upd_checking", .fr): return "Vérification GitHub…"
+        case ("upd_checking", .es): return "Comprobando GitHub…"
+        case ("upd_checking", .pt): return "A verificar GitHub…"
+
+        case ("upd_updating", .de): return "Aktualisiere über GitHub…"
+        case ("upd_updating", .en): return "Updating via GitHub…"
+        case ("upd_updating", .fr): return "Mise à jour via GitHub…"
+        case ("upd_updating", .es): return "Actualizando desde GitHub…"
+        case ("upd_updating", .pt): return "A atualizar via GitHub…"
+
+        case ("upd_relaunch_btn", .de): return "App jetzt neu starten"
+        case ("upd_relaunch_btn", .en): return "Relaunch App Now"
+        case ("upd_relaunch_btn", .fr): return "Relancer l'application maintenant"
+        case ("upd_relaunch_btn", .es): return "Reiniciar la aplicación ahora"
+        case ("upd_relaunch_btn", .pt): return "Reiniciar a aplicação agora"
+
         default: return key
         }
     }

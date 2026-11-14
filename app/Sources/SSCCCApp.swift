@@ -23,6 +23,12 @@ struct SSCCCApp: App {
         .defaultSize(width: 1280, height: 820)
         .windowStyle(.titleBar)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button(vm.t("upd_check_btn")) {
+                    Task { await vm.checkForGitHubUpdates(userInitiated: true) }
+                }
+                .keyboardShortcut("u", modifiers: [.command])
+            }
             CommandGroup(replacing: .help) {
                 Button(vm.tabTitle(.help)) {
                     vm.selectedTab = .help
@@ -205,6 +211,40 @@ struct MainStudioWindow: View {
                         .font(SolarisTheme.heroTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
                     Spacer()
+                    // GitHub Update-Status-Pill / Prüf-Button
+                    Button {
+                        if vm.updateStatus == .updateAvailable || vm.updateStatus == .updatedNeedsRestart {
+                            vm.showUpdatePromptSheet = true
+                        } else {
+                            Task { await vm.checkForGitHubUpdates(userInitiated: true) }
+                        }
+                    } label: {
+                        HStack(spacing: 7) {
+                            Image(systemName: vm.updateStatus == .updateAvailable ? "arrow.down.circle.fill" : "arrow.triangle.2.circlepath")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(vm.updateStatus == .updateAvailable ? .black : SolarisTheme.mint)
+                            if vm.updateStatus == .updateAvailable, let info = vm.availableUpdate {
+                                Text(String(format: vm.t("upd_available_pill"), info.version))
+                                    .font(.system(size: 12.5, weight: .bold))
+                                    .foregroundColor(.black)
+                            } else if vm.updateStatus == .checking {
+                                Text(vm.t("upd_checking"))
+                                    .font(.system(size: 12.5, weight: .semibold))
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            } else {
+                                Text("v\(AppReleaseMetadata.currentVersion)")
+                                    .font(.system(size: 12.5, weight: .semibold, design: .monospaced))
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule().fill(vm.updateStatus == .updateAvailable ? SolarisTheme.amber : SolarisTheme.cardElevated)
+                        )
+                    }
+                    .buttonStyle(.plain)
+
                     HStack(spacing: 12) {
                         Circle()
                             .fill(vm.daemonConnected ? SolarisTheme.emerald : SolarisTheme.amber)
@@ -251,6 +291,9 @@ struct MainStudioWindow: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $vm.showUpdatePromptSheet) {
+            UpdatePromptSheet(vm: vm)
+        }
     }
 }
 
@@ -291,5 +334,149 @@ private struct SolarisBackgroundLayer: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+private struct UpdatePromptSheet: View {
+    @ObservedObject var vm: ClusterViewModel
+
+    var body: some View {
+        let info = vm.availableUpdate
+        let hasUpdate = vm.updateStatus == .updateAvailable || vm.updateStatus == .updating || vm.updateStatus == .updatedNeedsRestart
+
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(hasUpdate ? SolarisTheme.amber : SolarisTheme.emerald)
+                        .frame(width: 48, height: 48)
+                    Image(systemName: hasUpdate ? "arrow.down.app.fill" : "checkmark.seal.fill")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.black)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(hasUpdate ? vm.t("upd_prompt_title") : String(format: vm.t("upd_up_to_date"), AppReleaseMetadata.currentVersion))
+                        .font(SolarisTheme.sectionTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text(vm.t("upd_prompt_subtitle"))
+                        .font(SolarisTheme.bodyLarge)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+                Spacer()
+            }
+
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(vm.t("upd_current_ver"))
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                    Text("v\(AppReleaseMetadata.currentVersion) (Build \(AppReleaseMetadata.currentBuild))")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(SolarisTheme.textPrimary)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.cardElevated))
+
+                if let info {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(vm.t("upd_latest_ver"))
+                            .font(Font.caption)
+                            .foregroundColor(SolarisTheme.textSecondary)
+                        Text("v\(info.version) · \(info.sourceLabel)")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(hasUpdate ? SolarisTheme.amberGlow : SolarisTheme.emerald)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.cardElevated))
+                }
+            }
+
+            if let info, !info.notes.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(vm.t("upd_notes_title"))
+                        .font(SolarisTheme.bodyBold)
+                        .foregroundColor(SolarisTheme.mint)
+                    ScrollView {
+                        Text(info.notes)
+                            .font(.system(size: 12.5, design: .monospaced))
+                            .foregroundColor(SolarisTheme.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 150)
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.35)))
+                }
+            }
+
+            if !vm.updateProgressLog.isEmpty {
+                ScrollView {
+                    Text(vm.updateProgressLog)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(SolarisTheme.mint)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 90)
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.45)))
+            }
+
+            HStack(spacing: 10) {
+                if vm.updateStatus == .updatedNeedsRestart {
+                    Button {
+                        vm.relaunchApp()
+                    } label: {
+                        Label(vm.t("upd_relaunch_btn"), systemImage: "arrow.clockwise.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(SolarisTheme.emerald)
+                    .foregroundColor(.black)
+                } else if vm.updateStatus == .updateAvailable {
+                    if vm.localGitRepoRoot != nil {
+                        Button {
+                            vm.applyGitHubUpdateAndRebuild()
+                        } label: {
+                            Label(vm.t("upd_install_git_btn"), systemImage: "arrow.down.circle.fill")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(SolarisTheme.amber)
+                        .foregroundColor(.black)
+                    }
+
+                    Button {
+                        vm.openUpdateOnGitHub()
+                    } label: {
+                        Label(vm.t("upd_open_github_btn"), systemImage: "safari")
+                    }
+                    .buttonStyle(.bordered)
+
+                    if !(info?.mandatory ?? false) {
+                        Button(vm.t("upd_skip_btn")) {
+                            vm.skipCurrentUpdate()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                } else if vm.updateStatus == .updating {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(vm.t("upd_updating"))
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.amberGlow)
+                }
+
+                Spacer()
+
+                Button(vm.t("upd_later_btn")) {
+                    vm.showUpdatePromptSheet = false
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(24)
+        .frame(width: 620)
+        .background(SolarisTheme.canvasBg)
+        .preferredColorScheme(.dark)
     }
 }

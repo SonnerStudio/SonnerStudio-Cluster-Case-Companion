@@ -120,6 +120,13 @@ final class ClusterViewModel: ObservableObject {
     private var partyAudioSocket: URLSessionWebSocketTask? = nil
     private var partyPulseTask: Task<Void, Never>? = nil
 
+    // GitHub Program Update State
+    @Published var updateStatus: AppUpdateStatus = .idle
+    @Published var availableUpdate: GitHubUpdateInfo? = nil
+    @Published var showUpdatePromptSheet: Bool = false
+    @Published var skippedUpdateVersion: String = UserDefaults.standard.string(forKey: "ssccc_skipped_version") ?? ""
+    @Published var updateProgressLog: String = ""
+
     static let fallbackReferenceModels: [ModelPreset] = [
         ModelPreset(
             id: "mlx-community/Qwen2.5-32B-Instruct-4bit",
@@ -176,6 +183,8 @@ final class ClusterViewModel: ObservableObject {
         Task {
             await checkDaemonHealth()
             await refreshLiveModels()
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            await checkForGitHubUpdates(userInitiated: false)
         }
     }
 
@@ -2552,5 +2561,231 @@ final class ClusterViewModel: ObservableObject {
         let fmt = DateFormatter()
         fmt.dateFormat = "HH:mm:ss"
         return fmt.string(from: Date())
+    }
+
+    // MARK: - GitHub-Controlled Program Update Checker & Installer
+
+    static func compareVersions(_ lhs: String, _ rhs: String) -> ComparisonResult {
+        let cleanA = lhs.trimmingCharacters(in: CharacterSet(charactersIn: "vV "))
+        let cleanB = rhs.trimmingCharacters(in: CharacterSet(charactersIn: "vV "))
+        let partsA = cleanA.split(separator: ".").map { Int($0.prefix(while: { $0.isNumber })) ?? 0 }
+        let partsB = cleanB.split(separator: ".").map { Int($0.prefix(while: { $0.isNumber })) ?? 0 }
+        let maxCount = max(partsA.count, partsB.count)
+        for i in 0..<maxCount {
+            let a = i < partsA.count ? partsA[i] : 0
+            let b = i < partsB.count ? partsB[i] : 0
+            if a < b { return .orderedAscending }
+            if a > b { return .orderedDescending }
+        }
+        return .orderedSame
+    }
+
+    func checkForGitHubUpdates(userInitiated: Bool = true) async {
+        updateStatus = .checking
+        let manifestCandidate = await fetchGitHubManifest()
+        let releaseCandidate = await fetchGitHubLatestRelease()
+
+        let best: GitHubUpdateInfo?
+        switch (manifestCandidate, releaseCandidate) {
+        case let (m?, r?):
+            let cmp = Self.compareVersions(r.version, m.version)
+            best = (cmp == .orderedDescending) ? r : m
+        case let (m?, nil):
+            best = m
+        case let (nil, r?):
+            best = r
+        case (nil, nil):
+            best = nil
+        }
+
+        guard let info = best else {
+            updateStatus = userInitiated ? .failed("GitHub nicht erreichbar") : .idle
+            return
+        }
+
+        let currentVer = AppReleaseMetadata.currentVersion
+        let currentBuild = AppReleaseMetadata.currentBuild
+        let versionCmp = Self.compareVersions(info.version, currentVer)
+        let isNewer = (versionCmp == .orderedDescending) || (versionCmp == .orderedSame && info.build > currentBuild)
+
+        if isNewer {
+            availableUpdate = info
+            updateStatus = .updateAvailable
+            if userInitiated || info.mandatory || skippedUpdateVersion != info.version {
+                showUpdatePromptSheet = true
+            }
+        } else {
+            availableUpdate = info
+            updateStatus = .upToDate
+            if userInitiated {
+                showUpdatePromptSheet = true
+            }
+        }
+    }
+
+    private func fetchGitHubManifest() async -> GitHubUpdateInfo? {
+        guard let url = URL(string: "\(AppReleaseMetadata.manifestRawURL)?t=\(Int(Date().timeIntervalSince1970))") else { return nil }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 8
+        req.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard (resp as? HTTPURLResponse)?.statusCode == 200,
+                  let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let version = obj["version"] as? String else { return nil }
+            let build = obj["build"] as? Int ?? 0
+            let tag = obj["tag"] as? String ?? "v\(version)"
+            let title = obj["title"] as? String ?? "SS-CCC \(tag)"
+            let notes = obj["notes"] as? String ?? ""
+            let mandatory = obj["mandatory"] as? Bool ?? false
+            let releaseURL = obj["release_url"] as? String ?? AppReleaseMetadata.releasesPageURL
+            let downloadURL = obj["download_url"] as? String ?? releaseURL
+            return GitHubUpdateInfo(
+                version: version,
+                build: build,
+                tag: tag,
+                title: title,
+                notes: notes,
+                mandatory: mandatory,
+                releaseURL: releaseURL,
+                downloadURL: downloadURL,
+                sourceLabel: "GitHub main/version.json"
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    private func fetchGitHubLatestRelease() async -> GitHubUpdateInfo? {
+        guard let url = URL(string: AppReleaseMetadata.latestReleaseAPIURL) else { return nil }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 8
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard (resp as? HTTPURLResponse)?.statusCode == 200,
+                  let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let tagName = obj["tag_name"] as? String else { return nil }
+            let cleanVer = tagName.trimmingCharacters(in: CharacterSet(charactersIn: "vV "))
+            let title = obj["name"] as? String ?? "SS-CCC \(tagName)"
+            let notes = obj["body"] as? String ?? ""
+            let htmlURL = obj["html_url"] as? String ?? AppReleaseMetadata.releasesPageURL
+            var downloadURL = htmlURL
+            if let assets = obj["assets"] as? [[String: Any]],
+               let firstAsset = assets.first(where: { ($0["name"] as? String ?? "").hasSuffix(".dmg") || ($0["name"] as? String ?? "").hasSuffix(".zip") }),
+               let browserDownload = firstAsset["browser_download_url"] as? String {
+                downloadURL = browserDownload
+            }
+            return GitHubUpdateInfo(
+                version: cleanVer,
+                build: 0,
+                tag: tagName,
+                title: title,
+                notes: notes,
+                mandatory: false,
+                releaseURL: htmlURL,
+                downloadURL: downloadURL,
+                sourceLabel: "GitHub Releases"
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    func skipCurrentUpdate() {
+        if let ver = availableUpdate?.version {
+            skippedUpdateVersion = ver
+            UserDefaults.standard.set(ver, forKey: "ssccc_skipped_version")
+        }
+        showUpdatePromptSheet = false
+    }
+
+    func openUpdateOnGitHub() {
+        let target = availableUpdate?.downloadURL ?? AppReleaseMetadata.releasesPageURL
+        if let url = URL(string: target) {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    var localGitRepoRoot: URL? {
+        let fm = FileManager.default
+        let candidates = [
+            URL(fileURLWithPath: fm.currentDirectoryPath),
+            Bundle.main.bundleURL.deletingLastPathComponent(),
+            Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent(),
+            Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        ]
+        for base in candidates {
+            var dir = base
+            for _ in 0..<5 {
+                if fm.fileExists(atPath: dir.appendingPathComponent(".git").path) &&
+                    fm.fileExists(atPath: dir.appendingPathComponent("app/Package.swift").path) {
+                    return dir
+                }
+                dir = dir.deletingLastPathComponent()
+            }
+        }
+        return nil
+    }
+
+    func applyGitHubUpdateAndRebuild() {
+        guard let repoRoot = localGitRepoRoot else {
+            openUpdateOnGitHub()
+            return
+        }
+        updateStatus = .updating
+        updateProgressLog = "git pull --ff-only origin main …"
+
+        Task.detached(priority: .userInitiated) {
+            let pullOut = Self.runCommandInDir(repoRoot, "/usr/bin/git", ["pull", "--ff-only", "origin", "main"])
+            await MainActor.run {
+                self.updateProgressLog = pullOut.output + "\n\nswift build …"
+            }
+            let appDir = repoRoot.appendingPathComponent("app")
+            let buildOut = Self.runCommandInDir(appDir, "/usr/bin/swift", ["build"])
+            await MainActor.run {
+                self.updateProgressLog += "\n" + buildOut.output
+                if buildOut.exitCode == 0 {
+                    self.updateStatus = .updatedNeedsRestart
+                } else {
+                    self.updateStatus = .failed("Build fehlgeschlagen (Exit \(buildOut.exitCode))")
+                }
+            }
+        }
+    }
+
+    func relaunchApp() {
+        if let repoRoot = localGitRepoRoot {
+            let script = repoRoot.appendingPathComponent("scripts/run_ssccc.sh").path
+            if FileManager.default.isExecutableFile(atPath: script) {
+                let proc = Process()
+                proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
+                proc.arguments = [script]
+                proc.currentDirectoryURL = repoRoot
+                try? proc.run()
+                NSApplication.shared.terminate(nil)
+                return
+            }
+        }
+        openUpdateOnGitHub()
+    }
+
+    nonisolated private static func runCommandInDir(_ dir: URL, _ launchPath: String, _ args: [String]) -> (exitCode: Int32, output: String) {
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: launchPath)
+        proc.arguments = args
+        proc.currentDirectoryURL = dir
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = pipe
+        do {
+            try proc.run()
+            proc.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let text = String(data: data, encoding: .utf8) ?? ""
+            return (proc.terminationStatus, text.trimmingCharacters(in: .whitespacesAndNewlines))
+        } catch {
+            return (-1, error.localizedDescription)
+        }
     }
 }

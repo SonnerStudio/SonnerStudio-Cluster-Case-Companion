@@ -1,0 +1,11 @@
+{
+  "version": "1.6.0",
+  "build": 160,
+  "tag": "v1.6.0",
+  "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
+  "notes": "• Verlaufsaufzeichnung (Einzel-Position & Global) im Wissenschaftslabor\n• Verbund-Audio-Party (AVAudioEngine) neben dem Live-Chat\n• Kopplung von lokalem TB/RDMA-Verbund und Internet-WAN-Verbund\n• M1–M12+ Apple Silicon Unterstützung & 5-Sprachen-Handbuch",
+  "mandatory": false,
+  "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
+  "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
+  "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git"
+}
