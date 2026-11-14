@@ -6,7 +6,18 @@
 
 *Native macOS Apple Silicon cluster manager & distributed MLX inference studio*
 
-![SS-CCC Studio Interface](docs/images/ssccc_hero_screenshot_v2.png)
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/images/ssccc_cluster_52gb.png" alt="SS-CCC 52 GB Cluster Mode" width="100%"/><br/>
+      <sub><b>Cluster Mode (52 GB Unified Pool · 2 Nodes)</b></sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/ssccc_single_16gb.png" alt="SS-CCC 16 GB Standalone Mode" width="100%"/><br/>
+      <sub><b>Standalone Mode (16 GB Local · 1 Node)</b></sub>
+    </td>
+  </tr>
+</table>
 
 </div>
 

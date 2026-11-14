@@ -6,7 +6,18 @@
 
 *Eigenständige macOS-Verbundverwaltung und verteilte MLX-Rechenoberfläche für Apple Silicon*
 
-![SS-CCC Programmoberfläche](docs/images/ssccc_hero_screenshot_v2.png)
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/images/ssccc_cluster_52gb.png" alt="SS-CCC 52-GB-Verbundbetrieb" width="100%"/><br/>
+      <sub><b>Verbundbetrieb (52 GB Gesamtspeicher · 2 Rechner)</b></sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/ssccc_single_16gb.png" alt="SS-CCC 16-GB-Einzelbetrieb" width="100%"/><br/>
+      <sub><b>Einzelbetrieb (16 GB örtlich · 1 Rechner)</b></sub>
+    </td>
+  </tr>
+</table>
 
 </div>
 

@@ -6,7 +6,18 @@
 
 *Gestionnaire natif macOS de grappe Apple Silicon et atelier d'inférence MLX répartie*
 
-![Interface SS-CCC](docs/images/ssccc_hero_screenshot_v2.png)
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/images/ssccc_cluster_52gb.png" alt="SS-CCC Mode Grappe 52 Go" width="100%"/><br/>
+      <sub><b>Mode Grappe (52 Go unifiés · 2 nœuds)</b></sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/ssccc_single_16gb.png" alt="SS-CCC Mode Autonome 16 Go" width="100%"/><br/>
+      <sub><b>Mode Autonome (16 Go local · 1 nœud)</b></sub>
+    </td>
+  </tr>
+</table>
 
 </div>
 

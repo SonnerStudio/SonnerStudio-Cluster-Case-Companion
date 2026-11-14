@@ -6,7 +6,18 @@
 
 *Gestor nativo macOS de conjuntos Apple Silicon e oficina de inferência distribuída MLX*
 
-![Interface SS-CCC](docs/images/ssccc_hero_screenshot_v2.png)
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/images/ssccc_cluster_52gb.png" alt="SS-CCC Modo Conjunto 52 GB" width="100%"/><br/>
+      <sub><b>Modo Conjunto (52 GB unificados · 2 equipamentos)</b></sub>
+    </td>
+    <td align="center">
+      <img src="docs/images/ssccc_single_16gb.png" alt="SS-CCC Modo Individual 16 GB" width="100%"/><br/>
+      <sub><b>Modo Individual (16 GB local · 1 equipamento)</b></sub>
+    </td>
+  </tr>
+</table>
 
 </div>
 
