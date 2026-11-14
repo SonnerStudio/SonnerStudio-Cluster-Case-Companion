@@ -279,6 +279,34 @@ class GlobalProjectTests(unittest.TestCase):
             for lang in [".de", ".en", ".fr", ".es", ".pt", ".ru", ".ja", ".zh"]:
                 self.assertIn(f'case ("{key}", {lang}):', loc)
 
+    def test_17_science_real_data_and_realistic_simulation(self):
+        """Verify Science & Roofline uses real SSE + ping in real mode and realistic labeled simulation."""
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        sci = (APP_SOURCES / "Views" / "ScienceBenchmarksView.swift").read_text(encoding="utf-8")
+
+        for sym in [
+            "runLiveChatCompletionTrial",
+            "measureRealNetworkRttMs",
+            '"stream": true',
+            "firstTokenNs",
+            "completion_tokens",
+            "Echtbetrieb: Kein aktiver Inferenz-Endpunkt",
+            "Simulation (Realistic Apple Silicon)",
+            "isLiveEndpoint: !isSimulatedMode",
+        ]:
+            self.assertIn(sym, vm, f"Missing real-data/simulation symbol {sym} in ClusterViewModel.swift")
+
+        # Ensure old mock modulo wave and hardcoded 18.0 ms Tailscale RTT are gone
+        self.assertNotIn("(idx * 19) % 11", vm)
+        self.assertNotIn("rttMs: 18.0", vm)
+
+        for badge in [
+            "SIMULATION · Realistische Apple-Silicon-Referenzwerte",
+            "ECHTZEIT-DATEN · Gemessene System- & Endpunkt-Telemetrie",
+            "LIVE SSE + PING",
+        ]:
+            self.assertIn(badge, sci, f"Missing mode badge {badge} in ScienceBenchmarksView.swift")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

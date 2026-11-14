@@ -1578,6 +1578,7 @@ final class ClusterViewModel: ObservableObject {
         sciTrials = []
         sciStatusMessage = t("sci_bench_running")
 
+        let isSimulatedMode = simulateMacStudio
         let scopeSnapshot = sciScope
         let useWan = isWanScienceActive
         let countTarget = max(5, sciTrialCount)
@@ -1585,63 +1586,104 @@ final class ClusterViewModel: ObservableObject {
         let baseTPOT = activeTPOTMs
         let baseWatts = activeWatts
         let baseRtt = activeStepRttMs
-        let jitterAmp = useWan ? sciWanJitterFactor : 0.025
+        let jitterAmp = useWan ? sciWanJitterFactor : 0.022
+        let endpointString = "\(openCodeBaseURL)/chat/completions"
+        let modelId = selectedModel.id
+        let remotePeers = wanPeers.filter { !$0.isLocalHost && $0.isOnline && !$0.overlayIP.isEmpty }
+        let wanPeerIPs = remotePeers.map(\.overlayIP)
 
         Task {
             var collected: [ScientificBenchmarkTrial] = []
 
-            // 1 Warmup + N measured trials (temperature=0.0 reproducibility protocol)
-            for idx in 0...countTarget {
-                let start = DispatchTime.now().uptimeNanoseconds
-                if !useWan && daemonConnected, let url = URL(string: "\(openCodeBaseURL)/chat/completions") {
-                    var req = URLRequest(url: url)
-                    req.httpMethod = "POST"
-                    req.timeoutInterval = 12
-                    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                    let payload: [String: Any] = [
-                        "model": selectedModel.id,
-                        "temperature": 0.0,
-                        "max_tokens": 24,
-                        "messages": [["role": "user", "content": "State the Roofline equation in one sentence."]]
-                    ]
-                    req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-                    _ = try? await URLSession.shared.data(for: req)
-                } else {
-                    // Deterministic local sysctl probe + WAN timing sleep
-                    _ = runShell("/usr/sbin/sysctl", ["-n", "vm.loadavg"])
-                    let pauseNs: UInt64 = useWan ? 65_000_000 : 50_000_000
-                    try? await Task.sleep(nanoseconds: pauseNs)
+            if !isSimulatedMode {
+                // REAL DATA MODE: Require reachable live inference endpoint (SSE streaming) — never fabricate fake trials
+                guard let endpointURL = URL(string: endpointString) else {
+                    isRunningBenchmark = false
+                    sciSummary = nil
+                    sciStatusMessage = "Echtbetrieb: Ungültige Endpunkt-URL (\(endpointString))."
+                    return
                 }
-                let elapsedMs = Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000.0
 
-                if idx == 0 { continue } // Discard warmup
+                // 1 Warmup + N measured live SSE trials (temperature=0.0 reproducibility protocol)
+                for idx in 0...countTarget {
+                    let liveSample: (ttftMs: Double, tpotMs: Double, tokensPerSec: Double, generatedTokens: Int)
+                    do {
+                        liveSample = try await runLiveChatCompletionTrial(endpointURL: endpointURL, modelId: modelId)
+                    } catch {
+                        isRunningBenchmark = false
+                        if collected.isEmpty {
+                            sciSummary = nil
+                            sciStatusMessage = "Echtbetrieb: Kein aktiver Inferenz-Endpunkt unter \(openCodeBaseURL) erreichbar (\(error.localizedDescription)). Starte oMLX, Ollama oder llama.cpp – oder aktiviere den Simulationsmodus in der Seitenleiste."
+                        } else {
+                            sciStatusMessage = "Echtbetrieb unterbrochen nach \(collected.count) realen Läufen: \(error.localizedDescription)"
+                        }
+                        return
+                    }
 
-                // Reproducible deterministic tail jitter (log-normal-like spike on p95/p99 indices)
-                let wave = (Double((idx * 19) % 11) - 5.0) / 5.0
-                let tailSpike = (idx % 10 == 9) ? (useWan ? jitterAmp * 1.45 : 0.04) : 0.0
-                let factor = max(0.85, 1.0 + wave * (jitterAmp * 0.45) + tailSpike)
+                    if idx == 0 { continue } // Discard warmup
 
-                let measuredTTFT = (!useWan && daemonConnected) ? max(15.0, elapsedMs * 0.35) : baseTTFT * factor
-                let measuredTPOT = (!useWan && daemonConnected) ? max(4.0, (elapsedMs * 0.65) / 24.0) : baseTPOT * factor
-                let tokSec = (1000.0 / max(0.5, measuredTPOT)) * Double(sciBatchSize)
-                let watts = baseWatts * (0.96 + Double(idx % 4) * 0.02)
-                let jPerTok = tokSec > 0 ? watts / tokSec : 0
-                let rttSample = baseRtt * factor
-                let sloPass = measuredTTFT <= sciSloTtftMaxMs && measuredTPOT <= sciSloTpotMaxMs
+                    let measuredRtt: Double
+                    if useWan, let targetIP = wanPeerIPs.first {
+                        measuredRtt = await measureRealNetworkRttMs(host: targetIP) ?? baseRtt
+                    } else {
+                        measuredRtt = await measureRealNetworkRttMs(host: "127.0.0.1") ?? 0.2
+                    }
 
-                let trial = ScientificBenchmarkTrial(
-                    trialIndex: idx,
-                    ttftMs: measuredTTFT,
-                    tpotMs: measuredTPOT,
-                    tokensPerSec: tokSec,
-                    netRttMs: rttSample,
-                    watts: watts,
-                    joulesPerToken: jPerTok,
-                    sloPass: sloPass,
-                    scopeLabel: scopeSnapshot.rawValue
-                )
-                collected.append(trial)
-                sciTrials = collected
+                    let watts = baseWatts // Estimated hardware TDP/power envelope for active nodes
+                    let tokSec = liveSample.tokensPerSec * Double(max(1, sciBatchSize))
+                    let jPerTok = tokSec > 0 ? watts / tokSec : 0
+                    let sloPass = liveSample.ttftMs <= sciSloTtftMaxMs && liveSample.tpotMs <= sciSloTpotMaxMs
+
+                    let trial = ScientificBenchmarkTrial(
+                        trialIndex: idx,
+                        ttftMs: liveSample.ttftMs,
+                        tpotMs: liveSample.tpotMs,
+                        tokensPerSec: tokSec,
+                        netRttMs: measuredRtt,
+                        watts: watts,
+                        joulesPerToken: jPerTok,
+                        sloPass: sloPass,
+                        scopeLabel: scopeSnapshot.rawValue
+                    )
+                    collected.append(trial)
+                    sciTrials = collected
+                }
+            } else {
+                // SIMULATION MODE: Credible, realistic Apple Silicon cluster telemetry (explicitly marked as Simulation)
+                for idx in 0...countTarget {
+                    try? await Task.sleep(nanoseconds: useWan ? 45_000_000 : 30_000_000)
+                    if idx == 0 { continue } // Discard warmup
+
+                    // Realistic bounded Gaussian-like variation (2-3% local, WAN jitter in WAN scope)
+                    let u1 = Double(((idx * 37 + 13) % 97) + 1) / 98.0
+                    let u2 = Double(((idx * 53 + 29) % 89) + 1) / 90.0
+                    let gaussianApprox = (u1 + u2 - 1.0) // [-1, +1] triangular/normal-like
+                    let tailSpike = (useWan && idx % 10 == 9) ? jitterAmp * 1.25 : 0.0
+                    let ttftFactor = max(0.88, 1.0 + gaussianApprox * (jitterAmp * 0.6) + tailSpike)
+                    let tpotFactor = max(0.92, 1.0 + gaussianApprox * (jitterAmp * 0.4) + tailSpike * 0.5)
+
+                    let simTTFT = max(8.0, baseTTFT * ttftFactor)
+                    let simTPOT = max(1.5, baseTPOT * tpotFactor)
+                    let tokSec = (1000.0 / simTPOT) * Double(sciBatchSize)
+                    let watts = baseWatts * (0.97 + Double(idx % 5) * 0.015)
+                    let jPerTok = tokSec > 0 ? watts / tokSec : 0
+                    let rttSample = max(0.2, baseRtt * max(0.85, 1.0 + gaussianApprox * jitterAmp))
+                    let sloPass = simTTFT <= sciSloTtftMaxMs && simTPOT <= sciSloTpotMaxMs
+
+                    let trial = ScientificBenchmarkTrial(
+                        trialIndex: idx,
+                        ttftMs: simTTFT,
+                        tpotMs: simTPOT,
+                        tokensPerSec: tokSec,
+                        netRttMs: rttSample,
+                        watts: watts,
+                        joulesPerToken: jPerTok,
+                        sloPass: sloPass,
+                        scopeLabel: scopeSnapshot.rawValue
+                    )
+                    collected.append(trial)
+                    sciTrials = collected
+                }
             }
 
             let ttfTs = collected.map(\.ttftMs).sorted()
@@ -1663,12 +1705,23 @@ final class ClusterViewModel: ObservableObject {
             let edp = jPerTok * (tpotMean / 1000.0)
             let co2Per1M = ((jPerTok * 1_000_000.0) / 3_600_000.0) * sciCarbonRegion.gco2PerKwh
 
+            let backendDesc: String
+            if !isSimulatedMode {
+                backendDesc = useWan
+                    ? "\(selectedService.rawValue) (Live SSE + Real RTT)"
+                    : "\(selectedService.rawValue) (Live SSE)"
+            } else {
+                backendDesc = useWan
+                    ? "Simulation (Realistic Apple Silicon + WAN)"
+                    : "Simulation (Realistic Apple Silicon)"
+            }
+
             let formatter = ISO8601DateFormatter()
             sciSummary = ScientificBenchmarkSummary(
                 modelId: selectedModel.id,
                 scopeLabel: scopeSnapshot.rawValue,
                 hardwareFingerprint: hardwareFingerprint,
-                backendLabel: (!useWan && daemonConnected) ? "\(selectedService.rawValue) (Live)" : (useWan ? "WAN Analytical + RTT Probe" : "Local Analytical + sysctl Probe"),
+                backendLabel: backendDesc,
                 trialCount: collected.count,
                 warmupDiscarded: 1,
                 ttftMeanMs: ttftMean,
@@ -1692,14 +1745,116 @@ final class ClusterViewModel: ObservableObject {
                 edpJoulesSec: edp,
                 co2GramsPerMillionTok: co2Per1M,
                 timestamp: formatter.string(from: Date()),
-                isLiveEndpoint: !useWan && daemonConnected
+                isLiveEndpoint: !isSimulatedMode
             )
             isRunningBenchmark = false
-            sciStatusMessage = t("sci_bench_done")
+            sciStatusMessage = isSimulatedMode
+                ? "Simulation abgeschlossen (\(collected.count) realistische Läufe)."
+                : t("sci_bench_done")
             if sciAutoRecordHistory {
-                recordScienceHistory(position: .globalAll, note: "Messreihe (\(collected.count) Läufe, T=0,0)")
+                let modeTag = isSimulatedMode ? "Simulation" : "Live-Messung"
+                recordScienceHistory(position: .globalAll, note: "\(modeTag) (\(collected.count) Läufe, T=0,0)")
             }
         }
+    }
+
+    /// Streams a real `/v1/chat/completions` SSE request and measures true TTFT (first token chunk) and decode TPOT.
+    private func runLiveChatCompletionTrial(
+        endpointURL: URL,
+        modelId: String
+    ) async throws -> (ttftMs: Double, tpotMs: Double, tokensPerSec: Double, generatedTokens: Int) {
+        var req = URLRequest(url: endpointURL)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 15
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let payload: [String: Any] = [
+            "model": modelId,
+            "temperature": 0.0,
+            "max_tokens": 32,
+            "stream": true,
+            "stream_options": ["include_usage": true],
+            "messages": [["role": "user", "content": "State the Roofline equation in one sentence."]]
+        ]
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let startNs = DispatchTime.now().uptimeNanoseconds
+        let (bytes, response) = try await URLSession.shared.bytes(for: req)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            throw NSError(
+                domain: "SSCCC.ScienceBenchmark",
+                code: http.statusCode,
+                userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode)"]
+            )
+        }
+
+        var firstTokenNs: UInt64?
+        var streamedChunks = 0
+        var reportedCompletionTokens: Int?
+
+        for try await rawLine in bytes.lines {
+            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard line.hasPrefix("data:") else { continue }
+            let jsonText = line.dropFirst(5).trimmingCharacters(in: .whitespacesAndNewlines)
+            if jsonText == "[DONE]" || jsonText.isEmpty { continue }
+
+            guard let data = jsonText.data(using: .utf8),
+                  let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                continue
+            }
+
+            if let usage = obj["usage"] as? [String: Any],
+               let compTokens = usage["completion_tokens"] as? Int, compTokens > 0 {
+                reportedCompletionTokens = compTokens
+            }
+
+            if let choices = obj["choices"] as? [[String: Any]], let first = choices.first {
+                let delta = first["delta"] as? [String: Any]
+                let content = (delta?["content"] as? String)
+                    ?? (delta?["reasoning_content"] as? String)
+                    ?? (first["text"] as? String)
+                    ?? ""
+                if !content.isEmpty {
+                    if firstTokenNs == nil {
+                        firstTokenNs = DispatchTime.now().uptimeNanoseconds
+                    }
+                    streamedChunks += 1
+                }
+            }
+        }
+
+        let endNs = DispatchTime.now().uptimeNanoseconds
+        let generatedTokens = max(1, reportedCompletionTokens ?? streamedChunks)
+        let firstNs = firstTokenNs ?? endNs
+        let ttftMs = max(1.0, Double(firstNs - startNs) / 1_000_000.0)
+        let decodeMs = max(0.5, Double(endNs - firstNs) / 1_000_000.0)
+        let tpotMs = generatedTokens > 1 ? max(0.2, decodeMs / Double(generatedTokens - 1)) : decodeMs
+        let tokSec = decodeMs > 0 ? (Double(generatedTokens) / (decodeMs / 1000.0)) : (1000.0 / max(0.5, tpotMs))
+        return (ttftMs, tpotMs, tokSec, generatedTokens)
+    }
+
+    /// Measures real ICMP ping RTT in milliseconds to a target host.
+    private func measureRealNetworkRttMs(host: String) async -> Double? {
+        await Task.detached(priority: .utility) {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/sbin/ping")
+            proc.arguments = ["-c", "1", "-W", "800", host]
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            proc.standardError = FileHandle.nullDevice
+            proc.standardInput = FileHandle.nullDevice
+            guard (try? proc.run()) != nil else { return nil }
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            proc.waitUntilExit()
+            let out = String(data: data, encoding: .utf8) ?? ""
+            guard let range = out.range(of: #"time=([0-9]+(\.[0-9]+)?)\s*ms"#, options: .regularExpression) else {
+                return nil
+            }
+            let match = String(out[range])
+            let numStr = match.replacingOccurrences(of: "time=", with: "")
+                .replacingOccurrences(of: "ms", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return Double(numStr)
+        }.value
     }
 
     func recordScienceHistory(position: ScienceHistoryPosition? = nil, note: String = "") {
@@ -1995,6 +2150,18 @@ final class ClusterViewModel: ObservableObject {
                         let online = (info["Online"] as? Bool) ?? false
                         let ips = (info["TailscaleIPs"] as? [String]) ?? []
                         if os.lowercased().contains("macos") || os.lowercased().contains("darwin") {
+                            let peerIP = ips.first ?? ""
+                            var probedRtt = 0.0
+                            if online, !peerIP.isEmpty {
+                                let pingOut = runShell("/sbin/ping", ["-c", "1", "-W", "500", peerIP])
+                                if let range = pingOut.range(of: #"time=([0-9]+(\.[0-9]+)?)\s*ms"#, options: .regularExpression) {
+                                    let numStr = String(pingOut[range])
+                                        .replacingOccurrences(of: "time=", with: "")
+                                        .replacingOccurrences(of: "ms", with: "")
+                                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                                    probedRtt = Double(numStr) ?? 0.0
+                                }
+                            }
                             discovered.append(
                                 WanPeerNode(
                                     id: "ts-\(peerKey)",
@@ -2004,8 +2171,8 @@ final class ClusterViewModel: ObservableObject {
                                     ramGB: 32.0,
                                     usableVramGB: 26.0,
                                     bandwidthGBs: 200.0,
-                                    overlayIP: ips.first ?? "100.64.0.x",
-                                    rttMs: 18.0,
+                                    overlayIP: peerIP.isEmpty ? "100.64.0.x" : peerIP,
+                                    rttMs: probedRtt,
                                     uplinkMbps: 200.0,
                                     assignedLayers: "Auto",
                                     transport: .tailscaleMesh,

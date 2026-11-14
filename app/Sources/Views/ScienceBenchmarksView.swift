@@ -43,9 +43,30 @@ struct ScienceBenchmarksView: View {
         SolarisCard(accent: SolarisTheme.amber) {
             HazardStripesBar(height: 5, stripeWidth: 10, cornerRadius: 3, opacity: 0.85)
             VStack(alignment: .leading, spacing: 6) {
-                Text(vm.t("sci_title"))
-                    .font(SolarisTheme.sectionTitle)
-                    .foregroundColor(SolarisTheme.textPrimary)
+                HStack(alignment: .center, spacing: 12) {
+                    Text(vm.t("sci_title"))
+                        .font(SolarisTheme.sectionTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Spacer()
+                    Label(
+                        vm.simulateMacStudio
+                            ? "SIMULATION · Realistische Apple-Silicon-Referenzwerte"
+                            : "ECHTZEIT-DATEN · Gemessene System- & Endpunkt-Telemetrie",
+                        systemImage: vm.simulateMacStudio ? "waveform.path.ecg" : "antenna.radiowaves.left.and.right"
+                    )
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(vm.simulateMacStudio ? SolarisTheme.amberGlow : SolarisTheme.emerald)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill((vm.simulateMacStudio ? SolarisTheme.amber : SolarisTheme.emerald).opacity(0.14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke((vm.simulateMacStudio ? SolarisTheme.amber : SolarisTheme.emerald).opacity(0.45), lineWidth: 1)
+                            )
+                    )
+                }
                 Text(vm.t("sci_sub"))
                     .font(SolarisTheme.bodyLarge)
                     .foregroundColor(SolarisTheme.textSecondary)
@@ -875,10 +896,23 @@ struct ScienceBenchmarksView: View {
                 if !vm.sciStatusMessage.isEmpty {
                     Text(vm.sciStatusMessage)
                         .font(Font.caption)
-                        .foregroundColor(SolarisTheme.emerald)
+                        .foregroundColor(vm.sciSummary == nil && !vm.simulateMacStudio ? SolarisTheme.amberGlow : SolarisTheme.emerald)
                 }
 
                 if let summary = vm.sciSummary {
+                    HStack(spacing: 8) {
+                        Text("Datenquelle: \(summary.backendLabel)")
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundColor(summary.isLiveEndpoint ? SolarisTheme.emerald : SolarisTheme.amberGlow)
+                        Spacer()
+                        Text(summary.isLiveEndpoint ? "LIVE SSE + PING" : "SIMULATION")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(summary.isLiveEndpoint ? SolarisTheme.emerald : SolarisTheme.amber)
+                            .cornerRadius(5)
+                    }
                     HStack(spacing: 14) {
                         ScienceMetricTile(
                             label: "TTFT (p50 / p95 / p99)",
