@@ -1,13 +1,13 @@
 {
-  "version": "1.6.13",
+  "version": "1.6.14",
   "build": 160,
-  "tag": "v1.6.13",
+  "tag": "v1.6.14",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• fix(updater): eliminate swift build pipe deadlock, isolate stdout SHA, and render failed state (e82d42a)\n• chore(release): auto-bump v1.6.12 (build 160) [skip ci] (4a61773)\n• Merge remote-tracking branch 'origin/main' (b368a65)\n• docs(help): expand in-app manual to 12 uniform chapters across all 8 languages (8f392dd)\n• chore(release): auto-bump v1.6.11 (build 160) [skip ci] (99e7d99)",
+  "notes": "• Merge remote-tracking branch 'origin/main' (16bdeab)\n• fix(relaunch): enforce single-instance relaunch and git merge-base ancestor SHA check (d7e05e2)\n• chore(release): auto-bump v1.6.13 (build 160) [skip ci] (92015aa)\n• fix(updater): eliminate swift build pipe deadlock, isolate stdout SHA, and render failed state (e82d42a)\n• chore(release): auto-bump v1.6.12 (build 160) [skip ci] (4a61773)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "e82d42a",
-  "updated_at": "2026-11-14T19:22:47Z"
+  "commit_sha": "16bdeab",
+  "updated_at": "2026-11-14T19:29:49Z"
 }
