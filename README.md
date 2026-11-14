@@ -84,7 +84,7 @@ flowchart LR
 | **2. Devices & Compare** | Add/remove any M1–M9+ Mac, inspect CPU/GPU/ANE/SSD/thermal/power telemetry, and compare bars |
 | **3. Model Studio** | Live model discovery (oMLX / Ollama / llama.cpp / GGUF), runtime readiness check, proportional layer splits, and KV-cache tuning |
 | **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, and inspect TB3/TB4/TB5 classes |
-| **5. Internet Cluster & Chat** | Join or host global WAN Mac clusters via Tailscale / WireGuard / libp2p / DERP and coordinate in live participant chat (`/ws/wan/{room_id}`) |
+| **5. Internet Cluster, Audio-Party & Chat** | Couple local TB/RDMA Macs with global WAN peers (Tailscale/WireGuard/libp2p/DERP), coordinate via Xbox/PS-style Audio-Party & Chat (`/ws/wan-audio`, `/ws/wan`) |
 | **6. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
 | **7. Science & Roofline** | 5-tab Local & Internet-WAN research lab: Log-Log Roofline (`P = min(β·I, π_eff)`), `N=1..128` scaling, *Petals/SWARM* & *DiLoCo*, KV memory equation, `J/tok` / `EDP` / `CO₂`, `CI₉₅` & `Goodput%` trials, and `CSV / JSON / LaTeX / BibTeX` export |
 | **8. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
@@ -157,6 +157,49 @@ SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1, M2
 - **Never allocate 100% of RAM:** SS-CCC enforces `iogpu.wired_limit_mb` reserves so macOS and WindowServer stay responsive.
 - **Proportional Layer Split:** Each Mac receives layers proportional to its usable memory (`Layers_i = TotalLayers × Usable_i / TotalUsable`).
 - **KV-Cache & Fast Metal Sync:** Use `--kv-bits 4` + `--prefill-step-size 512` for 64k+ context windows, and `MLX_METAL_FAST_SYNCH=1` to cut Metal sync overhead by **45×** (~180 µs → ~4 µs).
+
+---
+
+## 🏆 Global + Local Hybrid Supercluster Record Attempt (Scientific Challenge)
+
+![SS-CCC Global + Local Hybrid Supercluster Record Challenge](docs/images/ssccc_world_record_challenge.jpg)
+
+**Can a decentralized, cross-continental coalition of Apple Silicon Macs rival a datacenter supercomputer?**  
+We invite universities, AI research labs, developer communities, and Apple Silicon enthusiasts worldwide to organize an official **SS-CCC Hybrid Supercluster Record Attempt** — uniting as many **local Thunderbolt 3/4/5/RDMA clusters** and **Internet-connected WAN Macs** simultaneously as possible using SS-CCC's **Hybrid Bridge (`Couple Local + Internet`)**, **Cluster Audio-Party**, and **5-Tab Research Lab**.
+
+### 🔬 Scientific Rationale & Mathematical Scaling Model
+
+1. **Two-Tier Hierarchical Topology (Tier-0 TB/RDMA Islands + Tier-1 WAN Backbone):**
+   - Naive flat WAN clustering suffers when every single Transformer layer boundary crosses a high-latency Internet link ($H_{\text{WAN}} = N - 1$).
+   - By coupling local Thunderbolt/RDMA islands via **SS-CCC's Hybrid Bridge**, consecutive layers remain on intra-island Thunderbolt (`~0.07 ms` latency, `30–110 Gbps`), restricting WAN hops strictly to **inter-island gateway transitions** ($H_{\text{WAN}} \ll N_{\text{total}}$) via each island's **Rank 0 Gateway**.
+2. **Amortizing WAN RTT via Critical Micro-Batching ($B^*$) & Activation Compression:**
+   - Under Pipeline Parallelism, pipeline efficiency follows the GPipe bubble law:
+     $$\Phi_{\text{bubble}} = \frac{N - 1}{M + N - 1}, \qquad B^* = \left\lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \right\rceil$$
+   - Increasing micro-batch depth $M$ toward $B^*$ hides cross-continent RTT behind concurrent pipeline execution, while **FP8 / INT4 / Top-K activation compression** (*Petals / SWARM*) shrinks per-hop hidden-state payloads ($B \cdot d_{\text{model}}$) below $1\%$ of typical WAN uplinks.
+3. **Standardized Reproducible Record Protocol ($T = 0.0$):**
+   1. **Form Tier-0 Islands:** Connect local M1–M9+ Macs via Thunderbolt 3/4/5 (`MLX_METAL_FAST_SYNCH=1`).
+   2. **Bridge & Coordinate:** Enable **Hybrid Bridge (`Couple Local + Internet`)**, share your `SSCCC-WAN-…` room code, and join the **Cluster Audio-Party** (`Opus 16 kbps`, $<0.02\%$ WAN overhead) to synchronize layer splits.
+   3. **Execute Trials:** Switch **Science & Roofline** to **Internet-WAN**, select `N = 20` trials (`1` warmup discarded, `temperature = 0.0`), and define your target SLO (`TTFT ≤ 2500 ms`, `TPOT ≤ 100 ms/tok`).
+   4. **Archive Verification:** Export and publish the **JSON Reproducibility Manifest**, **CSV trial log**, and **LaTeX (`booktabs`) table** containing `hardware_fingerprint`, `TTFT/TPOT (p50/p95/p99 ± CI₉₅)`, `CV%`, `Goodput%`, `J/token`, `EDP`, and `gCO₂eq/1M tokens`.
+
+### 🥇 Official Record Categories
+- **Largest Unified Memory Pool:** Highest combined usable VRAM (`GB` / `TB`) across coupled local + WAN Macs.
+- **Most Simultaneous Coupled Macs ($N$):** Largest active mesh (`32–256+` nodes) sustaining a valid `N = 20` trial run.
+- **Highest Cross-Continent Hybrid Goodput:** Maximum `tokens/s` meeting interactive SLOs across $\ge 2$ continents.
+- **Best Cluster Energy Efficiency:** Lowest `Joules/token` and `EDP (J·s)` for a `70B+` parameter model.
+
+---
+
+## 🎯 Use Cases & Who SS-CCC Is Built For
+
+| User Group | Real-World Use Case with SS-CCC |
+| :--- | :--- |
+| **AI Systems & ML Researchers** | Analyze local vs. WAN Roofline limits ($P = \min(\beta \cdot I, \pi_{\text{eff}})$), *Petals/SWARM* activation compression, *DiLoCo* vs. DDP WAN communication, and export `CI₉₅` + `LaTeX`/`BibTeX` directly into papers. |
+| **Universities & Teaching Labs** | Pool student MacBooks and lab Mac minis across campus LAN and home WANs into a shared 70B–405B+ teaching cluster, coordinated live via **Cluster Audio-Party**. |
+| **Software Studios & Agentic Teams** | Run private, zero-cloud-cost coding models locally for **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **VS Code**, and **Xcode** across existing office Macs. |
+| **Privacy-First Legal, Medical & Enterprise** | Keep sensitive documents strictly on-premise or inside encrypted **WireGuard / Tailscale** tunnels with zero third-party API telemetry or data leakage. |
+| **Global Open-Source Swarms & Hackathons** | Spin up ad-hoc cross-border superclusters in minutes, coordinate layer splits with Xbox/PlayStation-style voice callouts, and attempt community scale records. |
+| **Green-AI & Sustainability Audits** | Benchmark `J/token`, Energy-Delay Product (`EDP`), and regional `gCO₂eq/1M tokens` (Norway hydro vs. EU/US grids) against datacenter GPU APIs. |
 
 ---
 

@@ -86,7 +86,7 @@ flowchart LR
 | **2. Dispositivos e comparação** | Telemetria em tempo real de cada Mac (CPU, GPU, ANE, RAM, largura de banda, SSD, temperatura, potência) e adição de Mac M1–M9+. |
 | **3. Oficina de modelos** | Leitura real de modelos (oMLX, Ollama, llama.cpp, GGUF), estado dos serviços, divisão de camadas e memória KV. |
 | **4. Rede e RDMA** | Matriz de classes Thunderbolt 3/4/5 para M1–M9+, estado RDMA e encaminhamento da ponte LAN/Thunderbolt. |
-| **5. Agrupamento Internet e conversa** | Ligar Mac pelo mundo via Tailscale/WireGuard/libp2p, partilhar identificador de sala e conversar em direto (`/ws/wan/{room_id}`). |
+| **5. Agrupamento Internet, Audio-Party e conversa** | Ligar Mac TB/RDMA locais a nós WAN globais, coordenar via Audio-Party (estilo consola) e conversa (`/ws/wan-audio`, `/ws/wan`). |
 | **6. Agentes e ambientes** | Configuração num clique para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** e **Xcode**. |
 | **7. Ciência e Roofline** | Laboratório de 5 separadores (Local e WAN): curva `P = min(β·I, π_eff)`, escala `N=1..128`, *Petals/SWARM* e *DiLoCo*, equação KV, `J/token` / `EDP` / `CO₂`, `IC₉₅` e `Goodput%`, exportação `CSV / JSON / LaTeX / BibTeX`. |
 | **8. API e consola** | Pontos de extremidade compatíveis com OpenAI / Ollama / oMLX, registo de atividade e comandos de arranque prontos a copiar. |
@@ -150,6 +150,27 @@ O SS-CCC suporta **qualquer Mac com processador Apple Silicon** (**M1, M2, M3, M
 - **Nunca alocar 100 % da RAM:** `iogpu.wired_limit_mb` protege a fluidez do macOS e do WindowServer.
 - **Repartição proporcional de camadas:** cada Mac recebe camadas consoante a sua memória utilizável (`Camadas_i = Total × Utilizável_i / TotalUtilizável`).
 - **Cache KV de 4 bits e sincronização rápida:** `--kv-bits 4` e `MLX_METAL_FAST_SYNCH=1` (45× mais rápido, ~180 µs → ~4 µs).
+
+---
+
+## 🏆 Desafio de recorde mundial: supercomputador híbrido local + Internet
+
+![Desafio de recorde mundial SS-CCC supercomputador híbrido](docs/images/ssccc_world_record_challenge.jpg)
+
+**Conseguirá uma coligação distribuída de computadores Mac Apple Silicon rivalizar com um centro de dados?**  
+Convidamos universidades, equipas de investigação e entusiastas de Apple Silicon a organizar uma **tentativa oficial de recorde com o SS-CCC**: reúnam em simultâneo o maior número possível de **agrupamentos locais Thunderbolt 3/4/5/RDMA** e **Mac ligados pela Internet** através da **ponte híbrida («Ligar local + Internet»)**, da **Audio-Party** e do **laboratório científico de 5 separadores**.
+
+### 🔬 Protocolo científico e modelação
+
+1. **Topologia hierárquica em dois níveis (ilhas locais TB/RDMA + rede WAN):**
+   - A ponte híbrida mantém camadas consecutivas nas ilhas Thunderbolt locais (`~0,07 ms`, `30–110 Gbps`), restringindo os saltos WAN às transições entre portas de nível 0 ($H_{\text{WAN}} \ll N_{\text{total}}$).
+2. **Ocultação da latência WAN ($B^*$) e compressão de ativações:**
+   - Com $\Phi_{\text{bolha}} = \frac{N - 1}{M + N - 1}$ e o lote crítico $B^* = \lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \rceil$, os micro-lotes $M \to B^*$ e a compressão **FP8 / INT4 / Top-K** (*Petals / SWARM*) mantêm a sobrecarga abaixo de $1\%$ da ligação de envio.
+3. **Protocolo reprodutível ($T = 0,0$):** Ative a ponte híbrida, entre na **Audio-Party** (`Opus 16 kbps`, $<0,02\%$ da ligação), execute `N = 20` ensaios (`T = 0,0`) em modo **Internet-WAN** e exporte o **manifesto JSON**, **CSV** e a **tabela LaTeX (`booktabs`)** com `IC₉₅`, `Goodput%`, `J/token`, `EDP` e `gCO₂eq/1M tokens`.
+
+### 🥇 Categorias de recorde e casos de utilização
+- **Categorias:** maior memória unificada total (`TB`), maior número de Mac ligados em simultâneo ($N \ge 32\text{–}256+$), maior débito útil transcontinental e melhor eficiência energética (`J/token`).
+- **Casos de utilização:** investigação em sistemas de IA (curvas Roofline, *DiLoCo* vs. DDP, artigos LaTeX/BibTeX), laboratórios universitários com portáteis e Mac mini, estúdios de software para **OpenCode / Cursor / Xcode** sem custos na nuvem, setores jurídicos e médicos sob túnel **WireGuard**, maratonas globais coordenadas via **Audio-Party** e auditorias **Green-AI**.
 
 ---
 

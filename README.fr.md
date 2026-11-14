@@ -86,7 +86,7 @@ flowchart LR
 | **2. Appareils et comparaison** | Télémétrie en direct de chaque Mac (CPU, GPU, ANE, RAM, bande passante, SSD, température, puissance) et ajout de Mac M1–M9+. |
 | **3. Atelier de modèles** | Découverte réelle (oMLX, Ollama, llama.cpp, GGUF), vérification d'état, découpage des couches et réglage du cache KV. |
 | **4. Réseau et RDMA** | Matrice des classes Thunderbolt 3/4/5 pour M1–M9+, état RDMA et routage du pont LAN/Thunderbolt. |
-| **5. Grappe Internet et messagerie** | Relier des Mac à travers le monde via Tailscale/WireGuard/libp2p, partager l'identifiant de salle et échanger en direct (`/ws/wan/{room_id}`). |
+| **5. Grappe Internet, Audio-Party & messagerie** | Coupler les Mac TB/RDMA locaux au réseau WAN mondial, coordonner en Audio-Party (style console) et messagerie (`/ws/wan-audio`, `/ws/wan`). |
 | **6. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
 | **7. Science et Roofline** | Laboratoire 5 onglets (Local & WAN) : courbe `P = min(β·I, π_eff)`, montée `N=1..128`, *Petals/SWARM* & *DiLoCo*, équation KV, `J/jeton` / `EDP` / `CO₂`, `IC₉₅` & `Goodput%`, export `CSV / JSON / LaTeX / BibTeX`. |
 | **8. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |
@@ -150,6 +150,27 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 - **Ne jamais allouer 100 % de la RAM :** `iogpu.wired_limit_mb` préserve la fluidité de macOS et de WindowServer.
 - **Répartition proportionnelle des couches :** chaque Mac reçoit une part calculée sur sa mémoire utilisable (`Couches_i = Total × Utilisable_i / TotalUtilisable`).
 - **Cache KV 4 bits & synchronisation rapide :** `--kv-bits 4` et `MLX_METAL_FAST_SYNCH=1` (45× plus rapide, ~180 µs → ~4 µs).
+
+---
+
+## 🏆 Appel au record mondial : supercalculateur hybride local + Internet
+
+![Défi record mondial SS-CCC supercalculateur hybride](docs/images/ssccc_world_record_challenge.jpg)
+
+**Une coalition mondiale de Mac Apple Silicon peut-elle rivaliser avec un centre de calcul ?**  
+Nous invitons les universités, laboratoires, studios et passionnés d'Apple Silicon à organiser un **record officiel SS-CCC** : reliez simultanément le plus grand nombre possible de **grappes locales Thunderbolt 3/4/5/RDMA** et de **Mac distants sur Internet** grâce au **pont hybride (« Coupler local + Internet »)**, à l'**Audio-Party** et au **laboratoire scientifique à 5 onglets**.
+
+### 🔬 Protocole scientifique & modélisation
+
+1. **Architecture hiérarchique à deux niveaux (îlots TB/RDMA locaux + dorsale WAN) :**
+   - Le pont hybride maintient les couches consécutives sur les îlots Thunderbolt locaux (`~0,07 ms`, `30–110 Gbps`), ne sollicitant le réseau WAN que pour les transitions entre passerelles de rang 0 ($H_{\text{WAN}} \ll N_{\text{total}}$).
+2. **Masquage de la latence WAN ($B^*$) & compression des activations :**
+   - Selon le modèle GPipe $\Phi_{\text{bulle}} = \frac{N - 1}{M + N - 1}$ et le seuil critique $B^* = \lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \rceil$, le micro-lotissement $M \to B^*$ associé à la compression **FP8 / INT4 / Top-K** (*Petals / SWARM*) maintient la charge vocale et tensorielle sous $1\%$ du débit montant.
+3. **Protocole reproductible ($T = 0,0$) :** Activez le pont hybride, rejoignez l'**Audio-Party** (`Opus 16 kbps`, $<0,02\%$ du lien), lancez `N = 20` essais (`T = 0,0`) dans le laboratoire **Internet-WAN** et exportez le **manifeste JSON**, le **CSV** et le **tableau LaTeX (`booktabs`)** avec `CI₉₅`, `Goodput%`, `J/jeton`, `EDP` et `gCO₂eq/1M jetons`.
+
+### 🥇 Catégories de record & cas d'usage
+- **Catégories :** plus grande mémoire unifiée cumulée (`To`), plus grand nombre de Mac couplés ($N \ge 32\text{–}256+$), meilleur débit utile transcontinental et meilleure efficacité énergétique (`J/jeton`).
+- **Cas d'usage :** recherche en systèmes d'IA (courbes Roofline, *DiLoCo* vs DDP, articles LaTeX/BibTeX), travaux pratiques universitaires sur parc mixte MacBook/Mac mini, studios logiciels alimentant **OpenCode / Cursor / Xcode** sans frais infonuagiques, secteurs juridiques/médicaux sous tunnel chiffré **WireGuard**, hackathons mondiaux en **Audio-Party** et audits **Green-AI**.
 
 ---
 
