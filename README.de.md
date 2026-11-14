@@ -297,7 +297,7 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 │   ├── SSCCCApp.swift              # Hauptfenster, Header-Update-Pill & UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # M1–M12+-Chip-Ableitung, WAN-/Forschungs-/Verlaufs- & Update-Modelle
-│   │   └── Localization.swift      # Vollständige 5-Sprachen-Oberfläche & Handbuch (EN/DE/FR/ES/PT)
+│   │   └── Localization.swift      # Vollständige 8-Sprachen-Oberfläche & Handbuch (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Hardware-Auslesung, Modell-Erkennung, WAN/Audio-Party & GitHub-Updater
 │   └── Views/                      # 9 modulare SwiftUI-Ansichten (inkl. 6-Reiter-Forschungslabor & Hilfe)
@@ -318,7 +318,7 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 
 > [!IMPORTANT]
 > **SS-CCC (ab v1.6) ist vollständig startfähig und durch `12/12` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
-> **Bereits umgesetzt und geprüft:** Englische Startsprache mit 5-Sprachen-Umschaltung, zukunftssichere M1–M12+-Hardware-Auslesung, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, 9-Kapitel-Handbuch sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
+> **Bereits umgesetzt und geprüft:** Englische Startsprache mit 8-Sprachen-Umschaltung (`EN/DE/FR/ES/PT/RU/JA/ZH`), zukunftssichere M1–M12+-Hardware-Auslesung, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, 9-Kapitel-Handbuch sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
 
 Wir laden Entwickler, Forschende und Apple-Silicon-Begeisterte herzlich dazu ein, **mitzuentwickeln und SS-CCC weiterzubringen**:
 - **Auf eigener Hardware erproben:** Teste SS-CCC mit deinen M1–M12+-Macs und teile Messwerte zu Durchsatz, Speicherverbrauch und RDMA/JACCL-Stabilität.

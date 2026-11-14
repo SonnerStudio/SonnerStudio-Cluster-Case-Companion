@@ -189,27 +189,86 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ![SS-CCC 世界纪录挑战](docs/images/ssccc_world_record_challenge.jpg)
 
-将本地 Thunderbolt 集群与全球互联网 Mac 联合，共同运行 `405B–671B+` 模型并记录可复现科学遥测数据（`p50/p95/p99`, `J/tok`, `CO₂`）。
+**由分散在全球各地的 Apple Silicon Mac 组成的去中心化联盟，能否媲美数据中心超级计算机？**  
+我们诚挚邀请全球高校、AI 研究实验室、开发者社区与 Apple Silicon 爱好者共同组织官方 **SS-CCC 混合超级集群世界纪录挑战** —— 利用 SS-CCC 的 **混合桥接（本地 + 互联网耦合）**、**Cluster Audio-Party** 与 **6 标签页科学实验室**，同时联合尽可能多的 **本地 Thunderbolt 3/4/5/RDMA 集群** 与 **互联网 WAN Mac**。
+
+### 🔬 科学原理与数学扩展模型
+
+1. **两级分层拓扑（Tier-0 本地 TB/RDMA 集群岛 + Tier-1 WAN 骨干网）：**
+   - 扁平化的互联网集群会在每一层边界都跨越广域网高延迟链路 ($H_{\text{WAN}} = N - 1$)，导致吞吐急剧下降。
+   - 通过 **SS-CCC 混合桥接**，连续的 Transformer 层保留在高速本地 Thunderbolt 集群岛内（`~0.07 ms` 延迟，`30–110 Gbps`），将跨网通信严格限制在少数 **岛间 Rank 0 网关交接** ($H_{\text{WAN}} \ll N_{\text{total}}$)。
+2. **通过临界微批次 ($B^*$) 与激活压缩隐藏 WAN RTT：**
+   - 流水线效率遵循 GPipe 气泡公式：
+     $$\Phi_{\text{bubble}} = \frac{N - 1}{M + N - 1}, \qquad B^* = \left\lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \right\rceil$$
+   - 将微批次深度 $M$ 提升至 $B^*$ 可在并发流水线执行中掩盖跨洲际往返延迟，同时 **FP8 / INT4 / Top-K 激活压缩** (*Petals / SWARM*) 将每跳通信负载压低至常规 WAN 上行带宽的 $1\%$ 以下。
+3. **标准化可复现纪录协议 ($T = 0.0$)：**
+   1. **组建 Tier-0 本地岛：** 通过 Thunderbolt 3/4/5 连接本地 M1–M9+ Mac（启用 `MLX_METAL_FAST_SYNCH=1`）。
+   2. **桥接与协同：** 启用 **混合桥接**，分享 `SSCCC-WAN-…` 房间号，并加入 **Cluster Audio-Party**（`Opus 16 kbps`，WAN 占用 $<0.02\%$）同步层划分。
+   3. **执行测试：** 在 **科学与 Roofline** 中切换至 **Internet-WAN**，运行 `N = 20` 次试验（丢弃 `1` 次预热，`T = 0.0`），验证目标 SLO（`TTFT ≤ 2500 ms`，`TPOT ≤ 100 ms/tok`）。
+   4. **归档验证：** 导出并公开包含 `hardware_fingerprint`、`TTFT/TPOT (p50/p95/p99 ± CI₉₅)`、`CV%`、`Goodput%`、`J/tok`、`EDP` 与 `gCO₂eq/1M tok` 的 **JSON 可复现清单**、**CSV 日志** 与 **LaTeX (`booktabs`) 表格**。
+
+![科学实验室与历史记录](docs/images/ssccc_history_telemetry_lab.jpg)
+
+### 🥇 官方纪录类别
+- **最大统一内存池：** 本地与 WAN 耦合后可支配的最大总可用 VRAM (`GB` / `TB`)。
+- **最多同时耦合 Mac 数量 ($N$)：** 成功完成有效 `N = 20` 试验的最大活跃网格（`32–256+` 节点）。
+- **最高跨洲混合 Goodput：** 横跨 $\ge 2$ 个大洲且满足交互式 SLO 的最高 `tokens/s`。
+- **最佳集群能效：** `70B+` 参数规模模型下的最低 `Joules/token` 与 `EDP (J·s)`。
 
 ---
 
-## 🎯 应用场景
+## 🎯 应用场景与目标用户
 
 ![SS-CCC 应用场景展示](docs/images/ssccc_use_cases_showcase.jpg)
 
-1. **AI 系统研究与 Roofline 基准测试**
-2. **高校与教学科研实验室**
-3. **软件工作室与本地 AI 智能体**
-4. **隐私优先的医疗、法律与研发（100% 离线）**
-5. **全球黑客松与分布式计算群**
-6. **绿色 AI 与能效审计 (`J/tok`)**
+| 用户群体 | SS-CCC 实际应用场景 |
+| :--- | :--- |
+| **AI 系统与 ML 研究人员** | 对比本地与 WAN 的 Roofline 极限 ($P = \min(\beta \cdot I, \pi_{\text{eff}})$)、*Petals/SWARM* 压缩、*DiLoCo* 与 DDP 通信开销，并将 `CI₉₅` + `LaTeX`/`BibTeX` 直接导出至论文。 |
+| **高校与教学科研实验室** | 跨校园局域网与家庭宽带聚合学生 MacBook 与实验室 Mac mini，通过 **Audio-Party** 协作组建共享 `70B–405B+` 教学集群。 |
+| **软件工作室与智能体团队** | 在现有办公 Mac 上零云端费用运行私有编程大模型，直接驱动 **OpenCode**、**Hermes Agent**、**Antigravity**、**Cursor**、**VS Code** 与 **Xcode**。 |
+| **隐私优先的医疗、法律与研发** | 敏感文档严格留在本地内网或加密 **WireGuard / Tailscale** 隧道中，杜绝任何第三方 API 遥测或数据外泄。 |
+| **全球开源计算群与黑客松** | 数分钟内跨国组建临时超级集群，通过主机风格语音派对协调分工并冲击社区规模纪录。 |
+| **绿色 AI 与可持续能效审计** | 对比不同电网碳强度（挪威水电 vs 欧美电网）下的 `J/token`、`EDP` 与 `gCO₂eq/1M tokens`，全面对标数据中心 GPU API。 |
 
 ---
 
-## 🚧 开发状态与贡献
+## 📁 仓库结构
 
-欢迎提交 PR、各代 Apple Silicon (M1–M12+) 测试数据与科学实验室报告。
+```text
+├── app/Sources/
+│   ├── SSCCCApp.swift              # 主窗口、顶部更新胶囊与 UpdatePromptSheet
+│   ├── Models/
+│   │   ├── ClusterModels.swift     # M1–M12+ 芯片推断、WAN/科学/历史与版本模型
+│   │   └── Localization.swift      # 完整 8 种语言界面与帮助词典 (EN/DE/FR/ES/PT/RU/JA/ZH)
+│   ├── ViewModels/
+│   │   └── ClusterViewModel.swift  # 硬件探测、模型发现、WAN/Audio-Party 与 GitHub 更新器
+│   └── Views/                      # 9 个模块化 SwiftUI 视图（含 6 标签页科学实验室与帮助）
+├── core/                           # Python FastAPI 网关、WebSocket WAN/音频中继与 MLX 分片
+├── scripts/
+│   ├── run_ssccc.sh                # 编译并启动 macOS 应用
+│   ├── bump_version.py             # 将 version.json 与 ClusterModels.swift 同步至 Git
+│   ├── setup_tb_network.sh         # 配置 10.99.1.x Thunderbolt 桥接网络
+│   └── setup_wired_limit.sh        # 应用安全的 iogpu.wired_limit_mb 内存上限
+├── tests/                          # 12 项全局自动化测试套件 (Swift + Python)
+├── .github/workflows/              # 自动 CI 版本控制与打标
+└── version.json                    # 托管于 GitHub 的更新控制清单
+```
+
+---
+
+## 🚧 开发状态与诚邀参与
+
+> [!IMPORTANT]
+> **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `12/12` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
+> **已实现并验证：** 英文默认启动与 8 语言即时切换 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、开放式 M1–M12+ 硬件探测、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、带单指标与全局历史记录的 6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、9 章内置帮助中心以及由 GitHub + CI 驱动的自动更新机制。
+
+我们热忱邀请开发者、研究人员与 Apple Silicon 爱好者 **共同参与并推动 SS-CCC 不断完善**：
+- **在您的硬件上实测：** 在 M1–M12+ Mac 上运行 SS-CCC，并分享吞吐量、显存占用及 RDMA/JACCL 稳定性数据。
+- **加入混合世界纪录挑战：** 将本地 Thunderbolt 集群与 WAN 节点联合，发布导出的 JSON / CSV / LaTeX 验证清单。
+- **提交 Pull Request：** 无论是 SwiftUI 界面优化、Python/MLX 分片策略、Thunderbolt 脚本还是多语言翻译改进，我们都非常欢迎！
+
+---
 
 ## 📄 许可证
 
-[LICENSE.md](LICENSE.md)
+基于 [MIT 许可证](LICENSE.md) 发布。

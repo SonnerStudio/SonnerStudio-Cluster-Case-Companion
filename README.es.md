@@ -249,11 +249,35 @@ Invitamos a universidades, grupos de investigación y entusiastas de Apple Silic
 
 ---
 
+## 📁 Estructura del repositorio
+
+```text
+├── app/Sources/
+│   ├── SSCCCApp.swift              # Ventana principal, aviso de actualización y UpdatePromptSheet
+│   ├── Models/
+│   │   ├── ClusterModels.swift     # Inferencia M1–M12+, modelos WAN/Ciencia/Historial y versiones
+│   │   └── Localization.swift      # Diccionario completo en 8 idiomas (EN/DE/FR/ES/PT/RU/JA/ZH)
+│   ├── ViewModels/
+│   │   └── ClusterViewModel.swift  # Sondeo de hardware, modelos, Audio-Party WAN y actualizador GitHub
+│   └── Views/                      # 9 vistas SwiftUI modulares (incl. laboratorio de 6 pestañas y ayuda)
+├── core/                           # Pasarela Python FastAPI, relés WebSocket WAN/Audio y reparto MLX
+├── scripts/
+│   ├── run_ssccc.sh                # Compila e inicia la aplicación macOS
+│   ├── bump_version.py             # Sincroniza version.json y ClusterModels.swift con Git
+│   ├── setup_tb_network.sh         # Configura el puente Thunderbolt 10.99.1.x
+│   └── setup_wired_limit.sh        # Aplica límites seguros de iogpu.wired_limit_mb
+├── tests/                          # Conjunto de verificación global de 12 pruebas (Swift + Python)
+├── .github/workflows/              # Control automático de versiones CI y etiquetado
+└── version.json                    # Manifiesto de control de actualizaciones alojado en GitHub
+```
+
+---
+
 ## 🚧 Estado de desarrollo y colaboración
 
 > [!IMPORTANT]
 > **SS-CCC (v1.6+) es totalmente ejecutable y está verificado por `12/12` pruebas automatizadas; las pruebas de resistencia multinodo continúan.**
-> **Ya implementado y comprobado:** idioma de inicio en inglés (con 5 idiomas), detección abierta M1–M12+, descubrimiento en vivo de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratorio científico de 6 pestañas con historial por posición y global, puente híbrido Local ↔ Internet-WAN, Audio-Party con `AVAudioEngine`, manual de 9 capítulos y actualización automática desde GitHub + CI.
+> **Ya implementado y comprobado:** idioma de inicio en inglés con 8 idiomas (`EN/DE/FR/ES/PT/RU/JA/ZH`), detección abierta M1–M12+, descubrimiento en vivo de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratorio científico de 6 pestañas con historial por posición y global, puente híbrido Local ↔ Internet-WAN, Audio-Party con `AVAudioEngine`, manual de 9 capítulos y actualización automática desde GitHub + CI.
 
 Animamos a desarrolladores, investigadores y entusiastas de Apple Silicon a **colaborar y seguir haciendo crecer SS-CCC**:
 - **Probar en tu equipo:** Ejecuta SS-CCC en tus Mac M1–M12+ y comparte resultados de rendimiento, memoria y RDMA/JACCL.

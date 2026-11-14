@@ -297,7 +297,7 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 │   ├── SSCCCApp.swift              # Main window, header update pill & UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # M1–M12+ chip inference, WAN/Science/History & Release models
-│   │   └── Localization.swift      # Complete 5-language UI & Help dictionary (EN/DE/FR/ES/PT)
+│   │   └── Localization.swift      # Complete 8-language UI & Help dictionary (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Hardware probes, model discovery, WAN/Audio-Party & GitHub updater
 │   └── Views/                      # 9 modular SwiftUI views (incl. 6-tab ScienceBenchmarksView & HelpDocsView)
@@ -318,7 +318,7 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 
 > [!IMPORTANT]
 > **SS-CCC v1.6+ is actively runnable and tested (`12/12` automated checks passing), while real-world multi-node endurance benchmarks continue.**
-> **Currently implemented & verified:** English default startup with 5-language UI, open-ended M1–M12+ hardware probing, live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, 9-chapter Help Center, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
+> **Currently implemented & verified:** English default startup with 8-language UI (`EN/DE/FR/ES/PT/RU/JA/ZH`), open-ended M1–M12+ hardware probing, live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, 9-chapter Help Center, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
 
 We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:
 - **Test on your hardware:** Try SS-CCC with your M1–M12+ Macs and share throughput, memory, and RDMA/JACCL stability findings.
