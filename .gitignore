@@ -1,0 +1,19 @@
+# macOS / Ventoy exFAT AppleDouble files
+.DS_Store
+._*
+**/.DS_Store
+**/._*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Swift / Xcode
+.build/
+.swiftpm/
+*.xcuserstate
+DerivedData/
