@@ -6,7 +6,7 @@
 
 *Native macOS Apple Silicon cluster manager & distributed MLX inference studio*
 
-![SS-CCC Studio Interface](docs/images/ssccc_hero_screenshot.png)
+![SS-CCC Studio Interface](docs/images/ssccc_hero_screenshot_v2.png)
 
 </div>
 

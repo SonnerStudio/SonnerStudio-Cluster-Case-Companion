@@ -6,7 +6,7 @@
 
 *Gestionnaire natif macOS de grappe Apple Silicon et atelier d'inférence MLX répartie*
 
-![Interface SS-CCC](docs/images/ssccc_hero_screenshot.png)
+![Interface SS-CCC](docs/images/ssccc_hero_screenshot_v2.png)
 
 </div>
 

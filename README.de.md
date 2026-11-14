@@ -6,7 +6,7 @@
 
 *Eigenständige macOS-Verbundverwaltung und verteilte MLX-Rechenoberfläche für Apple Silicon*
 
-![SS-CCC Programmoberfläche](docs/images/ssccc_hero_screenshot.png)
+![SS-CCC Programmoberfläche](docs/images/ssccc_hero_screenshot_v2.png)
 
 </div>
 

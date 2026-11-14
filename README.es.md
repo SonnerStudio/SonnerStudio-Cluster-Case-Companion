@@ -6,7 +6,7 @@
 
 *Gestor nativo para macOS de conjuntos Apple Silicon y taller de inferencia distribuida MLX*
 
-![Interfaz SS-CCC](docs/images/ssccc_hero_screenshot.png)
+![Interfaz SS-CCC](docs/images/ssccc_hero_screenshot_v2.png)
 
 </div>
 
