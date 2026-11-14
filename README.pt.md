@@ -73,6 +73,7 @@ flowchart LR
 - **Divisão ponderada de camadas e proteção `iogpu.wired_limit_mb`:** Distribuição proporcional consoante a largura de banda de memória de cada nó ativo, mantendo uma reserva segura do sistema para o macOS.
 - **Deteção real de modelos (oMLX, Ollama e llama.cpp):** Leitura direta dos modelos disponíveis no **oMLX**, **Ollama**, **llama.cpp**, ficheiros `.gguf` locais e cache MLX (sem perfis fictícios quando vazio, com verificação de estado e comandos copiáveis).
 - **Agrupamento global pela Internet (WAN) e conversação entre participantes (`/ws/wan/{room_id}`):** Ligue computadores Mac com Apple Silicon em todo o mundo por túnel cifrado (Tailscale/WireGuard, retransmissão P2P libp2p/DERP ou ponto manual) em grandes agrupamentos distribuídos com sala de conversa em tempo real.
+- **Laboratório científico de 5 separadores (Local e WAN):** Alterne entre **Local (TB/RDMA)**, **Internet WAN** e **Comparação direta** em cinco áreas: **Limite e gargalo** (teto de rede efetivo, lote crítico $B^*$), **Topologia WAN e escala** ($N=1\dots128$, compressão *Petals/SWARM*, retardatários, *DiLoCo* vs. DDP), **Memória e cache KV**, **Energia, CO₂ e custo** (`J/token`, `EDP`, `gCO₂eq/kWh`) e **Ensaios, estatística e exportação** (`IC₉₅`, `CV%`, `Goodput%`, `CSV / JSON / LaTeX / BibTeX`).
 - **Agentes e ambientes num clique:** Configuração imediata para **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** e **Xcode**.
 - **Modo de simulação comutável, tema amarelo SonnerStudio (`#FFD400`) e testes globais (`tests/`):** A simulação de demonstração mantém-se na barra lateral; todo o projeto é verificado por `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 - **Interface multilingue e centro de ajuda integrado:** Alternância imediata entre inglês, alemão, francês, espanhol e português, bem como um centro de ajuda pesquisável diretamente na aplicação.
@@ -87,7 +88,7 @@ flowchart LR
 | **4. Rede e RDMA** | Matriz de classes Thunderbolt 3/4/5 para M1–M9+, estado RDMA e encaminhamento da ponte LAN/Thunderbolt. |
 | **5. Agrupamento Internet e conversa** | Ligar Mac pelo mundo via Tailscale/WireGuard/libp2p, partilhar identificador de sala e conversar em direto (`/ws/wan/{room_id}`). |
 | **6. Agentes e ambientes** | Configuração num clique para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** e **Xcode**. |
-| **7. Ciência e Roofline** | Gráfico logarítmico interativo (`P = min(β·I, π)`), pontos de inflexão, fórmula GPipe, TTFT/TPOT, energia `J/token`, ensaios reprodutíveis (`T=0,0`, `p50/p95/p99`) e exportação CSV/JSON/BibTeX |
+| **7. Ciência e Roofline** | Laboratório de 5 separadores (Local e WAN): curva `P = min(β·I, π_eff)`, escala `N=1..128`, *Petals/SWARM* e *DiLoCo*, equação KV, `J/token` / `EDP` / `CO₂`, `IC₉₅` e `Goodput%`, exportação `CSV / JSON / LaTeX / BibTeX`. |
 | **8. API e consola** | Pontos de extremidade compatíveis com OpenAI / Ollama / oMLX, registo de atividade e comandos de arranque prontos a copiar. |
 | **9. Ajuda e documentação** | Manual integrado com pesquisa de texto integral, visão geral da arquitetura e guia passo a passo. |
 
