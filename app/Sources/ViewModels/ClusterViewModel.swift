@@ -103,6 +103,16 @@ final class ClusterViewModel: ObservableObject {
     @Published var chatMessages: [ClusterChatMessage] = []
     @Published var chatInput: String = ""
     @Published var wanStatusNote: String = ""
+    @Published var wanMeasuredDownloadMbps: Double = 0.0
+    @Published var wanMeasuredUploadMbps: Double = 0.0
+    @Published var wanMeasuredPingMs: Double = 0.0
+    @Published var wanMeasuredJitterMs: Double = 0.0
+    @Published var wanMeasuredPacketLossPct: Double = 0.0
+    @Published var wanActiveInterfaceName: String = "en0"
+    @Published var wanThroughputHistory: [WanBandwidthSample] = []
+    @Published var isProbingWanBandwidth: Bool = false
+    @Published var wanBandwidthLastUpdated: String = "—"
+    @Published var wanBandwidthSourceLabel: String = "Bereit"
     private var wanWebSocketTask: URLSessionWebSocketTask? = nil
 
     // Cluster Audio-Party (Xbox / PlayStation-style voice coordination for AI clusters)
@@ -2087,11 +2097,271 @@ final class ClusterViewModel: ObservableObject {
         guard !wanPeers.isEmpty else { return 0.0 }
         let avgBw = max(68.0, wanPeers.reduce(0.0) { $0 + $1.bandwidthGBs } / Double(wanPeers.count))
         let computeMs = (selectedModel.estimatedGB / avgBw) * 1000.0
-        let minUplinkMbps = wanPeers.map(\.uplinkMbps).min() ?? 100.0
+        let minUplinkMbps = max(10.0, wanBottleneckUplinkMbps > 0 ? wanBottleneckUplinkMbps : (wanPeers.map(\.uplinkMbps).min() ?? 100.0))
         // ~16 KB activation hidden-state tensor per pipeline hop
-        let transferMs = wanPeers.count > 1 ? ((0.128 / max(10.0, minUplinkMbps)) * 1000.0) * Double(wanPeers.count - 1) : 0.0
+        let transferMs = wanPeers.count > 1 ? ((0.128 / minUplinkMbps) * 1000.0) * Double(wanPeers.count - 1) : 0.0
         let totalStepMs = max(5.0, computeMs + wanTotalRttMs + transferMs)
         return 1000.0 / totalStepMs
+    }
+
+    // MARK: - Internet Bandwidth & WAN Throughput Monitoring
+
+    /// Effective bottleneck uplink across local WAN egress and remote WAN peers (Mbps).
+    var wanBottleneckUplinkMbps: Double {
+        let peerMin = wanRemotePeers.map(\.uplinkMbps).min() ?? (wanPeers.map(\.uplinkMbps).min() ?? 0.0)
+        if wanMeasuredUploadMbps > 0 {
+            return peerMin > 0 ? min(wanMeasuredUploadMbps, peerMin) : wanMeasuredUploadMbps
+        }
+        return peerMin
+    }
+
+    /// Net usable payload throughput in MB/s after ~12% overlay/QUIC/WireGuard framing overhead.
+    var wanEffectivePayloadMBs: Double {
+        (wanBottleneckUplinkMbps / 8.0) * 0.88
+    }
+
+    /// Per-hop hidden-state tensor sync latency (16 KB activation + current WAN ping RTT).
+    var wanActivationSyncOverheadMs: Double {
+        let uplink = max(1.0, wanBottleneckUplinkMbps)
+        let serializationMs = (0.128 / uplink) * 1000.0
+        let rtt = wanMeasuredPingMs > 0 ? wanMeasuredPingMs : (wanRemotePeers.map(\.rttMs).max() ?? 0.0)
+        return serializationMs + rtt
+    }
+
+    /// Percentage of inference step time spent in productive GPU compute vs WAN network wait.
+    var wanPipelineEfficiencyPct: Double {
+        guard !wanPeers.isEmpty else { return 0.0 }
+        let avgBw = max(68.0, wanPeers.reduce(0.0) { $0 + $1.bandwidthGBs } / Double(wanPeers.count))
+        let computeMs = (selectedModel.estimatedGB / avgBw) * 1000.0
+        let minUplink = max(1.0, wanBottleneckUplinkMbps > 0 ? wanBottleneckUplinkMbps : 100.0)
+        let transferMs = wanPeers.count > 1 ? ((0.128 / minUplink) * 1000.0) * Double(wanPeers.count - 1) : 0.0
+        let netMs = wanTotalRttMs + transferMs
+        let total = computeMs + netMs
+        return total > 0 ? (computeMs / total) * 100.0 : 100.0
+    }
+
+    var wanConnectionQualityGrade: String {
+        if wanMeasuredDownloadMbps <= 0 && wanMeasuredUploadMbps <= 0 && wanMeasuredPingMs <= 0 {
+            return "Nicht gemessen — Live-Check oder Speedtest starten"
+        }
+        let uplink = wanBottleneckUplinkMbps
+        let rtt = wanMeasuredPingMs
+        if uplink >= 150.0 && rtt <= 30.0 && wanMeasuredPacketLossPct < 0.5 {
+            return "Exzellent (High-Throughput Fiber · ideal für PP)"
+        } else if uplink >= 50.0 && rtt <= 65.0 && wanMeasuredPacketLossPct < 1.5 {
+            return "Gut (Stabil für Pipeline-Parallelism)"
+        } else {
+            return "Eingeschränkt (Hohe Latenz/Engpass · DiLoCo empfohlen)"
+        }
+    }
+
+    /// Measures real interface throughput (`netstat -ibn`), ICMP ping + jitter/loss, and optionally `/usr/bin/networkQuality -c`
+    /// in Real Mode (`!simulateMacStudio`), or realistic WAN fiber telemetry in Simulation Mode.
+    func probeWanBandwidthAndThroughput(runActiveSpeedTest: Bool = false) {
+        guard !isProbingWanBandwidth else { return }
+        isProbingWanBandwidth = true
+        let isSimulated = simulateMacStudio
+        let targetPeerIP = wanRemotePeers.first(where: { $0.isOnline && !$0.overlayIP.isEmpty })?.overlayIP ?? "1.1.1.1"
+        wanBandwidthSourceLabel = isSimulated
+            ? "Simulation läuft..."
+            : (runActiveSpeedTest ? "Aktiver macOS Speedtest (/usr/bin/networkQuality)..." : "Messe Live-Interface & ICMP-Ping...")
+
+        Task {
+            if isSimulated {
+                try? await Task.sleep(nanoseconds: runActiveSpeedTest ? 350_000_000 : 180_000_000)
+                let idx = wanThroughputHistory.count + 1
+                let wave = Double(((idx * 29 + 7) % 19) - 9) / 9.0
+                let dl = max(250.0, 485.0 + wave * 35.0)
+                let ul = max(100.0, 215.0 + wave * 18.0)
+                let ping = max(8.0, 16.5 + wave * 2.2)
+                let jitter = max(0.3, 1.4 + abs(wave) * 0.9)
+                let loss = 0.0
+                let payloadMBs = (ul / 8.0) * 0.88
+
+                self.wanActiveInterfaceName = "en0 (Sim)"
+                self.wanMeasuredDownloadMbps = dl
+                self.wanMeasuredUploadMbps = ul
+                self.wanMeasuredPingMs = ping
+                self.wanMeasuredJitterMs = jitter
+                self.wanMeasuredPacketLossPct = loss
+                self.wanBandwidthSourceLabel = "Simulation (Realistische Glasfaser-WAN-Telemetrie)"
+                self.wanBandwidthLastUpdated = self.currentClockTime()
+                self.appendWanThroughputSample(
+                    downloadMbps: dl,
+                    uploadMbps: ul,
+                    pingRttMs: ping,
+                    jitterMs: jitter,
+                    packetLossPct: loss,
+                    tensorSyncMBs: payloadMBs,
+                    isLive: false
+                )
+                self.isProbingWanBandwidth = false
+                return
+            }
+
+            // REAL DATA MODE: probe default interface, netstat delta, ICMP ping, and optional networkQuality
+            let result = await Task.detached(priority: .utility) { () -> (iface: String, dlMbps: Double, ulMbps: Double, pingMs: Double, jitterMs: Double, lossPct: Double, source: String) in
+                let iface = Self.detectDefaultNetworkInterface() ?? "en0"
+                let statsBefore = Self.readInterfaceBytes(iface: iface)
+                try? await Task.sleep(nanoseconds: 450_000_000)
+                let statsAfter = Self.readInterfaceBytes(iface: iface)
+
+                var dlMbps = 0.0
+                var ulMbps = 0.0
+                if let b0 = statsBefore, let b1 = statsAfter {
+                    let rxDelta = b1.rx >= b0.rx ? Double(b1.rx - b0.rx) : 0.0
+                    let txDelta = b1.tx >= b0.tx ? Double(b1.tx - b0.tx) : 0.0
+                    dlMbps = (rxDelta * 8.0) / (0.45 * 1_000_000.0)
+                    ulMbps = (txDelta * 8.0) / (0.45 * 1_000_000.0)
+                }
+
+                let pingRes = Self.runIcmpPingProbe(host: targetPeerIP, count: 3)
+                var sourceDesc = "Echtzeit: \(iface) (netstat) + ICMP Ping (\(targetPeerIP))"
+
+                if runActiveSpeedTest, let nq = Self.runMacOSNetworkQuality() {
+                    dlMbps = nq.dlMbps
+                    ulMbps = nq.ulMbps
+                    sourceDesc = "Echtzeit: /usr/bin/networkQuality + ICMP Ping (\(targetPeerIP))"
+                }
+
+                return (iface, dlMbps, ulMbps, pingRes.avgMs, pingRes.jitterMs, pingRes.lossPct, sourceDesc)
+            }.value
+
+            self.wanActiveInterfaceName = result.iface
+            if result.dlMbps > 0 || runActiveSpeedTest {
+                self.wanMeasuredDownloadMbps = result.dlMbps
+            }
+            if result.ulMbps > 0 || runActiveSpeedTest {
+                self.wanMeasuredUploadMbps = result.ulMbps
+            }
+            self.wanMeasuredPingMs = result.pingMs
+            self.wanMeasuredJitterMs = result.jitterMs
+            self.wanMeasuredPacketLossPct = result.lossPct
+            self.wanBandwidthSourceLabel = result.source
+            self.wanBandwidthLastUpdated = self.currentClockTime()
+            let effPayload = (self.wanBottleneckUplinkMbps / 8.0) * 0.88
+            self.appendWanThroughputSample(
+                downloadMbps: result.dlMbps,
+                uploadMbps: result.ulMbps,
+                pingRttMs: result.pingMs,
+                jitterMs: result.jitterMs,
+                packetLossPct: result.lossPct,
+                tensorSyncMBs: effPayload,
+                isLive: true
+            )
+            self.isProbingWanBandwidth = false
+        }
+    }
+
+    private func appendWanThroughputSample(
+        downloadMbps: Double,
+        uploadMbps: Double,
+        pingRttMs: Double,
+        jitterMs: Double,
+        packetLossPct: Double,
+        tensorSyncMBs: Double,
+        isLive: Bool
+    ) {
+        wanThroughputHistory.append(
+            WanBandwidthSample(
+                timestamp: Date(),
+                downloadMbps: downloadMbps,
+                uploadMbps: uploadMbps,
+                pingRttMs: pingRttMs,
+                jitterMs: jitterMs,
+                packetLossPct: packetLossPct,
+                tensorSyncMBs: tensorSyncMBs,
+                isLiveMeasurement: isLive
+            )
+        )
+        if wanThroughputHistory.count > 24 {
+            wanThroughputHistory.removeFirst(wanThroughputHistory.count - 24)
+        }
+    }
+
+    private nonisolated static func runQuickUtility(_ path: String, _ args: [String]) -> String {
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: path)
+        proc.arguments = args
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = FileHandle.nullDevice
+        proc.standardInput = FileHandle.nullDevice
+        guard (try? proc.run()) != nil else { return "" }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        proc.waitUntilExit()
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+
+    private nonisolated static func detectDefaultNetworkInterface() -> String? {
+        let out = runQuickUtility("/sbin/route", ["-n", "get", "default"])
+        for line in out.components(separatedBy: .newlines) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("interface:") {
+                return trimmed.replacingOccurrences(of: "interface:", with: "")
+                    .trimmingCharacters(in: .whitespaces)
+            }
+        }
+        return nil
+    }
+
+    private nonisolated static func readInterfaceBytes(iface: String) -> (rx: UInt64, tx: UInt64)? {
+        let out = runQuickUtility("/usr/sbin/netstat", ["-ibn"])
+        var bestRx: UInt64 = 0
+        var bestTx: UInt64 = 0
+        var found = false
+        for line in out.components(separatedBy: .newlines) {
+            let cols = line.split(whereSeparator: \.isWhitespace).map(String.init)
+            guard cols.count >= 10, cols[0] == iface else { continue }
+            if let ibytes = UInt64(cols[6]), let obytes = UInt64(cols[9]) {
+                bestRx = max(bestRx, ibytes)
+                bestTx = max(bestTx, obytes)
+                found = true
+            }
+        }
+        return found ? (bestRx, bestTx) : nil
+    }
+
+    private nonisolated static func runIcmpPingProbe(host: String, count: Int) -> (avgMs: Double, jitterMs: Double, lossPct: Double) {
+        let out = runQuickUtility("/sbin/ping", ["-c", "\(count)", "-W", "800", host])
+        var avgMs = 0.0
+        var jitterMs = 0.0
+        var lossPct = 100.0
+
+        if let lossRange = out.range(of: #"([0-9]+(\.[0-9]+)?)%\s*packet loss"#, options: .regularExpression) {
+            let numStr = String(out[lossRange])
+                .replacingOccurrences(of: "packet loss", with: "")
+                .replacingOccurrences(of: "%", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            lossPct = Double(numStr) ?? lossPct
+        }
+
+        // macOS ping footer: round-trip min/avg/max/stddev = 11.2/14.5/18.1/2.8 ms
+        for line in out.components(separatedBy: .newlines) where line.contains("min/avg/max/stddev") {
+            if let eqIdx = line.firstIndex(of: "=") {
+                let rhs = String(line[line.index(after: eqIdx)...])
+                    .replacingOccurrences(of: "ms", with: "")
+                    .trimmingCharacters(in: .whitespaces)
+                let parts = rhs.split(separator: "/").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
+                if parts.count >= 4 {
+                    avgMs = parts[1]
+                    jitterMs = parts[3]
+                }
+            }
+        }
+        return (avgMs, jitterMs, lossPct)
+    }
+
+    private nonisolated static func runMacOSNetworkQuality() -> (dlMbps: Double, ulMbps: Double)? {
+        let out = runQuickUtility("/usr/bin/networkQuality", ["-c"])
+        guard let data = out.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        let dlBps = (obj["dl_throughput"] as? Double) ?? 0.0
+        let ulBps = (obj["ul_throughput"] as? Double) ?? 0.0
+        guard dlBps > 0 || ulBps > 0 else { return nil }
+        return (dlBps / 1_000_000.0, ulBps / 1_000_000.0)
     }
 
     func probeWanOverlayTools() {

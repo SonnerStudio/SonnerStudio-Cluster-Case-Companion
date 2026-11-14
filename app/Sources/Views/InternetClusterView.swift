@@ -178,6 +178,9 @@ struct InternetClusterView: View {
                     )
                 }
 
+                // 2b. Internet Bandwidth, Throughput & Cluster Performance Impact Monitor
+                wanBandwidthMonitorCard
+
                 // 3. Connected Internet Macs & Mega-Cluster Builder
                 SolarisCard {
                         HStack {
@@ -343,6 +346,151 @@ struct InternetClusterView: View {
         .onAppear {
             if vm.audioPartyMembers.isEmpty {
                 vm.syncAudioPartyMembers()
+            }
+        }
+    }
+
+    // MARK: - Internet Bandwidth & Throughput Performance Monitor
+
+    private var wanBandwidthMonitorCard: some View {
+        SolarisCard(accent: vm.simulateMacStudio ? SolarisTheme.amber : SolarisTheme.emerald) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "speedometer")
+                            .foregroundColor(vm.simulateMacStudio ? SolarisTheme.amberGlow : SolarisTheme.emerald)
+                        Text("Internetbandbreite & WAN-Datendurchsatz")
+                            .font(SolarisTheme.cardTitle)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Text(vm.simulateMacStudio ? "SIMULATION" : "ECHTZEIT-MESSUNG")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(vm.simulateMacStudio ? SolarisTheme.amber : SolarisTheme.emerald)
+                            .cornerRadius(5)
+                    }
+                    Text("\(vm.wanBandwidthSourceLabel) · Interface: \(vm.wanActiveInterfaceName) · Letztes Update: \(vm.wanBandwidthLastUpdated)")
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+                Spacer()
+                HStack(spacing: 8) {
+                    Button {
+                        vm.probeWanBandwidthAndThroughput(runActiveSpeedTest: false)
+                    } label: {
+                        Label(
+                            vm.isProbingWanBandwidth ? "Messe..." : "Live-Check (Ping + Net)",
+                            systemImage: "waveform.path.ecg"
+                        )
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(vm.isProbingWanBandwidth)
+
+                    Button {
+                        vm.probeWanBandwidthAndThroughput(runActiveSpeedTest: true)
+                    } label: {
+                        Label("Speedtest (networkQuality)", systemImage: "gauge.with.dots.needle.67percent")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(SolarisTheme.mint)
+                    .foregroundColor(.black)
+                    .disabled(vm.isProbingWanBandwidth)
+                }
+            }
+
+            // 4 Network & Throughput KPIs
+            HStack(spacing: 12) {
+                WanMetricTile(
+                    title: "Download-Bandbreite",
+                    value: String(format: "%.1f Mbps", vm.wanMeasuredDownloadMbps),
+                    sub: String(format: "≈ %.1f MB/s RX", vm.wanMeasuredDownloadMbps / 8.0),
+                    accent: SolarisTheme.mint
+                )
+                WanMetricTile(
+                    title: "Upload / Cluster-Uplink",
+                    value: String(format: "%.1f Mbps", vm.wanMeasuredUploadMbps),
+                    sub: String(format: "Engpass: %.1f Mbps (%.1f MB/s)", vm.wanBottleneckUplinkMbps, vm.wanEffectivePayloadMBs),
+                    accent: SolarisTheme.amberGlow
+                )
+                WanMetricTile(
+                    title: "WAN-Ping & Jitter",
+                    value: String(format: "%.1f ms", vm.wanMeasuredPingMs),
+                    sub: String(format: "Jitter ±%.2f ms · Hop-Sync %.1f ms", vm.wanMeasuredJitterMs, vm.wanActivationSyncOverheadMs),
+                    accent: SolarisTheme.amber
+                )
+                WanMetricTile(
+                    title: "Paketverlust & Effizienz",
+                    value: String(format: "%.1f%% / %.1f%%", vm.wanMeasuredPacketLossPct, vm.wanPipelineEfficiencyPct),
+                    sub: "Loss % / GPU-Compute-Anteil",
+                    accent: vm.wanMeasuredPacketLossPct > 1.0 ? SolarisTheme.coral : SolarisTheme.emerald
+                )
+            }
+
+            // Cluster Performance Impact Summary Banner
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Leistungsauswirkung auf den Internet-Cluster")
+                        .font(SolarisTheme.bodyBold)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text("Bewertung: \(vm.wanConnectionQualityGrade)")
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(String(format: "Netto-Nutzdaten: %.2f MB/s", vm.wanEffectivePayloadMBs))
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .foregroundColor(SolarisTheme.emerald)
+                    Text(String(format: "Resultierender Durchsatz: %.2f tok/s", vm.wanEstimatedTokPerSec))
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(SolarisTheme.amberGlow)
+                }
+            }
+            .padding(10)
+            .background(SolarisTheme.cardElevated)
+            .cornerRadius(10)
+
+            // Throughput History Bar Chart (Download vs Upload)
+            if !vm.wanThroughputHistory.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Durchsatz-Verlauf (letzte \(vm.wanThroughputHistory.count) Messungen)")
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Spacer()
+                        HStack(spacing: 12) {
+                            Label("Download (Mbps)", systemImage: "square.fill")
+                                .font(Font.caption2)
+                                .foregroundColor(SolarisTheme.mint)
+                            Label("Upload (Mbps)", systemImage: "square.fill")
+                                .font(Font.caption2)
+                                .foregroundColor(SolarisTheme.amber)
+                        }
+                    }
+                    let maxMbps = max(10.0, vm.wanThroughputHistory.map { max($0.downloadMbps, $0.uploadMbps) }.max() ?? 100.0)
+                    HStack(alignment: .bottom, spacing: 6) {
+                        ForEach(vm.wanThroughputHistory) { sample in
+                            VStack(spacing: 2) {
+                                HStack(alignment: .bottom, spacing: 2) {
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(SolarisTheme.mint)
+                                        .frame(width: 8, height: max(4, CGFloat(sample.downloadMbps / maxMbps) * 56.0))
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .fill(SolarisTheme.amber)
+                                        .frame(width: 8, height: max(4, CGFloat(sample.uploadMbps / maxMbps) * 56.0))
+                                }
+                                Text(String(format: "%.0fms", sample.pingRttMs))
+                                    .font(.system(size: 8, design: .monospaced))
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(SolarisTheme.cardElevated)
+                    .cornerRadius(10)
+                }
             }
         }
     }

@@ -359,6 +359,18 @@ struct ScientificBenchmarkSummary {
     let isLiveEndpoint: Bool
 }
 
+struct WanBandwidthSample: Identifiable, Hashable {
+    let id = UUID()
+    let timestamp: Date
+    let downloadMbps: Double
+    let uploadMbps: Double
+    let pingRttMs: Double
+    let jitterMs: Double
+    let packetLossPct: Double
+    let tensorSyncMBs: Double
+    let isLiveMeasurement: Bool
+}
+
 struct ModelPreset: Identifiable, Hashable {
     let id: String
     let displayName: String

@@ -307,6 +307,38 @@ class GlobalProjectTests(unittest.TestCase):
         ]:
             self.assertIn(badge, sci, f"Missing mode badge {badge} in ScienceBenchmarksView.swift")
 
+    def test_18_wan_bandwidth_and_throughput_monitor(self):
+        """Verify Internet Cluster bandwidth & throughput monitor uses real netstat/ping/networkQuality and renders impact."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        wan_view = (APP_SOURCES / "Views" / "InternetClusterView.swift").read_text(encoding="utf-8")
+
+        self.assertIn("struct WanBandwidthSample", models)
+        for sym in [
+            "probeWanBandwidthAndThroughput",
+            "wanMeasuredDownloadMbps",
+            "wanMeasuredUploadMbps",
+            "wanMeasuredPingMs",
+            "wanMeasuredJitterMs",
+            "wanMeasuredPacketLossPct",
+            "wanThroughputHistory",
+            "wanBottleneckUplinkMbps",
+            "wanEffectivePayloadMBs",
+            "wanActivationSyncOverheadMs",
+            "wanPipelineEfficiencyPct",
+            "/usr/bin/networkQuality",
+            "/usr/sbin/netstat",
+        ]:
+            self.assertIn(sym, vm, f"Missing WAN bandwidth symbol {sym} in ClusterViewModel.swift")
+
+        for ui_sym in [
+            "wanBandwidthMonitorCard",
+            "Internetbandbreite & WAN-Datendurchsatz",
+            "Leistungsauswirkung auf den Internet-Cluster",
+            "Speedtest (networkQuality)",
+        ]:
+            self.assertIn(ui_sym, wan_view, f"Missing WAN monitor UI symbol {ui_sym} in InternetClusterView.swift")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
