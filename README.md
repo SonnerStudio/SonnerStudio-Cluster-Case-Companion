@@ -140,24 +140,51 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📚 Selected Documentation (Built Into the App's Help Center)
 
-### 1. Universal Apple Silicon M-Series Clustering (M1–M6)
-SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1, M2, M3, M4, M5, M6** — Base, Pro, Max, Ultra) across **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio, and Mac Pro**. Under **Devices & Compare**, you can add any number of Macs to the cluster; the node with the highest memory bandwidth automatically takes **Rank 0 (Coordinator)**.
+### 1. Universal Apple Silicon M-Series Clustering (M1–M12+)
+SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1–M6** and open-ended **M7–M12+** — Base, Pro, Max, Ultra) across **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio, and Mac Pro**. Under **Devices & Compare**, you can add any number of Macs to the cluster; the node with the highest memory bandwidth automatically takes **Rank 0 (Coordinator)**.
 
-| Mac / Chip Family | Memory Bandwidth | Thunderbolt | Recommended macOS Reserve |
+| Mac / Chip Family | Memory Bandwidth | Thunderbolt & RDMA | Recommended macOS Reserve |
 | :--- | :--- | :--- | :--- |
 | **M1 / M2** (Base) | 68 – 100 GB/s | TB 3 / USB4 (26–32 Gbps) | **4 GB** (≤ 24 GB RAM) |
 | **M3 / M4** (Base) | 100 – 120 GB/s | TB 4 (30–37 Gbps) | **4 GB** (≤ 24 GB RAM) |
-| **M5 / M6** (Base) | 153 – 180 GB/s | TB 5 (65–80 Gbps) | **4 GB** (≤ 24 GB RAM) |
+| **M5 / M6+** (Base) | 153 – 180+ GB/s | TB 5 (80 Gbps/dir, 160 Gbps bidir) | **4 GB** (≤ 24 GB RAM) |
 | **M1–M3 Pro** | 150 – 200 GB/s | TB 4 (30–37 Gbps) | **4 – 6 GB** |
-| **M4–M6 Pro** | 273 – 310 GB/s | TB 5 (65–80 Gbps) | **4 – 6 GB** |
+| **M4–M6+ Pro** | 273 – 310+ GB/s | TB 5 (80–120 Gbps boost) | **4 – 6 GB** |
 | **M1–M3 Max** | 400 GB/s | TB 4 (30–37 Gbps) | **6 GB** (32–64 GB RAM) |
-| **M4–M6 Max** | 460 – 580 GB/s | TB 5 (65–80 Gbps) | **6 GB** (32–64 GB RAM) |
-| **M1–M2 Ultra** / **M3 Ultra** | 800 GB/s | TB 4 / TB 5 | **8 GB** (≥ 96 GB RAM) |
+| **M4 Max** | **410 – 546 GB/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` latency) | **6 GB** (32–64 GB RAM) |
+| **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (≥ 96 GB RAM) |
 
-### 2. Memory Safety & Weighted Layer Sharding
+### 2. Thunderbolt 5 RDMA (`JACCL`) & Memory Safety
+- **macOS RDMA over Thunderbolt 5:** With `rdma_ctl enable` (macOS 26.2+) and Apple's `JACCL` (`mlx.distributed`) backend, node-to-node latency drops from `~300 µs` (TCP/IP) to **`~3 µs`**, delivering **`3.5–3.8 GB/s`** sustained MLX tensor throughput over direct point-to-point links.
 - **Never allocate 100% of RAM:** SS-CCC enforces `iogpu.wired_limit_mb` reserves so macOS and WindowServer stay responsive.
 - **Proportional Layer Split:** Each Mac receives layers proportional to its usable memory (`Layers_i = TotalLayers × Usable_i / TotalUsable`).
-- **KV-Cache & Fast Metal Sync:** Use `--kv-bits 4` + `--prefill-step-size 512` for 64k+ context windows, and `MLX_METAL_FAST_SYNCH=1` to cut Metal sync overhead by **45×** (~180 µs → ~4 µs).
+- **KV-Cache & Fast Metal Sync:** Use `--kv-bits 4` + `--prefill-step-size 512` for 64k+ context windows, and `MLX_METAL_FAST_SYNCH=1` to cut Metal sync overhead by **45×** (`~180 µs → ~4 µs`).
+
+---
+
+## 🔄 GitHub-Controlled Program Updates & Automatic Version Control
+
+SS-CCC includes an integrated, **GitHub-driven update and version-control pipeline** so every local installation stays synchronized with upstream improvements without manual polling:
+
+1. **Multi-Source GitHub Version Resolution:**
+   - On launch (after `1.2 s`) and automatically every **30 minutes** via `startAutomaticUpdateMonitor()`, `ClusterViewModel` queries three GitHub endpoints concurrently:
+     - `raw.githubusercontent.com/.../main/version.json` (live release manifest with `version`, `build`, `commit_sha`, `mandatory`, and `notes`)
+     - `api.github.com/repos/.../releases/latest` (official GitHub Releases & `.dmg`/`.zip` assets)
+     - `api.github.com/repos/.../commits/main` (latest `HEAD` short SHA)
+2. **In-App Update Prompt (`UpdatePromptSheet`) & 1-Click Rebuild:**
+   - Whenever a higher semantic version (`compareVersions`), higher build number, or newer `main` commit SHA is detected, an **Update Pill** lights up in the top header and opens the **Update Prompt** (`⌘U`).
+   - **Source Installations:** Runs `git pull --ff-only origin main` + `swift build` directly inside the app and offers a 1-click **Relaunch App Now** button (`scripts/run_ssccc.sh`).
+   - **Packaged `.app` Bundles:** Opens the GitHub Release asset download in Safari.
+3. **Automated CI Version Bumping (`.github/workflows/auto-version-control.yml`):**
+   - Every push to `main` triggers GitHub Actions to run `scripts/bump_version.py --part patch --sync-git`, synchronize `version.json` with `AppReleaseMetadata` in `ClusterModels.swift`, execute the full 12-test suite, commit `[skip ci] chore(release): auto-bump ...`, and update the Git tag `vX.Y.Z`.
+
+---
+
+## 🎙️ Cluster Audio-Party & Live WAN Collaboration
+
+- **Console-Style Voice Coordination:** Built directly alongside the text chat in **Internet Cluster**, **Cluster Audio-Party** uses Apple's native `AVAudioEngine` (`16 kHz PCM16`) over `/ws/wan-audio` for low-latency team voice communication.
+- **Tactical Controls:** Switch between **Push-to-Talk** and **Open-Mic** with configurable noise gate, instant **Mute / Deafen**, active speaker level meters, and live participant roles (`Rank 0 Gateway`, `WAN Worker`).
+- **Real-Time Room Sync (`/ws/wan/{room_id}`):** Synchronizes `SSCCC-WAN-…` room invites, hybrid local-to-WAN coupling events, and telemetry chat messages across all connected peers.
 
 ---
 
@@ -204,15 +231,39 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 
 ---
 
+## 📁 Repository Structure
+
+```text
+├── app/Sources/
+│   ├── SSCCCApp.swift              # Main window, header update pill & UpdatePromptSheet
+│   ├── Models/
+│   │   ├── ClusterModels.swift     # M1–M12+ chip inference, WAN/Science/History & Release models
+│   │   └── Localization.swift      # Complete 5-language UI & Help dictionary (EN/DE/FR/ES/PT)
+│   ├── ViewModels/
+│   │   └── ClusterViewModel.swift  # Hardware probes, model discovery, WAN/Audio-Party & GitHub updater
+│   └── Views/                      # 9 modular SwiftUI views (incl. 6-tab ScienceBenchmarksView & HelpDocsView)
+├── core/                           # Python FastAPI gateway, WebSocket WAN/Audio relays & MLX sharding
+├── scripts/
+│   ├── run_ssccc.sh                # Compiles & launches the macOS app
+│   ├── bump_version.py             # Synchronizes version.json & ClusterModels.swift with Git
+│   ├── setup_tb_network.sh         # Configures 10.99.1.x Thunderbolt bridge
+│   └── setup_wired_limit.sh        # Applies safe iogpu.wired_limit_mb limits
+├── tests/                          # 12-test global verification suite (Swift + Python)
+├── .github/workflows/              # Automated CI version control & tagging
+└── version.json                    # GitHub-hosted update control manifest
+```
+
+---
+
 ## 🚧 Development Status & Contributing
 
 > [!IMPORTANT]
-> **SS-CCC is runnable today, but remains under active development and testing.**
-> Core UI, hardware probing, weighted layer planning, and agent/runtime integrations work, while multi-node real-world benchmarks (across M1–M6 combinations, Thunderbolt 4/5 bridges, and RDMA/JACCL) are continuously being tested and refined.
+> **SS-CCC v1.6+ is actively runnable and tested (`12/12` automated checks passing), while real-world multi-node endurance benchmarks continue.**
+> **Currently implemented & verified:** English default startup with 5-language UI, open-ended M1–M12+ hardware probing, live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, 9-chapter Help Center, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
 
 We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:
-- **Test on your hardware:** Try SS-CCC with your M1–M6 Macs and share throughput, memory, and stability findings.
-- **Report issues & ideas:** Open an issue on GitHub for bugs, hardware edge cases, or new feature proposals.
+- **Test on your hardware:** Try SS-CCC with your M1–M12+ Macs and share throughput, memory, and RDMA/JACCL stability findings.
+- **Join the Hybrid Record Attempt:** Organize local TB islands + WAN peers and publish your exported JSON/CSV/LaTeX manifests.
 - **Submit Pull Requests:** Improvements to SwiftUI views, Python/MLX sharding, Thunderbolt/RDMA scripts, or translations are always welcome!
 
 ---

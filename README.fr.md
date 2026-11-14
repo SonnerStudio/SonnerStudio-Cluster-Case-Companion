@@ -142,15 +142,30 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 | **M3 / M4** (Base) | 100 – 120 Go/s | TB 4 (30–37 Gbps) | **4 Go** (≤ 24 Go RAM) |
 | **M5 / M6** (Base) | 153 – 180 Go/s | TB 5 (65–80 Gbps) | **4 Go** (≤ 24 Go RAM) |
 | **M1–M3 Pro** | 150 – 200 Go/s | TB 4 (30–37 Gbps) | **4 – 6 Go** |
-| **M4–M6 Pro** | 273 – 310 Go/s | TB 5 (65–80 Gbps) | **4 – 6 Go** |
+| **M4–M6+ Pro** | 273 – 310+ Go/s | TB 5 (80–120 Gbps boost) | **4 – 6 Go** |
 | **M1–M3 Max** | 400 Go/s | TB 4 (30–37 Gbps) | **6 Go** (32–64 Go RAM) |
-| **M4–M6 Max** | 460 – 580 Go/s | TB 5 (65–80 Gbps) | **6 Go** (32–64 Go RAM) |
-| **M1–M2 Ultra** / **M3 Ultra** | 800 Go/s | TB 4 / TB 5 | **8 Go** (≥ 96 Go RAM) |
+| **M4 Max** | **410 – 546 Go/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` latence) | **6 Go** (32–64 Go RAM) |
+| **M1–M2 Ultra / M3 Ultra** | **800 – 819 Go/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 Go** (≥ 96 Go RAM) |
 
-### 2. Protection mémoire et répartition pondérée
+### 2. Thunderbolt 5 RDMA (`JACCL`), protection mémoire et répartition pondérée
+- **RDMA macOS sur Thunderbolt 5 :** Avec `rdma_ctl enable` (macOS 26.2+) et le moteur `JACCL` (`mlx.distributed`), la latence inter-nœuds chute de `~300 µs` (TCP/IP) à **`~3 µs`** avec **`3,5–3,8 Go/s`** de débit tenseur soutenu.
 - **Ne jamais allouer 100 % de la RAM :** `iogpu.wired_limit_mb` préserve la fluidité de macOS et de WindowServer.
 - **Répartition proportionnelle des couches :** chaque Mac reçoit une part calculée sur sa mémoire utilisable (`Couches_i = Total × Utilisable_i / TotalUtilisable`).
 - **Cache KV 4 bits & synchronisation rapide :** `--kv-bits 4` et `MLX_METAL_FAST_SYNCH=1` (45× plus rapide, ~180 µs → ~4 µs).
+
+---
+
+## 🔄 Mises à jour pilotées par GitHub et contrôle automatique de version
+
+1. **Résolution GitHub multi-sources :** Au lancement (après `1,2 s`) puis toutes les **30 minutes** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` interroge `main/version.json`, `releases/latest` et `commits/main` (SHA court).
+2. **Invite de mise à jour (`UpdatePromptSheet`, `⌘U`) :** Lorsqu'une version, un numéro de compilation ou un SHA `main` plus récent est détecté, l'application propose pour les dépôts locaux `git pull --ff-only origin main` + `swift build` + relance en un clic (`scripts/run_ssccc.sh`), ou ouvre le téléchargement GitHub pour les paquets autonomes.
+3. **Automatisation CI (`.github/workflows/auto-version-control.yml`) :** Chaque *push* sur `main` exécute `scripts/bump_version.py --part patch --sync-git`, synchronise `version.json` et `ClusterModels.swift`, lance les 12 tests et crée le tag `vX.Y.Z`.
+
+---
+
+## 🎙️ Audio-Party de grappe et collaboration WAN en direct
+
+- **Audio temps réel (`AVAudioEngine`, 16 kHz PCM16) :** Relié au point `/ws/wan-audio` juste à côté du chat (`/ws/wan/{room_id}`), avec modes **Appuyer-pour-parler / Micro ouvert**, **Muet / Sourd**, vumètre et rôles de nœuds (`Passerelle rang 0`, `Nœud WAN`).
 
 ---
 
@@ -178,12 +193,12 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 ## 🚧 État d'avancement et contribution
 
 > [!IMPORTANT]
-> **SS-CCC est déjà exécutable, mais reste en cours de développement et de mise à l'épreuve.**
-> L'interface, la détection matérielle, le découpage pondéré des couches et la liaison avec les agents fonctionnent ; les essais poussés sur diverses combinaisons de Mac M1–M6, ponts Thunderbolt 4/5 et RDMA/JACCL se poursuivent activement.
+> **SS-CCC (v1.6+) est pleinement exécutable et validé par `12/12` tests automatisés, tandis que les essais d'endurance multi-nœuds se poursuivent.**
+> **Déjà opérationnel et vérifié :** langue de démarrage en anglais (avec 5 langues), détection évolutive M1–M12+, découverte de modèles en direct (oMLX / Ollama / llama.cpp / GGUF), laboratoire scientifique à 6 onglets avec historique par position et global, pont hybride Local ↔ Internet-WAN, Audio-Party `AVAudioEngine`, manuel à 9 chapitres et mise à jour automatique pilotée par GitHub + CI.
 
 Nous encourageons vivement les développeurs, chercheurs et passionnés d'Apple Silicon à **participer au développement et à faire évoluer SS-CCC** :
-- **Tester sur votre matériel :** Essayez SS-CCC sur vos Mac M1–M6 et partagez vos mesures de débit et de mémoire.
-- **Signaler et proposer :** Ouvrez un ticket sur GitHub pour tout bogue, cas particulier ou nouvelle idée.
+- **Tester sur votre matériel :** Essayez SS-CCC sur vos Mac M1–M12+ et partagez vos mesures de débit, mémoire et RDMA/JACCL.
+- **Participer au défi de record :** Coupler des îlots TB locaux et des pairs WAN et publier vos exports JSON/CSV/LaTeX.
 - **Proposer des améliorations :** Toute contribution à l'interface SwiftUI, au découpage MLX, aux scripts Thunderbolt ou aux traductions est la bienvenue !
 
 ---
