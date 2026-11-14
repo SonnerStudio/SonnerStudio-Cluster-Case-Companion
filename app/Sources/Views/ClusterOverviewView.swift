@@ -24,7 +24,7 @@ struct ClusterOverviewView: View {
                     )
                     MetricTile(
                         title: vm.t("kpi_link"),
-                        value: vm.transportMode == .lanWlanOnly ? "1–10 Gbps" : "30–37 Gbps",
+                        value: vm.effectiveLinkStats.rangeLabel,
                         subtitle: vm.activeLinkHeadline,
                         accent: SolarisTheme.emerald,
                         icon: "bolt.fill"
@@ -59,7 +59,11 @@ struct ClusterOverviewView: View {
                             NodeCardView(node: node)
 
                             if index < vm.nodes.count - 1 {
-                                LinkBridgeConnector(mode: vm.transportMode)
+                                LinkBridgeConnector(
+                                    leftGen: node.thunderboltGen,
+                                    rightGen: vm.nodes[index + 1].thunderboltGen,
+                                    mode: vm.transportMode
+                                )
                             }
                         }
                     }
@@ -214,13 +218,16 @@ private struct NodeCardView: View {
 }
 
 private struct LinkBridgeConnector: View {
+    let leftGen: Int
+    let rightGen: Int
     let mode: TransportMode
 
     var body: some View {
+        let stats = AppleSiliconChipFamily.linkTransferStats(genA: leftGen, genB: rightGen, mode: mode)
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
             let phase = CGFloat(context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.6) / 1.6)
             VStack(spacing: 8) {
-                Text(mode == .rdmaExperimental ? "RDMA" : "TB4/5")
+                Text(stats.badge)
                     .font(SolarisTheme.bodyBold)
                     .foregroundColor(SolarisTheme.amberGlow)
 
@@ -234,11 +241,11 @@ private struct LinkBridgeConnector: View {
                         .offset(x: phase * 84)
                 }
 
-                Text(mode == .lanWlanOnly ? "LAN/Wi-Fi" : "30–37 Gbps")
+                Text(stats.rangeLabel)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(SolarisTheme.textSecondary)
             }
-            .frame(width: 105)
+            .frame(width: 110)
         }
     }
 }

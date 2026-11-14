@@ -262,7 +262,7 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
 
     var thunderboltGen: Int {
         switch self {
-        case .m4Pro, .m4Max, .m5, .m5Pro, .m5Max, .m6, .m6Pro, .m6Max: return 5
+        case .m3Ultra, .m4Pro, .m4Max, .m5, .m5Pro, .m5Max, .m6, .m6Pro, .m6Max: return 5
         default: return 4
         }
     }
@@ -298,5 +298,30 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
         if lower.contains("m4") { return 120.0 }
         if lower.contains("m2") || lower.contains("m3") { return 100.0 }
         return 68.0
+    }
+
+    static func inferThunderboltGen(from chipName: String) -> Int {
+        let lower = chipName.lowercased()
+        if lower.contains("m6") || lower.contains("m5") || lower.contains("m3 ultra")
+            || lower.contains("m4 pro") || lower.contains("m4 max") {
+            return 5
+        }
+        return 4
+    }
+
+    static func linkTransferStats(genA: Int, genB: Int, mode: TransportMode) -> (rangeLabel: String, nominalGbps: Double, badge: String) {
+        if mode == .lanWlanOnly {
+            return ("1–10 Gbps", 2.5, "LAN/Wi-Fi")
+        }
+        let minGen = min(genA, genB)
+        if minGen >= 5 {
+            return mode == .rdmaExperimental
+                ? ("75–110 Gbps", 85.0, "TB5 RDMA")
+                : ("65–80 Gbps", 72.0, "TB5")
+        }
+        let badge = (genA != genB) ? "TB4/5" : "TB4"
+        return mode == .rdmaExperimental
+            ? ("34–38 Gbps", 36.0, "\(badge) RDMA")
+            : ("30–37 Gbps", 34.0, badge)
     }
 }

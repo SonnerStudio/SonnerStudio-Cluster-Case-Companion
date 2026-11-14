@@ -150,14 +150,27 @@ struct MainStudioWindow: View {
                 .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))
 
                 // Simulations-Schalter (bis Mac Studio per UPS eintrifft)
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle(vm.t("sim_toggle"), isOn: $vm.simulateMacStudio)
-                        .font(SolarisTheme.bodyBold)
+                HStack(alignment: .center, spacing: 10) {
+                    Button {
+                        vm.simulateMacStudio.toggle()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(vm.t("sim_toggle"))
+                                .font(SolarisTheme.bodyBold)
+                                .foregroundColor(SolarisTheme.textPrimary)
+                            Text(vm.simulateMacStudio ? vm.t("sim_active_desc") : vm.t("sim_single_desc"))
+                                .font(.system(size: 13))
+                                .foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    Toggle("", isOn: $vm.simulateMacStudio)
+                        .labelsHidden()
                         .toggleStyle(.switch)
                         .tint(SolarisTheme.amber)
-                    Text(vm.simulateMacStudio ? vm.t("sim_active_desc") : vm.t("sim_single_desc"))
-                        .font(.system(size: 13))
-                        .foregroundColor(SolarisTheme.textSecondary)
                 }
                 .padding(14)
                 .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))

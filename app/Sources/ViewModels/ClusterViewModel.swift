@@ -207,7 +207,7 @@ final class ClusterViewModel: ObservableObject {
     var nodes: [ClusterNodeModel] {
         let localUsable = AppleSiliconChipFamily.usableVramGB(for: localRamGB)
         let localBandwidth = AppleSiliconChipFamily.inferBandwidth(from: localChipName)
-        let localTbGen = localChipName.lowercased().contains("m6") || localChipName.lowercased().contains("m5") || localChipName.lowercased().contains("m4 max") || localChipName.lowercased().contains("m4 pro") ? 5 : 4
+        let localTbGen = AppleSiliconChipFamily.inferThunderboltGen(from: localChipName)
 
         var rawList: [ClusterNodeModel] = []
         if simulateMacStudio {
@@ -334,16 +334,28 @@ final class ClusterViewModel: ObservableObject {
         )
     }
 
+    var effectiveLinkStats: (rangeLabel: String, nominalGbps: Double, badge: String) {
+        let active = nodes
+        guard active.count > 1 else {
+            return ("Lokal (Intern)", 0.0, "1 Node")
+        }
+        let minTb = active.map(\.thunderboltGen).min() ?? 4
+        let maxTb = active.map(\.thunderboltGen).max() ?? 4
+        return AppleSiliconChipFamily.linkTransferStats(genA: minTb, genB: maxTb, mode: transportMode)
+    }
+
     var activeLinkHeadline: String {
+        guard nodes.count > 1 else { return "Lokal (1 Node)" }
+        let stats = effectiveLinkStats
         switch transportMode {
         case .autoHybrid:
-            return nodes.count > 1 ? "TB4/5 Bridge (30–37 Gbps) + LAN/WLAN Control" : "Lokal (1 Node)"
+            return "\(stats.badge) Bridge (\(stats.rangeLabel)) + LAN/WLAN Control"
         case .thunderboltOnly:
-            return "Thunderbolt Point-to-Point (10.99.1.x)"
+            return "Thunderbolt Point-to-Point (\(stats.rangeLabel) · 10.99.1.x)"
         case .lanWlanOnly:
             return "LAN / Wi-Fi Fallback (~1–10 Gbps)"
         case .rdmaExperimental:
-            return "JACCL / RDMA Verbs (<50 µs, Opt-In)"
+            return "JACCL / RDMA Verbs (\(stats.rangeLabel), Opt-In)"
         }
     }
 
@@ -390,11 +402,14 @@ final class ClusterViewModel: ObservableObject {
         }
 
         let split = shardingSplit
+        let splitSummary = split.nodeAllocations
+            .map { "\($0.nodeName): \($0.layers)L (\(String(format: "%.0f", $0.percent))%)" }
+            .joined(separator: " | ")
         consoleOutput = """
         [SS-CCC Lokale Vorschau]
         Modell: \(selectedModel.displayName) (\(selectedModel.quantization))
         Cluster: \(nodes.count) Node(s) · \(Int(totalPhysicalRamGB)) GB physisch (\(Int(totalUsableVramGB)) GB nutzbar)
-        Verteilung: Studio \(split.studioLayers) Layer (\(String(format: "%.0f", split.studioPercent))%) | Mini \(split.miniLayers) Layer (\(String(format: "%.0f", split.miniPercent))%)
+        Verteilung: \(splitSummary)
         Transport: \(activeLinkHeadline) | FAST_SYNCH=\(fastSynchEnabled ? "1 (~4 µs)" : "0 (~180 µs)")
         """
     }
