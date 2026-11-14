@@ -1,13 +1,13 @@
 {
-  "version": "1.6.1",
+  "version": "1.6.2",
   "build": 160,
-  "tag": "v1.6.1",
+  "tag": "v1.6.2",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• feat(versioning): add automatic version control (CI auto-bump, SHA check & 30m background monitor) (1779dca)\n• feat(update): add GitHub-controlled in-app update checker, prompt sheet, and git pull/rebuild updater (7918fc7)\n• docs(help): update Help & Handbook across all 5 languages to match current features (29bac1c)\n• fix(science): fix scope/tab/picker/grid layout and add per-position & global history recording (5d3d77e)\n• Include InternetClusterView.swift in scripts/run_ssccc.sh and verify all Swift sources in test_12 (8d3b040)",
+  "notes": "• Merge remote-tracking branch 'origin/main' (867fa47)\n• chore(release): auto-bump v1.6.1 (build 160) [skip ci] (336707d)\n• docs(readme): update all 5 READMEs for 6-tab Science Lab, History Recording, GitHub Updates & Auto Version Control (f4848a8)\n• feat(versioning): add automatic version control (CI auto-bump, SHA check & 30m background monitor) (1779dca)\n• feat(update): add GitHub-controlled in-app update checker, prompt sheet, and git pull/rebuild updater (7918fc7)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "1779dca",
-  "updated_at": "2026-11-14T17:47:47Z"
+  "commit_sha": "867fa47",
+  "updated_at": "2026-11-14T17:51:07Z"
 }
