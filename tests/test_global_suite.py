@@ -151,6 +151,14 @@ class GlobalProjectTests(unittest.TestCase):
         for ui in ["ScalingCurveCanvasView", "rooflineTabContent", "wanTopologyTabContent", "memoryKvTabContent", "energeticsTabContent", "trialsExportTabContent"]:
             self.assertIn(ui, view)
 
+    def test_10_local_wan_cluster_coupling_present(self):
+        """Verify Local TB/RDMA Cluster <-> Internet WAN Cluster hybrid coupling exists."""
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        view = (APP_SOURCES / "Views" / "InternetClusterView.swift").read_text(encoding="utf-8")
+        for sym in ["isLocalClusterCoupledWithWan", "toggleLocalClusterWanCoupling", "syncLocalClusterIntoWan", "coupledLocalBridgeCount", "coupledRemoteWanCount"]:
+            self.assertIn(sym, vm)
+        self.assertIn("toggleLocalClusterWanCoupling()", view)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

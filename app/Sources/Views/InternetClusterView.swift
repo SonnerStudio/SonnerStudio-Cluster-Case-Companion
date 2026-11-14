@@ -104,6 +104,50 @@ struct InternetClusterView: View {
                     }
                 }
 
+                // 1b. Hybrid Bridge: Couple Local Thunderbolt/RDMA Cluster with Internet WAN Cluster
+                SolarisCard(accent: vm.isLocalClusterCoupledWithWan ? SolarisTheme.mint : SolarisTheme.amber) {
+                    HStack(alignment: .center, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
+                                Image(systemName: vm.isLocalClusterCoupledWithWan ? "link.circle.fill" : "link.badge.plus")
+                                    .foregroundColor(vm.isLocalClusterCoupledWithWan ? SolarisTheme.mint : SolarisTheme.amberGlow)
+                                Text("Hybrid-Brücke: Lokalen TB/RDMA-Verbund mit Internet-Cluster koppeln")
+                                    .font(SolarisTheme.cardTitle)
+                                    .foregroundColor(SolarisTheme.textPrimary)
+                            }
+                            Text(
+                                vm.isLocalClusterCoupledWithWan
+                                    ? "Aktiv: \(vm.coupledLocalBridgeCount) lokale Thunderbolt/RDMA-Macs (\(Int(vm.totalPhysicalRamGB)) GB) bilden eine schnelle Tier-0-Insel und teilen Schichten mit \(vm.coupledRemoteWanCount) WAN-Partnern."
+                                    : "Fügt alle \(vm.nodes.count) lokalen Thunderbolt/RDMA-Macs (\(Int(vm.totalPhysicalRamGB)) GB RAM) über deinen Rang-0-Leitrechner als gemeinsame Speicher- und Rechen-Insel in den Internet-Cluster ein."
+                            )
+                            .font(Font.caption)
+                            .foregroundColor(SolarisTheme.textSecondary)
+                        }
+
+                        Spacer()
+
+                        Button {
+                            vm.toggleLocalClusterWanCoupling()
+                        } label: {
+                            Label(
+                                vm.isLocalClusterCoupledWithWan ? "Kopplung lösen" : "Lokal + Internet koppeln",
+                                systemImage: vm.isLocalClusterCoupledWithWan ? "xmark.circle" : "bolt.horizontal.fill"
+                            )
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(vm.isLocalClusterCoupledWithWan ? SolarisTheme.coral : SolarisTheme.mint)
+                        .foregroundColor(.black)
+
+                        Button {
+                            vm.sciScope = .internetWan
+                            vm.selectedTab = .science
+                        } label: {
+                            Label("Im Forschungslabor analysieren", systemImage: "waveform.path.ecg")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+
                 // 2. WAN Pool Summary Tiles
                 HStack(spacing: 14) {
                     WanMetricTile(

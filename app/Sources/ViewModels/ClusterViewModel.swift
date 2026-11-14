@@ -80,6 +80,7 @@ final class ClusterViewModel: ObservableObject {
     @Published var wanRoomCode: String = "SSCCC-WAN-\(String(UUID().uuidString.prefix(8)))"
     @Published var wanRelayUrl: String = "ws://127.0.0.1:8000/ws/wan/"
     @Published var wanConnected: Bool = false
+    @Published var isLocalClusterCoupledWithWan: Bool = false
     @Published var wanTransport: WanOverlayTransport = .tailscaleMesh
     @Published var wanScaleMode: InternetClusterScale = .privateTeam
     @Published var wanTailscaleInstalled: Bool = false
@@ -2081,6 +2082,95 @@ final class ClusterViewModel: ObservableObject {
                 isSelf: false
             )
         )
+    }
+
+    // MARK: - Local Thunderbolt/RDMA <-> Internet WAN Coupling
+
+    var coupledLocalBridgeCount: Int {
+        wanPeers.filter { $0.isLocalHost || $0.id.hasPrefix("local-bridge-") }.count
+    }
+
+    var coupledRemoteWanCount: Int {
+        wanPeers.filter { !$0.isLocalHost && !$0.id.hasPrefix("local-bridge-") }.count
+    }
+
+    func toggleLocalClusterWanCoupling() {
+        isLocalClusterCoupledWithWan.toggle()
+        syncLocalClusterIntoWan(announceInChat: true)
+    }
+
+    func syncLocalClusterIntoWan(announceInChat: Bool = false) {
+        let remoteOnly = wanPeers.filter { !$0.isLocalHost && !$0.id.hasPrefix("local-bridge-") }
+        if isLocalClusterCoupledWithWan {
+            let localBridgePeers: [WanPeerNode] = nodes.enumerated().map { idx, node in
+                let tbMbps = Double(node.thunderboltGen >= 5 ? 80000 : 32000)
+                return WanPeerNode(
+                    id: idx == 0 ? "local-host" : "local-bridge-\(node.id)",
+                    displayName: idx == 0 ? "\(node.name) (Gateway)" : "\(node.name) (TB\(node.thunderboltGen))",
+                    region: "Lokal · TB\(node.thunderboltGen)\(node.rdmaEnabled ? " RDMA" : "")",
+                    chip: node.chip,
+                    ramGB: node.totalRamGB,
+                    usableVramGB: node.usableVramGB,
+                    bandwidthGBs: node.bandwidthGBs,
+                    overlayIP: idx == 0 ? (wanTailscaleIP.isEmpty ? node.lanIP : wanTailscaleIP) : node.tbIP,
+                    rttMs: idx == 0 ? 0.0 : 0.07,
+                    uplinkMbps: tbMbps,
+                    assignedLayers: "Auto",
+                    transport: wanTransport,
+                    isOnline: true,
+                    isLocalHost: true
+                )
+            }
+            wanPeers = localBridgePeers + remoteOnly
+            recomputeWanLayerAssignments()
+            wanStatusNote = "Gekoppelt: \(localBridgePeers.count) lokale TB-Macs + \(remoteOnly.count) WAN-Macs (\(Int(wanTotalRamGB)) GB Gesamt-RAM)."
+            if announceInChat {
+                chatMessages.append(
+                    ClusterChatMessage(
+                        senderName: "Hybrid-Brücke",
+                        senderRegion: "Lokal ↔ WAN",
+                        senderChip: "\(localBridgePeers.count) TB + \(remoteOnly.count) WAN",
+                        timestamp: currentClockTime(),
+                        text: "🔗 Lokaler Thunderbolt/RDMA-Verbund (\(localBridgePeers.count) Macs · \(Int(totalPhysicalRamGB)) GB) mit Internet-Cluster gekoppelt. Gesamtspeicher: \(Int(wanTotalRamGB)) GB (\(Int(wanTotalUsableVramGB)) GB nutzbar).",
+                        isSystemEvent: true,
+                        isSelf: false
+                    )
+                )
+            }
+        } else {
+            let primaryHost = wanPeers.first(where: { $0.id == "local-host" }) ?? WanPeerNode(
+                id: "local-host",
+                displayName: Host.current().localizedName ?? "Lokaler Mac",
+                region: "Lokal",
+                chip: localChipName,
+                ramGB: localRamGB,
+                usableVramGB: AppleSiliconChipFamily.usableVramGB(for: localRamGB),
+                bandwidthGBs: AppleSiliconChipFamily.inferBandwidth(from: localChipName),
+                overlayIP: wanTailscaleIP.isEmpty ? localLanIP : wanTailscaleIP,
+                rttMs: 0.0,
+                uplinkMbps: 300.0,
+                assignedLayers: "Auto",
+                transport: wanTransport,
+                isOnline: true,
+                isLocalHost: true
+            )
+            wanPeers = [primaryHost] + remoteOnly
+            recomputeWanLayerAssignments()
+            wanStatusNote = "Kopplung gelöst: \(wanPeers.count) Knoten im Internet-Verbund."
+            if announceInChat {
+                chatMessages.append(
+                    ClusterChatMessage(
+                        senderName: "Hybrid-Brücke",
+                        senderRegion: "Lokal ↔ WAN",
+                        senderChip: "Getrennt",
+                        timestamp: currentClockTime(),
+                        text: "🔌 Lokale Thunderbolt-Brücke vom Internet-Cluster getrennt.",
+                        isSystemEvent: true,
+                        isSelf: false
+                    )
+                )
+            }
+        }
     }
 
     func recomputeWanLayerAssignments() {
