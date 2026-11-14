@@ -133,6 +133,52 @@ chmod +x scripts/run_ssccc.sh
 
 ---
 
+## 📖 Guide d'utilisation : Grappe locale & hybride (Local + Internet), chargement des modèles et données théoriques
+
+### 1. Configuration de la grappe locale (Thunderbolt 3/4/5 & LAN)
+1. **Câblage physique :** Reliez vos Mac en direct par câbles **Thunderbolt 3/4/5** (point-à-point, anneau ou maillage) et/ou **Ethernet 10GbE**.
+2. **Adresses IP point-à-point :** Exécutez `./scripts/setup_tb_network.sh studio` (`10.99.1.1`) sur le Mac principal et `./scripts/setup_tb_network.sh mini` (`10.99.1.2`, etc.) sur les nœuds secondaires (ou configurez-les dans **Réseau et mémoire directe**).
+3. **RDMA optionnel (macOS 26.2+ sur TB5) :** Activez `rdma_ctl enable` pour que `JACCL` (`mlx.distributed`) atteigne **`~3 µs`** de latence inter-nœuds contre `~300 µs` en TCP/IP.
+4. **Attribution automatique des rangs :** Ajoutez vos Mac dans **Appareils et comparaison**. Le `MemoryWeightedPlanner` attribue automatiquement le **rang 0 (coordinateur)** au Mac offrant le plus haut débit mémoire, et les **rangs 1..N (workers)** aux autres.
+
+### 2. Configuration du réseau hybride (Local + Internet WAN simultanément)
+1. **Cœur local rapide (Niveau 1) :** L'anneau Thunderbolt/LAN local (`10.99.1.x` / `192.168.x.x`) reste actif pour les couches sensibles à la latence.
+2. **Salon coordinateur WAN (Niveau 2) :** Dans **Grappe Internet et discussion**, ouvrez un salon (`/ws/wan/{room_id}` sur le port `8000`, exposé via Tailscale, WireGuard, Cloudflare Tunnel ou proxy inverse).
+3. **Connexion des nœuds distants :** Les Mac distants rejoignent la grappe avec le **Code de salon + Jeton d'accès**.
+4. **Routage hybride à deux niveaux :** SS-CCC garde les couches critiques sur l'anneau local (`3–180 µs`) et délègue le surplus aux nœuds WAN (`15–120 ms` RTT) avec micro-batching (`M ≥ 4`).
+
+### 3. Qui charge le modèle, combien de modèles tiennent en mémoire et quel est le flux d'exécution ?
+- **Qui charge quoi ?**
+  - **Coordinateur (Rang 0) :** Héberge la passerelle API (`:8000`), effectue la tokenisation, **conserve toujours les Embeddings et la tête LM (`has_embeddings=True`, `has_lm_head=True`)** plus sa part proportionnelle de couches (`Couches_i = Total × Utilisable_i / TotalUtilisable`).
+  - **Workers (Rangs 1..N) :** Chaque nœud ne charge **que sa tranche Safetensors/couches `[start_layer .. end_layer)`** depuis son cache local HuggingFace/oMLX/Ollama (`~/.cache/huggingface`, `~/.ollama/models`, `~/Models`).
+- **Combien de modèles peuvent être chargés simultanément ?**
+  - **Mode distribué (`mlx.distributed` / `JACCL`) :** **1 grand modèle réparti à la fois** sur l'ensemble du pool mémoire (changement rapide par hot-swap).
+  - **Mode multi-modèles (`oMLX` / `Ollama` / nœuds hétérogènes) :** Tant que `Σ (Poids_i + Cache_KV_i) ≤ VRAM_Utilisable_Totale_Go` (après réserve macOS de 4–8 Go via `iogpu.wired_limit_mb`), **plusieurs modèles** restent résidents en parallèle (ex. : **codeur 32B + routeur rapide 8B + embeddings 1,5B**).
+- **Flux et structure d'une requête :**
+  1. **Détection & sélection du lien** (`TB5 RDMA > TB Bridge > 10GbE > WLAN > WAN`).
+  2. **Plan de répartition** (`hostfile.json` et limites mémoire `iogpu.wired_limit_mb`).
+  3. **Entrée API** (`http://127.0.0.1:8000/v1/chat/completions`, `/v1/messages`, `/api/chat`).
+  4. **Phase Prefill (`TTFT`) :** Rang 0 encode le prompt puis traverse le pipeline (`Rang 0 → 1 → ... → N → Rang 0`).
+  5. **Phase Decode (`TPOT` & `tok/s`) :** Génération jeton par jeton avec `--kv-bits 4` et `MLX_METAL_FAST_SYNCH=1`.
+  6. **Streaming SSE & télémétrie** dans **Science et performance** (`tok/s`, `J/tok`, `p50/p95/p99`).
+
+### 4. Données théoriques de dimensionnement et de performance par cas d'usage
+
+> **Formules d'estimation analytique :**
+> - **Mémoire requise :** `VRAM_Go ≈ Paramètres_B × (Bits / 8) × 1,15 + Cache_KV_Go`
+> - **Plafond théorique Decode :** `tok/s ≈ (Bande_Passante_Effective_Go/s / Poids_Actifs_Go) × (1 − Surcoût_Comm)`
+
+| Cas d'usage | Topologie & Pool utilisable | Modèle type & Quantification | `TTFT` théorique (2k prompt) | Débit théorique (`tok/s` / `TPOT`) | Énergie & goulot principal |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Poste individuel (Edge Dev)** | 1× Mac mini M4 (16 Go, `12 Go` util., `120 Go/s`) | `Qwen2.5-14B` (`4 bits`, ~8,8 Go) | `~1,8 – 2,6 s` | **`11 – 14 tok/s`** (`~75 ms/tok`) | `~1,7 J/tok` · Bande passante mémoire |
+| **2. Studio Pro solo (Codage rapide)** | 1× Mac Studio M4 Max (64 Go, `58 Go` util., `546 Go/s`) | `Llama-3.3-70B` (`4 bits`, ~40 Go) | `~1,1 – 1,7 s` | **`12 – 14 tok/s`** (`~74 ms/tok`) | `~3,8 J/tok` · Bande passante mémoire |
+| **3. Anneau local 2 nœuds TB5 RDMA** | 2× M4 Max 64 Go (`116 Go` util., `~1 092 Go/s` agg., `~3 µs` JACCL) | `Qwen2.5-Coder-72B` (`8 bits`, ~78 Go) | `~1,4 – 2,0 s` | **`12 – 14 tok/s`** (`~76 ms/tok`) | `~7,5 J/tok` · Surcoût RDMA négligeable |
+| **4. Labo 4 nœuds Ultra TB5 RDMA** | 4× M3 Ultra 256 Go (`992 Go` util., `~3,27 To/s` agg.) | `DeepSeek-V3 671B MoE` (`4 bits`, ~385 Go, ~37B actifs) | `~2,2 – 3,5 s` | **`38 – 55 tok/s`** (`~20 ms/tok`) | `~5,2 J/tok` · Débit experts actifs MoE |
+| **5. Hybride Bureau LAN + Domicile WAN** | 2× TB4/10GbE + 2× WAN (`192 Go` util., `35 ms` RTT WAN) | `Llama-3.1-405B` (`3/4 bits`, ~170 Go) | `~6 – 11 s` | **`2,2 – 4,5 tok/s`** (`~280 ms/tok`) | `~28 J/tok` · Latence WAN (`M=8` aide) |
+| **6. Essaim communautaire mondial WAN** | 16+ Mac mondiaux (`1,5+ To` util., `60–120 ms` RTT WAN) | `671B–1T+` Frontier (`4/8 bits`) | `~12 – 25 s` | **`1,2 – 3,0 tok/s`** (`~500 ms/tok`) | Latence WAN (le batching compense) |
+
+---
+
 ## 📚 Extraits de la documentation (intégrés dans l'aide de l'application)
 
 ### 1. Tous les Mac à puce Apple M en grappe (M1–M6)

@@ -140,6 +140,52 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ---
 
+## 📖 Anwendungsanleitung: Lokaler & Hybrid-Verbund (Lokal + Internet), Modell-Laden & Theoretische Berechnungsdaten
+
+### 1. Einrichtung des lokalen Clusters (Thunderbolt 3/4/5 & LAN)
+1. **Physische Verkabelung:** Verbinde die Macs direkt über **Thunderbolt-3/4/5-Kabel** (Punkt-zu-Punkt, Daisy-Chain oder Ring) und/oder **10GbE-Ethernet**.
+2. **Feste Punkt-zu-Punkt-IPs vergeben:** Führe `./scripts/setup_tb_network.sh studio` (`10.99.1.1`) auf dem Leitrechner sowie `./scripts/setup_tb_network.sh mini` (`10.99.1.2`, usw.) auf den Worker-Macs aus — alternativ direkt im Reiter **Netzwerk & Direktspeicher**.
+3. **Optional RDMA aktivieren (ab macOS 26.2 auf TB5):** Mit `rdma_ctl enable` nutzt Apples `JACCL`-Backend (`mlx.distributed`) direkten Speicherzugriff mit **`~3 µs`** Latenz statt `~300 µs` über TCP/IP.
+4. **Automatische Rang-Zuweisung:** Füge alle beteiligten Macs unter **Geräte & Vergleich** hinzu. Der `MemoryWeightedPlanner` vergibt automatisch **Rang 0 (Leitrechner / Coordinator)** an den Mac mit dem höchsten Speicherdurchsatz (bei Gleichstand größter nutzbarer Speicher); alle weiteren werden **Rang 1..N (Worker)**.
+
+### 2. Einrichtung des Hybrid-Clusternetzwerks (Lokal + Internet-WAN gleichzeitig)
+1. **Lokaler Hochgeschwindigkeits-Kern (Ebene 1):** Dein lokaler Thunderbolt-/LAN-Ring (`10.99.1.x` / `192.168.x.x`) bleibt für latenzkritische Tensor- und Pipeline-Schritte aktiv.
+2. **WAN-Koordinator-Raum starten (Ebene 2):** Im Reiter **Internet-Verbund & Chat** eröffnest du einen WAN-Raum (`/ws/wan/{room_id}` auf Port `8000`, erreichbar über Tailscale, WireGuard, Cloudflare Tunnel oder Reverse-Proxy).
+3. **Entfernte Macs verbinden:** Weltweite Teilnehmer treten per **Raum-Code + Join-Token** als **WAN-Worker** bei.
+4. **Zweistufiges Hybrid-Routing:** SS-CCC belässt hochfrequente Schichten auf dem lokalen TB-/LAN-Ring (`3–180 µs`) und lagert Überhang-Schichten auf WAN-Worker (`15–120 ms` RTT) aus, wobei Mikro-Batches (`M ≥ 4`) die Internet-Laufzeit kaschieren.
+
+### 3. Wer lädt das Modell, wie viele Modelle passen parallel und wie läuft eine Anfrage ab?
+- **Wer lädt das Modell?**
+  - **Leitrechner (Rang 0):** Stellt das OpenAI/Anthropic/Ollama-Gateway (`:8000`) bereit, übernimmt Tokenisierung sowie **immer Embeddings und LM-Head (`has_embeddings=True`, `has_lm_head=True`)** plus seinen anteiligen Schichtenblock (`Schichten_i = Gesamtschichten × Nutzbar_i / GesamtNutzbar`).
+  - **Worker (Rang 1..N):** Jeder Worker lädt **ausschließlich die ihm zugewiesenen Safetensors-/Layer-Slices `[start_layer .. end_layer)`** aus seinem lokalen HuggingFace-, oMLX- oder Ollama-Cache (`~/.cache/huggingface`, `~/.ollama/models`, `~/Models`) — kein Rechner verschwendet RAM für Schichten anderer Knoten.
+- **Wie viele Modelle können gleichzeitig geladen werden?**
+  - **Verteilter Cluster-Modus (`mlx.distributed` / `JACCL`):** Standardmäßig **1 großes, aufgeteiltes Modell gleichzeitig** über den gesamten Cluster-Speicherpool. Ein Modellwechsel erfolgt per schnellem Hot-Swap.
+  - **Multi-Modell-Betrieb (`oMLX` / `Ollama` / Einzelknoten-Mix):** Solange `Σ (Modellgewichte_i + KV_Cache_i) ≤ Gesamt_Nutzbarer_VRAM_GB` gilt (abzüglich 4–8 GB macOS-Schutzreserve via `iogpu.wired_limit_mb`), können **mehrere Modelle parallel** geladen bleiben — z. B. ein **32B-Coder-Modell + 8B-Schnellmodell + 1,5B-Embedding-Modell** über `oMLX`-Paged-KV-Cache oder `OLLAMA_MAX_LOADED_MODELS`.
+- **Ablauf & Struktur einer Anfrage (End-to-End):**
+  1. **Hardware-Probe & Link-Wahl:** Erfasst RAM, Bandbreite und Interfaces (`TB5 RDMA > TB Bridge > 10GbE > WLAN > WAN`).
+  2. **Sharding-Plan:** `MemoryWeightedPlanner` erzeugt `hostfile.json` und Schichtgrenzen unter Einhaltung von `iogpu.wired_limit_mb`.
+  3. **API-Eingang:** IDEs/Agenten (Antigravity, OpenCode, Cursor, Hermes) senden Requests an `http://127.0.0.1:8000/v1/chat/completions` (oder `/v1/messages`, `/api/chat`).
+  4. **Prefill-Phase (Rechenlimitiert → `TTFT`):** Rang 0 bettet den Prompt (`S_prompt`) ein, berechnet seine Schichten und reicht Aktivierungen durch die Pipeline (`Rang 0 → 1 → ... → N → Rang 0`).
+  5. **Decode-Phase (Bandbreitenlimitiert → `TPOT` & `tok/s`):** Token-für-Token-Generierung mit `--kv-bits 4` (75 % KV-Ersparnis) und `MLX_METAL_FAST_SYNCH=1`.
+  6. **SSE-Streaming & Telemetrie:** Rang 0 streamt die Antwort an den Client und protokolliert `tok/s`, `TTFT`, `TPOT`, `J/tok` sowie `p50/p95/p99` im Wissenschaftslabor.
+
+### 4. Theoretische Dimensionierungs- & Leistungsdaten für verschiedene Anwendungsfälle
+
+> **Analytische Faustformeln:**
+> - **Speicherbedarf:** `VRAM_GB ≈ Parameter_B × (Bits / 8) × 1,15 + KV_Cache_GB`
+> - **Theoretisches Decode-Limit:** `tok/s ≈ (Effektive_Bandbreite_GB/s / Aktive_Gewichte_GB) × (1 − Kommunikationsverlust)`
+
+| Anwendungsfall / Szenario | Topologie & Nutzbarer Pool | Typisches Modell & Quantisierung | Theoretische `TTFT` (2k Prompt) | Theoretischer Durchsatz (`tok/s` / `TPOT`) | Energie & Hauptengpass |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Einzelplatz (Edge Dev)** | 1× Mac mini M4 (16 GB, `12 GB` nutzbar, `120 GB/s`) | `Qwen2.5-14B` (`4-Bit`, ~8,8 GB) | `~1,8 – 2,6 s` | **`11 – 14 tok/s`** (`~75 ms/tok`) | `~1,7 J/tok` · Speicherbandbreite |
+| **2. Einzelner Pro-Studio (Schnell-Coding)** | 1× Mac Studio M4 Max (64 GB, `58 GB` nutzbar, `546 GB/s`) | `Llama-3.3-70B` (`4-Bit`, ~40 GB) | `~1,1 – 1,7 s` | **`12 – 14 tok/s`** (`~74 ms/tok`) | `~3,8 J/tok` · Speicherbandbreite |
+| **3. Lokaler 2-Knoten-TB5-RDMA-Ring** | 2× M4 Max 64 GB (`116 GB` nutzbar, `~1.092 GB/s` ges., `~3 µs` JACCL) | `Qwen2.5-Coder-72B` (`8-Bit`, ~78 GB) | `~1,4 – 2,0 s` | **`12 – 14 tok/s`** (`~76 ms/tok`) | `~7,5 J/tok` · Minimaler RDMA-Overhead |
+| **4. Forschungslabor 4-Knoten-Ultra-Ring** | 4× M3 Ultra 256 GB (`992 GB` nutzbar, `~3,27 TB/s` ges., TB5 RDMA) | `DeepSeek-V3 671B MoE` (`4-Bit`, ~385 GB, ~37B aktiv) | `~2,2 – 3,5 s` | **`38 – 55 tok/s`** (`~20 ms/tok`) | `~5,2 J/tok` · MoE-Aktivexperten-BW |
+| **5. Hybrid Büro-LAN + Home-Office WAN** | 2× Lokal TB4/10GbE + 2× WAN (`192 GB` nutzbar, `35 ms` WAN-RTT) | `Llama-3.1-405B` (`3/4-Bit`, ~170 GB) | `~6 – 11 s` | **`2,2 – 4,5 tok/s`** (`~280 ms/tok`) | `~28 J/tok` · WAN-RTT (`M=8` hilft) |
+| **6. Weltweiter Community-WAN-Schwarm** | 16+ Macs weltweit (`1,5+ TB` nutzbar, `60–120 ms` WAN-RTT) | `671B–1T+` Frontier (`4/8-Bit`) | `~12 – 25 s` | **`1,2 – 3,0 tok/s`** (`~500 ms/tok`) | WAN-Latenz (Batching skaliert) |
+
+---
+
 ## 📚 Ausgewählte Dokumentation (vollständig im Hilfe-Bereich der App)
 
 ### 1. Alle Apple Mac mit M-Prozessor im Verbund (M1–M12+)

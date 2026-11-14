@@ -140,6 +140,52 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ---
 
+## 📖 Operational Guide: Local & Hybrid (Local + Internet) Cluster Setup, Model Loading & Theoretical Sizing
+
+### 1. Setting Up the Local Cluster (Thunderbolt 3/4/5 & LAN)
+1. **Physical Interconnect:** Connect your Macs directly via **Thunderbolt 3/4/5 cables** (point-to-point, daisy-chain, or ring) and/or **10GbE Ethernet**.
+2. **Assign Point-to-Point IPs:** Run `./scripts/setup_tb_network.sh studio` (`10.99.1.1`) on your primary Mac and `./scripts/setup_tb_network.sh mini` (`10.99.1.2`, etc.) on worker Macs, or configure interfaces directly in **Network & Direct Memory**.
+3. **Optional RDMA (macOS 26.2+ on TB5):** Enable Apple's low-latency RDMA transport with `rdma_ctl enable` so `JACCL` (`mlx.distributed`) achieves **`~3 µs`** node-to-node latency instead of `~300 µs` over TCP/IP.
+4. **Automatic Rank Assignment:** Add all participating Macs under **Devices & Compare**. SS-CCC's `MemoryWeightedPlanner` automatically assigns **Rank 0 (Coordinator)** to the Mac with the highest memory bandwidth (tie-breaker: highest usable unified memory), while all others become **Rank 1..N (Workers)**.
+
+### 2. Setting Up a Hybrid Cluster Network (Local + Internet WAN Simultaneously)
+1. **Local High-Speed Core (Tier 1):** Keep your local Thunderbolt/LAN ring active (`10.99.1.x` / `192.168.x.x`) for latency-sensitive tensor/pipeline steps.
+2. **WAN Coordinator Room (Tier 2):** In **Internet Cluster & Chat**, start a WAN room (`/ws/wan/{room_id}` on port `8000`, exposed via Tailscale, WireGuard, Cloudflare Tunnel, or a reverse proxy).
+3. **Join Remote Workers:** Remote Macs anywhere on the Internet join using the **Room Code + Join Token**.
+4. **Two-Tier Hybrid Routing:** SS-CCC keeps high-frequency layers on the local TB/LAN ring (`3–180 µs`) and routes overflow pipeline stages to WAN workers (`15–120 ms` RTT) using micro-batching (`M ≥ 4`) to hide WAN round-trip latency.
+
+### 3. Who Loads the Model, How Many Models Fit, and End-to-End Request Flow
+- **Who Loads What?**
+  - **Coordinator (Rank 0):** Hosts the OpenAI/Anthropic/Ollama API gateway (`:8000`), runs tokenization, **always holds the Embeddings and LM-Head (`has_embeddings=True`, `has_lm_head=True`)**, plus its proportional share of transformer layers (`Layers_i = TotalLayers × Usable_i / TotalUsable`).
+  - **Workers (Rank 1..N):** Each worker downloads/reads **only its assigned Safetensors/layer slice `[start_layer .. end_layer)`** from its local HuggingFace/oMLX/Ollama cache (`~/.cache/huggingface`, `~/.ollama/models`, `~/Models`)—no worker wastes RAM loading layers assigned to other nodes.
+- **How Many Models Can Be Loaded Simultaneously?**
+  - **Distributed Cluster Mode (`mlx.distributed` / `JACCL`):** **1 large sharded model at a time** across the combined cluster memory pool (switching models performs a fast hot-swap).
+  - **Multi-Model Serving (`oMLX` / `Ollama` / Heterogeneous Nodes):** As long as `Σ (ModelWeights_i + KV_Cache_i) ≤ Total_Usable_VRAM_GB` (after reserving 4–8 GB per Mac via `iogpu.wired_limit_mb`), multiple models can stay resident simultaneously—e.g., a **32B coder model + 8B fast router + 1.5B embedding model** via `oMLX` paged KV-cache or `OLLAMA_MAX_LOADED_MODELS`.
+- **End-to-End Execution Flow & Structure:**
+  1. **Probe & Link Selection:** Detects Apple Silicon RAM, bandwidth, and interfaces (`TB5 RDMA > TB Bridge > 10GbE > WLAN > WAN`).
+  2. **Sharding Plan:** `MemoryWeightedPlanner` writes `hostfile.json` and layer ranges while enforcing `iogpu.wired_limit_mb`.
+  3. **API Ingress:** Agents/IDEs send requests to `http://127.0.0.1:8000/v1/chat/completions` (or `/v1/messages`, `/api/chat`).
+  4. **Prefill Phase (Compute-Bound → `TTFT`):** Rank 0 embeds the prompt (`S_prompt`), computes its layers, and passes activations down the pipeline (`Rank 0 → 1 → ... → N → Rank 0`).
+  5. **Decode Phase (Bandwidth-Bound → `TPOT` & `tok/s`):** Tokens are generated auto-regressively using `--kv-bits 4` compressed KV-cache and `MLX_METAL_FAST_SYNCH=1`.
+  6. **SSE Streaming & Telemetry:** Rank 0 streams tokens to the client and records `tok/s`, `TTFT`, `TPOT`, `J/tok`, and `p50/p95/p99` in **Science & Benchmarks**.
+
+### 4. Theoretical Sizing & Performance Data Across Use Cases
+
+> **Analytical Estimation Rules:**
+> - **Memory Footprint:** `VRAM_GB ≈ Params_B × (Bits / 8) × 1.15 + KV_Cache_GB`
+> - **Theoretical Decode Ceiling:** `tok/s ≈ (Effective_Bandwidth_GB/s / Active_Weights_GB) × (1 − Comm_Overhead)`
+
+| Use Case Scenario | Topology & Usable Pool | Typical Model & Quant | Theoretical `TTFT` (2k Prompt) | Theoretical Decode (`tok/s` / `TPOT`) | Energy & Primary Bottleneck |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Solo Workstation (Edge Dev)** | 1× Mac mini M4 (16 GB, `12 GB` usable, `120 GB/s`) | `Qwen2.5-14B` (`4-bit`, ~8.8 GB) | `~1.8 – 2.6 s` | **`11 – 14 tok/s`** (`~75 ms/tok`) | `~1.7 J/tok` · Memory-bandwidth bound |
+| **2. Single Pro Studio (Fast Coding)** | 1× Mac Studio M4 Max (64 GB, `58 GB` usable, `546 GB/s`) | `Llama-3.3-70B` (`4-bit`, ~40 GB) | `~1.1 – 1.7 s` | **`12 – 14 tok/s`** (`~74 ms/tok`) | `~3.8 J/tok` · Memory-bandwidth bound |
+| **3. Local 2-Node TB5 RDMA Ring** | 2× M4 Max 64 GB (`116 GB` usable, `~1,092 GB/s` agg., `~3 µs` JACCL) | `Qwen2.5-Coder-72B` (`8-bit`, ~78 GB) | `~1.4 – 2.0 s` | **`12 – 14 tok/s`** (`~76 ms/tok`) | `~7.5 J/tok` · Negligible RDMA sync |
+| **4. Research Lab 4-Node Ultra Ring** | 4× M3 Ultra 256 GB (`992 GB` usable, `~3.27 TB/s` agg., TB5 RDMA) | `DeepSeek-V3 671B MoE` (`4-bit`, ~385 GB, ~37B active) | `~2.2 – 3.5 s` | **`38 – 55 tok/s`** (`~20 ms/tok`) | `~5.2 J/tok` · MoE active-expert BW |
+| **5. Hybrid Office LAN + Home WAN** | 2× Local TB4/10GbE + 2× WAN (`192 GB` usable, `35 ms` WAN RTT) | `Llama-3.1-405B` (`3/4-bit`, ~170 GB) | `~6 – 11 s` | **`2.2 – 4.5 tok/s`** (`~280 ms/tok`) | `~28 J/tok` · WAN RTT (`M=8` helps) |
+| **6. Global Community WAN Swarm** | 16+ Macs worldwide (`1.5+ TB` usable, `60–120 ms` WAN RTT) | `671B–1T+` Frontier (`4/8-bit`) | `~12 – 25 s` | **`1.2 – 3.0 tok/s`** (`~500 ms/tok`) | WAN latency bound (batching scales) |
+
+---
+
 ## 📚 Selected Documentation (Built Into the App's Help Center)
 
 ### 1. Universal Apple Silicon M-Series Clustering (M1–M12+)
