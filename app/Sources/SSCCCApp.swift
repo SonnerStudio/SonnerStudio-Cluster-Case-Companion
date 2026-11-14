@@ -209,7 +209,7 @@ struct MainStudioWindow: View {
                         Circle()
                             .fill(vm.daemonConnected ? SolarisTheme.emerald : SolarisTheme.amber)
                             .frame(width: 10, height: 10)
-                        Text(vm.daemonConnected ? "Daemon Online (:8000)" : "UI-Vorschau · \(Int(vm.totalPhysicalRamGB)) GB Pool")
+                        Text(vm.daemonConnected ? vm.t("header_online") : String(format: vm.t("header_preview"), Int(vm.totalPhysicalRamGB)))
                             .font(SolarisTheme.bodyBold)
                             .foregroundColor(SolarisTheme.textPrimary)
                     }

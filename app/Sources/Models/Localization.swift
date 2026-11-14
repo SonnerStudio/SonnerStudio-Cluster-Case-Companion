@@ -168,11 +168,17 @@ enum L10n {
         case ("sim_single_desc", .es): return "Solo Mac mini local (16 GB)"
         case ("sim_single_desc", .pt): return "Apenas Mac mini local (16 GB)"
 
-        case ("header_preview", .de): return "Vorschau · %d GB Verbund"
-        case ("header_preview", .en): return "Preview · %d GB Pool"
+        case ("header_preview", .de): return "Oberflächen-Vorschau · %d GB Speicher"
+        case ("header_preview", .en): return "UI Preview · %d GB Pool"
         case ("header_preview", .fr): return "Aperçu · %d Go partagés"
-        case ("header_preview", .es): return "Vista previa · %d GB"
-        case ("header_preview", .pt): return "Pré-visualização · %d GB"
+        case ("header_preview", .es): return "Vista previa · %d GB compartidos"
+        case ("header_preview", .pt): return "Pré-visualização · %d GB partilhados"
+
+        case ("header_online", .de): return "Dienst aktiv (:8000)"
+        case ("header_online", .en): return "Service Online (:8000)"
+        case ("header_online", .fr): return "Service actif (:8000)"
+        case ("header_online", .es): return "Servicio activo (:8000)"
+        case ("header_online", .pt): return "Serviço ativo (:8000)"
 
         // Overview KPIs
         case ("kpi_memory", .de): return "Gekoppelter Speicher"
