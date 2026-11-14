@@ -137,16 +137,72 @@ struct ModelStudioView: View {
                     }
                 }
 
-                // Schnelle MLX-Modelle: Import aus Ollama/llama.cpp & Export-Bridge
+                // Schnelle MLX-Modelle: oMLX, Ollama & llama.cpp Dienste
                 SolarisCard(accent: SolarisTheme.mint) {
-                    Text("Schnelle MLX-Modelle: Ollama & llama.cpp Brücke")
-                        .font(SolarisTheme.sectionTitle)
-                        .foregroundColor(SolarisTheme.textPrimary)
-                    Text("SS-CCC rechnet ausschließlich mit nativen MLX-Modellen. Vorhandene Ollama- oder llama.cpp-Modelle lassen sich als MLX einbinden — und dein 52-GB-MLX-Cluster wird gleichzeitig für Ollama- & llama.cpp-Clients bereitgestellt.")
-                        .font(SolarisTheme.bodyLarge)
-                        .foregroundColor(SolarisTheme.textSecondary)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Laufzeit-Dienste: oMLX, Ollama & llama.cpp")
+                                .font(SolarisTheme.sectionTitle)
+                                .foregroundColor(SolarisTheme.textPrimary)
+                            Text("Lade das gewählte Modell direkt in oMLX (Paged SSD KV-Cache), Ollama oder llama.cpp — oder binde lokale Modelle als schnelles MLX in SS-CCC ein.")
+                                .font(SolarisTheme.bodyLarge)
+                                .foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        Spacer()
+                    }
+
+                    // Dienst-Auswahl (oMLX / Ollama / llama.cpp)
+                    HStack(spacing: 12) {
+                        ForEach(RuntimeService.allCases) { svc in
+                            let selected = vm.selectedService == svc
+                            let installed = vm.serviceAvailability[svc] ?? false
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(svc.rawValue)
+                                        .font(SolarisTheme.cardTitle)
+                                        .foregroundColor(SolarisTheme.textPrimary)
+                                    Spacer()
+                                    Text(installed ? "INSTALLIERT" : "PORT :\(svc.defaultPort)")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 3)
+                                        .background(Capsule().fill((installed ? SolarisTheme.emerald : SolarisTheme.amber).opacity(0.22)))
+                                        .foregroundColor(installed ? SolarisTheme.emerald : SolarisTheme.amberGlow)
+                                }
+                                Text(svc.description)
+                                    .font(.system(size: 13.5))
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            }
+                            .padding(12)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(selected ? SolarisTheme.amber.opacity(0.14) : SolarisTheme.cardElevated)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .stroke(selected ? SolarisTheme.amber : SolarisTheme.borderSubtle, lineWidth: 1.2)
+                                    )
+                            )
+                            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .onTapGesture {
+                                vm.selectedService = svc
+                            }
+                        }
+                    }
 
                     HStack(spacing: 14) {
+                        Button {
+                            vm.loadModelInSelectedService()
+                        } label: {
+                            Label("Modell in \(vm.selectedService.rawValue) laden", systemImage: "play.circle.fill")
+                                .font(SolarisTheme.bodyBold)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.emerald))
+                                .foregroundColor(.black)
+                        }
+                        .buttonStyle(.plain)
+
                         Button {
                             vm.scanOllamaAndLlamaCppToMLX()
                         } label: {
@@ -162,7 +218,7 @@ struct ModelStudioView: View {
                         Button {
                             vm.exportForOllamaAndLlamaCpp()
                         } label: {
-                            Label("Für Ollama & llama.cpp bereitstellen", systemImage: "arrow.up.forward.app.fill")
+                            Label("Brücke exportieren", systemImage: "arrow.up.forward.app.fill")
                                 .font(SolarisTheme.bodyBold)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)

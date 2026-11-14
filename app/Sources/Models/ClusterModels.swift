@@ -14,7 +14,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .overview: return "cpu.fill"
-        case .devices: return "macstudio.and.apple.display"
+        case .devices: return "macstudio.fill"
         case .models: return "square.stack.3d.up.fill"
         case .network: return "bolt.horizontal.circle.fill"
         case .agents: return "sparkles.rectangle.stack.fill"
@@ -27,11 +27,38 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         switch self {
         case .overview: return "52 GB Pool & Topologie"
         case .devices: return "Einzeldaten & Vergleich"
-        case .models: return "Layer-Split & KV-Cache"
+        case .models: return "MLX, oMLX, Ollama & llama.cpp"
         case .network: return "TB4/5, RDMA & Hybrid"
-        case .agents: return "OpenCode & Hermes Agent"
+        case .agents: return "Lokale Agenten, IDEs & SDKs"
         case .science: return "arXiv, Splitwise & Tuning"
-        case .console: return "OpenAI / Ollama Gateway"
+        case .console: return "OpenAI / Ollama / oMLX API"
+        }
+    }
+}
+
+enum RuntimeService: String, CaseIterable, Identifiable {
+    case omlx = "oMLX (SSD KV-Cache)"
+    case ollama = "Ollama"
+    case llamaCpp = "llama.cpp"
+
+    var id: String { rawValue }
+
+    var defaultPort: Int {
+        switch self {
+        case .omlx: return 8000
+        case .ollama: return 11434
+        case .llamaCpp: return 8080
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .omlx:
+            return "Nativer macOS-MLX-Server mit Paged SSD KV-Cache, OpenAI (/v1) & Anthropic (/v1/messages) API."
+        case .ollama:
+            return "Lokaler Modell-Dienst auf Port 11434 — ideal für Zero-Config & breite Client-Unterstützung."
+        case .llamaCpp:
+            return "Direkter GGUF-/llama-server-Dienst (Port 8080) oder Import nach schnellem MLX."
         }
     }
 }

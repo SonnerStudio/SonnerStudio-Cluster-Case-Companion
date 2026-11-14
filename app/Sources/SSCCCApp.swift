@@ -60,38 +60,36 @@ struct MainStudioWindow: View {
 
                 ForEach(NavigationTab.allCases) { tab in
                     let active = vm.selectedTab == tab
-                    Button {
-                        vm.selectedTab = tab
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: tab.icon)
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(active ? SolarisTheme.amber : SolarisTheme.textSecondary)
-                                .frame(width: 26)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(tab.rawValue)
-                                    .font(SolarisTheme.bodyBold)
-                                    .foregroundColor(active ? SolarisTheme.textPrimary : SolarisTheme.textSecondary)
-                                Text(tab.subtitle)
-                                    .font(.system(size: 12.5))
-                                    .foregroundColor(SolarisTheme.textSecondary.opacity(0.8))
-                            }
-                            Spacer()
+                    HStack(spacing: 12) {
+                        Image(systemName: tab.icon)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(active ? SolarisTheme.amber : SolarisTheme.textSecondary)
+                            .frame(width: 26)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(tab.rawValue)
+                                .font(SolarisTheme.bodyBold)
+                                .foregroundColor(active ? SolarisTheme.textPrimary : SolarisTheme.textSecondary)
+                            Text(tab.subtitle)
+                                .font(.system(size: 12.5))
+                                .foregroundColor(SolarisTheme.textSecondary.opacity(0.8))
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 11)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(active ? SolarisTheme.cardElevated.opacity(0.90) : Color.black.opacity(0.34))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(active ? SolarisTheme.amber.opacity(0.55) : Color.white.opacity(0.06), lineWidth: 1)
-                                )
-                        )
+                        Spacer(minLength: 0)
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 11)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(active ? SolarisTheme.cardElevated.opacity(0.90) : Color.black.opacity(0.34))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(active ? SolarisTheme.amber.opacity(0.55) : Color.white.opacity(0.06), lineWidth: 1)
+                            )
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .onTapGesture {
+                        vm.selectedTab = tab
+                    }
                 }
 
                 Spacer()

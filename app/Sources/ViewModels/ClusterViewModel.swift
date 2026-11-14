@@ -16,8 +16,10 @@ final class ClusterViewModel: ObservableObject {
 
     @Published var agentStatusMessage: String = "Bereit für 1-Klick-Konfiguration."
     @Published var openCodeBaseURL: String = "http://127.0.0.1:8000/v1"
-    @Published var bridgeStatusMessage: String = "Nur schnelle native MLX-Modelle aktiv (Ollama & llama.cpp per Bridge angebunden)."
+    @Published var selectedService: RuntimeService = .omlx
+    @Published var bridgeStatusMessage: String = "Bereit: Modelle direkt in oMLX, Ollama oder llama.cpp laden & als schnelles MLX einbinden."
     @Published var discoveredExternalModels: [String] = []
+    @Published var serviceAvailability: [RuntimeService: Bool] = [:]
 
     @Published var localChipName: String = "Apple M4"
     @Published var localOSVersion: String = "macOS 27.0.1"
@@ -117,6 +119,40 @@ final class ClusterViewModel: ObservableObject {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         lastProbeTimestamp = formatter.string(from: Date())
+        refreshServiceAvailability()
+    }
+
+    func refreshServiceAvailability() {
+        let hasOmlx = !runShell("/usr/bin/which", ["omlx"]).isEmpty || FileManager.default.fileExists(atPath: "/Applications/oMLX.app")
+        let hasOllama = !runShell("/usr/bin/which", ["ollama"]).isEmpty || FileManager.default.fileExists(atPath: "/Applications/Ollama.app")
+        let hasLlama = !runShell("/usr/bin/which", ["llama-server"]).isEmpty || !runShell("/usr/bin/which", ["llama-cli"]).isEmpty
+        serviceAvailability = [
+            .omlx: hasOmlx,
+            .ollama: hasOllama,
+            .llamaCpp: hasLlama
+        ]
+    }
+
+    func loadModelInSelectedService() {
+        let modelId = selectedModel.id
+        switch selectedService {
+        case .omlx:
+            let cmd = "omlx serve --model \(modelId) --port 8000"
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(cmd, forType: .string)
+            bridgeStatusMessage = "oMLX-Startbefehl kopiert (Paged SSD KV-Cache aktiv): \(cmd)"
+        case .ollama:
+            let ollamaTag = modelId.contains("70B") ? "llama3.3:70b" : (modelId.contains("Qwen2.5") ? "qwen2.5:32b" : "deepseek-r1:32b")
+            let cmd = "ollama run \(ollamaTag)"
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(cmd, forType: .string)
+            bridgeStatusMessage = "Ollama-Ladebefehl kopiert: \(cmd) (oder direkt über SS-CCC Port 8000/11434 ansprechen)."
+        case .llamaCpp:
+            let cmd = "llama-server --hf-repo \(modelId) --port 8080 -ngl 99"
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(cmd, forType: .string)
+            bridgeStatusMessage = "llama.cpp-Serverbefehl kopiert: \(cmd)"
+        }
     }
 
     var nodes: [ClusterNodeModel] {

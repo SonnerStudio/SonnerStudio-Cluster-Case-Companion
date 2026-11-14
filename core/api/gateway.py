@@ -205,6 +205,26 @@ def scan_ollama_and_gguf() -> dict[str, object]:
     }
 
 
+@app.post("/v1/messages")
+def anthropic_messages_omlx_compat(req: dict) -> dict[str, object]:
+    """Anthropic-kompatibler Endpunkt (analog oMLX) fuer Coding-Agenten."""
+    nodes = _current_nodes()
+    total_gb = sum(n.total_ram_gb for n in nodes)
+    model_name = req.get("model", "mlx-community/Llama-3.3-70B-Instruct-4bit")
+    return {
+        "id": f"msg_{uuid.uuid4().hex[:12]}",
+        "type": "message",
+        "role": "assistant",
+        "model": model_name,
+        "content": [
+            {
+                "type": "text",
+                "text": f"[SS-CCC oMLX-Compat | {total_gb:.0f} GB Pool] Bereit fuer '{model_name}'.",
+            }
+        ],
+    }
+
+
 @app.post("/v1/chat/completions")
 def chat_completions(req: ChatCompletionRequest) -> dict[str, object]:
     nodes = _current_nodes()
