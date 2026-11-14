@@ -1,13 +1,13 @@
 {
-  "version": "1.6.16",
+  "version": "1.6.17",
   "build": 160,
-  "tag": "v1.6.16",
+  "tag": "v1.6.17",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• Merge remote-tracking branch 'origin/main' (095b398)\n• fix(readme): replace Unicode flag emojis with crisp PNG flags for Windows compatibility (8938c4a)\n• chore(release): auto-bump v1.6.15 (build 160) [skip ci] (269b508)\n• feat(updater-ui): polish up-to-date info card with hazard stripes, accurate status copy, and Close button (75c0dfe)\n• chore(release): auto-bump v1.6.14 (build 160) [skip ci] (e73b3e8)",
+  "notes": "• feat(science): use real SSE streaming and ICMP RTT in real mode, realistic labeled simulation (468716a)\n• chore(release): auto-bump v1.6.16 (build 160) [skip ci] (f0d77ab)\n• Merge remote-tracking branch 'origin/main' (095b398)\n• fix(readme): replace Unicode flag emojis with crisp PNG flags for Windows compatibility (8938c4a)\n• chore(release): auto-bump v1.6.15 (build 160) [skip ci] (269b508)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "095b398",
-  "updated_at": "2026-11-14T19:42:19Z"
+  "commit_sha": "468716a",
+  "updated_at": "2026-11-14T19:57:58Z"
 }
