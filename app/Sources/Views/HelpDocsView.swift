@@ -684,6 +684,378 @@ enum HelpDocsContent {
                     codeSample: "./scripts/run_ssccc.sh\nhttp://127.0.0.1:8000/v1"
                 )
             ]
+
+        case .ru:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. Универсальная кластеризация Apple Silicon (M1–M12+)",
+                    summary: "Любой Mac с чипом Apple Silicon (M1–M12+ — Base, Pro, Max, Ultra) может войти в кластер: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio и Mac Pro.",
+                    bullets: [
+                        "Перспективное распознавание: ПСП, FP16 TFLOPS и поколение Thunderbolt определяются автоматически даже для будущих M7–M12+.",
+                        "Автоназначение ранга: Mac с максимальной ПСП автоматически становится Рангом 0 (Координатор).",
+                        "Смешанные поколения: объединяйте MacBook Pro M2 Max, Mac mini M4 и Mac Studio M5 Max."
+                    ],
+                    codeSample: "Rank 0 = максимальная ПСП (ГБ/с)\nRank 1..N = рабочие узлы конвейера"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "2. Единая память и защита от OOM (iogpu.wired_limit_mb)",
+                    summary: "CPU и GPU делят единую память. Никогда не отдавайте MLX 100% физической RAM.",
+                    bullets: [
+                        "До 24 ГБ RAM: резервируйте минимум 4 ГБ для macOS и WindowServer (16 ГБ -> 12 ГБ доступно).",
+                        "32–64 ГБ RAM: резервируйте 6 ГБ для macOS (36 ГБ -> 30 ГБ доступно).",
+                        "96+ ГБ RAM (Ultra/Max): резервируйте 8 ГБ для macOS (128 ГБ -> 120 ГБ доступно).",
+                        "SS-CCC проверяет веса модели + резерв KV-кэша до запуска."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # Mac 36 ГБ -> лимит 30 ГБ"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "3. Сеть, мост Thunderbolt (TB3/4/5) и RDMA",
+                    summary: "SS-CCC разделяет плоскость управления (LAN/Wi-Fi) и скоростную передачу тензоров (Thunderbolt).",
+                    bullets: [
+                        "Управление (LAN/Wi-Fi): Bonjour, API-шлюз и проверка здоровья.",
+                        "Данные (Thunderbolt 3/4/5): мост 10.99.1.x со скоростью 30–37 Гбит/с (TB4) или до 90+ Гбит/с (TB5 RDMA).",
+                        "Fast Metal Sync: MLX_METAL_FAST_SYNCH=1 сокращает синхронизацию со ~180 мкс до ~4 мкс (в 45× быстрее).",
+                        "RDMA / JACCL: нативно на Thunderbolt 5 (macOS 26.2+)."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # или: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-kv",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "4. Взвешенный шардинг и квантование KV-кэша",
+                    summary: "Вместо равного деления SS-CCC назначает слои пропорционально доступной памяти каждого узла.",
+                    bullets: [
+                        "Формула: Layers_i = TotalLayers × (Usable_i / TotalUsable).",
+                        "Точность KV-кэша: FP16 (~16k), 8-Bit (~32k) или 4-Bit (~64k+ для длинных сессий агентов).",
+                        "Chunked Prefill (--prefill-step-size 512) предотвращает пики памяти."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512"
+                ),
+                HelpDocSection(
+                    id: "internet-coupling",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "5. Интернет-кластер WAN, гибридная связка и мировой рекорд",
+                    summary: "Объединяйте Mac по всему миру через Tailscale, WireGuard или QUIC — или свяжите локальный Thunderbolt-кластер с роем WAN.",
+                    bullets: [
+                        "Гибрид (Локальный <-> Интернет): локальное кольцо TB4/TB5 работает как ядро Ранга 0, а удалённые WAN-узлы добавляют слои.",
+                        "Мега-кластер: масштабируется до 64, 128 и 256+ узлов по стратегиям Petals / SWARM / DiLoCo.",
+                        "Чат в реальном времени: WebSocket (/ws/wan-chat) синхронизирует комнаты, топологию и сообщения."
+                    ],
+                    codeSample: "WebSocket-чат: ws://127.0.0.1:8000/ws/wan-chat"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "6. Живой чат участников и кластерная Audio-Party",
+                    summary: "Консольный голосовой чат (в духе Xbox / PlayStation) прямо рядом с текстовым чатом.",
+                    bullets: [
+                        "Низкая задержка: AVAudioEngine (16 кГц PCM16) через ретранслятор /ws/wan-audio.",
+                        "Режимы: Push-to-Talk и Open-Mic, мгновенное отключение микрофона/звука и индикатор уровня.",
+                        "Список участников: показывает активных спикеров и роли узлов."
+                    ],
+                    codeSample: "WebSocket-аудио: ws://127.0.0.1:8000/ws/wan-audio"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "7. Научная лаборатория (6 вкладок) и запись истории",
+                    summary: "Анализируйте локальные TB/RDMA-кластеры, WAN-рои или сравнение бок о бок на 6 вкладках.",
+                    bullets: [
+                        "Вкладки 1–2: Williams Log-Log Roofline, TTFT/TPOT, пузыри GPipe, Petals/SWARM, масштаб N=1..128.",
+                        "Вкладки 3–4: уравнение памяти, TokenPowerBench (Дж/ток, EDP), углеродный след и TCO.",
+                        "Вкладка 5: воспроизводимые серии N=5/10/20 с p50/p95/p99, CI95 и экспортом CSV, JSON, LaTeX, BibTeX.",
+                        "Вкладка 6 (История): запись по отдельным позициям или глобально с графиком тренда и экспортом CSV."
+                    ],
+                    codeSample: "Режимы: Локально (TB/RDMA) | Интернет WAN | Сравнение (Локально vs WAN)"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "8. Среды выполнения: MLX, oMLX, Ollama и llama.cpp",
+                    summary: "Запускайте модели напрямую или сканируйте локальные модели Ollama/GGUF в быстрый MLX.",
+                    bullets: [
+                        "oMLX (порт 8000): нативный сервер macOS MLX с подкачкой KV-кэша на SSD и API OpenAI + Anthropic.",
+                        "Ollama (порт 11434): быстрый запуск GGUF.",
+                        "llama.cpp (порт 8080): прямой запуск llama-server."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000"
+                ),
+                HelpDocSection(
+                    id: "agents-launch",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "9. ИИ-агенты (1 клик), запуск и проверка",
+                    summary: "Подключите локальных кодинг-агентов и IDE к вашему кластеру без утечки данных в облако.",
+                    bullets: [
+                        "1-клик настройка: OpenCode, Hermes Agent, Google Antigravity; совместимо с Cursor, Continue, Xcode.",
+                        "Запуск приложения: ./scripts/run_ssccc.sh собирает и открывает UI macOS.",
+                        "Тесты: python3 -m unittest discover -s tests -v."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\nOpenAI Endpoint: http://127.0.0.1:8000/v1"
+                )
+            ]
+
+        case .ja:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. ユニバーサル Apple Silicon クラスタリング (M1–M12+)",
+                    summary: "Apple Silicon（M1〜M12+ — Base, Pro, Max, Ultra）搭載のすべてのMac（Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro）が参加可能です。",
+                    bullets: [
+                        "将来対応の自動判別: メモリ帯域幅・FP16 TFLOPS・Thunderbolt世代を自動推定します。",
+                        "自動ランク割り当て: 最もメモリ帯域が広いMacが自動的にランク0（コーディネーター）になります。",
+                        "異種世代混在: 例として MacBook Pro M2 Max、Mac mini M4、Mac Studio M5 Max を組み合わせ可能。"
+                    ],
+                    codeSample: "Rank 0 = 最大メモリ帯域 (GB/s)\nRank 1..N = パイプラインワーカー"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "2. 統合メモリプールとOOM保護 (iogpu.wired_limit_mb)",
+                    summary: "CPUとGPUがメモリを共有するため、物理RAMの100%をMLXに割り当てないでください。",
+                    bullets: [
+                        "24 GB以下: macOSとWindowServer用に最低4 GBを確保（16 GB → 12 GB利用可能）。",
+                        "32〜64 GB: macOS用に6 GBを確保（36 GB → 30 GB利用可能）。",
+                        "96 GB以上 (Ultra/Max): macOS用に8 GBを確保（128 GB → 120 GB利用可能）。",
+                        "起動前にモデル重み＋KVキャッシュ予備を合計プールと照合します。"
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # 36 GB Mac -> 30 GB 上限"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "3. ネットワーク、Thunderboltブリッジ (TB3/4/5) とRDMA",
+                    summary: "制御プレーン（LAN/Wi-Fi）と高速テンソル転送（Thunderbolt）を完全に分離します。",
+                    bullets: [
+                        "制御プレーン (LAN/Wi-Fi): Bonjour探索、APIゲートウェイ、ヘルスチェック。",
+                        "データプレーン (TB3/4/5): 専用 10.99.1.x ブリッジで 30–37 Gbps (TB4) または最大 90+ Gbps (TB5 RDMA)。",
+                        "Fast Metal Sync: MLX_METAL_FAST_SYNCH=1 により同期遅延を ~180 µs から ~4 µs へ45倍高速化。",
+                        "RDMA / JACCL: Thunderbolt 5 (macOS 26.2+) でネイティブ対応。"
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # または mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-kv",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "4. 重み付きパイプライン分割とKVキャッシュ量子化",
+                    summary: "均等分割ではなく、各ノードの利用可能メモリに比例してレイヤーを割り当てます。",
+                    bullets: [
+                        "計算式: Layers_i = TotalLayers × (Usable_i / TotalUsable)。",
+                        "KVキャッシュ精度: FP16 (~16k)、8-Bit (~32k)、4-Bit (~64k+ 長文エージェント向け)。",
+                        "Chunked Prefill (--prefill-step-size 512) でメモリスパイクを防止。"
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512"
+                ),
+                HelpDocSection(
+                    id: "internet-coupling",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "5. インターネットWANクラスター、ローカル連携＆世界記録挑戦",
+                    summary: "Tailscale・WireGuard・QUIC経由で世界中のMacを接続し、ローカルTBクラスターとWAN群を直結できます。",
+                    bullets: [
+                        "ハイブリッド連携: ローカルTB4/TB5リングが高速Rank 0コアとして動作し、遠隔WANノードが追加レイヤーを担当。",
+                        "メガクラスター: Petals / SWARM / DiLoCo戦略で 64〜256+ ノードへ拡張。",
+                        "リアルタイムリレー: WebSocket (/ws/wan-chat) で招待・構成・メッセージを同期。"
+                    ],
+                    codeSample: "WebSocketチャット: ws://127.0.0.1:8000/ws/wan-chat"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "6. ライブ参加者チャット＆クラスター Audio-Party",
+                    summary: "テキストチャットのすぐ隣にコンソール風の音声パーティー（Xbox / PlayStation風）を内蔵。",
+                    bullets: [
+                        "低遅延音声: AVAudioEngine (16 kHz PCM16) と専用 /ws/wan-audio リレー。",
+                        "音声モード: Push-to-Talk / Open-Mic 切替、ミュート・スピーカーオフ・音量メーター対応。",
+                        "参加者一覧: 発言中スピーカーとノード役割をリアルタイム表示。"
+                    ],
+                    codeSample: "WebSocket音声: ws://127.0.0.1:8000/ws/wan-audio"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "7. 科学＆Rooflineラボ (6タブ) と履歴記録",
+                    summary: "ローカルTB/RDMA、インターネットWAN、または両者の並列比較を6つの研究タブで分析します。",
+                    bullets: [
+                        "タブ1–2: Williams両対数Roofline、TTFT/TPOT、GPipeバブル、Petals/SWARM圧縮、N=1..128拡張。",
+                        "タブ3–4: メモリ方程式、TokenPowerBench (J/tok, EDP)、CO₂排出量、電力TCO比較。",
+                        "タブ5: N=5/10/20 再現ベンチマーク (p50/p95/p99, CI95) と CSV/JSON/LaTeX/BibTeX 出力。",
+                        "タブ6 (履歴): 単一項目または全体のスナップショットを自動・手動記録し、2軸グラフとCSV出力に対応。"
+                    ],
+                    codeSample: "スコープ: ローカル (TB/RDMA) | インターネットWAN | 比較 (ローカル vs WAN)"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "8. ランタイム: MLX, oMLX, Ollama & llama.cpp",
+                    summary: "お好みのローカルランタイムで直接モデルを起動、またはOllama/GGUFを高速MLXへ取り込みます。",
+                    bullets: [
+                        "oMLX (ポート8000): SSDページングKVキャッシュ対応のネイティブmacOS MLXサーバー。",
+                        "Ollama (ポート11434): ゼロ設定GGUFランナー。",
+                        "llama.cpp (ポート8080): llama-server による直接GGUF実行。"
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000"
+                ),
+                HelpDocSection(
+                    id: "agents-launch",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "9. AIエージェント連携 (1クリック)、起動と検証",
+                    summary: "クラウドへのデータ流出なしでローカルのコーディングエージェントやIDEを接続します。",
+                    bullets: [
+                        "1クリック設定: OpenCode, Hermes Agent, Google Antigravity に対応（Cursor, Continue, Xcode互換）。",
+                        "起動: ./scripts/run_ssccc.sh でビルド＆起動。",
+                        "テスト: python3 -m unittest discover -s tests -v でモデル・翻訳・APIを検証。"
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\nOpenAI Endpoint: http://127.0.0.1:8000/v1"
+                )
+            ]
+
+        case .zh:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. 全系列 Apple Silicon Mac 通用集群 (M1–M12+)",
+                    summary: "任何搭载 Apple Silicon（M1 至 M12+ — Base、Pro、Max、Ultra）的 Mac 均可加入集群：Mac mini、MacBook Air、MacBook Pro、iMac、Mac Studio 与 Mac Pro。",
+                    bullets: [
+                        "面向未来的芯片解析：自动推断内存带宽、FP16 TFLOPS 与 Thunderbolt 代际，原生兼容未来 M7–M12+。",
+                        "自动分配排名：内存带宽最高的 Mac 自动成为 Rank 0（协调器）。",
+                        "跨代混搭：例如可将 MacBook Pro M2 Max、Mac mini M4 与 Mac Studio M5 Max 混合组网。"
+                    ],
+                    codeSample: "Rank 0 = 最高内存带宽 (GB/s)\nRank 1..N = 流水线工作节点"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "2. 统一内存池与 OOM 防护 (iogpu.wired_limit_mb)",
+                    summary: "Apple Silicon 的 CPU 与 GPU 共享统一内存，切勿将 100% 物理内存分配给 MLX。",
+                    bullets: [
+                        "24 GB 及以下：至少为 macOS 与 WindowServer 保留 4 GB（如 16 GB → 12 GB 可用）。",
+                        "32–64 GB：为 macOS 保留 6 GB（如 36 GB → 30 GB 可用）。",
+                        "96 GB+ (Ultra/Max)：为 macOS 保留 8 GB（如 128 GB → 120 GB 可用）。",
+                        "启动前自动校验模型权重与 KV 缓存预留是否超出总可用内存池。"
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # 36 GB Mac -> 30 GB 上限"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "3. 网络架构、Thunderbolt 桥接 (TB3/4/5) 与 RDMA",
+                    summary: "SS-CCC 将控制平面（LAN/Wi-Fi）与高速张量传输（Thunderbolt）彻底隔离。",
+                    bullets: [
+                        "控制平面 (LAN/Wi-Fi)：Bonjour 服务发现、API 网关与健康检查。",
+                        "数据平面 (TB3/4/5)：专用 10.99.1.x 桥接，提供 30–37 Gbps (TB4) 或高达 90+ Gbps (TB5 RDMA)。",
+                        "Fast Metal Sync：MLX_METAL_FAST_SYNCH=1 将 GPU/CPU 同步延迟从 ~180 µs 降至 ~4 µs（提速 45×）。",
+                        "RDMA / JACCL：Thunderbolt 5 (macOS 26.2+) 原生支持。"
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # 或 mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-kv",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "4. 加权流水线分片与 KV 缓存量化",
+                    summary: "不同于易使小内存 Mac 过载的均分策略，SS-CCC 按各节点可用内存比例分配层数。",
+                    bullets: [
+                        "分配公式：Layers_i = TotalLayers × (Usable_i / TotalUsable)。",
+                        "KV 缓存精度：FP16 (~16k)、8-Bit (~32k) 或 4-Bit (~64k+ 长上下文智能体会话)。",
+                        "分块预填充 (--prefill-step-size 512) 防止大型代码库引发内存尖峰。"
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512"
+                ),
+                HelpDocSection(
+                    id: "internet-coupling",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "5. 互联网 WAN 集群、本地混合耦合与世界纪录挑战",
+                    summary: "通过 Tailscale、WireGuard 或 QUIC 连接全球 Mac，或将本地 Thunderbolt 集群直接耦合至互联网 WAN 集群。",
+                    bullets: [
+                        "混合耦合 (本地 <-> 互联网)：本地 TB4/TB5 环作为高速 Rank 0 核心，远程 WAN 节点分担额外层数。",
+                        "超大规模挑战：结合 Petals / SWARM / DiLoCo 策略扩展至 64、128 甚至 256+ 节点。",
+                        "实时中继：WebSocket (/ws/wan-chat) 同步房间邀请、拓扑更新与聊天消息。"
+                    ],
+                    codeSample: "WebSocket 聊天中继: ws://127.0.0.1:8000/ws/wan-chat"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "6. 实时参与者聊天与集群 Audio-Party 语音派对",
+                    summary: "在文字聊天旁内置主机风格语音派对（灵感源自 Xbox / PlayStation），专为分布式 AI 团队打造。",
+                    bullets: [
+                        "低延迟语音：基于 AVAudioEngine (16 kHz PCM16) 与专用 /ws/wan-audio 中继。",
+                        "语音模式：支持按键通话 (Push-to-Talk) 与自由麦 (Open-Mic)、一键静音/闭麦与电平指示。",
+                        "成员列表：实时显示当前发言者与节点角色。"
+                    ],
+                    codeSample: "WebSocket 音频中继: ws://127.0.0.1:8000/ws/wan-audio"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "7. 科学与 Roofline 实验室 (6 个标签页) 与历史记录",
+                    summary: "在六个专业研究标签页中分析本地 TB/RDMA 集群、互联网 WAN 集群或两者并排对比。",
+                    bullets: [
+                        "标签 1–2：Williams 双对数 Roofline、TTFT/TPOT、GPipe 气泡、Petals/SWARM 压缩与 N=1..128 扩展。",
+                        "标签 3–4：Transformer 内存方程、TokenPowerBench (J/tok, EDP)、碳足迹与电力 TCO 对比。",
+                        "标签 5：N=5/10/20 可复现基准测试（p50/p95/p99, 95% CI），支持 CSV、JSON、LaTeX 与 BibTeX 导出。",
+                        "标签 6 (历史记录)：支持单指标或全局自动/手动快照录制、双曲线趋势图与 CSV 导出。"
+                    ],
+                    codeSample: "分析范围: 本地 (TB/RDMA) | 互联网 WAN | 对比 (本地 vs WAN)"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "8. 运行时服务：MLX、oMLX、Ollama 与 llama.cpp",
+                    summary: "直接在首选本地运行时加载模型，或将本地 Ollama/GGUF 模型扫描导入高速 MLX。",
+                    bullets: [
+                        "oMLX (端口 8000)：原生 macOS MLX 服务器，支持 SSD 分页 KV 缓存及 OpenAI + Anthropic 接口。",
+                        "Ollama (端口 11434)：零配置 GGUF 运行时。",
+                        "llama.cpp (端口 8080)：直接运行 llama-server GGUF。"
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000"
+                ),
+                HelpDocSection(
+                    id: "agents-launch",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "9. AI 智能体一键配置、启动与验证",
+                    summary: "将本地编程智能体与编辑器接入统一 Apple Silicon 集群，零云端数据泄漏。",
+                    bullets: [
+                        "一键配置：自动生成 OpenCode、Hermes Agent、Google Antigravity 配置，兼容 Cursor、Continue、Xcode。",
+                        "启动应用：./scripts/run_ssccc.sh 自动编译并打开 macOS 界面。",
+                        "测试套件：python3 -m unittest discover -s tests -v 校验模型、本地化与接口。"
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\nOpenAI Endpoint: http://127.0.0.1:8000/v1"
+                )
+            ]
         }
     }
 }
