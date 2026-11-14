@@ -93,8 +93,11 @@ class GlobalProjectTests(unittest.TestCase):
             "refreshLiveModels",
             "inferModelSpecs",
             "scanLocalDiskModels",
+            "checkRuntimeReadiness",
+            "probeRuntimeBinaries",
         ]:
             self.assertIn(expected, vm, f"Missing live model discovery component: {expected}")
+        self.assertIn("@Published var modelPresets: [ModelPreset] = []", vm)
 
     def test_06_scientific_roofline_and_stats_present(self):
         """Verify scientific Roofline, GPipe, energetics, p50/p95/p99, and export methods exist."""

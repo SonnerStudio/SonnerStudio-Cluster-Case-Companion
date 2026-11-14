@@ -51,6 +51,7 @@ final class ClusterViewModel: ObservableObject {
     @Published var helpSearchText: String = ""
     @Published var isRefreshingModels: Bool = false
     @Published var modelDiscoveryNote: String = ""
+    @Published var runtimeReadiness: [RuntimeService: RuntimeReadiness] = [:]
 
     // Scientific Roofline & Benchmark State
     @Published var sciBatchSize: Int = 1
@@ -109,7 +110,7 @@ final class ClusterViewModel: ObservableObject {
         )
     ]
 
-    @Published var modelPresets: [ModelPreset] = ClusterViewModel.fallbackReferenceModels
+    @Published var modelPresets: [ModelPreset] = []
 
     init() {
         self.selectedModel = ClusterViewModel.fallbackReferenceModels[0]
@@ -967,10 +968,91 @@ final class ClusterViewModel: ObservableObject {
             }
             modelDiscoveryNote = "\(live.count) echte(s) Modell(e) aus oMLX / Ollama / llama.cpp / lokalem Speicher eingelesen."
         } else {
-            modelPresets = Self.fallbackReferenceModels
-            modelDiscoveryNote = "Keine laufenden oMLX-/Ollama-/llama.cpp-Modelle gefunden — zeige neutrale Referenzprofile."
+            modelPresets = []
+            modelDiscoveryNote = t("ms_no_models_note")
         }
+        await checkRuntimeReadiness(
+            omlxRunning: live.contains(where: { $0.sourceLabel == "oMLX Live" }) ? true : nil,
+            ollamaRunning: live.contains(where: { $0.sourceLabel == "Ollama Live" }) ? true : nil,
+            llamaRunning: live.contains(where: { $0.sourceLabel == "llama.cpp Live" }) ? true : nil
+        )
         isRefreshingModels = false
+    }
+
+    private func isPortReachable(port: Int, path: String) async -> Bool {
+        guard let url = URL(string: "http://127.0.0.1:\(port)\(path)") else { return false }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 0.8
+        if let (_, resp) = try? await URLSession.shared.data(for: req),
+           let http = resp as? HTTPURLResponse, (200..<500).contains(http.statusCode) {
+            return true
+        }
+        return false
+    }
+
+    func checkRuntimeReadiness(omlxRunning: Bool? = nil, ollamaRunning: Bool? = nil, llamaRunning: Bool? = nil) async {
+        let omlxUp: Bool
+        if let v = omlxRunning { omlxUp = v } else { omlxUp = await isPortReachable(port: 8000, path: "/v1/models") }
+        let ollamaUp: Bool
+        if let v = ollamaRunning { ollamaUp = v } else { ollamaUp = await isPortReachable(port: 11434, path: "/api/tags") }
+        let llamaUp: Bool
+        if let v = llamaRunning { llamaUp = v } else { llamaUp = await isPortReachable(port: 8080, path: "/v1/models") }
+
+        let paths = Self.probeRuntimeBinaries()
+        runtimeReadiness = [
+            .omlx: RuntimeReadiness(
+                service: .omlx,
+                installed: !paths.omlx.isEmpty,
+                running: omlxUp,
+                binaryPath: paths.omlx,
+                installCommand: "pip install omlx && omlx serve --port 8000",
+                pullModelCommand: "mlx_lm.server --model mlx-community/Qwen2.5-14B-Instruct-4bit --port 8000"
+            ),
+            .ollama: RuntimeReadiness(
+                service: .ollama,
+                installed: !paths.ollama.isEmpty,
+                running: ollamaUp,
+                binaryPath: paths.ollama,
+                installCommand: "brew install ollama && ollama serve",
+                pullModelCommand: "ollama pull qwen2.5:14b"
+            ),
+            .llamaCpp: RuntimeReadiness(
+                service: .llamaCpp,
+                installed: !paths.llama.isEmpty,
+                running: llamaUp,
+                binaryPath: paths.llama,
+                installCommand: "brew install llama.cpp",
+                pullModelCommand: "llama-server -hf bartowski/Qwen2.5-14B-Instruct-GGUF:Q4_K_M --port 8080"
+            )
+        ]
+    }
+
+    private static func probeRuntimeBinaries() -> (omlx: String, ollama: String, llama: String) {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser.path
+        func firstExisting(_ candidates: [String]) -> String {
+            for p in candidates where fm.fileExists(atPath: p) { return p }
+            return ""
+        }
+        let omlx = firstExisting([
+            "/opt/homebrew/bin/omlx",
+            "/usr/local/bin/omlx",
+            "\(home)/.local/bin/omlx",
+            "/opt/homebrew/bin/mlx_lm.server",
+            "\(home)/.local/bin/mlx_lm.server"
+        ])
+        let ollama = firstExisting([
+            "/opt/homebrew/bin/ollama",
+            "/usr/local/bin/ollama",
+            "/Applications/Ollama.app"
+        ])
+        let llama = firstExisting([
+            "/opt/homebrew/bin/llama-server",
+            "/usr/local/bin/llama-server",
+            "/opt/homebrew/bin/llama-cli",
+            "/usr/local/bin/llama-cli"
+        ])
+        return (omlx, ollama, llama)
     }
 
     private static func scanLocalDiskModels(excludingIds: Set<String>) -> [ModelPreset] {

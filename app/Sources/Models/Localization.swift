@@ -317,6 +317,18 @@ enum L10n {
         case ("ms_sub", .es): return "Elige un modelo de oMLX, Ollama o llama.cpp — SS-CCC calcula el reparto proporcional de capas entre todos los nodos activos."
         case ("ms_sub", .pt): return "Escolha um modelo do oMLX, Ollama ou llama.cpp — o SS-CCC calcula a repartição proporcional de camadas entre todos os nós ativos."
 
+        case ("ms_no_models_note", .de): return "Keine lokalen oder laufenden Modelle in oMLX, Ollama oder llama.cpp gefunden."
+        case ("ms_no_models_note", .en): return "No local or running models found in oMLX, Ollama, or llama.cpp."
+        case ("ms_no_models_note", .fr): return "Aucun modèle local ou actif trouvé dans oMLX, Ollama ou llama.cpp."
+        case ("ms_no_models_note", .es): return "No se encontraron modelos locales ni activos en oMLX, Ollama o llama.cpp."
+        case ("ms_no_models_note", .pt): return "Nenhum modelo local ou ativo encontrado no oMLX, Ollama ou llama.cpp."
+
+        case ("ms_empty_guide", .de): return "Bitte stelle mindestens ein Modell über oMLX, Ollama oder llama.cpp bereit und klicke anschließend auf „Modelle neu einlesen“."
+        case ("ms_empty_guide", .en): return "Please make at least one model available via oMLX, Ollama, or llama.cpp, then click “Refresh Models”."
+        case ("ms_empty_guide", .fr): return "Veuillez rendre au moins un modèle disponible via oMLX, Ollama ou llama.cpp, puis cliquez sur actualiser."
+        case ("ms_empty_guide", .es): return "Prepara al menos un modelo mediante oMLX, Ollama o llama.cpp y vuelve a leer la lista."
+        case ("ms_empty_guide", .pt): return "Disponibilize pelo menos um modelo através do oMLX, Ollama ou llama.cpp e atualize a lista."
+
         case ("ms_plan_title", .de): return "Gewichteter Schichten-Aufteilungsplan"
         case ("ms_plan_title", .en): return "Weighted Pipeline Sharding Plan"
         case ("ms_plan_title", .fr): return "Plan de répartition pondérée des couches"

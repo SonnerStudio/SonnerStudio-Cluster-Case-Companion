@@ -66,6 +66,15 @@ enum RuntimeService: String, CaseIterable, Identifiable {
     }
 }
 
+struct RuntimeReadiness: Hashable {
+    let service: RuntimeService
+    let installed: Bool
+    let running: Bool
+    let binaryPath: String
+    let installCommand: String
+    let pullModelCommand: String
+}
+
 enum KVCachePrecision: String, CaseIterable, Identifiable {
     case fp16 = "FP16 (Standard)"
     case q8 = "8-Bit (--kv-bits 8)"

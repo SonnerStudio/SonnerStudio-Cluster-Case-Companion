@@ -36,50 +36,129 @@ struct ModelStudioView: View {
                             .foregroundColor(SolarisTheme.mint)
                     }
 
-                    VStack(spacing: 12) {
-                        ForEach(vm.modelPresets) { preset in
-                            let isSelected = preset.id == vm.selectedModel.id
-                            Button {
-                                vm.selectedModel = preset
-                                vm.kvCacheReserveGB = preset.kvReserveGB
-                            } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack(spacing: 8) {
-                                            Text(preset.displayName)
-                                                .font(SolarisTheme.cardTitle)
-                                                .foregroundColor(SolarisTheme.textPrimary)
-                                            Text(preset.sourceLabel)
-                                                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 3)
-                                                .background(Capsule().fill((preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amber).opacity(0.22)))
-                                                .foregroundColor(preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amberGlow)
-                                        }
-                                        Text("\(preset.quantization) · \(preset.totalLayers) Layer · ~\(String(format: "%.1f", preset.estimatedGB)) GB · \(preset.notes)")
-                                            .font(SolarisTheme.bodyLarge)
+                    if vm.modelPresets.isEmpty {
+                        VStack(alignment: .leading, spacing: 14) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "tray.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(SolarisTheme.amberGlow)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(vm.t("ms_no_models_note"))
+                                        .font(SolarisTheme.cardTitle)
+                                        .foregroundColor(SolarisTheme.textPrimary)
+                                    Text(vm.t("ms_empty_guide"))
+                                        .font(SolarisTheme.bodyLarge)
+                                        .foregroundColor(SolarisTheme.textSecondary)
+                                }
+                            }
+
+                            Divider().background(SolarisTheme.borderSubtle)
+
+                            // Runtime Readiness Matrix: oMLX, Ollama, llama.cpp
+                            ForEach(RuntimeService.allCases) { svc in
+                                let status = vm.runtimeReadiness[svc]
+                                let isRunning = status?.running ?? false
+                                let isInstalled = status?.installed ?? false
+                                let badgeText = isRunning ? "Bereit (Läuft)" : (isInstalled ? "Installiert (Gestoppt)" : "Nicht gefunden")
+                                let badgeColor = isRunning ? SolarisTheme.emerald : (isInstalled ? SolarisTheme.amberGlow : SolarisTheme.coral)
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text(svc.rawValue)
+                                            .font(SolarisTheme.bodyBold)
+                                            .foregroundColor(SolarisTheme.textPrimary)
+                                        Spacer()
+                                        Text(badgeText)
+                                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 4)
+                                            .background(Capsule().fill(badgeColor.opacity(0.20)))
+                                            .foregroundColor(badgeColor)
+                                    }
+                                    if let path = status?.binaryPath, !path.isEmpty {
+                                        Text("Pfad: \(path)")
+                                            .font(.system(size: 11, design: .monospaced))
                                             .foregroundColor(SolarisTheme.textSecondary)
                                     }
-                                    Spacer()
-                                    if isSelected {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 24))
-                                            .foregroundColor(SolarisTheme.amber)
+                                    let cmd = isInstalled ? (status?.pullModelCommand ?? "") : (status?.installCommand ?? "")
+                                    if !cmd.isEmpty {
+                                        HStack {
+                                            Text(cmd)
+                                                .font(.system(size: 12, design: .monospaced))
+                                                .foregroundColor(SolarisTheme.mint)
+                                                .textSelection(.enabled)
+                                            Spacer()
+                                            Button("Kopieren") {
+                                                NSPasteboard.general.clearContents()
+                                                NSPasteboard.general.setString(cmd, forType: .string)
+                                                vm.bridgeStatusMessage = "Befehl kopiert: \(cmd)"
+                                            }
+                                            .buttonStyle(.bordered)
+                                        }
                                     }
                                 }
-                                .padding(14)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .contentShape(Rectangle())
+                                .padding(12)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(isSelected ? SolarisTheme.amber.opacity(0.14) : SolarisTheme.cardElevated)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .stroke(isSelected ? SolarisTheme.amber : SolarisTheme.borderSubtle, lineWidth: 1.2)
-                                        )
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .fill(SolarisTheme.cardElevated)
                                 )
                             }
-                            .buttonStyle(.plain)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(SolarisTheme.cardElevated.opacity(0.7))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(SolarisTheme.amber.opacity(0.35), lineWidth: 1)
+                                )
+                        )
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(vm.modelPresets) { preset in
+                                let isSelected = preset.id == vm.selectedModel.id
+                                Button {
+                                    vm.selectedModel = preset
+                                    vm.kvCacheReserveGB = preset.kvReserveGB
+                                } label: {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            HStack(spacing: 8) {
+                                                Text(preset.displayName)
+                                                    .font(SolarisTheme.cardTitle)
+                                                    .foregroundColor(SolarisTheme.textPrimary)
+                                                Text(preset.sourceLabel)
+                                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 3)
+                                                    .background(Capsule().fill((preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amber).opacity(0.22)))
+                                                    .foregroundColor(preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amberGlow)
+                                            }
+                                            Text("\(preset.quantization) · \(preset.totalLayers) Layer · ~\(String(format: "%.1f", preset.estimatedGB)) GB · \(preset.notes)")
+                                                .font(SolarisTheme.bodyLarge)
+                                                .foregroundColor(SolarisTheme.textSecondary)
+                                        }
+                                        Spacer()
+                                        if isSelected {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .font(.system(size: 24))
+                                                .foregroundColor(SolarisTheme.amber)
+                                        }
+                                    }
+                                    .padding(14)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .fill(isSelected ? SolarisTheme.amber.opacity(0.14) : SolarisTheme.cardElevated)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                    .stroke(isSelected ? SolarisTheme.amber : SolarisTheme.borderSubtle, lineWidth: 1.2)
+                                            )
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
                 }
