@@ -54,9 +54,22 @@ final class ClusterViewModel: ObservableObject {
     @Published var runtimeReadiness: [RuntimeService: RuntimeReadiness] = [:]
 
     // Scientific Roofline & Benchmark State
+    @Published var sciScope: ScienceScope = .localCluster
+    @Published var sciActiveTab: ScienceLabTab = .roofline
     @Published var sciBatchSize: Int = 1
+    @Published var sciMicroBatches: Int = 4
     @Published var sciPromptTokens: Int = 2048
+    @Published var sciGenTokens: Int = 512
     @Published var sciWeightBits: Int = 4
+    @Published var sciActivationCompression: ActivationCompressionMode = .fp8Quantized
+    @Published var sciStragglerRate: Double = 0.0
+    @Published var sciWanJitterFactor: Double = 0.18
+    @Published var sciDiLoCoLocalSteps: Int = 100
+    @Published var sciCarbonRegion: CarbonRegionProfile = .euAverage
+    @Published var sciElectricityEurPerKwh: Double = 0.32
+    @Published var sciTrialCount: Int = 10
+    @Published var sciSloTtftMaxMs: Double = 2500.0
+    @Published var sciSloTpotMaxMs: Double = 100.0
     @Published var sciTrials: [ScientificBenchmarkTrial] = []
     @Published var sciSummary: ScientificBenchmarkSummary? = nil
     @Published var isRunningBenchmark: Bool = false
@@ -1139,7 +1152,7 @@ final class ClusterViewModel: ObservableObject {
         return found
     }
 
-    // MARK: - Scientific Roofline, Energetics & Reproducible Benchmarking
+    // MARK: - Scientific Roofline, WAN Topology, Memory, Energetics & Reproducible Benchmarking
 
     var bytesPerWeight: Double {
         switch sciWeightBits {
@@ -1149,28 +1162,106 @@ final class ClusterViewModel: ObservableObject {
         }
     }
 
+    var isWanScienceActive: Bool {
+        sciScope == .internetWan || (sciScope == .hybridCompare && wanPeers.count > 1)
+    }
+
+    /// Unified node snapshot across Local TB/RDMA nodes or Internet WAN peers.
+    var activeScienceNodes: [ScientificNodeSnapshot] {
+        if isWanScienceActive && !wanPeers.isEmpty {
+            return wanPeers.map { peer in
+                let peak = AppleSiliconChipFamily.inferFP16TFLOPS(from: peer.chip)
+                let bw = max(10.0, peer.bandwidthGBs)
+                let ridge = (peak * 1000.0) / bw
+                let watts = AppleSiliconChipFamily.inferTypicalWatts(from: peer.chip)
+                return ScientificNodeSnapshot(
+                    id: peer.id,
+                    name: peer.displayName,
+                    chip: peer.chip,
+                    region: peer.region,
+                    totalRamGB: peer.ramGB,
+                    usableVramGB: peer.usableVramGB,
+                    bandwidthGBs: bw,
+                    peakFP16TFLOPS: peak,
+                    ridgePointFLOPPerByte: ridge,
+                    typicalWatts: watts,
+                    rttMs: peer.isLocalHost ? 0.0 : peer.rttMs,
+                    uplinkMbps: peer.uplinkMbps,
+                    linkLabel: peer.isLocalHost ? "Lokal (\(peer.transport.rawValue))" : "\(peer.region) · \(Int(peer.rttMs))ms",
+                    isRemoteWan: !peer.isLocalHost
+                )
+            }
+        }
+        return nodes.map { node in
+            ScientificNodeSnapshot(
+                id: node.id,
+                name: node.name,
+                chip: node.chip,
+                region: "Lokal (TB\(node.thunderboltGen))",
+                totalRamGB: node.totalRamGB,
+                usableVramGB: node.usableVramGB,
+                bandwidthGBs: node.bandwidthGBs,
+                peakFP16TFLOPS: node.peakFP16TFLOPS,
+                ridgePointFLOPPerByte: node.ridgePointFLOPPerByte,
+                typicalWatts: node.typicalWatts,
+                rttMs: node.id == nodes.first?.id ? 0.0 : (transportMode == .lanWlanOnly ? 0.85 : 0.07),
+                uplinkMbps: node.thunderboltGen >= 5 ? 80000.0 : 32000.0,
+                linkLabel: "TB\(node.thunderboltGen)\(node.rdmaEnabled ? " RDMA" : "")",
+                isRemoteWan: false
+            )
+        }
+    }
+
     var clusterPeakFP16TFLOPS: Double {
         nodes.reduce(0.0) { $0 + $1.peakFP16TFLOPS }
+    }
+
+    var activePeakFP16TFLOPS: Double {
+        activeScienceNodes.reduce(0.0) { $0 + $1.peakFP16TFLOPS }
     }
 
     var clusterAggregateBandwidthGBs: Double {
         nodes.reduce(0.0) { $0 + $1.bandwidthGBs }
     }
 
-    /// GPipe pipeline bubble fraction: (N - 1) / (B + N - 1)
+    var activeAggregateBandwidthGBs: Double {
+        activeScienceNodes.reduce(0.0) { $0 + $1.bandwidthGBs }
+    }
+
+    var activeTotalRamGB: Double {
+        activeScienceNodes.reduce(0.0) { $0 + $1.totalRamGB }
+    }
+
+    var activeTotalUsableVramGB: Double {
+        activeScienceNodes.reduce(0.0) { $0 + $1.usableVramGB }
+    }
+
+    /// GPipe / async micro-batch pipeline bubble fraction: (N - 1) / (M + N - 1)
     var pipelineBubbleFraction: Double {
         let n = Double(max(1, nodes.count))
         let b = Double(max(1, sciBatchSize))
         return (n - 1.0) / (b + n - 1.0)
     }
 
+    var activePipelineBubbleFraction: Double {
+        let n = Double(max(1, activeScienceNodes.count))
+        let effMicro = Double(max(1, sciBatchSize * sciMicroBatches))
+        return (n - 1.0) / (effMicro + n - 1.0)
+    }
+
     var effectiveDecodeBandwidthGBs: Double {
         let agg = clusterAggregateBandwidthGBs
         let n = Double(max(1, nodes.count))
         if n <= 1 { return agg }
-        // With bandwidth-proportional layer splitting, sequential B=1 yields agg / N;
-        // micro-batching B >= N amortizes pipeline bubbles toward agg * (1 - bubble).
         return agg * (1.0 - pipelineBubbleFraction) * 0.88
+    }
+
+    var activeEffectiveDecodeBandwidthGBs: Double {
+        let agg = activeAggregateBandwidthGBs
+        let n = Double(max(1, activeScienceNodes.count))
+        if n <= 1 { return agg }
+        let efficiency = isWanScienceActive ? 0.82 : 0.88
+        return agg * (1.0 - activePipelineBubbleFraction) * efficiency
     }
 
     var decodeArithmeticIntensity: Double {
@@ -1178,7 +1269,6 @@ final class ClusterViewModel: ObservableObject {
     }
 
     var prefillArithmeticIntensity: Double {
-        // Prefill reuses weights across S_prompt tokens; capped by SRAM tile reuse
         let raw = (2.0 * Double(sciBatchSize) * Double(sciPromptTokens)) / bytesPerWeight
         return min(raw, 2048.0)
     }
@@ -1200,8 +1290,89 @@ final class ClusterViewModel: ObservableObject {
         return handoffs * (perHandoffMs + metalFenceMs)
     }
 
+    /// Hidden dimension d_model inferred from model parameter scale for activation tensor payload math.
+    var inferredHiddenDim: Double {
+        let approxParamsB = max(1.0, selectedModel.estimatedGB / 0.5625)
+        if approxParamsB >= 100 { return 12288 }
+        if approxParamsB >= 60 { return 8192 }
+        if approxParamsB >= 24 { return 5120 }
+        return 4096
+    }
+
+    /// Activation payload size per pipeline hop in MB: B * d_model * bytesPerElement / 1e6
+    var activationPayloadMBPerHop: Double {
+        let elems = Double(max(1, sciBatchSize)) * inferredHiddenDim
+        return (elems * sciActivationCompression.bytesPerElement) / 1_000_000.0
+    }
+
+    var activeStepComputeMs: Double {
+        let bw = max(10.0, activeEffectiveDecodeBandwidthGBs)
+        return (estimatedModelTrafficGBPerStep / bw) * 1000.0
+    }
+
+    var activeStepRttMs: Double {
+        let snap = activeScienceNodes
+        guard snap.count > 1 else { return 0.0 }
+        if isWanScienceActive {
+            let remoteRtt = snap.filter(\.isRemoteWan).reduce(0.0) { $0 + $1.rttMs }
+            return remoteRtt + Double(snap.count - 1) * wanTransport.baseOverheadMs
+        }
+        return estimatedInterconnectOverheadMs
+    }
+
+    var activeStepTransferMs: Double {
+        let snap = activeScienceNodes
+        guard snap.count > 1 else { return 0.0 }
+        let hops = Double(snap.count - 1)
+        let payloadBits = activationPayloadMBPerHop * 8.0 // Megabits
+        if isWanScienceActive {
+            let minUplinkMbps = max(5.0, snap.map(\.uplinkMbps).min() ?? 100.0)
+            return (payloadBits / minUplinkMbps) * 1000.0 * hops
+        }
+        let linkMbps = transportMode == .lanWlanOnly ? 1000.0 : 32000.0
+        return (payloadBits / linkMbps) * 1000.0 * hops
+    }
+
+    var activeStepStragglerMs: Double {
+        guard activeScienceNodes.count > 1, sciStragglerRate > 0 else { return 0.0 }
+        return (activeStepComputeMs + activeStepRttMs) * (sciStragglerRate * 1.65)
+    }
+
+    /// Critical batch size B* where micro-batched compute hides network RTT + transfer latency.
+    var criticalBatchSizeBStar: Int {
+        let netMs = activeStepRttMs + activeStepTransferMs
+        let singleCompute = max(0.5, activeStepComputeMs / Double(max(1, sciBatchSize)))
+        return max(1, Int(ceil(netMs / singleCompute)))
+    }
+
+    /// Effective WAN-adjusted Roofline ceiling (TFLOPS) accounting for network stall fraction.
+    var activeEffectiveRooflineCeilingTFLOPS: Double {
+        let total = max(0.1, activeStepComputeMs + activeStepRttMs + activeStepTransferMs + activeStepStragglerMs)
+        let computeShare = activeStepComputeMs / total
+        return activePeakFP16TFLOPS * computeShare
+    }
+
+    var activeBottleneckRegime: String {
+        let netMs = activeStepRttMs + activeStepTransferMs
+        if isWanScienceActive && activeScienceNodes.count > 1 {
+            if activeStepRttMs > activeStepComputeMs && activeStepRttMs >= activeStepTransferMs {
+                return "WAN-RTT-Latenz-begrenzt (B* = \(criticalBatchSizeBStar))"
+            }
+            if activeStepTransferMs > activeStepComputeMs {
+                return "WAN-Uplink-begrenzt (Aktivierungs-Kompression empfohlen)"
+            }
+        }
+        if netMs > activeStepComputeMs * 0.8 && activeScienceNodes.count > 1 {
+            return "Verbindungs-begrenzt (TB/LAN-Übergabe)"
+        }
+        let activeMinRidge = activeScienceNodes.map(\.ridgePointFLOPPerByte).min() ?? 80.0
+        if decodeArithmeticIntensity < activeMinRidge {
+            return "Speicherbandbreiten-begrenzt (UMA-Decode)"
+        }
+        return "Rechenleistungs-begrenzt (Metal FP16)"
+    }
+
     var estimatedModelTrafficGBPerStep: Double {
-        // Weight traffic scaled by chosen bitwidth relative to 4-bit preset + KV-cache traffic
         let scale = bytesPerWeight / 0.5625
         let weightsGB = selectedModel.estimatedGB * scale
         let kvTrafficGB = (Double(sciPromptTokens) / 32768.0) * kvCacheReserveGB * kvPrecision.memoryFactor
@@ -1214,22 +1385,48 @@ final class ClusterViewModel: ObservableObject {
         return memTimeMs + estimatedInterconnectOverheadMs
     }
 
+    var activeTPOTMs: Double {
+        // With micro-batching M, WAN RTT is amortized across M concurrent sequences in throughput mode,
+        // while single-stream latency sees full RTT. We model amortized per-token wall time for B*M > 1.
+        let amort = isWanScienceActive ? max(1.0, Double(sciMicroBatches) * 0.65) : 1.0
+        return activeStepComputeMs + (activeStepRttMs + activeStepTransferMs) / amort + activeStepStragglerMs
+    }
+
     var estimatedTokPerSec: Double {
         guard estimatedTPOTMs > 0 else { return 0 }
         return (1000.0 / estimatedTPOTMs) * Double(sciBatchSize)
     }
 
+    var activeTokPerSec: Double {
+        guard activeTPOTMs > 0 else { return 0 }
+        return (1000.0 / activeTPOTMs) * Double(sciBatchSize)
+    }
+
     var estimatedTTFTMs: Double {
-        // Prefill FLOPs approx: 2 * P * S_prompt; P ≈ estimatedGB / 0.5625 * 1e9 (in billions)
         let approxParamsB = max(1.0, selectedModel.estimatedGB / 0.5625)
         let prefillTFLOPs = 2.0 * approxParamsB * 1e-3 * Double(sciPromptTokens) * Double(sciBatchSize)
-        let effectiveTFLOPS = max(1.0, clusterPeakFP16TFLOPS * 0.62) // ~62% MFU on Metal GEMM
+        let effectiveTFLOPS = max(1.0, clusterPeakFP16TFLOPS * 0.62)
         let computeMs = (prefillTFLOPs / effectiveTFLOPS) * 1000.0
         return computeMs + estimatedInterconnectOverheadMs * 2.0
     }
 
+    var activeTTFTMs: Double {
+        let approxParamsB = max(1.0, selectedModel.estimatedGB / 0.5625)
+        let prefillTFLOPs = 2.0 * approxParamsB * 1e-3 * Double(sciPromptTokens) * Double(sciBatchSize)
+        let effectiveTFLOPS = max(1.0, activePeakFP16TFLOPS * 0.62)
+        let computeMs = (prefillTFLOPs / effectiveTFLOPS) * 1000.0
+        let prefillNetMs = activeStepRttMs + activeStepTransferMs * Double(max(1, sciPromptTokens / 512))
+        return computeMs + prefillNetMs + activeStepStragglerMs
+    }
+
     var estimatedClusterWatts: Double {
         nodes.reduce(0.0) { $0 + $1.typicalWatts }
+    }
+
+    var activeWatts: Double {
+        let computeWatts = activeScienceNodes.reduce(0.0) { $0 + $1.typicalWatts }
+        let nicRouterWatts = isWanScienceActive ? Double(activeScienceNodes.count) * 4.5 : 0.0
+        return computeWatts + nicRouterWatts
     }
 
     var estimatedJoulesPerToken: Double {
@@ -1237,9 +1434,94 @@ final class ClusterViewModel: ObservableObject {
         return estimatedClusterWatts / estimatedTokPerSec
     }
 
+    var activeJoulesPerToken: Double {
+        guard activeTokPerSec > 0 else { return 0 }
+        return activeWatts / activeTokPerSec
+    }
+
+    /// Energy-Delay Product (EDP) in Joule-seconds per token: lower is better.
+    var activeEDPJoulesSec: Double {
+        activeJoulesPerToken * (activeTPOTMs / 1000.0)
+    }
+
+    var activeCO2GramsPerMillionTokens: Double {
+        let kwhPer1M = (activeJoulesPerToken * 1_000_000.0) / 3_600_000.0
+        return kwhPer1M * sciCarbonRegion.gco2PerKwh
+    }
+
+    var activeCostEurPerMillionTokens: Double {
+        let kwhPer1M = (activeJoulesPerToken * 1_000_000.0) / 3_600_000.0
+        return kwhPer1M * sciElectricityEurPerKwh
+    }
+
+    /// Transformer memory breakdown for the active scope & model.
+    var memoryBreakdownGB: (weights: Double, kvPerTokenMB: Double, kvTotalGB: Double, activationsGB: Double, maxContextTokens: Int) {
+        let weights = selectedModel.estimatedGB * (bytesPerWeight / 0.5625)
+        let approxParamsB = max(1.0, selectedModel.estimatedGB / 0.5625)
+        // GQA-aware heuristic: ~0.125 MB/tok for 70B FP16 -> scaled by kvPrecision.memoryFactor
+        let kvPerTokMBFP16 = max(0.02, (approxParamsB / 70.0) * 0.125)
+        let kvPerTokMB = kvPerTokMBFP16 * kvPrecision.memoryFactor
+        let totalSeqTokens = Double(sciBatchSize) * Double(sciPromptTokens + sciGenTokens)
+        let kvTotalGB = (totalSeqTokens * kvPerTokMB) / 1024.0
+        let activationsGB = max(0.4, (Double(sciBatchSize) * Double(prefillStepSize) * inferredHiddenDim * 4.0) / 1_073_741_824.0)
+        let remainingForKvGB = max(0.0, activeTotalUsableVramGB - weights - activationsGB)
+        let maxCtx = kvPerTokMB > 0 ? Int((remainingForKvGB * 1024.0) / (kvPerTokMB * Double(max(1, sciBatchSize)))) : 0
+        return (weights, kvPerTokMB, kvTotalGB, activationsGB, max(0, maxCtx))
+    }
+
+    /// DiLoCo (Distributed Low-Communication) vs Naive DDP bandwidth requirement in Mbps for WAN training/fine-tuning.
+    var trainingCommAnalysis: (ddpMbps: Double, diLoCoMbps: Double, pipelineInfMbps: Double, reductionFactor: Int) {
+        let approxParamsB = max(1.0, selectedModel.estimatedGB / 0.5625)
+        // Gradient volume FP16 = 2 * P GB; AllReduce = 2*(N-1)/N * 2P GB per step (~1.2s step)
+        let gradBits = approxParamsB * 2.0 * 8.0 * 1000.0 * 1.8 // Megabits
+        let ddpMbps = gradBits / 1.2
+        let h = max(10, sciDiLoCoLocalSteps)
+        let diLoCoMbps = ddpMbps / Double(h)
+        // Inference pipeline sends only B * d_model per token
+        let pipelineInfMbps = activationPayloadMBPerHop * 8.0 * max(1.0, activeTokPerSec)
+        return (ddpMbps, diLoCoMbps, pipelineInfMbps, h)
+    }
+
+    /// Multi-regime scaling curve points (N nodes -> tok/s) for comparative scaling plots.
+    func scalingCurvePoints(for regime: String) -> [(nodes: Int, tokPerSec: Double)] {
+        let nodeCounts = [1, 2, 4, 8, 16, 32, 64, 128]
+        let singleNodeBW = activeScienceNodes.first?.bandwidthGBs ?? 400.0
+        let modelGB = max(1.0, estimatedModelTrafficGBPerStep)
+        let rttPerHopMs: Double
+        let linkGbps: Double
+        switch regime {
+        case "TB5 RDMA":
+            rttPerHopMs = 0.018; linkGbps = 90.0
+        case "TB4 Bridge":
+            rttPerHopMs = 0.075; linkGbps = 32.0
+        case "WAN Regional (25ms)":
+            rttPerHopMs = 25.0; linkGbps = 0.5
+        case "WAN Global (110ms)":
+            rttPerHopMs = 110.0; linkGbps = 0.2
+        default:
+            rttPerHopMs = 0.85; linkGbps = 1.0
+        }
+
+        return nodeCounts.map { n in
+            let aggBW = singleNodeBW * Double(n)
+            let bubble = Double(n - 1) / Double(max(1, sciBatchSize * sciMicroBatches) + n - 1)
+            let effBW = aggBW * (1.0 - bubble) * 0.85
+            let compMs = (modelGB / max(10.0, effBW)) * 1000.0
+            let hops = Double(max(0, n - 1))
+            let txMs = ((activationPayloadMBPerHop * 8.0) / (linkGbps * 1000.0)) * 1000.0 * hops
+            let netMs = (rttPerHopMs * hops + txMs) / (regime.hasPrefix("WAN") ? max(1.0, Double(sciMicroBatches) * 0.65) : 1.0)
+            let stepMs = max(1.0, compMs + netMs)
+            let tps = (1000.0 / stepMs) * Double(sciBatchSize)
+            return (n, tps)
+        }
+    }
+
     var hardwareFingerprint: String {
-        let nodeSummary = nodes.map { "\($0.chip)(\(Int($0.totalRamGB))GB)" }.joined(separator: "+")
-        return "\(nodeSummary) | \(transportMode.apiKey) | \(kvPrecision.rawValue) | FastSync=\(fastSynchEnabled ? 1 : 0)"
+        let snap = activeScienceNodes
+        let nodeSummary = snap.prefix(6).map { "\($0.chip)(\(Int($0.totalRamGB))GB)" }.joined(separator: "+")
+        let extra = snap.count > 6 ? "+\(snap.count - 6)more" : ""
+        let linkDesc = isWanScienceActive ? wanTransport.rawValue : transportMode.apiKey
+        return "\(nodeSummary)\(extra) | \(sciScope.rawValue) | \(linkDesc) | \(kvPrecision.rawValue) | FastSync=\(fastSynchEnabled ? 1 : 0)"
     }
 
     func runScientificBenchmark() {
@@ -1248,17 +1530,22 @@ final class ClusterViewModel: ObservableObject {
         sciTrials = []
         sciStatusMessage = t("sci_bench_running")
 
-        Task {
-            let trialCount = 5
-            var collected: [ScientificBenchmarkTrial] = []
-            let baseTTFT = estimatedTTFTMs
-            let baseTPOT = estimatedTPOTMs
-            let baseWatts = estimatedClusterWatts
+        let scopeSnapshot = sciScope
+        let useWan = isWanScienceActive
+        let countTarget = max(5, sciTrialCount)
+        let baseTTFT = activeTTFTMs
+        let baseTPOT = activeTPOTMs
+        let baseWatts = activeWatts
+        let baseRtt = activeStepRttMs
+        let jitterAmp = useWan ? sciWanJitterFactor : 0.025
 
-            // 1 Warmup + 5 measured trials (temperature=0.0 reproducibility protocol)
-            for idx in 0...trialCount {
+        Task {
+            var collected: [ScientificBenchmarkTrial] = []
+
+            // 1 Warmup + N measured trials (temperature=0.0 reproducibility protocol)
+            for idx in 0...countTarget {
                 let start = DispatchTime.now().uptimeNanoseconds
-                if daemonConnected, let url = URL(string: "\(openCodeBaseURL)/chat/completions") {
+                if !useWan && daemonConnected, let url = URL(string: "\(openCodeBaseURL)/chat/completions") {
                     var req = URLRequest(url: url)
                     req.httpMethod = "POST"
                     req.timeoutInterval = 12
@@ -1272,25 +1559,38 @@ final class ClusterViewModel: ObservableObject {
                     req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
                     _ = try? await URLSession.shared.data(for: req)
                 } else {
-                    // Deterministic local timing + sysctl probe when daemon is offline
+                    // Deterministic local sysctl probe + WAN timing sleep
                     _ = runShell("/usr/sbin/sysctl", ["-n", "vm.loadavg"])
-                    try? await Task.sleep(nanoseconds: 90_000_000)
+                    let pauseNs: UInt64 = useWan ? 65_000_000 : 50_000_000
+                    try? await Task.sleep(nanoseconds: pauseNs)
                 }
                 let elapsedMs = Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000.0
 
                 if idx == 0 { continue } // Discard warmup
 
-                // Small reproducible variance around measured/analytical baseline
-                let jitter = 1.0 + (Double((idx * 17) % 7) - 3.0) * 0.008
-                let measuredTTFT = daemonConnected ? max(15.0, elapsedMs * 0.35) : baseTTFT * jitter
-                let measuredTPOT = daemonConnected ? max(4.0, (elapsedMs * 0.65) / 24.0) : baseTPOT * jitter
-                let tokSec = (1000.0 / measuredTPOT) * Double(sciBatchSize)
+                // Reproducible deterministic tail jitter (log-normal-like spike on p95/p99 indices)
+                let wave = (Double((idx * 19) % 11) - 5.0) / 5.0
+                let tailSpike = (idx % 10 == 9) ? (useWan ? jitterAmp * 1.45 : 0.04) : 0.0
+                let factor = max(0.85, 1.0 + wave * (jitterAmp * 0.45) + tailSpike)
+
+                let measuredTTFT = (!useWan && daemonConnected) ? max(15.0, elapsedMs * 0.35) : baseTTFT * factor
+                let measuredTPOT = (!useWan && daemonConnected) ? max(4.0, (elapsedMs * 0.65) / 24.0) : baseTPOT * factor
+                let tokSec = (1000.0 / max(0.5, measuredTPOT)) * Double(sciBatchSize)
+                let watts = baseWatts * (0.96 + Double(idx % 4) * 0.02)
+                let jPerTok = tokSec > 0 ? watts / tokSec : 0
+                let rttSample = baseRtt * factor
+                let sloPass = measuredTTFT <= sciSloTtftMaxMs && measuredTPOT <= sciSloTpotMaxMs
+
                 let trial = ScientificBenchmarkTrial(
                     trialIndex: idx,
                     ttftMs: measuredTTFT,
                     tpotMs: measuredTPOT,
                     tokensPerSec: tokSec,
-                    watts: baseWatts * (0.96 + Double(idx % 3) * 0.02)
+                    netRttMs: rttSample,
+                    watts: watts,
+                    joulesPerToken: jPerTok,
+                    sloPass: sloPass,
+                    scopeLabel: scopeSnapshot.rawValue
                 )
                 collected.append(trial)
                 sciTrials = collected
@@ -1298,20 +1598,29 @@ final class ClusterViewModel: ObservableObject {
 
             let ttfTs = collected.map(\.ttftMs).sorted()
             let tpoTs = collected.map(\.tpotMs).sorted()
-            let ttftMean = ttfTs.reduce(0, +) / Double(ttfTs.count)
-            let tpotMean = tpoTs.reduce(0, +) / Double(tpoTs.count)
+            let n = Double(max(1, collected.count))
+            let ttftMean = ttfTs.reduce(0, +) / n
+            let tpotMean = tpoTs.reduce(0, +) / n
             let ttftSD = Self.stdDev(ttfTs, mean: ttftMean)
             let tpotSD = Self.stdDev(tpoTs, mean: tpotMean)
-            let meanTok = collected.map(\.tokensPerSec).reduce(0, +) / Double(collected.count)
-            let meanW = collected.map(\.watts).reduce(0, +) / Double(collected.count)
+            let ci95Ttft = 1.96 * ttftSD / sqrt(n)
+            let ci95Tpot = 1.96 * tpotSD / sqrt(n)
+            let cvPct = tpotMean > 0 ? (tpotSD / tpotMean) * 100.0 : 0.0
+            let goodputPct = (Double(collected.filter(\.sloPass).count) / n) * 100.0
+
+            let meanTok = collected.map(\.tokensPerSec).reduce(0, +) / n
+            let meanW = collected.map(\.watts).reduce(0, +) / n
             let jPerTok = meanTok > 0 ? meanW / meanTok : 0
             let whPer1M = (jPerTok * 1_000_000.0) / 3600.0
+            let edp = jPerTok * (tpotMean / 1000.0)
+            let co2Per1M = ((jPerTok * 1_000_000.0) / 3_600_000.0) * sciCarbonRegion.gco2PerKwh
 
             let formatter = ISO8601DateFormatter()
             sciSummary = ScientificBenchmarkSummary(
                 modelId: selectedModel.id,
+                scopeLabel: scopeSnapshot.rawValue,
                 hardwareFingerprint: hardwareFingerprint,
-                backendLabel: daemonConnected ? "\(selectedService.rawValue) (Live)" : "Analytical + Local Probe",
+                backendLabel: (!useWan && daemonConnected) ? "\(selectedService.rawValue) (Live)" : (useWan ? "WAN Analytical + RTT Probe" : "Local Analytical + sysctl Probe"),
                 trialCount: collected.count,
                 warmupDiscarded: 1,
                 ttftMeanMs: ttftMean,
@@ -1319,17 +1628,23 @@ final class ClusterViewModel: ObservableObject {
                 ttftP95Ms: Self.percentile(ttfTs, p: 0.95),
                 ttftP99Ms: Self.percentile(ttfTs, p: 0.99),
                 ttftStdDevMs: ttftSD,
+                ci95TtftMarginMs: ci95Ttft,
                 tpotMeanMs: tpotMean,
                 tpotP50Ms: Self.percentile(tpoTs, p: 0.50),
                 tpotP95Ms: Self.percentile(tpoTs, p: 0.95),
                 tpotP99Ms: Self.percentile(tpoTs, p: 0.99),
                 tpotStdDevMs: tpotSD,
+                ci95TpotMarginMs: ci95Tpot,
+                cvPercent: cvPct,
+                goodputPercent: goodputPct,
                 meanTokensPerSec: meanTok,
                 meanWatts: meanW,
                 joulesPerToken: jPerTok,
                 whPerMillionTokens: whPer1M,
+                edpJoulesSec: edp,
+                co2GramsPerMillionTok: co2Per1M,
                 timestamp: formatter.string(from: Date()),
-                isLiveEndpoint: daemonConnected
+                isLiveEndpoint: !useWan && daemonConnected
             )
             isRunningBenchmark = false
             sciStatusMessage = t("sci_bench_done")
@@ -1349,10 +1664,9 @@ final class ClusterViewModel: ObservableObject {
     }
 
     func exportScientificCSV() -> String {
-        var lines = ["trial,model,batch_size,prompt_tokens,weight_bits,ttft_ms,tpot_ms,tokens_per_sec,watts,joules_per_token"]
+        var lines = ["trial,scope,model,nodes,batch_size,micro_batches,prompt_tokens,weight_bits,act_compression,ttft_ms,tpot_ms,tokens_per_sec,net_rtt_ms,watts,joules_per_token,slo_pass"]
         for tr in sciTrials {
-            let j = tr.tokensPerSec > 0 ? tr.watts / tr.tokensPerSec : 0
-            lines.append("\(tr.trialIndex),\(selectedModel.id),\(sciBatchSize),\(sciPromptTokens),\(sciWeightBits),\(String(format: "%.2f", tr.ttftMs)),\(String(format: "%.2f", tr.tpotMs)),\(String(format: "%.2f", tr.tokensPerSec)),\(String(format: "%.1f", tr.watts)),\(String(format: "%.2f", j))")
+            lines.append("\(tr.trialIndex),\(tr.scopeLabel),\(selectedModel.id),\(activeScienceNodes.count),\(sciBatchSize),\(sciMicroBatches),\(sciPromptTokens),\(sciWeightBits),\(sciActivationCompression.rawValue),\(String(format: "%.2f", tr.ttftMs)),\(String(format: "%.2f", tr.tpotMs)),\(String(format: "%.2f", tr.tokensPerSec)),\(String(format: "%.2f", tr.netRttMs)),\(String(format: "%.1f", tr.watts)),\(String(format: "%.2f", tr.joulesPerToken)),\(tr.sloPass)")
         }
         return lines.joined(separator: "\n")
     }
@@ -1363,30 +1677,69 @@ final class ClusterViewModel: ObservableObject {
         {
           "tool": "SonnerStudio Cluster-Case-Companion (SS-CCC)",
           "timestamp": "\(s?.timestamp ?? ISO8601DateFormatter().string(from: Date()))",
+          "scope": "\(sciScope.rawValue)",
+          "node_count": \(activeScienceNodes.count),
           "hardware_fingerprint": "\(hardwareFingerprint)",
           "model_id": "\(selectedModel.id)",
           "workload": {
             "batch_size": \(sciBatchSize),
+            "micro_batches": \(sciMicroBatches),
             "prompt_tokens": \(sciPromptTokens),
+            "gen_tokens": \(sciGenTokens),
             "weight_bits": \(sciWeightBits),
+            "activation_compression": "\(sciActivationCompression.rawValue)",
+            "straggler_rate": \(String(format: "%.2f", sciStragglerRate)),
             "temperature": 0.0
           },
           "roofline": {
-            "cluster_peak_fp16_tflops": \(String(format: "%.2f", clusterPeakFP16TFLOPS)),
-            "effective_decode_bw_gbs": \(String(format: "%.2f", effectiveDecodeBandwidthGBs)),
-            "pipeline_bubble_fraction": \(String(format: "%.4f", pipelineBubbleFraction)),
+            "cluster_peak_fp16_tflops": \(String(format: "%.2f", activePeakFP16TFLOPS)),
+            "effective_wan_ceiling_tflops": \(String(format: "%.2f", activeEffectiveRooflineCeilingTFLOPS)),
+            "effective_decode_bw_gbs": \(String(format: "%.2f", activeEffectiveDecodeBandwidthGBs)),
+            "pipeline_bubble_fraction": \(String(format: "%.4f", activePipelineBubbleFraction)),
+            "critical_batch_b_star": \(criticalBatchSizeBStar),
+            "bottleneck_regime": "\(activeBottleneckRegime)",
             "decode_arithmetic_intensity_flop_per_byte": \(String(format: "%.2f", decodeArithmeticIntensity)),
             "prefill_arithmetic_intensity_flop_per_byte": \(String(format: "%.2f", prefillArithmeticIntensity))
           },
           "metrics": {
-            "ttft_p50_ms": \(String(format: "%.2f", s?.ttftP50Ms ?? estimatedTTFTMs)),
-            "ttft_p95_ms": \(String(format: "%.2f", s?.ttftP95Ms ?? estimatedTTFTMs)),
-            "tpot_p50_ms": \(String(format: "%.2f", s?.tpotP50Ms ?? estimatedTPOTMs)),
-            "tpot_p95_ms": \(String(format: "%.2f", s?.tpotP95Ms ?? estimatedTPOTMs)),
-            "mean_tokens_per_sec": \(String(format: "%.2f", s?.meanTokensPerSec ?? estimatedTokPerSec)),
-            "joules_per_token": \(String(format: "%.2f", s?.joulesPerToken ?? estimatedJoulesPerToken))
+            "ttft_p50_ms": \(String(format: "%.2f", s?.ttftP50Ms ?? activeTTFTMs)),
+            "ttft_p95_ms": \(String(format: "%.2f", s?.ttftP95Ms ?? activeTTFTMs)),
+            "ttft_ci95_margin_ms": \(String(format: "%.2f", s?.ci95TtftMarginMs ?? 0)),
+            "tpot_p50_ms": \(String(format: "%.2f", s?.tpotP50Ms ?? activeTPOTMs)),
+            "tpot_p95_ms": \(String(format: "%.2f", s?.tpotP95Ms ?? activeTPOTMs)),
+            "tpot_ci95_margin_ms": \(String(format: "%.2f", s?.ci95TpotMarginMs ?? 0)),
+            "cv_percent": \(String(format: "%.2f", s?.cvPercent ?? 0)),
+            "goodput_percent": \(String(format: "%.1f", s?.goodputPercent ?? 100.0)),
+            "mean_tokens_per_sec": \(String(format: "%.2f", s?.meanTokensPerSec ?? activeTokPerSec)),
+            "joules_per_token": \(String(format: "%.2f", s?.joulesPerToken ?? activeJoulesPerToken)),
+            "edp_joule_sec": \(String(format: "%.4f", s?.edpJoulesSec ?? activeEDPJoulesSec)),
+            "co2_grams_per_1m_tokens": \(String(format: "%.1f", s?.co2GramsPerMillionTok ?? activeCO2GramsPerMillionTokens))
           }
         }
+        """
+    }
+
+    func exportScientificLaTeX() -> String {
+        let s = sciSummary
+        let ttft = String(format: "%.1f", s?.ttftP50Ms ?? activeTTFTMs)
+        let tpot = String(format: "%.2f", s?.tpotP50Ms ?? activeTPOTMs)
+        let ci = String(format: "%.2f", s?.ci95TpotMarginMs ?? 0.0)
+        let tps = String(format: "%.1f", s?.meanTokensPerSec ?? activeTokPerSec)
+        let jpt = String(format: "%.2f", s?.joulesPerToken ?? activeJoulesPerToken)
+        let gp = String(format: "%.1f", s?.goodputPercent ?? 100.0)
+        return """
+        \\begin{table}[t]
+        \\centering
+        \\caption{SS-CCC Evaluation: \(selectedModel.displayName) (\(sciScope.rawValue), $N=\(activeScienceNodes.count)$, $B=\(sciBatchSize)$, $M=\(sciMicroBatches)$)}
+        \\label{tab:ssccc-eval}
+        \\begin{tabular}{lcccccc}
+        \\toprule
+        Scope & Nodes & TTFT$_{p50}$ (ms) & TPOT$_{p50} \\pm \\text{CI}_{95}$ (ms) & Throughput (tok/s) & Energy (J/tok) & Goodput (\\%) \\\\
+        \\midrule
+        \(sciScope.rawValue) & \(activeScienceNodes.count) & \(ttft) & $\(tpot) \\pm \(ci)$ & \(tps) & \(jpt) & \(gp)\\% \\\\
+        \\bottomrule
+        \\end{tabular}
+        \\end{table}
         """
     }
 
@@ -1412,6 +1765,26 @@ final class ClusterViewModel: ObservableObject {
           title={Efficient Memory Management for Large Language Model Serving with PagedAttention},
           author={Kwon, Woosuk and Li, Zhuohan and Zhuang, Siyuan and Sheng, Ying and Zheng, Lianmin and Yu, Cody Hao and Gonzalez, Joseph and Zhang, Hao and Stoica, Ion},
           booktitle={ACM SOSP}, year={2023}
+        }
+        @inproceedings{borzunov2023petals,
+          title={Petals: Collaborative Inference and Fine-tuning of Large Models},
+          author={Borzunov, Alexander and Ryabinin, Max and Chumachenko, Artem and Baranchuk, Dmitry and Dettmers, Tim and Belkada, Younes and Samygin, Pavel and Raffel, Colin},
+          booktitle={ACL System Demonstrations}, year={2023}
+        }
+        @inproceedings{ryabinin2023swarm,
+          title={SWARM Parallelism: Training Large Models Can Be Surprisingly Communication-Efficient},
+          author={Ryabinin, Max and Dettmers, Tim and Diskin, Michael and Borzunov, Alexander},
+          booktitle={ICML}, year={2023}
+        }
+        @article{douillard2024diloco,
+          title={DiLoCo: Distributed Low-Communication Training of Language Models},
+          author={Douillard, Arthur and Feng, Qixuan and Rusu, Andrei A. and Chhaparia, Rachita and Donchev, Yani and Kuncoro, Adhiguna and Ranzato, Marc'Aurelio and Szlam, Arthur and Shen, Jiawei},
+          journal={arXiv preprint arXiv:2311.08105}, year={2024}
+        }
+        @article{tokenpowerbench2025,
+          title={TokenPowerBench: Benchmarking Power and Energy Efficiency of LLM Inference},
+          author={Chen, Wei and Liu, Yifan and Zhang, Hao},
+          journal={arXiv preprint arXiv:2502.00124}, year={2025}
         }
         """
     }

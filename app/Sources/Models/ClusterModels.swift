@@ -172,17 +172,116 @@ struct ClusterNodeModel: Identifiable, Hashable {
     }
 }
 
+enum ScienceScope: String, CaseIterable, Identifiable {
+    case localCluster = "Lokal (TB/RDMA)"
+    case internetWan = "Internet-WAN"
+    case hybridCompare = "Vergleich (Lokal vs. WAN)"
+
+    var id: String { rawValue }
+}
+
+enum ScienceLabTab: String, CaseIterable, Identifiable {
+    case roofline = "Roofline & Engpass"
+    case wanTopology = "WAN-Topologie & Skalierung"
+    case memoryKv = "Speicher & KV-Analyse"
+    case energetics = "Energie, CO₂ & Kosten"
+    case trialsExport = "Messreihen & Export"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .roofline: return "chart.xyaxis.line"
+        case .wanTopology: return "globe.europe.africa.fill"
+        case .memoryKv: return "memorychip.fill"
+        case .energetics: return "bolt.fill"
+        case .trialsExport: return "tablecells.fill"
+        }
+    }
+}
+
+enum ActivationCompressionMode: String, CaseIterable, Identifiable {
+    case fp16Raw = "FP16 (16-Bit Roh)"
+    case fp8Quantized = "FP8 / INT8 (2× Kompakt)"
+    case int4Block = "INT4 Block (4× Kompakt)"
+    case topKSparse = "Top-K Dünnbesetzt (~6×)"
+
+    var id: String { rawValue }
+
+    var bytesPerElement: Double {
+        switch self {
+        case .fp16Raw: return 2.0
+        case .fp8Quantized: return 1.0
+        case .int4Block: return 0.5625
+        case .topKSparse: return 0.32
+        }
+    }
+
+    var qualityNote: String {
+        switch self {
+        case .fp16Raw: return "Verlustfrei (0,00 PPL-Abweichung)"
+        case .fp8Quantized: return "Vernachlässigbar (<0,02 PPL, Standard für Petals/SWARM)"
+        case .int4Block: return "Gering (+0,08–0,15 PPL, ideal für schmale Uplink-Leitungen)"
+        case .topKSparse: return "Messbar (+0,25–0,45 PPL, maximaler Durchsatz bei CGNAT/DERP)"
+        }
+    }
+}
+
+enum CarbonRegionProfile: String, CaseIterable, Identifiable {
+    case norway = "Norwegen / Wasserkraft (20 g/kWh)"
+    case france = "Frankreich / Kernkraft (55 g/kWh)"
+    case euAverage = "EU-Mittelwert (250 g/kWh)"
+    case germany = "Deutschland (320 g/kWh)"
+    case globalWan = "Weltweiter WAN-Mix (360 g/kWh)"
+    case usAverage = "USA-Mittelwert (380 g/kWh)"
+
+    var id: String { rawValue }
+
+    var gco2PerKwh: Double {
+        switch self {
+        case .norway: return 20.0
+        case .france: return 55.0
+        case .euAverage: return 250.0
+        case .germany: return 320.0
+        case .globalWan: return 360.0
+        case .usAverage: return 380.0
+        }
+    }
+}
+
+struct ScientificNodeSnapshot: Identifiable {
+    let id: String
+    let name: String
+    let chip: String
+    let region: String
+    let totalRamGB: Double
+    let usableVramGB: Double
+    let bandwidthGBs: Double
+    let peakFP16TFLOPS: Double
+    let ridgePointFLOPPerByte: Double
+    let typicalWatts: Double
+    let rttMs: Double
+    let uplinkMbps: Double
+    let linkLabel: String
+    let isRemoteWan: Bool
+}
+
 struct ScientificBenchmarkTrial: Identifiable {
     let id = UUID()
     let trialIndex: Int
     let ttftMs: Double
     let tpotMs: Double
     let tokensPerSec: Double
+    let netRttMs: Double
     let watts: Double
+    let joulesPerToken: Double
+    let sloPass: Bool
+    let scopeLabel: String
 }
 
 struct ScientificBenchmarkSummary {
     let modelId: String
+    let scopeLabel: String
     let hardwareFingerprint: String
     let backendLabel: String
     let trialCount: Int
@@ -192,15 +291,21 @@ struct ScientificBenchmarkSummary {
     let ttftP95Ms: Double
     let ttftP99Ms: Double
     let ttftStdDevMs: Double
+    let ci95TtftMarginMs: Double
     let tpotMeanMs: Double
     let tpotP50Ms: Double
     let tpotP95Ms: Double
     let tpotP99Ms: Double
     let tpotStdDevMs: Double
+    let ci95TpotMarginMs: Double
+    let cvPercent: Double
+    let goodputPercent: Double
     let meanTokensPerSec: Double
     let meanWatts: Double
     let joulesPerToken: Double
     let whPerMillionTokens: Double
+    let edpJoulesSec: Double
+    let co2GramsPerMillionTok: Double
     let timestamp: String
     let isLiveEndpoint: Bool
 }

@@ -517,6 +517,42 @@ enum L10n {
         case ("sci_link", .es): return "Rendimiento de datos (puente TB4/5)"
         case ("sci_link", .pt): return "Débito de dados (ponte TB4/5)"
 
+        case ("sci_scope_label", .de): return "Untersuchungs-Bereich"
+        case ("sci_scope_label", .en): return "Cluster Scope"
+        case ("sci_scope_label", .fr): return "Périmètre d'analyse"
+        case ("sci_scope_label", .es): return "Ámbito de análisis"
+        case ("sci_scope_label", .pt): return "Âmbito de análise"
+
+        case ("sci_tab_roofline", .de): return "Grenzkurve & Engpass"
+        case ("sci_tab_roofline", .en): return "Roofline & Bottleneck"
+        case ("sci_tab_roofline", .fr): return "Courbe & goulot"
+        case ("sci_tab_roofline", .es): return "Límite y cuello de botella"
+        case ("sci_tab_roofline", .pt): return "Limite e gargalo"
+
+        case ("sci_tab_wan", .de): return "WAN-Netz & Skalierung"
+        case ("sci_tab_wan", .en): return "WAN Topology & Scaling"
+        case ("sci_tab_wan", .fr): return "Topologie WAN et montée"
+        case ("sci_tab_wan", .es): return "Topología WAN y escala"
+        case ("sci_tab_wan", .pt): return "Topologia WAN e escala"
+
+        case ("sci_tab_memory", .de): return "Speicher & KV-Analyse"
+        case ("sci_tab_memory", .en): return "Memory & KV Analysis"
+        case ("sci_tab_memory", .fr): return "Mémoire et cache KV"
+        case ("sci_tab_memory", .es): return "Memoria y caché KV"
+        case ("sci_tab_memory", .pt): return "Memória e cache KV"
+
+        case ("sci_tab_energy", .de): return "Energie, CO₂ & Kosten"
+        case ("sci_tab_energy", .en): return "Energy, CO₂ & Cost"
+        case ("sci_tab_energy", .fr): return "Énergie, CO₂ et coût"
+        case ("sci_tab_energy", .es): return "Energía, CO₂ y coste"
+        case ("sci_tab_energy", .pt): return "Energia, CO₂ e custo"
+
+        case ("sci_tab_trials", .de): return "Messreihen & Ausgabe"
+        case ("sci_tab_trials", .en): return "Trials, Stats & Export"
+        case ("sci_tab_trials", .fr): return "Essais, stats et export"
+        case ("sci_tab_trials", .es): return "Ensayos, estadística y exportación"
+        case ("sci_tab_trials", .pt): return "Ensaios, estatística e exportação"
+
         // API & Console
         case ("api_openai", .de): return "OpenAI-verträglicher Endpunkt"
         case ("api_openai", .en): return "OpenAI-Compatible Endpoint"

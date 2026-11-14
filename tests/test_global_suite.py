@@ -119,7 +119,7 @@ class GlobalProjectTests(unittest.TestCase):
     def test_07_five_language_localization_completeness(self):
         """Verify key UI strings are localized across all 5 languages (de, en, fr, es, pt)."""
         loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
-        for key in ["sci_title", "sci_workload_title", "sci_bench_run", "ms_title", "ms_sub", "net_checklist", "pool_bar_title", "wan_title", "wan_sub", "wan_chat_title"]:
+        for key in ["sci_title", "sci_workload_title", "sci_bench_run", "sci_scope_label", "sci_tab_roofline", "sci_tab_wan", "sci_tab_memory", "sci_tab_energy", "sci_tab_trials", "ms_title", "ms_sub", "net_checklist", "pool_bar_title", "wan_title", "wan_sub", "wan_chat_title"]:
             for lang in [".de", ".en", ".fr", ".es", ".pt"]:
                 pattern = rf'case\s*\(\s*"{key}"\s*,\s*{lang}\s*\)'
                 self.assertRegex(loc, pattern, f"Missing localization for ({key}, {lang})")
@@ -137,6 +137,19 @@ class GlobalProjectTests(unittest.TestCase):
             self.assertIn(fn, vm)
         self.assertIn("struct InternetClusterView", view)
         self.assertIn("/ws/wan/{room_id}", gateway)
+
+    def test_09_science_lab_wan_and_multitab_present(self):
+        """Verify 5-tab Science Lab supports Internet WAN, Scaling, DiLoCo, Memory/KV, Carbon/EDP, CI95, and LaTeX export."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        view = (APP_SOURCES / "Views" / "ScienceBenchmarksView.swift").read_text(encoding="utf-8")
+
+        for item in ["enum ScienceScope", "enum ScienceLabTab", "enum ActivationCompressionMode", "enum CarbonRegionProfile", "struct ScientificNodeSnapshot"]:
+            self.assertIn(item, models)
+        for fn in ["activeScienceNodes", "criticalBatchSizeBStar", "trainingCommAnalysis", "scalingCurvePoints", "memoryBreakdownGB", "exportScientificLaTeX"]:
+            self.assertIn(fn, vm)
+        for ui in ["ScalingCurveCanvasView", "rooflineTabContent", "wanTopologyTabContent", "memoryKvTabContent", "energeticsTabContent", "trialsExportTabContent"]:
+            self.assertIn(ui, view)
 
 
 if __name__ == "__main__":
