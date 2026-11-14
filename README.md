@@ -25,24 +25,41 @@
 
 ## 🧭 Overview
 
-**SonnerStudio Cluster-Case-Companion (SS-CCC)** combines the unified memory of multiple Apple Silicon Macs — such as a **Mac Studio M5 Max (36 GB, Thunderbolt 5)** and a **Mac mini M4 (16 GB, Thunderbolt 4)** — into a **52 GB physical (~42 GB usable) AI cluster** over **Thunderbolt (Bridge or RDMA)**, **LAN/WLAN**, or **Hybrid** networking.
+**SonnerStudio Cluster-Case-Companion (SS-CCC)** unifies the memory and compute of any **Apple Silicon Macs (M1–M9+)** — from a single Mac mini or MacBook Pro to multi-Mac **Thunderbolt 3/4/5 & RDMA** desks or **global Internet WAN clusters (2–256+ Macs)** — with native **MLX**, **oMLX**, **Ollama**, and **llama.cpp** integration.
 
 <div align="center">
-  <img src="docs/images/cluster_topology_graphic.png" alt="Mac Studio M5 Max + Mac mini M4 Thunderbolt Cluster" width="88%"/>
+  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC Universal Apple Silicon M1–M9+ & 1-Click Ecosystem" width="94%"/>
 </div>
 
 ---
 
-## 🏗️ Hybrid Architecture (Control Plane & Data Plane)
+## 🌐 Global Internet Cluster, Live Chat & Scientific Roofline
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="SS-CCC Global Internet WAN Mac Cluster & Live Chat" width="100%"/><br/>
+      <sub><b>Global Internet Cluster & Participant Chat</b><br/>Tailscale · WireGuard · libp2p QUIC · DERP · <code>/status</code> · <code>/layers</code> · <code>/ping</code></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="SS-CCC Science & Roofline Analytics" width="100%"/><br/>
+      <sub><b>Scientific Roofline & Energy Analytics</b><br/>Log-Log Roofline · GPipe Bubble · <code>J/token</code> · <code>p50/p95/p99</code> · CSV/JSON/BibTeX</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ Hybrid Architecture (Control Plane, Thunderbolt & WAN)
 
 ```mermaid
 flowchart LR
-  Clients["OpenCode · Hermes Agent · Antigravity · oMLX · Ollama · llama.cpp"] -->|"OpenAI / Ollama / Anthropic API (:8000 / :11434)"| Studio
-  subgraph Control["Control Plane (LAN / WLAN)"]
-    Discovery["Bonjour / mDNS Discovery & Heartbeats"]
+  Clients["Cursor · VS Code · Xcode · OpenCode · Hermes · Antigravity"] -->|"OpenAI / Ollama / Anthropic API (:8000 / :11434)"| Rank0
+  subgraph Control["Control Plane (LAN / WLAN / Tailscale WAN)"]
+    Discovery["Bonjour / mDNS + WebSocket Chat (/ws/wan/{room})"]
   end
-  subgraph Data["Data Plane (Thunderbolt 4/5 · 30–37 Gbps)"]
-    Studio["Mac Studio M5 Max (36 GB · ~71% Layers)"] <-->|"MLX ring / jaccl + FAST_SYNCH=1 (~4 µs)"| Mini["Mac mini M4 (16 GB · ~29% Layers)"]
+  subgraph Data["Data Plane (TB3/4/5 · RDMA · WAN Pipeline Parallelism)"]
+    Rank0["Rank 0 Coordinator (Highest Bandwidth M1–M9+)"] <-->|"MLX ring / jaccl + FAST_SYNCH=1 (~4 µs)"| Workers["Worker Nodes (Rank 1..N · Weighted Layers)"]
   end
 ```
 
@@ -55,6 +72,7 @@ flowchart LR
 - **All Thunderbolt Classes (TB3 / TB4 / TB5) & RDMA:** Dynamically negotiates pairwise link speeds across M1–M9+ (`TB3/USB4: 26–32 Gbps`, `TB4: 30–37 Gbps`, `TB5: 65–80 Gbps`, `TB5 RDMA: 75–110 Gbps`) with `MLX_METAL_FAST_SYNCH=1` (45× faster GPU/CPU sync).
 - **Live Model Studio & Runtime Readiness:** Discovers real installed/running models from **oMLX**, **Ollama**, **llama.cpp**, local `.gguf` files, and `~/.cache/huggingface/hub` (no mock profiles when empty; displays a live runtime readiness check & setup commands instead), with memory-weighted layer sharding and KV-cache quantization (`FP16 / 8-bit / 4-bit`).
 - **6× 1-Click Agent & IDE Integrations:** Instant configuration export for **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code**, and **Apple Xcode**.
+- **Global Internet WAN Cluster & Participant Chat (`/ws/wan/{room_id}`):** Connect any Apple Silicon Macs worldwide into large distributed clusters over encrypted tunnels (Tailscale / WireGuard, libp2p / DERP P2P relay, or manual endpoint) with built-in real-time participant chat.
 - **SonnerStudio Yellow (`#FFD400`) UI, 5-Language Manual & Global Test Suite (`tests/`):** Full interface and searchable Help Center (`⌘?`) in **English, German, French, Spanish, and Portuguese**, verified by `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 
 ### 🖥️ Program Modules at a Glance
@@ -65,10 +83,11 @@ flowchart LR
 | **2. Devices & Compare** | Add/remove any M1–M9+ Mac, inspect CPU/GPU/ANE/SSD/thermal/power telemetry, and compare bars |
 | **3. Model Studio** | Live model discovery (oMLX / Ollama / llama.cpp / GGUF), runtime readiness check, proportional layer splits, and KV-cache tuning |
 | **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, and inspect TB3/TB4/TB5 classes |
-| **5. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
-| **6. Science & Roofline** | Interactive log-log Roofline plot (`P = min(β·I, π)`), Ridge Points, GPipe bubble math, TTFT/TPOT, `J/token` energetics, reproducible `T=0.0` trials (`p50/p95/p99`), and CSV/JSON/BibTeX export |
-| **7. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
-| **8. Help & Documentation** | Searchable 5-language user manual (`⌘?`) covering clustering, safety limits, networking, and agents |
+| **5. Internet Cluster & Chat** | Join or host global WAN Mac clusters via Tailscale / WireGuard / libp2p / DERP and coordinate in live participant chat (`/ws/wan/{room_id}`) |
+| **6. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
+| **7. Science & Roofline** | Interactive log-log Roofline plot (`P = min(β·I, π)`), Ridge Points, GPipe bubble math, TTFT/TPOT, `J/token` energetics, reproducible `T=0.0` trials (`p50/p95/p99`), and CSV/JSON/BibTeX export |
+| **8. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
+| **9. Help & Documentation** | Searchable 5-language user manual (`⌘?`) covering clustering, safety limits, networking, and agents |
 
 ---
 

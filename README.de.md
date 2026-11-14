@@ -25,24 +25,41 @@
 
 ## 🧭 Überblick
 
-Der **SonnerStudio Verbund-Begleiter (SS-CCC)** koppelt den gemeinsamen Arbeitsspeicher mehrerer Apple-Silicon-Rechner — etwa eines **Mac Studio M5 Max (36 GB, Thunderbolt 5)** und eines **Mac mini M4 (16 GB, Thunderbolt 4)** — zu einem **52-GB-Rechenverbund (~42 GB nutzbar)** über **Thunderbolt (Brücke oder Direktspeicherzugriff)**, **Kabelnetz/Funknetz** oder im **Mischbetrieb**.
+Der **SonnerStudio Verbund-Begleiter (SS-CCC)** koppelt den gemeinsamen Arbeitsspeicher beliebiger **Apple-Silicon-Macs (M1–M9+)** — vom einzelnen Mac mini oder MacBook Pro über örtliche **Thunderbolt-3/4/5- & RDMA-Verbünde** bis hin zu **weltweiten Internet-Verbünden (2–256+ Macs)** — mit unmittelbarer Anbindung an **MLX**, **oMLX**, **Ollama** und **llama.cpp**.
 
 <div align="center">
-  <img src="docs/images/cluster_topology_graphic.png" alt="Mac Studio M5 Max und Mac mini M4 über Thunderbolt gekoppelt" width="88%"/>
+  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC Universeller Apple-Silicon-Verbund M1–M9+ und 1-Klick-Werkzeuge" width="94%"/>
 </div>
 
 ---
 
-## 🏗️ Aufbau (Steuerungsebene & Datenebene)
+## 🌐 Weltweiter Internet-Verbund, Teilnehmer-Chat & Forschung
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="SS-CCC Weltweiter Internet-Mac-Verbund & Teilnehmer-Chat" width="100%"/><br/>
+      <sub><b>Internet-Verbund & Teilnehmer-Chat</b><br/>Tailscale · WireGuard · libp2p QUIC · DERP · <code>/status</code> · <code>/layers</code> · <code>/ping</code></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="SS-CCC Forschung, Grenzkurve & Energiebilanz" width="100%"/><br/>
+      <sub><b>Forschung, Grenzkurve & Energiebilanz</b><br/>Log-Log-Grenzkurve · GPipe-Blase · <code>J/Token</code> · <code>p50/p95/p99</code> · CSV/JSON/BibTeX</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ Aufbau (Steuerungsebene, Thunderbolt & Internet-Verbund)
 
 ```mermaid
 flowchart LR
-  Clients["OpenCode · Hermes Agent · Antigravity · oMLX · Ollama · llama.cpp"] -->|"Schnittstelle (:8000 / :11434)"| Studio
-  subgraph Control["Steuerungsebene (Kabelnetz / Funknetz)"]
-    Discovery["Bonjour-Erkennung & Zustandsmeldung"]
+  Clients["Cursor · VS Code · Xcode · OpenCode · Hermes · Antigravity"] -->|"Schnittstelle (:8000 / :11434)"| Rank0
+  subgraph Control["Steuerungsebene (Kabelnetz / Funknetz / Tailscale)"]
+    Discovery["Bonjour-Erkennung & WebSocket-Chat (/ws/wan/{room})"]
   end
-  subgraph Data["Datenebene (Thunderbolt 4/5 · 30–37 Gbps)"]
-    Studio["Mac Studio M5 Max (36 GB · ~71 % Schichten)"] <-->|"MLX ring / jaccl + FAST_SYNCH=1 (~4 µs)"| Mini["Mac mini M4 (16 GB · ~29 % Schichten)"]
+  subgraph Data["Datenebene (TB3/4/5 · RDMA · WAN-Pipeline-Parallelität)"]
+    Rank0["Rang 0 Leitrechner (höchste Bandbreite M1–M9+)"] <-->|"MLX ring / jaccl + FAST_SYNCH=1 (~4 µs)"| Workers["Arbeitsrechner (Rang 1..N · gewichtete Schichten)"]
   end
 ```
 
@@ -55,9 +72,10 @@ flowchart LR
 - **Alle Thunderbolt-Klassen (TB3 / TB4 / TB5) & Direktspeicherzugriff:** Berechnet paarweise Übertragungsraten dynamisch (`TB3/USB4: 26–32 Gbps`, `TB4: 30–37 Gbps`, `TB5: 65–80 Gbps`, `TB5 RDMA: 75–110 Gbps`) samt `MLX_METAL_FAST_SYNCH=1` (45× schnellere GPU/CPU-Abstimmung).
 - **Echte Modell-Erkennung & Dienstprüfung:** Liest vorhandene und laufende Modelle unmittelbar aus **oMLX**, **Ollama**, **llama.cpp**, örtlichen `.gguf`-Dateien sowie `~/.cache/huggingface/hub` ein (keine Platzhalter-Profile bei leerem Stand, sondern direkte Laufzeitprüfung & kopierbare Einrichtungsbefehle), samt gewichteter Schichtenverteilung und KV-Verdichtung (`FP16 / 8-Bit / 4-Bit`).
 - **6× Ein-Klick-Einrichtung für Agenten & Werkzeuge:** Sofortige Einrichtung für **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** und **Apple Xcode**.
+- **Weltweiter Netzverbund (Internet-WAN) & Teilnehmer-Gespräch (`/ws/wan/{room_id}`):** Verbinde beliebige Apple-Silicon-Macs über verschlüsselte Tunnel (Tailscale/WireGuard, P2P-Weiterleitung über libp2p/DERP oder manuellen Endpunkt) zu großen weltweiten Rechnerverbünden samt Echtzeit-Teilnehmergespräch.
 - **SonnerStudio-Gelb (`#FFD400`), fünfsprachiges Handbuch & Prüfsammlung (`tests/`):** Vollständige Oberfläche samt durchsuchbarer Hilfe (`⌘?`) auf **Deutsch, Englisch, Französisch, Spanisch und Portugiesisch**, abgesichert durch `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 
-### 🖥️ Die acht Programmbereiche im Überblick
+### 🖥️ Die neun Programmbereiche im Überblick
 
 | Menüpunkt | Aufgabe & Inhalt |
 | :--- | :--- |
@@ -65,10 +83,11 @@ flowchart LR
 | **2. Geräte & Vergleich** | Beliebige M1–M9+-Macs hinzufügen/entfernen, CPU/GPU/ANE/SSD/Thermik/Strom auslesen und vergleichen |
 | **3. Modell-Werkstatt** | Echte Modelle aus oMLX / Ollama / llama.cpp einlesen, Dienstbereitschaft prüfen, anteilige Schichtenverteilung & KV-Speicher regeln |
 | **4. Netzwerk & Direktspeicher** | Mischbetrieb / TB / LAN / RDMA umschalten, `FAST_SYNCH=1` setzen und TB3/TB4/TB5-Klassen einsehen |
-| **5. Agenten & Werkzeuge** | Ein-Klick-Einrichtung für OpenCode, Hermes Agent, Antigravity, Cursor, VS Code und Xcode |
-| **6. Forschung & Grenzkurve** | Interaktives Log-Log-Grenzkurvendiagramm (`P = min(β·I, π)`), Knickpunkte, GPipe-Blasenformel, TTFT/TPOT, `J/Token`-Energiebilanz, reproduzierbare Messreihen (`T=0,0`, `p50/p95/p99`) und CSV/JSON/BibTeX-Ausgabe |
-| **7. Schnittstelle & Konsole** | OpenAI- (`/v1`) & Ollama-Endpunkte (`/api/tags`) prüfen und Verbund-Anfragen direkt testen |
-| **8. Hilfe & Handbuch** | Durchsuchbares Handbuch in fünf Sprachen (`⌘?`) zu Verbund, Speicherschutz, Netzwerk und Agenten |
+| **5. Weltweiter Verbund & Gespräch** | Macs weltweit per Tailscale/WireGuard/libp2p koppeln, Raum-Kennung teilen und im Echtzeit-Gespräch (`/ws/wan/{room_id}`) abstimmen |
+| **6. Agenten & Werkzeuge** | Ein-Klick-Einrichtung für OpenCode, Hermes Agent, Antigravity, Cursor, VS Code und Xcode |
+| **7. Forschung & Grenzkurve** | Interaktives Log-Log-Grenzkurvendiagramm (`P = min(β·I, π)`), Knickpunkte, GPipe-Blasenformel, TTFT/TPOT, `J/Token`-Energiebilanz, reproduzierbare Messreihen (`T=0,0`, `p50/p95/p99`) und CSV/JSON/BibTeX-Ausgabe |
+| **8. Schnittstelle & Konsole** | OpenAI- (`/v1`) & Ollama-Endpunkte (`/api/tags`) prüfen und Verbund-Anfragen direkt testen |
+| **9. Hilfe & Handbuch** | Durchsuchbares Handbuch in fünf Sprachen (`⌘?`) zu Verbund, Speicherschutz, Netzwerk und Agenten |
 
 ---
 

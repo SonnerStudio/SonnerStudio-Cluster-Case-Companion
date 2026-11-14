@@ -25,24 +25,41 @@
 
 ## 🧭 Présentation
 
-Le **Compagnon de grappe SonnerStudio (SS-CCC)** associe la mémoire unifiée de plusieurs Mac Apple Silicon — par exemple un **Mac Studio M5 Max (36 Go, Thunderbolt 5)** et un **Mac mini M4 (16 Go, Thunderbolt 4)** — pour former une **grappe de 52 Go physiques (~42 Go exploitables)** par **Thunderbolt (pont ou accès direct mémoire)**, **réseau filaire/sans fil** ou en mode **hybride**.
+Le **Compagnon de grappe SonnerStudio (SS-CCC)** réunit la mémoire unifiée de tout **Mac Apple Silicon (M1–M9+)** — d'un Mac mini ou MacBook Pro isolé jusqu'aux grappes locales **Thunderbolt 3/4/5 & RDMA** ou aux **grappes Internet mondiales (2–256+ Mac)** — avec prise en charge directe de **MLX**, **oMLX**, **Ollama** et **llama.cpp**.
 
 <div align="center">
-  <img src="docs/images/cluster_topology_graphic.png" alt="Mac Studio M5 Max et Mac mini M4 reliés par Thunderbolt" width="88%"/>
+  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC Écosystème universel Apple Silicon M1–M9+" width="94%"/>
 </div>
 
 ---
 
-## 🏗️ Architecture hybride (plan de contrôle et plan de données)
+## 🌐 Grappe Internet mondiale, discussion & courbe scientifique
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="SS-CCC Grappe Internet mondiale & Discussion" width="100%"/><br/>
+      <sub><b>Grappe Internet & Discussion des participants</b><br/>Tailscale · WireGuard · libp2p QUIC · DERP · <code>/status</code> · <code>/layers</code> · <code>/ping</code></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="SS-CCC Science & Roofline" width="100%"/><br/>
+      <sub><b>Analyse Roofline & Bilan énergétique</b><br/>Courbe log-log · Bulle GPipe · <code>J/jeton</code> · <code>p50/p95/p99</code> · CSV/JSON/BibTeX</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ Architecture hybride (contrôle, Thunderbolt et Internet)
 
 ```mermaid
 flowchart LR
-  Clients["OpenCode · Hermes Agent · Antigravity · oMLX · Ollama · llama.cpp"] -->|"Interface (:8000 / :11434)"| Studio
-  subgraph Control["Plan de contrôle (réseau filaire / sans fil)"]
-    Discovery["Découverte Bonjour & battements de cœur"]
+  Clients["Cursor · VS Code · Xcode · OpenCode · Hermes · Antigravity"] -->|"Interface (:8000 / :11434)"| Rank0
+  subgraph Control["Plan de contrôle (filaire / sans fil / Tailscale)"]
+    Discovery["Découverte Bonjour & Chat WebSocket (/ws/wan/{room})"]
   end
-  subgraph Data["Plan de données (Thunderbolt 4/5 · 30–37 Gbps)"]
-    Studio["Mac Studio M5 Max (36 Go · ~71 % couches)"] <-->|"MLX ring / jaccl + FAST_SYNCH=1 (~4 µs)"| Mini["Mac mini M4 (16 Go · ~29 % couches)"]
+  subgraph Data["Plan de données (TB3/4/5 · RDMA · Pipeline WAN)"]
+    Rank0["Rang 0 Coordinateur (plus haut débit M1–M9+)"] <-->|"MLX ring / jaccl + FAST_SYNCH=1 (~4 µs)"| Workers["Nœuds travailleurs (Rang 1..N · couches pondérées)"]
   end
 ```
 
@@ -55,11 +72,12 @@ flowchart LR
 - **Classes Thunderbolt 3 / 4 / 5 et RDMA :** Détection et classement automatiques pour les puces M1–M9+ (TB3 `40 Gbit/s`, TB4 `40 Gbit/s`, TB5 `80/120 Gbit/s` ainsi que RDMA via Thunderbolt 5), avec plan de contrôle LAN/Wi-Fi séparé et plan de données Thunderbolt isolé.
 - **Répartition pondérée des couches et protection `iogpu.wired_limit_mb` :** Découpage proportionnel des couches selon la bande passante mémoire de chaque nœud actif tout en préservant une réserve système sûre pour macOS.
 - **Détection réelle des modèles (oMLX, Ollama et llama.cpp) :** Lecture directe des modèles disponibles sur **oMLX**, **Ollama**, **llama.cpp**, `.gguf` locaux et cache MLX (sans profils fictifs lorsque la liste est vide, avec vérification d'état et commandes d'installation copiables).
+- **Grappe Internet mondiale (WAN) et messagerie des participants (`/ws/wan/{room_id}`) :** Reliez des Mac Apple Silicon à travers le monde via tunnel chiffré (Tailscale/WireGuard, relais P2P libp2p/DERP ou point manuel) en de vastes grappes distribuées avec messagerie en temps réel.
 - **Agents et environnements en un clic :** Configuration directe pour **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**.
 - **Mode simulation commutable, thème jaune SonnerStudio (`#FFD400`) et suite de tests (`tests/`) :** Le nœud simulé de démonstration reste activable dans la barre latérale ; l'ensemble est vérifié par `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 - **Interface multilingue et centre d'aide intégré :** Changement immédiat entre l'anglais, l'allemand, le français, l'espagnol et le portugais ainsi qu'un centre d'aide consultable par recherche directement dans l'application.
 
-### 🖥️ Les huit domaines du programme en un coup d'œil
+### 🖥️ Les neuf domaines du programme en un coup d'œil
 
 | Domaine | Contenu et fonction |
 | :--- | :--- |
@@ -67,10 +85,11 @@ flowchart LR
 | **2. Appareils et comparaison** | Télémétrie en direct de chaque Mac (CPU, GPU, ANE, RAM, bande passante, SSD, température, puissance) et ajout de Mac M1–M9+. |
 | **3. Atelier de modèles** | Découverte réelle (oMLX, Ollama, llama.cpp, GGUF), vérification d'état, découpage des couches et réglage du cache KV. |
 | **4. Réseau et RDMA** | Matrice des classes Thunderbolt 3/4/5 pour M1–M9+, état RDMA et routage du pont LAN/Thunderbolt. |
-| **5. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
-| **6. Science et Roofline** | Courbe logarithmique interactive (`P = min(β·I, π)`), points d'inflexion, formule GPipe, TTFT/TPOT, bilan `J/jeton`, essais reproductibles (`T=0,0`, `p50/p95/p99`) et export CSV/JSON/BibTeX |
-| **7. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |
-| **8. Aide et documentation** | Manuel intégré avec recherche plein texte, vue d'ensemble architecturale et guide étape par étape. |
+| **5. Grappe Internet et messagerie** | Relier des Mac à travers le monde via Tailscale/WireGuard/libp2p, partager l'identifiant de salle et échanger en direct (`/ws/wan/{room_id}`). |
+| **6. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
+| **7. Science et Roofline** | Courbe logarithmique interactive (`P = min(β·I, π)`), points d'inflexion, formule GPipe, TTFT/TPOT, bilan `J/jeton`, essais reproductibles (`T=0,0`, `p50/p95/p99`) et export CSV/JSON/BibTeX |
+| **8. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |
+| **9. Aide et documentation** | Manuel intégré avec recherche plein texte, vue d'ensemble architecturale et guide étape par étape. |
 
 ---
 
