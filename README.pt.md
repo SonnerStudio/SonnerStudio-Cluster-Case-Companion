@@ -104,6 +104,19 @@ O SS-CCC suporta **qualquer Mac com processador Apple Silicon** (**M1, M2, M3, M
 
 ---
 
+## 🚧 Estado de desenvolvimento e colaboração
+
+> [!IMPORTANT]
+> **O SS-CCC já é executável, mas encontra-se ainda em desenvolvimento e validação contínua.**
+> A interface, a leitura do equipamento, a repartição ponderada de camadas e a ligação a agentes já estão operacionais; os ensaios em combinações reais de Mac M1–M6, pontes Thunderbolt 4/5 e RDMA/JACCL continuam a ser aperfeiçoados.
+
+Convidamos programadores, investigadores e entusiastas de Apple Silicon a **participar no desenvolvimento e a fazer evoluir o SS-CCC**:
+- **Testar no seu equipamento:** Experimente o SS-CCC nos seus Mac M1–M6 e partilhe medições de débito, memória e estabilidade.
+- **Partilhar sugestões e falhas:** Abra um registo no GitHub para erros, casos específicos ou novas funcionalidades.
+- **Enviar melhorias:** Contributos para a interface SwiftUI, para a repartição MLX, para os guiões Thunderbolt ou para as traduções são sempre bem-vindos!
+
+---
+
 ## 📄 Licença
 
 Publicado sob a [Licença MIT](LICENSE.md).

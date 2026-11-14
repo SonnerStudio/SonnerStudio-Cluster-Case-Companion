@@ -113,6 +113,19 @@ SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1, M2
 
 ---
 
+## 🚧 Development Status & Contributing
+
+> [!IMPORTANT]
+> **SS-CCC is runnable today, but remains under active development and testing.**
+> Core UI, hardware probing, weighted layer planning, and agent/runtime integrations work, while multi-node real-world benchmarks (across M1–M6 combinations, Thunderbolt 4/5 bridges, and RDMA/JACCL) are continuously being tested and refined.
+
+We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:
+- **Test on your hardware:** Try SS-CCC with your M1–M6 Macs and share throughput, memory, and stability findings.
+- **Report issues & ideas:** Open an issue on GitHub for bugs, hardware edge cases, or new feature proposals.
+- **Submit Pull Requests:** Improvements to SwiftUI views, Python/MLX sharding, Thunderbolt/RDMA scripts, or translations are always welcome!
+
+---
+
 ## 📄 License
 
 Published under the [MIT License](LICENSE.md).
