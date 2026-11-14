@@ -131,6 +131,54 @@ struct AgentIntegrationsView: View {
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.38)))
                         .textSelection(.enabled)
                 }
+
+                // Antigravity (AGY) Integration
+                SolarisCard(accent: SolarisTheme.emerald) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Google Antigravity (AGY SDK & IDE)")
+                                .font(SolarisTheme.sectionTitle)
+                                .foregroundColor(SolarisTheme.textPrimary)
+                            Text("Schreibt ~/.gemini/antigravity/ssccc_local_provider.json & ssccc_local_agent.py (LocalOpenAIAgentConfig).")
+                                .font(SolarisTheme.bodyLarge)
+                                .foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        Spacer()
+                        Button {
+                            vm.installAntigravityConfig()
+                        } label: {
+                            Label("Antigravity 1-Klick-Setup", systemImage: "sparkles")
+                                .font(SolarisTheme.bodyBold)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.emerald))
+                                .foregroundColor(.black)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(vm.antigravityConfigPython, forType: .string)
+                            vm.agentStatusMessage = "Antigravity Python-Snippet in Zwischenablage kopiert."
+                        } label: {
+                            Label("Kopieren", systemImage: "doc.on.doc")
+                                .font(SolarisTheme.bodyBold)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 10)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.cardElevated))
+                                .foregroundColor(SolarisTheme.textPrimary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Text(vm.antigravityConfigPython)
+                        .font(SolarisTheme.monoCode)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.38)))
+                        .textSelection(.enabled)
+                }
             }
             .padding(24)
         }

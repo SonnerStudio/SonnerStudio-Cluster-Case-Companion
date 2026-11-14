@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from pathlib import Path
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
@@ -156,9 +157,51 @@ def list_openai_models() -> dict[str, object]:
 def list_ollama_models() -> dict[str, object]:
     return {
         "models": [
-            {"name": "llama3.3:70b-mlx-q4", "size": 37_500_000_000},
-            {"name": "qwen2.5:32b-mlx-q4", "size": 19_200_000_000},
+            {"name": "llama3.3:70b-mlx-q4", "model": "mlx-community/Llama-3.3-70B-Instruct-4bit", "size": 37_500_000_000},
+            {"name": "qwen2.5:32b-mlx-q4", "model": "mlx-community/Qwen2.5-32B-Instruct-4bit", "size": 19_200_000_000},
+            {"name": "deepseek-r1:32b-mlx-q4", "model": "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit", "size": 19_500_000_000},
         ]
+    }
+
+
+@app.post("/api/chat")
+def ollama_chat(req: dict) -> dict[str, object]:
+    nodes = _current_nodes()
+    total_gb = sum(n.total_ram_gb for n in nodes)
+    model_name = req.get("model", "llama3.3:70b-mlx-q4")
+    messages = req.get("messages", [])
+    prompt_preview = messages[-1].get("content", "") if messages else ""
+    return {
+        "model": model_name,
+        "message": {
+            "role": "assistant",
+            "content": f"[SS-CCC Ollama-MLX-Bridge | {total_gb:.0f} GB Pool] Antwort fuer '{model_name}': \"{prompt_preview[:80]}\"",
+        },
+        "done": True,
+    }
+
+
+@app.get("/v1/mlx/import-scan")
+def scan_ollama_and_gguf() -> dict[str, object]:
+    """Scannt lokale Ollama-Manifeste und llama.cpp .gguf-Dateien fuer schnelle MLX-Einbindung."""
+    home = Path.home()
+    ollama_manifests = home / ".ollama" / "models" / "manifests"
+    ollama_found: list[str] = []
+    if ollama_manifests.exists():
+        for p in ollama_manifests.rglob("*"):
+            if p.is_file():
+                ollama_found.append(str(p.relative_to(ollama_manifests)))
+
+    gguf_found: list[str] = []
+    for folder in [home / "Models", home / ".cache" / "llama.cpp", home / "Downloads"]:
+        if folder.exists():
+            for p in folder.rglob("*.gguf"):
+                gguf_found.append(str(p))
+
+    return {
+        "engine_policy": "mlx_only_fast",
+        "ollama_manifests": ollama_found[:20],
+        "gguf_files": gguf_found[:20],
     }
 
 

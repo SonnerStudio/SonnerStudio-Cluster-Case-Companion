@@ -136,6 +136,59 @@ struct ModelStudioView: View {
                         .frame(width: 420)
                     }
                 }
+
+                // Schnelle MLX-Modelle: Import aus Ollama/llama.cpp & Export-Bridge
+                SolarisCard(accent: SolarisTheme.mint) {
+                    Text("Schnelle MLX-Modelle: Ollama & llama.cpp Brücke")
+                        .font(SolarisTheme.sectionTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text("SS-CCC rechnet ausschließlich mit nativen MLX-Modellen. Vorhandene Ollama- oder llama.cpp-Modelle lassen sich als MLX einbinden — und dein 52-GB-MLX-Cluster wird gleichzeitig für Ollama- & llama.cpp-Clients bereitgestellt.")
+                        .font(SolarisTheme.bodyLarge)
+                        .foregroundColor(SolarisTheme.textSecondary)
+
+                    HStack(spacing: 14) {
+                        Button {
+                            vm.scanOllamaAndLlamaCppToMLX()
+                        } label: {
+                            Label("Ollama / GGUF → MLX scannen", systemImage: "magnifyingglass.circle.fill")
+                                .font(SolarisTheme.bodyBold)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.mint))
+                                .foregroundColor(.black)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            vm.exportForOllamaAndLlamaCpp()
+                        } label: {
+                            Label("Für Ollama & llama.cpp bereitstellen", systemImage: "arrow.up.forward.app.fill")
+                                .font(SolarisTheme.bodyBold)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.amber))
+                                .foregroundColor(.black)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Text(vm.bridgeStatusMessage)
+                        .font(SolarisTheme.bodyBold)
+                        .foregroundColor(SolarisTheme.emerald)
+
+                    if !vm.discoveredExternalModels.isEmpty {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(vm.discoveredExternalModels, id: \.self) { item in
+                                Text("• \(item)")
+                                    .font(SolarisTheme.monoCode)
+                                    .foregroundColor(SolarisTheme.textPrimary)
+                            }
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.35)))
+                    }
+                }
             }
             .padding(24)
         }

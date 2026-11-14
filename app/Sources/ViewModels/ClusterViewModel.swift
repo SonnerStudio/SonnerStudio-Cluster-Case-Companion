@@ -16,6 +16,8 @@ final class ClusterViewModel: ObservableObject {
 
     @Published var agentStatusMessage: String = "Bereit für 1-Klick-Konfiguration."
     @Published var openCodeBaseURL: String = "http://127.0.0.1:8000/v1"
+    @Published var bridgeStatusMessage: String = "Nur schnelle native MLX-Modelle aktiv (Ollama & llama.cpp per Bridge angebunden)."
+    @Published var discoveredExternalModels: [String] = []
 
     @Published var localChipName: String = "Apple M4"
     @Published var localOSVersion: String = "macOS 27.0.1"
@@ -347,6 +349,124 @@ final class ClusterViewModel: ObservableObject {
             agentStatusMessage = "Hermes Agent konfiguriert: ~/.hermes/config.yaml & .env geschrieben."
         } catch {
             agentStatusMessage = "Fehler beim Schreiben der Hermes-Config: \(error.localizedDescription)"
+        }
+    }
+
+    var antigravityConfigPython: String {
+        """
+        # Antigravity SDK (AGY) <-> SonnerStudio Cluster-Case-Companion (SS-CCC)
+        from google.antigravity import Agent, LocalOpenAIAgentConfig
+
+        config = LocalOpenAIAgentConfig(
+            model="\(selectedModel.id)",
+            base_url="\(openCodeBaseURL)",
+        ).lightweight()
+        """
+    }
+
+    func installAntigravityConfig() {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser
+        let agyDir = home.appendingPathComponent(".gemini/antigravity")
+        do {
+            try fm.createDirectory(at: agyDir, withIntermediateDirectories: true)
+            let providerJSON = """
+            {
+              "provider": "ss-ccc-local-mlx",
+              "base_url": "\(openCodeBaseURL)",
+              "model": "\(selectedModel.id)",
+              "engine": "mlx-distributed"
+            }
+            """
+            try providerJSON.write(
+                to: agyDir.appendingPathComponent("ssccc_local_provider.json"),
+                atomically: true,
+                encoding: .utf8
+            )
+            try antigravityConfigPython.write(
+                to: agyDir.appendingPathComponent("ssccc_local_agent.py"),
+                atomically: true,
+                encoding: .utf8
+            )
+            agentStatusMessage = "Antigravity konfiguriert: ~/.gemini/antigravity/ssccc_local_provider.json & ssccc_local_agent.py geschrieben."
+        } catch {
+            agentStatusMessage = "Fehler beim Schreiben der Antigravity-Config: \(error.localizedDescription)"
+        }
+    }
+
+    func scanOllamaAndLlamaCppToMLX() {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser
+        var found: [String] = []
+
+        // 1. Ollama Manifests scannen
+        let ollamaDir = home.appendingPathComponent(".ollama/models/manifests")
+        if let enumerator = fm.enumerator(at: ollamaDir, includingPropertiesForKeys: nil) {
+            for case let fileURL as URL in enumerator {
+                var isDir: ObjCBool = false
+                if fm.fileExists(atPath: fileURL.path, isDirectory: &isDir), !isDir.boolValue {
+                    found.append("Ollama → MLX: \(fileURL.deletingLastPathComponent().lastPathComponent):\(fileURL.lastPathComponent)")
+                }
+            }
+        }
+
+        // 2. llama.cpp / GGUF Dateien scannen
+        let ggufDirs = [
+            home.appendingPathComponent("Models"),
+            home.appendingPathComponent(".cache/llama.cpp"),
+            home.appendingPathComponent("Downloads")
+        ]
+        for dir in ggufDirs {
+            if let enumerator = fm.enumerator(at: dir, includingPropertiesForKeys: nil) {
+                for case let fileURL as URL in enumerator where fileURL.pathExtension.lowercased() == "gguf" {
+                    found.append("GGUF → MLX: \(fileURL.lastPathComponent)")
+                }
+            }
+        }
+
+        discoveredExternalModels = Array(found.prefix(10))
+        if found.isEmpty {
+            bridgeStatusMessage = "Keine lokalen Ollama-/GGUF-Dateien gefunden. Nutze direkte schnelle MLX-Modelle (mlx-community/*-4bit)."
+        } else {
+            bridgeStatusMessage = "\(found.count) Ollama/GGUF-Quelle(n) erkannt — bereit zur schnellen MLX-Einbindung (mlx_lm.convert --quantize)."
+        }
+    }
+
+    func exportForOllamaAndLlamaCpp() {
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser
+        let exportDir = home.appendingPathComponent(".ssccc/bridges")
+        do {
+            try fm.createDirectory(at: exportDir, withIntermediateDirectories: true)
+            let modelfile = """
+            # SS-CCC Ollama-Bridge Profil (nutzt schnelles MLX-Cluster-Backend)
+            # Gateway: \(openCodeBaseURL.replacingOccurrences(of: "/v1", with: ""))
+            FROM \(selectedModel.id)
+            PARAMETER num_ctx \(kvPrecision == .q4 ? 65536 : (kvPrecision == .q8 ? 32768 : 16384))
+            """
+            try modelfile.write(
+                to: exportDir.appendingPathComponent("Modelfile.ssccc"),
+                atomically: true,
+                encoding: .utf8
+            )
+
+            let llamaCppBridge = """
+            {
+              "bridge": "ss-ccc-mlx-cluster",
+              "openai_base_url": "\(openCodeBaseURL)",
+              "ollama_base_url": "\(openCodeBaseURL.replacingOccurrences(of: "/v1", with: ""))",
+              "active_mlx_model": "\(selectedModel.id)",
+              "kv_precision": "\(kvPrecision.rawValue)"
+            }
+            """
+            try llamaCppBridge.write(
+                to: exportDir.appendingPathComponent("llamacpp_ollama_bridge.json"),
+                atomically: true,
+                encoding: .utf8
+            )
+            bridgeStatusMessage = "Bereitgestellt: ~/.ssccc/bridges/Modelfile.ssccc & llamacpp_ollama_bridge.json (Endpoint: \(openCodeBaseURL))."
+        } catch {
+            bridgeStatusMessage = "Fehler beim Bridge-Export: \(error.localizedDescription)"
         }
     }
 }
