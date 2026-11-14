@@ -387,12 +387,33 @@ private struct UpdatePromptSheet: View {
                         Text("v\(info.version) · \(info.sourceLabel)")
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
                             .foregroundColor(hasUpdate ? SolarisTheme.amberGlow : SolarisTheme.emerald)
+                        if !info.commitSHA.isEmpty {
+                            Text("GitHub SHA: \(info.commitSHA) · Lokal: \(vm.localGitCommitSHA.isEmpty ? AppReleaseMetadata.embeddedCommitSHA : vm.localGitCommitSHA)")
+                                .font(.system(size: 10.5, design: .monospaced))
+                                .foregroundColor(SolarisTheme.textSecondary)
+                        }
                     }
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.cardElevated))
                 }
             }
+
+            HStack {
+                Toggle(vm.t("upd_auto_toggle"), isOn: $vm.autoUpdateCheckEnabled)
+                    .toggleStyle(.switch)
+                    .font(Font.caption)
+                    .foregroundColor(SolarisTheme.textPrimary)
+                Spacer()
+                if !vm.lastUpdateCheckTime.isEmpty {
+                    Text("\(vm.t("upd_last_check")): \(vm.lastUpdateCheckTime)")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(RoundedRectangle(cornerRadius: 8).fill(SolarisTheme.cardElevated.opacity(0.7)))
 
             if let info, !info.notes.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {

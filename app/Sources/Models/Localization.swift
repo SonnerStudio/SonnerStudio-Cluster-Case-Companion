@@ -712,6 +712,18 @@ enum L10n {
         case ("upd_relaunch_btn", .es): return "Reiniciar la aplicación ahora"
         case ("upd_relaunch_btn", .pt): return "Reiniciar a aplicação agora"
 
+        case ("upd_auto_toggle", .de): return "Automatische Versionskontrolle (alle 30 Min.)"
+        case ("upd_auto_toggle", .en): return "Automatic Version Control (every 30 min)"
+        case ("upd_auto_toggle", .fr): return "Contrôle automatique de version (toutes les 30 min)"
+        case ("upd_auto_toggle", .es): return "Control automático de versiones (cada 30 min)"
+        case ("upd_auto_toggle", .pt): return "Controlo automático de versões (a cada 30 min)"
+
+        case ("upd_last_check", .de): return "Letzte Prüfung"
+        case ("upd_last_check", .en): return "Last Check"
+        case ("upd_last_check", .fr): return "Dernière vérification"
+        case ("upd_last_check", .es): return "Última comprobación"
+        case ("upd_last_check", .pt): return "Última verificação"
+
         default: return key
         }
     }

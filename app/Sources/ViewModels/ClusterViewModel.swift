@@ -120,12 +120,26 @@ final class ClusterViewModel: ObservableObject {
     private var partyAudioSocket: URLSessionWebSocketTask? = nil
     private var partyPulseTask: Task<Void, Never>? = nil
 
-    // GitHub Program Update State
+    // GitHub Program Update & Automatic Version Control State
     @Published var updateStatus: AppUpdateStatus = .idle
     @Published var availableUpdate: GitHubUpdateInfo? = nil
     @Published var showUpdatePromptSheet: Bool = false
     @Published var skippedUpdateVersion: String = UserDefaults.standard.string(forKey: "ssccc_skipped_version") ?? ""
     @Published var updateProgressLog: String = ""
+    @Published var autoUpdateCheckEnabled: Bool = UserDefaults.standard.object(forKey: "ssccc_auto_update_check") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(autoUpdateCheckEnabled, forKey: "ssccc_auto_update_check")
+            if autoUpdateCheckEnabled {
+                startAutomaticUpdateMonitor()
+            } else {
+                autoUpdateMonitorTask?.cancel()
+                autoUpdateMonitorTask = nil
+            }
+        }
+    }
+    @Published var lastUpdateCheckTime: String = ""
+    @Published var localGitCommitSHA: String = ""
+    private var autoUpdateMonitorTask: Task<Void, Never>? = nil
 
     static let fallbackReferenceModels: [ModelPreset] = [
         ModelPreset(
@@ -180,11 +194,13 @@ final class ClusterViewModel: ObservableObject {
         self.selectedModel = ClusterViewModel.fallbackReferenceModels[0]
         refreshLocalHardwareProbe()
         probeWanOverlayTools()
+        refreshLocalCommitSHA()
         Task {
             await checkDaemonHealth()
             await refreshLiveModels()
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
-            await checkForGitHubUpdates(userInitiated: false)
+        }
+        if autoUpdateCheckEnabled {
+            startAutomaticUpdateMonitor()
         }
     }
 
@@ -2580,10 +2596,35 @@ final class ClusterViewModel: ObservableObject {
         return .orderedSame
     }
 
+    func startAutomaticUpdateMonitor() {
+        autoUpdateMonitorTask?.cancel()
+        autoUpdateMonitorTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            while !Task.isCancelled {
+                guard let self, self.autoUpdateCheckEnabled else { return }
+                await self.checkForGitHubUpdates(userInitiated: false)
+                try? await Task.sleep(nanoseconds: 1_800_000_000_000) // 30 minutes
+            }
+        }
+    }
+
+    func refreshLocalCommitSHA() {
+        if let repoRoot = localGitRepoRoot {
+            let res = Self.runCommandInDir(repoRoot, "/usr/bin/git", ["rev-parse", "--short", "HEAD"])
+            if res.exitCode == 0 && !res.output.isEmpty {
+                localGitCommitSHA = res.output
+                return
+            }
+        }
+        localGitCommitSHA = AppReleaseMetadata.embeddedCommitSHA
+    }
+
     func checkForGitHubUpdates(userInitiated: Bool = true) async {
         updateStatus = .checking
+        refreshLocalCommitSHA()
         let manifestCandidate = await fetchGitHubManifest()
         let releaseCandidate = await fetchGitHubLatestRelease()
+        let remoteHeadSHA = await fetchGitHubMainCommitSHA()
 
         let best: GitHubUpdateInfo?
         switch (manifestCandidate, releaseCandidate) {
@@ -2598,15 +2639,34 @@ final class ClusterViewModel: ObservableObject {
             best = nil
         }
 
-        guard let info = best else {
+        lastUpdateCheckTime = currentClockTime()
+
+        guard var info = best else {
             updateStatus = userInitiated ? .failed("GitHub nicht erreichbar") : .idle
             return
+        }
+
+        if info.commitSHA.isEmpty, let sha = remoteHeadSHA {
+            info = GitHubUpdateInfo(
+                version: info.version,
+                build: info.build,
+                tag: info.tag,
+                title: info.title,
+                notes: info.notes,
+                mandatory: info.mandatory,
+                releaseURL: info.releaseURL,
+                downloadURL: info.downloadURL,
+                sourceLabel: info.sourceLabel,
+                commitSHA: sha,
+                updatedAt: info.updatedAt
+            )
         }
 
         let currentVer = AppReleaseMetadata.currentVersion
         let currentBuild = AppReleaseMetadata.currentBuild
         let versionCmp = Self.compareVersions(info.version, currentVer)
-        let isNewer = (versionCmp == .orderedDescending) || (versionCmp == .orderedSame && info.build > currentBuild)
+        let shaChanged = !info.commitSHA.isEmpty && !localGitCommitSHA.isEmpty && info.commitSHA != localGitCommitSHA && localGitRepoRoot != nil
+        let isNewer = (versionCmp == .orderedDescending) || (versionCmp == .orderedSame && info.build > currentBuild) || shaChanged
 
         if isNewer {
             availableUpdate = info
@@ -2620,6 +2680,22 @@ final class ClusterViewModel: ObservableObject {
             if userInitiated {
                 showUpdatePromptSheet = true
             }
+        }
+    }
+
+    private func fetchGitHubMainCommitSHA() async -> String? {
+        guard let url = URL(string: AppReleaseMetadata.commitsMainAPIURL) else { return nil }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 6
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard (resp as? HTTPURLResponse)?.statusCode == 200,
+                  let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let sha = obj["sha"] as? String else { return nil }
+            return String(sha.prefix(7))
+        } catch {
+            return nil
         }
     }
 
@@ -2640,6 +2716,8 @@ final class ClusterViewModel: ObservableObject {
             let mandatory = obj["mandatory"] as? Bool ?? false
             let releaseURL = obj["release_url"] as? String ?? AppReleaseMetadata.releasesPageURL
             let downloadURL = obj["download_url"] as? String ?? releaseURL
+            let commitSHA = obj["commit_sha"] as? String ?? ""
+            let updatedAt = obj["updated_at"] as? String ?? ""
             return GitHubUpdateInfo(
                 version: version,
                 build: build,
@@ -2649,7 +2727,9 @@ final class ClusterViewModel: ObservableObject {
                 mandatory: mandatory,
                 releaseURL: releaseURL,
                 downloadURL: downloadURL,
-                sourceLabel: "GitHub main/version.json"
+                sourceLabel: "GitHub main/version.json",
+                commitSHA: commitSHA,
+                updatedAt: updatedAt
             )
         } catch {
             return nil
@@ -2685,7 +2765,9 @@ final class ClusterViewModel: ObservableObject {
                 mandatory: false,
                 releaseURL: htmlURL,
                 downloadURL: downloadURL,
-                sourceLabel: "GitHub Releases"
+                sourceLabel: "GitHub Releases",
+                commitSHA: "",
+                updatedAt: obj["published_at"] as? String ?? ""
             )
         } catch {
             return nil

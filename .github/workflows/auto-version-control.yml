@@ -1,0 +1,54 @@
+name: Auto Version Control & Release Sync
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      part:
+        description: "Version part to bump"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  auto-version:
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !startsWith(github.event.head_commit.message, 'chore(release):')"
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump & synchronize version metadata
+        run: |
+          PART="${{ github.event.inputs.part || 'patch' }}"
+          python3 scripts/bump_version.py --part "$PART" --sync-git
+          python3 scripts/bump_version.py --check
+
+      - name: Run full Swift & Python test suite
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Commit & push synchronized version metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          TAG=$(python3 -c "import json; print(json.load(open('version.json'))['tag'])")
+          BUILD=$(python3 -c "import json; print(json.load(open('version.json'))['build'])")
+          git add version.json app/Sources/Models/ClusterModels.swift
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): auto-bump ${TAG} (build ${BUILD}) [skip ci]"
+            git push origin main
+            git tag -f "${TAG}"
+            git push -f origin "${TAG}"
+          fi

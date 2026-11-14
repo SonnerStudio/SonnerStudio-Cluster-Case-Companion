@@ -757,14 +757,19 @@ enum AppReleaseMetadata {
     static let githubRepo = "SonnerStudio-Cluster-Case-Companion"
     static let manifestRawURL = "https://raw.githubusercontent.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/main/version.json"
     static let latestReleaseAPIURL = "https://api.github.com/repos/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest"
+    static let commitsMainAPIURL = "https://api.github.com/repos/SonnerStudio/SonnerStudio-Cluster-Case-Companion/commits/main"
     static let releasesPageURL = "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases"
+
+    static let fallbackVersion = "1.6.0"
+    static let fallbackBuild = 160
+    static let embeddedCommitSHA = "7918fc7"
 
     static var currentVersion: String {
         if let bundleVer = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
            !bundleVer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return bundleVer
         }
-        return "1.6.0"
+        return fallbackVersion
     }
 
     static var currentBuild: Int {
@@ -772,7 +777,7 @@ enum AppReleaseMetadata {
            let num = Int(buildStr) {
             return num
         }
-        return 160
+        return fallbackBuild
     }
 }
 
@@ -786,6 +791,8 @@ struct GitHubUpdateInfo: Equatable {
     let releaseURL: String
     let downloadURL: String
     let sourceLabel: String
+    let commitSHA: String
+    let updatedAt: String
 }
 
 enum AppUpdateStatus: Equatable {
