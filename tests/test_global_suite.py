@@ -221,6 +221,32 @@ class GlobalProjectTests(unittest.TestCase):
                 f"Expected industrial hazard stripes in {rel}",
             )
 
+    def test_15_help_manual_parity_across_eight_languages(self):
+        """Verify HelpDocsView.swift has all 12 chapters with identical IDs across all 8 languages."""
+        import re
+        src = (APP_SOURCES / "Views" / "HelpDocsView.swift").read_text(encoding="utf-8")
+        expected_ids = [
+            "universal-m",
+            "overview-hazard",
+            "memory-safety",
+            "network-tb",
+            "sharding-loading",
+            "setup-hybrid",
+            "audio-party",
+            "science-history",
+            "runtimes",
+            "agents-api",
+            "updater-ci",
+            "launch-tests",
+        ]
+        blocks = re.split(r"case \.(de|en|fr|es|pt|ru|ja|zh):", src)
+        self.assertEqual(len(blocks), 17, "Expected 8 language cases in HelpDocsView.swift")
+        for i in range(1, len(blocks), 2):
+            lang = blocks[i]
+            body = blocks[i + 1]
+            ids = re.findall(r'id:\s*"([^"]+)"', body)
+            self.assertEqual(ids, expected_ids, f"Chapter IDs mismatch for language .{lang}")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
