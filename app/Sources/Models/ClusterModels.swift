@@ -145,6 +145,52 @@ struct ClusterNodeModel: Identifiable, Hashable {
     let thermalLabel: String
     let powerLabel: String
     let isSimulated: Bool
+
+    var peakFP16TFLOPS: Double {
+        AppleSiliconChipFamily.inferFP16TFLOPS(from: chip)
+    }
+
+    var ridgePointFLOPPerByte: Double {
+        guard bandwidthGBs > 0 else { return 0 }
+        return (peakFP16TFLOPS * 1000.0) / bandwidthGBs
+    }
+
+    var typicalWatts: Double {
+        AppleSiliconChipFamily.inferTypicalWatts(from: chip)
+    }
+}
+
+struct ScientificBenchmarkTrial: Identifiable {
+    let id = UUID()
+    let trialIndex: Int
+    let ttftMs: Double
+    let tpotMs: Double
+    let tokensPerSec: Double
+    let watts: Double
+}
+
+struct ScientificBenchmarkSummary {
+    let modelId: String
+    let hardwareFingerprint: String
+    let backendLabel: String
+    let trialCount: Int
+    let warmupDiscarded: Int
+    let ttftMeanMs: Double
+    let ttftP50Ms: Double
+    let ttftP95Ms: Double
+    let ttftP99Ms: Double
+    let ttftStdDevMs: Double
+    let tpotMeanMs: Double
+    let tpotP50Ms: Double
+    let tpotP95Ms: Double
+    let tpotP99Ms: Double
+    let tpotStdDevMs: Double
+    let meanTokensPerSec: Double
+    let meanWatts: Double
+    let joulesPerToken: Double
+    let whPerMillionTokens: Double
+    let timestamp: String
+    let isLiveEndpoint: Bool
 }
 
 struct ModelPreset: Identifiable, Hashable {
@@ -351,6 +397,39 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
 
     static func inferANECores(from chipName: String) -> Int {
         chipName.lowercased().contains("ultra") ? 32 : 16
+    }
+
+    static func inferFP16TFLOPS(from chipName: String) -> Double {
+        let lower = chipName.lowercased()
+        if lower.contains("m3 ultra") { return 114.6 }
+        if lower.contains("m2 ultra") { return 54.4 }
+        if lower.contains("m1 ultra") { return 42.0 }
+        if lower.contains("m6 max") { return 46.0 }
+        if lower.contains("m5 max") { return 41.0 }
+        if lower.contains("m4 max") { return 36.8 }
+        if lower.contains("m3 max") { return 32.8 }
+        if lower.contains("m2 max") { return 27.2 }
+        if lower.contains("m1 max") { return 20.8 }
+        if lower.contains("m6 pro") { return 23.0 }
+        if lower.contains("m5 pro") { return 20.8 }
+        if lower.contains("m4 pro") { return 18.4 }
+        if lower.contains("m3 pro") { return 14.8 }
+        if lower.contains("m2 pro") { return 13.6 }
+        if lower.contains("m1 pro") { return 10.6 }
+        if lower.contains("m6") { return 11.6 }
+        if lower.contains("m5") { return 10.4 }
+        if lower.contains("m4") { return 8.6 }
+        if lower.contains("m3") { return 8.2 }
+        if lower.contains("m2") { return 7.2 }
+        return 5.2
+    }
+
+    static func inferTypicalWatts(from chipName: String) -> Double {
+        let lower = chipName.lowercased()
+        if lower.contains("ultra") { return 155.0 }
+        if lower.contains("max") { return 95.0 }
+        if lower.contains("pro") { return 42.0 }
+        return 22.0
     }
 
     static func linkTransferStats(genA: Int, genB: Int, mode: TransportMode) -> (rangeLabel: String, nominalGbps: Double, badge: String) {

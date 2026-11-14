@@ -66,7 +66,7 @@ flowchart LR
 | **3. Modell-Werkstatt** | MLX-Modelle wählen, anteilige Schichtenverteilung prüfen, KV-Speicher regeln, oMLX / Ollama / llama.cpp starten |
 | **4. Netzwerk & Direktspeicher** | Mischbetrieb / TB / LAN / RDMA umschalten, `FAST_SYNCH=1` setzen und TB3/TB4/TB5-Klassen einsehen |
 | **5. Agenten & Werkzeuge** | Ein-Klick-Einrichtung für OpenCode, Hermes Agent, Antigravity, Cursor, VS Code und Xcode |
-| **6. Forschung & Grenzkurve** | Wissenschaftliche Grundlagen (Splitwise/DistServe, KV-Mathematik, Hardware-Grenzkurven) |
+| **6. Forschung & Grenzkurve** | Interaktives Log-Log-Grenzkurvendiagramm (`P = min(β·I, π)`), Knickpunkte, GPipe-Blasenformel, TTFT/TPOT, `J/Token`-Energiebilanz, reproduzierbare Messreihen (`T=0,0`, `p50/p95/p99`) und CSV/JSON/BibTeX-Ausgabe |
 | **7. Schnittstelle & Konsole** | OpenAI- (`/v1`) & Ollama-Endpunkte (`/api/tags`) prüfen und Verbund-Anfragen direkt testen |
 | **8. Hilfe & Handbuch** | Durchsuchbares Handbuch in fünf Sprachen (`⌘?`) zu Verbund, Speicherschutz, Netzwerk und Agenten |
 

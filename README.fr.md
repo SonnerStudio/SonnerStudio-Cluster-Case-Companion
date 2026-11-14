@@ -68,7 +68,7 @@ flowchart LR
 | **3. Atelier de modèles** | Découpage proportionnel des couches, réglage du cache KV et liaison avec **oMLX**, **Ollama** et **llama.cpp**. |
 | **4. Réseau et RDMA** | Matrice des classes Thunderbolt 3/4/5 pour M1–M6, état RDMA et routage du pont LAN/Thunderbolt. |
 | **5. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
-| **6. Science et Roofline** | Analyse arithmétique d'intensité, goulots d'étranglement mémoire/calcul et stratégie préremplissage-décodage. |
+| **6. Science et Roofline** | Courbe logarithmique interactive (`P = min(β·I, π)`), points d'inflexion, formule GPipe, TTFT/TPOT, bilan `J/jeton`, essais reproductibles (`T=0,0`, `p50/p95/p99`) et export CSV/JSON/BibTeX |
 | **7. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |
 | **8. Aide et documentation** | Manuel intégré avec recherche plein texte, vue d'ensemble architecturale et guide étape par étape. |
 

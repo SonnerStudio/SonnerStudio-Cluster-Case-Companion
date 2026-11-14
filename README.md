@@ -66,7 +66,7 @@ flowchart LR
 | **3. Model Studio** | Select MLX models, preview proportional layer splits, tune KV cache, and launch oMLX / Ollama / llama.cpp |
 | **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, and inspect TB3/TB4/TB5 classes |
 | **5. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
-| **6. Science & Roofline** | OSDI '24 Splitwise / DistServe principles, KV-cache math, and hardware bandwidth rooflines |
+| **6. Science & Roofline** | Interactive log-log Roofline plot (`P = min(β·I, π)`), Ridge Points, GPipe bubble math, TTFT/TPOT, `J/token` energetics, reproducible `T=0.0` trials (`p50/p95/p99`), and CSV/JSON/BibTeX export |
 | **7. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
 | **8. Help & Documentation** | Searchable 5-language user manual (`⌘?`) covering clustering, safety limits, networking, and agents |
 
