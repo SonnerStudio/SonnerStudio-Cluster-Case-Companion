@@ -1,50 +1,67 @@
-# ☀️ SonnerStudio Cluster-Case-Companion (SS-CCC)
+<div align="center">
 
-> **🇺🇸 🇬🇧 🇨🇦 [English](README.md)** · **🇩🇪 🇦🇹 🇨🇭 [Deutsch](README.de.md)** · **🇫🇷 🇧🇪 🇨🇭 [Français](README.fr.md)** · **🇪🇸 🇲🇽 🇦🇷 [Español](README.es.md)** · **🇵🇹 🇧🇷 [Português](README.pt.md)**
+# ☀️ SonnerStudio Verbund-Begleiter (SS-CCC)
 
-**SonnerStudio Cluster-Case-Companion (SS-CCC)** ist eine native macOS-Cluster-App und Inferenz-Plattform (inspiriert von **EXO** und **Apple/Claris Harbor / Fabric**). Sie koppelt den Unified Memory mehrerer Apple-Silicon-Macs — z. B. **Mac Studio M5 Max (36 GB, Thunderbolt 5)** + **Mac mini M4 (16 GB, Thunderbolt 4)** zu einem **52 GB physischen (~42 GB nutzbaren) KI-Cluster** über **Thunderbolt (Bridge / RDMA)**, **LAN/WLAN** oder **Hybrid-Betrieb**.
+**🇺🇸 🇬🇧 🇨🇦 [English](README.md)** · **🇩🇪 🇦🇹 🇨🇭 [Deutsch](README.de.md)** · **🇫🇷 🇧🇪 🇨🇭 [Français](README.fr.md)** · **🇪🇸 🇲🇽 🇦🇷 [Español](README.es.md)** · **🇵🇹 🇧🇷 [Português](README.pt.md)**
+
+*Eigenständige macOS-Verbundverwaltung und verteilte MLX-Rechenoberfläche für Apple Silicon*
+
+![SS-CCC Programmoberfläche](docs/images/ssccc_hero_screenshot.png)
+
+</div>
+
+---
+
+## 🧭 Überblick
+
+Der **SonnerStudio Verbund-Begleiter (SS-CCC)** koppelt den gemeinsamen Arbeitsspeicher mehrerer Apple-Silicon-Rechner — etwa eines **Mac Studio M5 Max (36 GB, Thunderbolt 5)** und eines **Mac mini M4 (16 GB, Thunderbolt 4)** — zu einem **52-GB-Rechenverbund (~42 GB nutzbar)** über **Thunderbolt (Brücke oder Direktspeicherzugriff)**, **Kabelnetz/Funknetz** oder im **Mischbetrieb**.
+
+<div align="center">
+  <img src="docs/images/cluster_topology_graphic.png" alt="Mac Studio M5 Max und Mac mini M4 über Thunderbolt gekoppelt" width="88%"/>
+</div>
+
+---
+
+## 🏗️ Aufbau (Steuerungsebene & Datenebene)
+
+```mermaid
+flowchart LR
+  Clients["OpenCode · Hermes Agent · Antigravity · oMLX · Ollama · llama.cpp"] -->|"Schnittstelle (:8000 / :11434)"| Studio
+  subgraph Control["Steuerungsebene (Kabelnetz / Funknetz)"]
+    Discovery["Bonjour-Erkennung & Zustandsmeldung"]
+  end
+  subgraph Data["Datenebene (Thunderbolt 4/5 · 30–37 Gbps)"]
+    Studio["Mac Studio M5 Max (36 GB · ~71 % Schichten)"] <-->|"MLX ring / jaccl + FAST_SYNCH=1 (~4 µs)"| Mini["Mac mini M4 (16 GB · ~29 % Schichten)"]
+  end
+```
 
 ---
 
 ## ✨ Hauptfunktionen
 
-- **52-GB-Verbund für heterogene Hardware:** Speichergewichtetes Pipeline-Sharding (`~71 %` Layer + Embeddings/LM-Head auf M5 Max `460 GB/s`, `~29 %` Layer auf M4 `120 GB/s`) mit sicherem `iogpu.wired_limit_mb`-Schutz.
-- **Hybride Control- & Data-Plane-Architektur:**
-  - **Control Plane (LAN/WLAN):** Bonjour/mDNS-Discovery (`_ssccc._tcp.local.`), Heartbeats, API-Gateway und Modell-Downloads.
-  - **Data Plane (Thunderbolt 4/5 oder RDMA):** Isolierte Punkt-zu-Punkt-IPs (`10.99.1.x`) für `mlx.distributed` (`ring` TCP/IP mit real 30–37 Gbps oder `jaccl` RDMA `<50 µs` auf TB5 / Opt-In TB4).
-- **Native SwiftUI-Oberfläche (*Solaris Telemetry Lab*):**
-  - **Cluster-Übersicht:** Live-Topologie, animierter Datenfluss und 52-GB-Speicherpool-Balken.
-  - **Geräte & Vergleich:** Live-Hardware-Auslesung (`sysctl`, `sw_vers`, `ibv_devices`, `ipconfig`) mit Direktvergleich.
-  - **Modell-Studio:** Proportionales Layer-Sharding, KV-Cache-Quantisierung (`FP16 / 8-Bit / 4-Bit`) sowie Laufzeit-Dienste für **oMLX** (Paged SSD KV-Cache), **Ollama** und **llama.cpp**.
-  - **Agenten & IDEs (1-Klick-Setup):** Sofortige Konfiguration für **OpenCode**, **Hermes Agent** und **Google Antigravity (AGY)**.
-  - **Forschung & Roofline:** Wissenschaftliche Grundlagen (*Splitwise/DistServe*, *SpecPipe*, `MLX_METAL_FAST_SYNCH=1`).
+- **52-GB-Speicherkopplung für ungleiche Rechner:** Speichergewichtete Schichtenverteilung (`~71 %` der Schichten samt Einbettung und Ausgabekopf auf dem M5 Max mit `460 GB/s`, `~29 %` auf dem M4 mit `120 GB/s`) mit sicherer `iogpu.wired_limit_mb`-Begrenzung.
+- **Native macOS-Oberfläche (*Solaris-Telemetrie-Labor*):**
+  - **Verbund-Übersicht & Gerätevergleich:** Direkte Auslesung (`sysctl`, `sw_vers`, `ibv_devices`, `ipconfig`) mit Balkenvergleich.
+  - **Modell-Werkstatt:** Anteilige Schichtenaufteilung, KV-Speicher-Verkleinerung (`FP16 / 8-Bit / 4-Bit`) sowie direkte Anbindung an **oMLX**, **Ollama** und **llama.cpp**.
+  - **Agenten & Entwicklungsumgebungen (Ein-Klick-Einrichtung):** Sofortige Einrichtung für **OpenCode**, **Hermes Agent** und **Google Antigravity**.
+  - **Mehrsprachige Oberfläche:** Sprachumschalter im linken Seitenmenü (Deutsch, Englisch, Französisch, Spanisch, Portugiesisch).
 
 ---
 
-## 🚀 Schnellstart (macOS Apple Silicon)
+## 🚀 Schnellstart
 
 ```bash
-# 1. Native SwiftUI Studio-App starten
+# 1. Native macOS-Oberfläche starten
 "./scripts/run_ssccc.sh"
 
-# 2. (Optional) Python/FastAPI-Gateway starten (benötigt uv)
+# 2. (Optional) Python/FastAPI-Dienst starten
 cd core && uv sync --extra dev
 PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
-# 3. Punkt-zu-Punkt-Thunderbolt-IPs einrichten (Studio & Mini)
+# 3. Feste Punkt-zu-Punkt-Thunderbolt-Adressen einrichten
 ./scripts/setup_tb_network.sh studio   # 10.99.1.1
 ./scripts/setup_tb_network.sh mini     # 10.99.1.2
 ```
-
----
-
-## 📁 Projektstruktur
-
-- `app/` — Native macOS SwiftUI-App (`SSCCCApp`, MVVM)
-- `core/` — Hexagonale Python/MLX-Cluster-Engine (`domain/`, `ports/`, `adapters/`, `application/`, `api/`, `tests/`)
-- `docs/` — [Roadmap](docs/ROADMAP.md), [Implementation Plan](docs/IMPLEMENTATION_PLAN.md), [Architektur](docs/ARCHITECTURE.md)
-- `scripts/` — Hardware-Check, Thunderbolt-Netzwerk-Setup, MLX-Benchmarks, App-Starter
-- `configs/` — MLX-Distributed-Hostfile-Vorlagen
 
 ---
 

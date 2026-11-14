@@ -10,10 +10,10 @@ struct AgentIntegrationsView: View {
                 SolarisCard(accent: SolarisTheme.amber) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Lokale KI-Agenten, IDEs & SDKs anbinden")
+                            Text(vm.t("agents_title"))
                                 .font(SolarisTheme.sectionTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
-                            Text("Verbinde OpenCode, Hermes Agent, Google Antigravity sowie weitere lokale IDEs & Agenten-Frameworks per 1-Klick mit dem 52-GB-Cluster.")
+                            Text(vm.t("agents_sub"))
                                 .font(SolarisTheme.bodyLarge)
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }

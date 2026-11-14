@@ -51,12 +51,12 @@ struct MainStudioWindow: View {
                         Text("SS-CCC")
                             .font(SolarisTheme.sectionTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
-                        Text("SonnerStudio Companion")
+                        Text(vm.t("app_subtitle"))
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(SolarisTheme.textSecondary)
                     }
                 }
-                .padding(.bottom, 18)
+                .padding(.bottom, 12)
 
                 ForEach(NavigationTab.allCases) { tab in
                     let active = vm.selectedTab == tab
@@ -66,10 +66,10 @@ struct MainStudioWindow: View {
                             .foregroundColor(active ? SolarisTheme.amber : SolarisTheme.textSecondary)
                             .frame(width: 26)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(tab.rawValue)
+                            Text(vm.tabTitle(tab))
                                 .font(SolarisTheme.bodyBold)
                                 .foregroundColor(active ? SolarisTheme.textPrimary : SolarisTheme.textSecondary)
-                            Text(tab.subtitle)
+                            Text(vm.tabSubtitle(tab))
                                 .font(.system(size: 12.5))
                                 .foregroundColor(SolarisTheme.textSecondary.opacity(0.8))
                         }
@@ -94,13 +94,30 @@ struct MainStudioWindow: View {
 
                 Spacer()
 
+                // Sprachauswahl (DE / EN / FR / ES / PT)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(vm.t("language_label"))
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundColor(SolarisTheme.textSecondary)
+                    Picker("", selection: $vm.language) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.shortLabel).tag(lang)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))
+
                 // Simulations-Schalter (bis Mac Studio per UPS eintrifft)
                 VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Mac Studio (Sim)", isOn: $vm.simulateMacStudio)
+                    Toggle(vm.t("sim_toggle"), isOn: $vm.simulateMacStudio)
                         .font(SolarisTheme.bodyBold)
                         .toggleStyle(.switch)
                         .tint(SolarisTheme.amber)
-                    Text(vm.simulateMacStudio ? "36 GB + 16 GB = 52 GB aktiv" : "Nur lokaler Mac mini (16 GB)")
+                    Text(vm.simulateMacStudio ? vm.t("sim_active_desc") : vm.t("sim_single_desc"))
                         .font(.system(size: 13))
                         .foregroundColor(SolarisTheme.textSecondary)
                 }
@@ -117,7 +134,7 @@ struct MainStudioWindow: View {
             VStack(spacing: 0) {
                 // Header-Leiste
                 HStack {
-                    Text(vm.selectedTab.rawValue)
+                    Text(vm.tabTitle(vm.selectedTab))
                         .font(SolarisTheme.heroTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
                     Spacer()

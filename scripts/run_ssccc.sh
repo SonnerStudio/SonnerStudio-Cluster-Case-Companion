@@ -10,6 +10,7 @@ swiftc -parse-as-library \
   -sdk "$(xcrun --show-sdk-path)" \
   -o "${OUT_BIN}" \
   "${ROOT_DIR}/app/Sources/Models/ClusterModels.swift" \
+  "${ROOT_DIR}/app/Sources/Models/Localization.swift" \
   "${ROOT_DIR}/app/Sources/ViewModels/ClusterViewModel.swift" \
   "${ROOT_DIR}/app/Sources/Views/Theme.swift" \
   "${ROOT_DIR}/app/Sources/Views/ClusterOverviewView.swift" \

@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 final class ClusterViewModel: ObservableObject {
     @Published var selectedTab: NavigationTab = .overview
+    @Published var language: AppLanguage = .de
     @Published var simulateMacStudio: Bool = true
     @Published var transportMode: TransportMode = .autoHybrid
     @Published var daemonConnected: Bool = false
@@ -153,6 +154,18 @@ final class ClusterViewModel: ObservableObject {
             NSPasteboard.general.setString(cmd, forType: .string)
             bridgeStatusMessage = "llama.cpp-Serverbefehl kopiert: \(cmd)"
         }
+    }
+
+    func t(_ key: String) -> String {
+        L10n.text(key, language)
+    }
+
+    func tabTitle(_ tab: NavigationTab) -> String {
+        L10n.tabTitle(tab, language)
+    }
+
+    func tabSubtitle(_ tab: NavigationTab) -> String {
+        L10n.tabSubtitle(tab, language)
     }
 
     var nodes: [ClusterNodeModel] {

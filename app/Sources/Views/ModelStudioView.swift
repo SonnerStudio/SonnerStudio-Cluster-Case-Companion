@@ -9,10 +9,10 @@ struct ModelStudioView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 SolarisCard {
-                    Text("Modell-Auswahl & Speicher-Prüfung")
+                    Text(vm.t("ms_title"))
                         .font(SolarisTheme.sectionTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
-                    Text("Wähle ein MLX-Modell — SS-CCC berechnet automatisch die proportionale Layer-Verteilung auf 36 GB + 16 GB.")
+                    Text(vm.t("ms_sub"))
                         .font(SolarisTheme.bodyLarge)
                         .foregroundColor(SolarisTheme.textSecondary)
 
@@ -60,7 +60,7 @@ struct ModelStudioView: View {
                 SolarisCard(accent: split.fits ? SolarisTheme.emerald : SolarisTheme.coral) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Weighted Pipeline Sharding Plan")
+                            Text(vm.t("ms_plan_title"))
                                 .font(SolarisTheme.sectionTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
                             Text("Bedarf inkl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB KV-Cache: \(String(format: "%.1f", split.totalRequiredGB)) GB von \(Int(split.totalUsableGB)) GB verfügbar")
@@ -69,7 +69,7 @@ struct ModelStudioView: View {
                         }
                         Spacer()
                         Label(
-                            split.fits ? "Passt in Cluster" : "Zu groß (OOM-Schutz)",
+                            split.fits ? vm.t("ms_fits") : vm.t("ms_oom"),
                             systemImage: split.fits ? "checkmark.shield.fill" : "exclamationmark.triangle.fill"
                         )
                         .font(SolarisTheme.bodyBold)
@@ -104,7 +104,7 @@ struct ModelStudioView: View {
                     .frame(height: 44)
 
                     HStack {
-                        Text("KV-Cache-Reserve:")
+                        Text(vm.t("ms_kv_reserve"))
                             .font(SolarisTheme.bodyBold)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Slider(value: $vm.kvCacheReserveGB, in: 1...12, step: 0.5)
@@ -119,7 +119,7 @@ struct ModelStudioView: View {
 
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("KV-Cache-Quantisierung (für lange Agenten-Kontexte)")
+                            Text(vm.t("ms_kv_quant"))
                                 .font(SolarisTheme.bodyBold)
                                 .foregroundColor(SolarisTheme.textPrimary)
                             Text("Empfohlenes Kontext-Fenster: \(vm.kvPrecision.maxContextEstimate) · --prefill-step-size \(vm.prefillStepSize)")
@@ -141,10 +141,10 @@ struct ModelStudioView: View {
                 SolarisCard(accent: SolarisTheme.mint) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Laufzeit-Dienste: oMLX, Ollama & llama.cpp")
+                            Text(vm.t("ms_services_title"))
                                 .font(SolarisTheme.sectionTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
-                            Text("Lade das gewählte Modell direkt in oMLX (Paged SSD KV-Cache), Ollama oder llama.cpp — oder binde lokale Modelle als schnelles MLX in SS-CCC ein.")
+                            Text(vm.t("ms_services_sub"))
                                 .font(SolarisTheme.bodyLarge)
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }
@@ -162,7 +162,7 @@ struct ModelStudioView: View {
                                         .font(SolarisTheme.cardTitle)
                                         .foregroundColor(SolarisTheme.textPrimary)
                                     Spacer()
-                                    Text(installed ? "INSTALLIERT" : "PORT :\(svc.defaultPort)")
+                                    Text(installed ? vm.t("ms_installed") : "PORT :\(svc.defaultPort)")
                                         .font(.system(size: 11, weight: .bold))
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 3)
@@ -206,7 +206,7 @@ struct ModelStudioView: View {
                         Button {
                             vm.scanOllamaAndLlamaCppToMLX()
                         } label: {
-                            Label("Ollama / GGUF → MLX scannen", systemImage: "magnifyingglass.circle.fill")
+                            Label(vm.t("ms_scan_btn"), systemImage: "magnifyingglass.circle.fill")
                                 .font(SolarisTheme.bodyBold)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
@@ -218,7 +218,7 @@ struct ModelStudioView: View {
                         Button {
                             vm.exportForOllamaAndLlamaCpp()
                         } label: {
-                            Label("Brücke exportieren", systemImage: "arrow.up.forward.app.fill")
+                            Label(vm.t("ms_export_btn"), systemImage: "arrow.up.forward.app.fill")
                                 .font(SolarisTheme.bodyBold)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)

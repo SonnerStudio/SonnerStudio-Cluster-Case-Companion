@@ -9,10 +9,10 @@ struct DevicesCompareView: View {
                 SolarisCard(accent: SolarisTheme.amber) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Verbundene Geräte & Hardware-Telemetrie")
+                            Text(vm.t("dev_title"))
                                 .font(SolarisTheme.sectionTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
-                            Text("Lokales Gerät wird live via sysctl/sw_vers/ibv_devices/ipconfig ausgelesen (Stand: \(vm.lastProbeTimestamp)).")
+                            Text("sysctl / sw_vers / ibv_devices / ipconfig (\(vm.lastProbeTimestamp))")
                                 .font(SolarisTheme.bodyLarge)
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }
@@ -20,7 +20,7 @@ struct DevicesCompareView: View {
                         Button {
                             vm.refreshLocalHardwareProbe()
                         } label: {
-                            Label("Hardware neu auslesen", systemImage: "arrow.clockwise")
+                            Label(vm.t("dev_refresh"), systemImage: "arrow.clockwise")
                                 .font(SolarisTheme.bodyBold)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
@@ -44,7 +44,7 @@ struct DevicesCompareView: View {
                     let secondary = vm.nodes[1]
 
                     SolarisCard(accent: SolarisTheme.mint) {
-                        Text("Direktvergleich: \(primary.name) vs. \(secondary.name)")
+                        Text("\(vm.t("dev_compare")): \(primary.name) vs. \(secondary.name)")
                             .font(SolarisTheme.sectionTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
 

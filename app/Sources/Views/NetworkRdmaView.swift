@@ -7,10 +7,10 @@ struct NetworkRdmaView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 SolarisCard(accent: SolarisTheme.amber) {
-                    Text("Transport-Verfahren (Hybrid LAN/WLAN + Thunderbolt)")
+                    Text(vm.t("net_title"))
                         .font(SolarisTheme.sectionTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
-                    Text("Wähle, wie Aktivierungs-Tensoren zwischen Mac Studio M5 Max (TB5) und Mac mini M4 (TB4) übertragen werden.")
+                    Text(vm.t("net_sub"))
                         .font(SolarisTheme.bodyLarge)
                         .foregroundColor(SolarisTheme.textSecondary)
 
@@ -56,10 +56,10 @@ struct NetworkRdmaView: View {
                 SolarisCard {
                     Toggle(isOn: $vm.fastSynchEnabled) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("MLX_METAL_FAST_SYNCH=1 aktivieren")
+                            Text(vm.t("net_fast_synch"))
                                 .font(SolarisTheme.cardTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
-                            Text("Senkt den GPU/CPU-Synchronisations-Overhead von ~180 µs auf ~4 µs (45× schneller bei Pipeline-Übergängen).")
+                            Text(vm.t("net_fast_synch_sub"))
                                 .font(SolarisTheme.bodyLarge)
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }
@@ -70,7 +70,7 @@ struct NetworkRdmaView: View {
                     Divider().background(SolarisTheme.borderSubtle)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Checkliste sobald der Mac Studio M5 Max eintrifft:")
+                        Text(vm.t("net_checklist"))
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Text("1. Thunderbolt-Kabel verbinden & `scripts/setup_tb_network.sh studio` bzw. `mini` ausführen.")

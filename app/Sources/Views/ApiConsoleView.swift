@@ -8,7 +8,7 @@ struct ApiConsoleView: View {
             VStack(alignment: .leading, spacing: 22) {
                 HStack(spacing: 16) {
                     SolarisCard(accent: vm.daemonConnected ? SolarisTheme.emerald : SolarisTheme.amber) {
-                        Text("OpenAI-Kompatibler Endpunkt")
+                        Text(vm.t("api_openai"))
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Text("http://127.0.0.1:8000/v1")
@@ -19,7 +19,7 @@ struct ApiConsoleView: View {
                             .foregroundColor(SolarisTheme.textSecondary)
                     }
                     SolarisCard {
-                        Text("Ollama-Kompatibler Endpunkt")
+                        Text(vm.t("api_ollama"))
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Text("http://127.0.0.1:8000/api/tags")
@@ -32,7 +32,7 @@ struct ApiConsoleView: View {
                 }
 
                 SolarisCard {
-                    Text("Cluster-Test-Konsole")
+                    Text(vm.t("api_console"))
                         .font(SolarisTheme.sectionTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
 
@@ -49,7 +49,7 @@ struct ApiConsoleView: View {
                             Task { await vm.sendTestPrompt() }
                         } label: {
                             Label(
-                                vm.isSendingPrompt ? "Sende..." : "Test-Anfrage ausführen",
+                                vm.isSendingPrompt ? vm.t("api_sending") : vm.t("api_send"),
                                 systemImage: "paperplane.fill"
                             )
                             .font(SolarisTheme.bodyBold)
@@ -64,7 +64,7 @@ struct ApiConsoleView: View {
                         Button {
                             Task { await vm.checkDaemonHealth() }
                         } label: {
-                            Label("Daemon prüfen", systemImage: "arrow.clockwise")
+                            Label(vm.t("api_health"), systemImage: "arrow.clockwise")
                                 .font(SolarisTheme.bodyBold)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
@@ -74,7 +74,7 @@ struct ApiConsoleView: View {
                         .buttonStyle(.plain)
                     }
 
-                    Text("Antwort / Telemetrie:")
+                    Text(vm.t("api_output"))
                         .font(SolarisTheme.bodyBold)
                         .foregroundColor(SolarisTheme.textSecondary)
 

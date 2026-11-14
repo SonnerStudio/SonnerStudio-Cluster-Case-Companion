@@ -7,10 +7,10 @@ struct ScienceBenchmarksView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 SolarisCard(accent: SolarisTheme.amber) {
-                    Text("Wissenschaftliche Grundlagen & Roofline-Analyse")
+                    Text(vm.t("sci_title"))
                         .font(SolarisTheme.sectionTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
-                    Text("Erkenntnisse aus aktueller IT-Systemforschung (OSDI '24, arXiv, Apple MLX) direkt auf deinen 36-GB-M5-Max + 16-GB-M4-Cluster übertragen.")
+                    Text(vm.t("sci_sub"))
                         .font(SolarisTheme.bodyLarge)
                         .foregroundColor(SolarisTheme.textSecondary)
 
@@ -38,13 +38,13 @@ struct ScienceBenchmarksView: View {
 
                 // Roofline Vergleich: M5 Max vs M4
                 SolarisCard {
-                    Text("Hardware-Roofline: Warum Rank 0 auf den Mac Studio M5 Max gehört")
+                    Text(vm.t("sci_roofline"))
                         .font(SolarisTheme.cardTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
 
                     Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) {
                         GridRow {
-                            Text("Eigenschaft").foregroundColor(SolarisTheme.textSecondary)
+                            Text(vm.t("sci_prop")).foregroundColor(SolarisTheme.textSecondary)
                             Text("Mac Studio M5 Max (36 GB)").foregroundColor(SolarisTheme.amberGlow)
                             Text("Mac mini M4 (16 GB)").foregroundColor(SolarisTheme.mint)
                         }
@@ -53,17 +53,17 @@ struct ScienceBenchmarksView: View {
                         Divider().gridCellUnsizedAxes(.horizontal)
 
                         GridRow {
-                            Text("Speicherbandbreite (Decode-Limit)").foregroundColor(SolarisTheme.textSecondary)
-                            Text("460 GB/s (3,8× schneller)").foregroundColor(SolarisTheme.textPrimary)
+                            Text(vm.t("sci_bw")).foregroundColor(SolarisTheme.textSecondary)
+                            Text("460 GB/s (3,8×)").foregroundColor(SolarisTheme.textPrimary)
                             Text("120 GB/s").foregroundColor(SolarisTheme.textPrimary)
                         }
                         GridRow {
-                            Text("Optimaler Layer-Anteil").foregroundColor(SolarisTheme.textSecondary)
+                            Text(vm.t("sci_layers")).foregroundColor(SolarisTheme.textSecondary)
                             Text("~71 % + Embeddings + LM-Head").foregroundColor(SolarisTheme.textPrimary)
                             Text("~29 % (Worker Rank 1)").foregroundColor(SolarisTheme.textPrimary)
                         }
                         GridRow {
-                            Text("Data-Plane-Durchsatz (TB4/5 Bridge)").foregroundColor(SolarisTheme.textSecondary)
+                            Text(vm.t("sci_link")).foregroundColor(SolarisTheme.textSecondary)
                             Text("30–37 Gbps (real iperf3)").foregroundColor(SolarisTheme.textPrimary)
                             Text("40 Gbps Link-Cap (TB4)").foregroundColor(SolarisTheme.textPrimary)
                         }

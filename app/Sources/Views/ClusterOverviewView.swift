@@ -9,21 +9,21 @@ struct ClusterOverviewView: View {
                 // Top KPI-Leiste (Große Kennzahlen)
                 HStack(spacing: 16) {
                     MetricTile(
-                        title: "Gekoppelter Speicher",
+                        title: vm.t("kpi_memory"),
                         value: "\(Int(vm.totalPhysicalRamGB)) GB",
-                        subtitle: "\(Int(vm.totalUsableVramGB)) GB nutzbares MLX-Limit",
+                        subtitle: String(format: vm.t("kpi_memory_sub"), Int(vm.totalUsableVramGB)),
                         accent: SolarisTheme.amber,
                         icon: "memorychip.fill"
                     )
                     MetricTile(
-                        title: "Aktive Nodes",
+                        title: vm.t("kpi_nodes"),
                         value: "\(vm.nodes.count)",
-                        subtitle: vm.simulateMacStudio ? "Studio (Sim) + Mac mini M4" : "Nur lokaler Mac mini M4",
+                        subtitle: vm.simulateMacStudio ? "Studio + Mac mini M4" : "Mac mini M4",
                         accent: SolarisTheme.mint,
                         icon: "desktopcomputer"
                     )
                     MetricTile(
-                        title: "Data-Plane-Link",
+                        title: vm.t("kpi_link"),
                         value: vm.transportMode == .lanWlanOnly ? "1–10 Gbps" : "30–37 Gbps",
                         subtitle: vm.activeLinkHeadline,
                         accent: SolarisTheme.emerald,
@@ -35,10 +35,10 @@ struct ClusterOverviewView: View {
                 SolarisCard(accent: SolarisTheme.amber) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Cluster-Topologie & Speicher-Pool")
+                            Text(vm.t("topo_title"))
                                 .font(SolarisTheme.sectionTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
-                            Text("Control Plane über LAN/WLAN · Aktivierungs-Tensoren isoliert über Thunderbolt")
+                            Text(vm.t("topo_sub"))
                                 .font(SolarisTheme.bodyLarge)
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }
@@ -69,7 +69,7 @@ struct ClusterOverviewView: View {
                 // 52-GB Unified Memory Pool Balken
                 SolarisCard {
                     HStack {
-                        Text("52-GB-Speicherpool-Aufteilung (iogpu.wired_limit_mb)")
+                        Text(vm.t("pool_bar_title"))
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Spacer()
@@ -110,7 +110,7 @@ struct ClusterOverviewView: View {
                     }
                     .frame(height: 40)
 
-                    Text("Hinweis: Niemals 100 % des RAM zuweisen — 6 GB (Studio) bzw. 4 GB (Mini) bleiben fest für macOS & WindowServer reserviert.")
+                    Text(vm.t("pool_bar_note"))
                         .font(SolarisTheme.bodyLarge)
                         .foregroundColor(SolarisTheme.textSecondary)
                 }
