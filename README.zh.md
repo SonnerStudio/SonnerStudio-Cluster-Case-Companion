@@ -242,14 +242,14 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   │   └── Localization.swift      # 完整 8 种语言界面与帮助词典 (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # 硬件探测、模型发现、WAN/Audio-Party 与 GitHub 更新器
-│   └── Views/                      # 9 个模块化 SwiftUI 视图（含 6 标签页科学实验室与帮助）
+│   └── Views/                      # 9 个模块化 SwiftUI 视图 + Theme.swift（3 标签页集群概览、黄黑工业警示条纹、6 标签页科学实验室与帮助）
 ├── core/                           # Python FastAPI 网关、WebSocket WAN/音频中继与 MLX 分片
 ├── scripts/
 │   ├── run_ssccc.sh                # 编译并启动 macOS 应用
 │   ├── bump_version.py             # 将 version.json 与 ClusterModels.swift 同步至 Git
 │   ├── setup_tb_network.sh         # 配置 10.99.1.x Thunderbolt 桥接网络
 │   └── setup_wired_limit.sh        # 应用安全的 iogpu.wired_limit_mb 内存上限
-├── tests/                          # 12 项全局自动化测试套件 (Swift + Python)
+├── tests/                          # 14 项全局自动化测试套件 (Swift + Python)
 ├── .github/workflows/              # 自动 CI 版本控制与打标
 └── version.json                    # 托管于 GitHub 的更新控制清单
 ```
@@ -259,8 +259,8 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 ## 🚧 开发状态与诚邀参与
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `12/12` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
-> **已实现并验证：** 英文默认启动与 8 语言即时切换 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、开放式 M1–M12+ 硬件探测、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、带单指标与全局历史记录的 6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、9 章内置帮助中心以及由 GitHub + CI 驱动的自动更新机制。
+> **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `14/14` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
+> **已实现并验证：** 英文默认启动与 8 语言即时切换 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**3 标签页集群概览**（**本地集群**、包含区域与本地子集群的 **互联网集群** 以及 **本地 + 互联网** 混合视图）、覆盖 6 大核心界面的 **黄黑斜纹工业警示条 (`HazardStripesBar` / `IndustrialHazardBanner`)**、开放式 M1–M12+ 硬件探测、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、带单指标与全局历史记录的 6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、9 章内置帮助中心以及由 GitHub + CI 驱动的自动更新机制。
 
 我们热忱邀请开发者、研究人员与 Apple Silicon 爱好者 **共同参与并推动 SS-CCC 不断完善**：
 - **在您的硬件上实测：** 在 M1–M12+ Mac 上运行 SS-CCC，并分享吞吐量、显存占用及 RDMA/JACCL 稳定性数据。

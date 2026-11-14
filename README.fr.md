@@ -212,7 +212,7 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 1. **Résolution GitHub multi-sources :** Au lancement (après `1,2 s`) puis toutes les **30 minutes** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` interroge `main/version.json`, `releases/latest` et `commits/main` (SHA court).
 2. **Invite de mise à jour (`UpdatePromptSheet`, `⌘U`) :** Lorsqu'une version, un numéro de compilation ou un SHA `main` plus récent est détecté, l'application propose pour les dépôts locaux `git pull --ff-only origin main` + `swift build` + relance en un clic (`scripts/run_ssccc.sh`), ou ouvre le téléchargement GitHub pour les paquets autonomes.
-3. **Automatisation CI (`.github/workflows/auto-version-control.yml`) :** Chaque *push* sur `main` exécute `scripts/bump_version.py --part patch --sync-git`, synchronise `version.json` et `ClusterModels.swift`, lance les 12 tests et crée le tag `vX.Y.Z`.
+3. **Automatisation CI (`.github/workflows/auto-version-control.yml`) :** Chaque *push* sur `main` exécute `scripts/bump_version.py --part patch --sync-git`, synchronise `version.json` et `ClusterModels.swift`, lance les 14 tests et crée le tag `vX.Y.Z`.
 
 ---
 
@@ -259,14 +259,14 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 │   │   └── Localization.swift      # Dictionnaire complet en 8 langues (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Sondes matérielles, modèles, Audio-Party WAN & mise à jour GitHub
-│   └── Views/                      # 9 vues SwiftUI modulaires (dont laboratoire 6 onglets & aide)
+│   └── Views/                      # 9 vues SwiftUI modulaires + Theme.swift (Vue d'ensemble 3 onglets, bandes d'avertissement, labo 6 onglets & aide)
 ├── core/                           # Passerelle Python FastAPI, relais WebSocket WAN/Audio & MLX
 ├── scripts/
 │   ├── run_ssccc.sh                # Compile et lance l'application macOS
 │   ├── bump_version.py             # Synchronise version.json & ClusterModels.swift avec Git
 │   ├── setup_tb_network.sh         # Configure le pont Thunderbolt 10.99.1.x
 │   └── setup_wired_limit.sh        # Applique des limites sûres iogpu.wired_limit_mb
-├── tests/                          # Suite de vérification globale en 12 tests (Swift + Python)
+├── tests/                          # Suite de vérification globale en 14 tests (Swift + Python)
 ├── .github/workflows/              # Contrôle automatique de version CI & étiquetage
 └── version.json                    # Manifeste de contrôle des mises à jour hébergé sur GitHub
 ```
@@ -276,8 +276,8 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 ## 🚧 État d'avancement et contribution
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) est pleinement exécutable et validé par `12/12` tests automatisés, tandis que les essais d'endurance multi-nœuds se poursuivent.**
-> **Déjà opérationnel et vérifié :** langue de démarrage en anglais avec 8 langues (`EN/DE/FR/ES/PT/RU/JA/ZH`), détection évolutive M1–M12+, découverte de modèles en direct (oMLX / Ollama / llama.cpp / GGUF), laboratoire scientifique à 6 onglets avec historique par position et global, pont hybride Local ↔ Internet-WAN, Audio-Party `AVAudioEngine`, manuel à 9 chapitres et mise à jour automatique pilotée par GitHub + CI.
+> **SS-CCC (v1.6+) est pleinement exécutable et validé par `14/14` tests automatisés, tandis que les essais d'endurance multi-nœuds se poursuivent.**
+> **Déjà opérationnel et vérifié :** langue de démarrage en anglais avec 8 langues (`EN/DE/FR/ES/PT/RU/JA/ZH`), **vue d'ensemble en 3 onglets** (**Grappe locale**, **Grappe Internet** avec sous-grappes régionales/locales et **Local + Internet** hybride), **bandes de signalisation industrielles jaune-noir (`HazardStripesBar` / `IndustrialHazardBanner`)** sur 6 vues, détection évolutive M1–M12+, découverte de modèles en direct (oMLX / Ollama / llama.cpp / GGUF), laboratoire scientifique à 6 onglets avec historique par position et global, pont hybride Local ↔ Internet-WAN, Audio-Party `AVAudioEngine`, manuel à 9 chapitres et mise à jour automatique pilotée par GitHub + CI.
 
 Nous encourageons vivement les développeurs, chercheurs et passionnés d'Apple Silicon à **participer au développement et à faire évoluer SS-CCC** :
 - **Tester sur votre matériel :** Essayez SS-CCC sur vos Mac M1–M12+ et partagez vos mesures de débit, mémoire et RDMA/JACCL.

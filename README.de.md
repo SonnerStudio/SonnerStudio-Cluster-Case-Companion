@@ -229,7 +229,7 @@ SS-CCC verfügt über eine integrierte, **über GitHub gesteuerte Update- und Ve
    - **Quelltext-Installationen:** Führt `git pull --ff-only origin main` + `swift build` direkt aus der App aus und startet SS-CCC per Klick auf **App jetzt neu starten** (`scripts/run_ssccc.sh`) neu.
    - **Eigenständige `.app`-Pakete:** Öffnet direkt das aktuelle GitHub Release im Browser.
 3. **Automatische CI-Versionskontrolle (`.github/workflows/auto-version-control.yml`):**
-   - Jeder Push auf `main` startet auf GitHub automatisch `scripts/bump_version.py --part patch --sync-git`, synchronisiert `version.json` mit `AppReleaseMetadata` in `ClusterModels.swift`, führt alle 12 Tests aus, committet `[skip ci] chore(release): auto-bump ...` und setzt das passende Git-Tag `vX.Y.Z`.
+   - Jeder Push auf `main` startet auf GitHub automatisch `scripts/bump_version.py --part patch --sync-git`, synchronisiert `version.json` mit `AppReleaseMetadata` in `ClusterModels.swift`, führt alle 14 Tests aus, committet `[skip ci] chore(release): auto-bump ...` und setzt das passende Git-Tag `vX.Y.Z`.
 
 ---
 
@@ -307,7 +307,7 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 │   ├── bump_version.py             # Synchronisiert version.json & ClusterModels.swift mit Git
 │   ├── setup_tb_network.sh         # Richtet das 10.99.1.x-Thunderbolt-Netz ein
 │   └── setup_wired_limit.sh        # Setzt sichere iogpu.wired_limit_mb-Grenzen
-├── tests/                          # 12-teilige globale Prüfsammlung (Swift + Python)
+├── tests/                          # 14-teilige globale Prüfsammlung (Swift + Python)
 ├── .github/workflows/              # Automatische CI-Versionskontrolle & Tagging
 └── version.json                    # Über GitHub gesteuerte Update-Steuerdatei
 ```
@@ -317,8 +317,8 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 ## 🚧 Entwicklungsstand & Mitmachen
 
 > [!IMPORTANT]
-> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `12/12` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
-> **Bereits umgesetzt und geprüft:** Englische Startsprache mit 8-Sprachen-Umschaltung (`EN/DE/FR/ES/PT/RU/JA/ZH`), zukunftssichere M1–M12+-Hardware-Auslesung, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, 9-Kapitel-Handbuch sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
+> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `14/14` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
+> **Bereits umgesetzt und geprüft:** Englische Startsprache mit 8-Sprachen-Umschaltung (`EN/DE/FR/ES/PT/RU/JA/ZH`), **3-Reiter-Cluster-Übersicht** (**Lokaler Cluster**, **Internet-Cluster** mit regionalen & lokalen Teilverbünden sowie **Lokal + Internet**-Hybridansicht), **gelb-schwarze Industrie-Warnstreifen (`HazardStripesBar` / `IndustrialHazardBanner`)** in 6 Kernansichten, zukunftssichere M1–M12+-Hardware-Auslesung, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, 9-Kapitel-Handbuch sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
 
 Wir laden Entwickler, Forschende und Apple-Silicon-Begeisterte herzlich dazu ein, **mitzuentwickeln und SS-CCC weiterzubringen**:
 - **Auf eigener Hardware erproben:** Teste SS-CCC mit deinen M1–M12+-Macs und teile Messwerte zu Durchsatz, Speicherverbrauch und RDMA/JACCL-Stabilität.

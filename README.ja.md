@@ -242,14 +242,14 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   │   └── Localization.swift      # 8 言語完全対応 UI & ヘルプ辞書 (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # ハードウェア探索、モデル検出、WAN/Audio-Party & GitHub 更新
-│   └── Views/                      # 9 つの SwiftUI ビュー（6 タブ科学ラボ & ヘルプ含む）
+│   └── Views/                      # 9 つの SwiftUI ビュー + Theme.swift（3 タブ概要、黄黒の警告ストライプ、6 タブ科学ラボ & ヘルプ）
 ├── core/                           # Python FastAPI ゲートウェイ、WebSocket WAN/音声リレー & MLX 分割
 ├── scripts/
 │   ├── run_ssccc.sh                # macOS アプリをコンパイルして起動
 │   ├── bump_version.py             # version.json & ClusterModels.swift を Git と同期
 │   ├── setup_tb_network.sh         # 10.99.1.x Thunderbolt ブリッジを設定
 │   └── setup_wired_limit.sh        # 安全な iogpu.wired_limit_mb 上限を適用
-├── tests/                          # 12 項目の総合テストスイート (Swift + Python)
+├── tests/                          # 14 項目の総合テストスイート (Swift + Python)
 ├── .github/workflows/              # 自動 CI バージョン管理とタグ付け
 └── version.json                    # GitHub ホスト型アップデート制御マニフェスト
 ```
@@ -259,8 +259,8 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 ## 🚧 開発状況とコントリビューションのお誘い
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) は完全に動作可能で `12/12` の自動テストを通過しており、異種マルチノード環境での連続耐久ベンチマークを継続中です。**
-> **実装・検証済み機能：** 英語デフォルト起動＋8 言語切替 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、将来対応 M1–M12+ ハードウェア検出、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、単一項目・全体履歴記録付き 6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、9 章ヘルプセンター、および CI 連動 GitHub 自動アップデート。
+> **SS-CCC (v1.6+) は完全に動作可能で `14/14` の自動テストを通過しており、異種マルチノード環境での連続耐久ベンチマークを継続中です。**
+> **実装・検証済み機能：** 英語デフォルト起動＋8 言語切替 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**3 タブ構成のクラスター概要**（**ローカルクラスター**、地域・ローカルサブクラスター付きの **インターネットクラスター**、および **ローカル + インターネット** ハイブリッド表示）、6 つの主要画面に配置された **黄黒の産業用警告ストライプ (`HazardStripesBar` / `IndustrialHazardBanner`)**、将来対応 M1–M12+ ハードウェア検出、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、単一項目・全体履歴記録付き 6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、9 章ヘルプセンター、および CI 連動 GitHub 自動アップデート。
 
 開発者、研究者、Apple Silicon 愛好家の皆様からの **貢献・参加を心より歓迎します**：
 - **実機でのテスト：** お持ちの M1–M12+ Mac で SS-CCC を試し、スループット・メモリ・RDMA/JACCL の安定性レポートを共有してください。

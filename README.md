@@ -229,7 +229,7 @@ SS-CCC includes an integrated, **GitHub-driven update and version-control pipeli
    - **Source Installations:** Runs `git pull --ff-only origin main` + `swift build` directly inside the app and offers a 1-click **Relaunch App Now** button (`scripts/run_ssccc.sh`).
    - **Packaged `.app` Bundles:** Opens the GitHub Release asset download in Safari.
 3. **Automated CI Version Bumping (`.github/workflows/auto-version-control.yml`):**
-   - Every push to `main` triggers GitHub Actions to run `scripts/bump_version.py --part patch --sync-git`, synchronize `version.json` with `AppReleaseMetadata` in `ClusterModels.swift`, execute the full 12-test suite, commit `[skip ci] chore(release): auto-bump ...`, and update the Git tag `vX.Y.Z`.
+   - Every push to `main` triggers GitHub Actions to run `scripts/bump_version.py --part patch --sync-git`, synchronize `version.json` with `AppReleaseMetadata` in `ClusterModels.swift`, execute the full 14-test suite, commit `[skip ci] chore(release): auto-bump ...`, and update the Git tag `vX.Y.Z`.
 
 ---
 
@@ -300,14 +300,14 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 │   │   └── Localization.swift      # Complete 8-language UI & Help dictionary (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Hardware probes, model discovery, WAN/Audio-Party & GitHub updater
-│   └── Views/                      # 9 modular SwiftUI views (incl. 6-tab ScienceBenchmarksView & HelpDocsView)
+│   └── Views/                      # 9 modular SwiftUI views + Theme.swift (3-tab Cluster Overview, industrial hazard stripes, 6-tab lab & help)
 ├── core/                           # Python FastAPI gateway, WebSocket WAN/Audio relays & MLX sharding
 ├── scripts/
 │   ├── run_ssccc.sh                # Compiles & launches the macOS app
 │   ├── bump_version.py             # Synchronizes version.json & ClusterModels.swift with Git
 │   ├── setup_tb_network.sh         # Configures 10.99.1.x Thunderbolt bridge
 │   └── setup_wired_limit.sh        # Applies safe iogpu.wired_limit_mb limits
-├── tests/                          # 12-test global verification suite (Swift + Python)
+├── tests/                          # 14-test global verification suite (Swift + Python)
 ├── .github/workflows/              # Automated CI version control & tagging
 └── version.json                    # GitHub-hosted update control manifest
 ```
@@ -317,8 +317,8 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 ## 🚧 Development Status & Contributing
 
 > [!IMPORTANT]
-> **SS-CCC v1.6+ is actively runnable and tested (`12/12` automated checks passing), while real-world multi-node endurance benchmarks continue.**
-> **Currently implemented & verified:** English default startup with 8-language UI (`EN/DE/FR/ES/PT/RU/JA/ZH`), open-ended M1–M12+ hardware probing, live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, 9-chapter Help Center, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
+> **SS-CCC v1.6+ is actively runnable and tested (`14/14` automated checks passing), while real-world multi-node endurance benchmarks continue.**
+> **Currently implemented & verified:** English default startup with 8-language UI (`EN/DE/FR/ES/PT/RU/JA/ZH`), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** across 6 operational views, open-ended M1–M12+ hardware probing, live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, 9-chapter Help Center, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
 
 We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:
 - **Test on your hardware:** Try SS-CCC with your M1–M12+ Macs and share throughput, memory, and RDMA/JACCL stability findings.

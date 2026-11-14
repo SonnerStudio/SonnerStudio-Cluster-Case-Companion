@@ -212,7 +212,7 @@ O SS-CCC suporta **qualquer Mac com processador Apple Silicon** (**M1, M2, M3, M
 
 1. **Verificação multifonte no GitHub:** No arranque (após `1,2 s`) e a cada **30 minutos** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` consulta `main/version.json`, `releases/latest` e `commits/main` (SHA curto).
 2. **Aviso na aplicação (`UpdatePromptSheet`, `⌘U`):** Quando deteta uma versão, compilação ou SHA mais recente, disponibiliza para instalações a partir do código `git pull --ff-only origin main` + `swift build` + reinício num clique (`scripts/run_ssccc.sh`), ou transferência direta via GitHub Releases.
-3. **Automatização CI (`.github/workflows/auto-version-control.yml`):** Cada *push* para `main` executa `scripts/bump_version.py --part patch --sync-git`, sincroniza `version.json` e `ClusterModels.swift`, corre os 12 testes e cria a tag `vX.Y.Z`.
+3. **Automatização CI (`.github/workflows/auto-version-control.yml`):** Cada *push* para `main` executa `scripts/bump_version.py --part patch --sync-git`, sincroniza `version.json` e `ClusterModels.swift`, corre os 14 testes e cria a tag `vX.Y.Z`.
 
 ---
 
@@ -259,14 +259,14 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 │   │   └── Localization.swift      # Dicionário completo em 8 idiomas (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Sondagem de hardware, modelos, Audio-Party WAN e atualizador GitHub
-│   └── Views/                      # 9 vistas SwiftUI modulares (incl. laboratório de 6 separadores e ajuda)
+│   └── Views/                      # 9 vistas SwiftUI modulares + Theme.swift (Vista geral 3 separadores, faixas de aviso, lab. 6 separadores e ajuda)
 ├── core/                           # Gateway Python FastAPI, retransmissores WebSocket WAN/Áudio e MLX
 ├── scripts/
 │   ├── run_ssccc.sh                # Compila e inicia a aplicação macOS
 │   ├── bump_version.py             # Sincroniza version.json e ClusterModels.swift com Git
 │   ├── setup_tb_network.sh         # Configura a ponte Thunderbolt 10.99.1.x
 │   └── setup_wired_limit.sh        # Aplica limites seguros de iogpu.wired_limit_mb
-├── tests/                          # Conjunto de verificação global de 12 testes (Swift + Python)
+├── tests/                          # Conjunto de verificação global de 14 testes (Swift + Python)
 ├── .github/workflows/              # Controlo automático de versões CI e etiquetagem
 └── version.json                    # Manifesto de controlo de atualizações alojado no GitHub
 ```
@@ -276,8 +276,8 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 ## 🚧 Estado de desenvolvimento e colaboração
 
 > [!IMPORTANT]
-> **O SS-CCC (v1.6+) é totalmente executável e validado por `12/12` testes automatizados; os ensaios de resistência multinó continuam.**
-> **Já implementado e verificado:** idioma inicial em inglês com 8 idiomas (`EN/DE/FR/ES/PT/RU/JA/ZH`), deteção aberta M1–M12+, descoberta em tempo real de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratório científico de 6 separadores com histórico por posição e global, ponte híbrida Local ↔ Internet-WAN, Audio-Party com `AVAudioEngine`, manual de 9 capítulos e atualização automática controlada via GitHub + CI.
+> **O SS-CCC (v1.6+) é totalmente executável e validado por `14/14` testes automatizados; os ensaios de resistência multinó continuam.**
+> **Já implementado e verificado:** idioma inicial em inglês com 8 idiomas (`EN/DE/FR/ES/PT/RU/JA/ZH`), **visão geral do cluster em 3 separadores** (**Cluster local**, **Cluster da Internet** com subclusters regionais/locais e vista híbrida **Local + Internet**), **faixas industriais de aviso amarelo-preto (`HazardStripesBar` / `IndustrialHazardBanner`)** em 6 vistas, deteção aberta M1–M12+, descoberta em tempo real de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratório científico de 6 separadores com histórico por posição e global, ponte híbrida Local ↔ Internet-WAN, Audio-Party com `AVAudioEngine`, manual de 9 capítulos e atualização automática controlada via GitHub + CI.
 
 Convidamos programadores, investigadores e entusiastas de Apple Silicon a **participar no desenvolvimento e a fazer evoluir o SS-CCC**:
 - **Testar no seu equipamento:** Experimente o SS-CCC nos seus Mac M1–M12+ e partilhe medições de débito, memória e RDMA/JACCL.
