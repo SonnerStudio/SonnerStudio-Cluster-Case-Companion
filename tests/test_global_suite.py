@@ -247,6 +247,25 @@ class GlobalProjectTests(unittest.TestCase):
             ids = re.findall(r'id:\s*"([^"]+)"', body)
             self.assertEqual(ids, expected_ids, f"Chapter IDs mismatch for language .{lang}")
 
+    def test_16_github_updater_deadlock_and_sha_hygiene(self):
+        """Verify updater avoids pipe deadlocks, separates stdout/stderr for SHA, and handles failed state."""
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        app = (APP_SOURCES / "SSCCCApp.swift").read_text(encoding="utf-8")
+
+        for sym in [
+            "stdoutPipe",
+            "stderrPipe",
+            "availableData",
+            "GIT_TERMINAL_PROMPT",
+            "FileHandle.nullDevice",
+            "sanitizeGitNoise",
+            "res.stdout",
+            "if pullOut.exitCode != 0",
+        ]:
+            self.assertIn(sym, vm, f"Expected updater safety symbol {sym} in ClusterViewModel.swift")
+
+        self.assertIn("case .failed(", app, "UpdatePromptSheet must render .failed error state")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

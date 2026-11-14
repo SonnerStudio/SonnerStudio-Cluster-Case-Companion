@@ -390,7 +390,7 @@ private struct UpdatePromptSheet: View {
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
                             .foregroundColor(hasUpdate ? SolarisTheme.amberGlow : SolarisTheme.emerald)
                         if !info.commitSHA.isEmpty {
-                            Text("GitHub SHA: \(info.commitSHA) · Lokal: \(vm.localGitCommitSHA.isEmpty ? AppReleaseMetadata.embeddedCommitSHA : vm.localGitCommitSHA)")
+                            Text("GitHub SHA: \(info.commitSHA) · Local: \(vm.localGitCommitSHA.isEmpty ? AppReleaseMetadata.embeddedCommitSHA : vm.localGitCommitSHA)")
                                 .font(.system(size: 10.5, design: .monospaced))
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }
@@ -487,6 +487,31 @@ private struct UpdatePromptSheet: View {
                     Text(vm.t("upd_updating"))
                         .font(Font.caption)
                         .foregroundColor(SolarisTheme.amberGlow)
+                } else if case .failed(let errMsg) = vm.updateStatus {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(SolarisTheme.coral)
+                        Text(errMsg)
+                            .font(Font.caption)
+                            .foregroundColor(SolarisTheme.coral)
+                            .lineLimit(2)
+                    }
+                    if vm.localGitRepoRoot != nil {
+                        Button {
+                            vm.applyGitHubUpdateAndRebuild()
+                        } label: {
+                            Label(vm.t("upd_install_git_btn"), systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(SolarisTheme.amber)
+                        .foregroundColor(.black)
+                    }
+                    Button {
+                        vm.openUpdateOnGitHub()
+                    } label: {
+                        Label(vm.t("upd_open_github_btn"), systemImage: "safari")
+                    }
+                    .buttonStyle(.bordered)
                 }
 
                 Spacer()

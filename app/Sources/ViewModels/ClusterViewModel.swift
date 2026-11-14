@@ -2641,8 +2641,12 @@ final class ClusterViewModel: ObservableObject {
     func refreshLocalCommitSHA() {
         if let repoRoot = localGitRepoRoot {
             let res = Self.runCommandInDir(repoRoot, "/usr/bin/git", ["rev-parse", "--short", "HEAD"])
-            if res.exitCode == 0 && !res.output.isEmpty {
-                localGitCommitSHA = res.output
+            let cleanStdout = res.stdout
+                .components(separatedBy: .newlines)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .last(where: { !$0.isEmpty }) ?? ""
+            if res.exitCode == 0 && !cleanStdout.isEmpty {
+                localGitCommitSHA = cleanStdout
                 return
             }
         }
@@ -2846,21 +2850,62 @@ final class ClusterViewModel: ObservableObject {
             return
         }
         updateStatus = .updating
-        updateProgressLog = "git pull --ff-only origin main …"
+        updateProgressLog = "git pull --ff-only origin main …\n"
 
         Task.detached(priority: .userInitiated) {
-            let pullOut = Self.runCommandInDir(repoRoot, "/usr/bin/git", ["pull", "--ff-only", "origin", "main"])
-            await MainActor.run {
-                self.updateProgressLog = pullOut.output + "\n\nswift build …"
+            let pullOut = Self.runCommandInDir(
+                repoRoot,
+                "/usr/bin/git",
+                ["pull", "--ff-only", "origin", "main"]
+            ) { chunk in
+                let cleaned = Self.sanitizeGitNoise(chunk)
+                guard !cleaned.isEmpty else { return }
+                Task { @MainActor in
+                    self.updateProgressLog += cleaned
+                }
             }
-            let appDir = repoRoot.appendingPathComponent("app")
-            let buildOut = Self.runCommandInDir(appDir, "/usr/bin/swift", ["build"])
+
+            if pullOut.exitCode != 0 {
+                await MainActor.run {
+                    let cleanErr = Self.sanitizeGitNoise(pullOut.output)
+                    if !cleanErr.isEmpty {
+                        self.updateProgressLog = cleanErr
+                    }
+                    self.updateStatus = .failed("git pull failed (Exit \(pullOut.exitCode))")
+                }
+                return
+            }
+
             await MainActor.run {
-                self.updateProgressLog += "\n" + buildOut.output
+                let cleanPull = Self.sanitizeGitNoise(pullOut.output)
+                self.updateProgressLog = (cleanPull.isEmpty ? "Already up to date." : cleanPull) + "\n\nswift build …\n"
+            }
+
+            let appDir = repoRoot.appendingPathComponent("app")
+            let buildOut = Self.runCommandInDir(
+                appDir,
+                "/usr/bin/swift",
+                ["build"]
+            ) { chunk in
+                guard !chunk.isEmpty else { return }
+                Task { @MainActor in
+                    self.updateProgressLog += chunk
+                }
+            }
+
+            await MainActor.run {
                 if buildOut.exitCode == 0 {
+                    self.refreshLocalCommitSHA()
+                    if !self.updateProgressLog.hasSuffix("\n") {
+                        self.updateProgressLog += "\n"
+                    }
+                    self.updateProgressLog += "Build complete."
                     self.updateStatus = .updatedNeedsRestart
                 } else {
-                    self.updateStatus = .failed("Build fehlgeschlagen (Exit \(buildOut.exitCode))")
+                    if self.updateProgressLog.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("swift build …") {
+                        self.updateProgressLog += "\n" + buildOut.output
+                    }
+                    self.updateStatus = .failed("Build failed (Exit \(buildOut.exitCode))")
                 }
             }
         }
@@ -2872,8 +2917,11 @@ final class ClusterViewModel: ObservableObject {
             if FileManager.default.isExecutableFile(atPath: script) {
                 let proc = Process()
                 proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
-                proc.arguments = [script]
+                proc.arguments = ["-c", "nohup \"\(script)\" >/dev/null 2>&1 &"]
                 proc.currentDirectoryURL = repoRoot
+                proc.standardInput = FileHandle.nullDevice
+                proc.standardOutput = FileHandle.nullDevice
+                proc.standardError = FileHandle.nullDevice
                 try? proc.run()
                 NSApplication.shared.terminate(nil)
                 return
@@ -2882,22 +2930,72 @@ final class ClusterViewModel: ObservableObject {
         openUpdateOnGitHub()
     }
 
-    nonisolated private static func runCommandInDir(_ dir: URL, _ launchPath: String, _ args: [String]) -> (exitCode: Int32, output: String) {
+    nonisolated static func sanitizeGitNoise(_ text: String) -> String {
+        text.components(separatedBy: .newlines)
+            .filter { !$0.contains("non-monotonic index .git/objects/pack/._") }
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    nonisolated private static func runCommandInDir(
+        _ dir: URL,
+        _ launchPath: String,
+        _ args: [String],
+        onOutput: (@Sendable (String) -> Void)? = nil
+    ) -> (exitCode: Int32, stdout: String, stderr: String, output: String) {
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: launchPath)
         proc.arguments = args
         proc.currentDirectoryURL = dir
-        let pipe = Pipe()
-        proc.standardOutput = pipe
-        proc.standardError = pipe
+        var env = ProcessInfo.processInfo.environment
+        env["GIT_TERMINAL_PROMPT"] = "0"
+        proc.environment = env
+        proc.standardInput = FileHandle.nullDevice
+
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        proc.standardOutput = stdoutPipe
+        proc.standardError = stderrPipe
+
+        let lock = NSLock()
+        var stdoutData = Data()
+        var stderrData = Data()
+        let ioGroup = DispatchGroup()
+
+        let startDraining: (FileHandle, Bool) -> Void = { handle, isStdout in
+            ioGroup.enter()
+            DispatchQueue.global(qos: .utility).async {
+                defer { ioGroup.leave() }
+                while true {
+                    let chunk = handle.availableData
+                    if chunk.isEmpty { break }
+                    lock.lock()
+                    if isStdout {
+                        stdoutData.append(chunk)
+                    } else {
+                        stderrData.append(chunk)
+                    }
+                    lock.unlock()
+                    if let onOutput, let text = String(data: chunk, encoding: .utf8), !text.isEmpty {
+                        onOutput(text)
+                    }
+                }
+            }
+        }
+
         do {
             try proc.run()
+            startDraining(stdoutPipe.fileHandleForReading, true)
+            startDraining(stderrPipe.fileHandleForReading, false)
             proc.waitUntilExit()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let text = String(data: data, encoding: .utf8) ?? ""
-            return (proc.terminationStatus, text.trimmingCharacters(in: .whitespacesAndNewlines))
+            ioGroup.wait()
+
+            let outStr = (String(data: stdoutData, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let errStr = (String(data: stderrData, encoding: .utf8) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let combined = [outStr, errStr].filter { !$0.isEmpty }.joined(separator: "\n")
+            return (proc.terminationStatus, outStr, errStr, combined)
         } catch {
-            return (-1, error.localizedDescription)
+            return (-1, "", error.localizedDescription, error.localizedDescription)
         }
     }
 }
