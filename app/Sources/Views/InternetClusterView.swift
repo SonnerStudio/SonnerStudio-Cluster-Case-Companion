@@ -32,6 +32,8 @@ struct InternetClusterView: View {
                         .foregroundColor(.black)
                     }
 
+                    HazardStripesBar(height: 5, stripeWidth: 10, cornerRadius: 3, opacity: 0.88)
+
                     // Room Code, Relay URL & Scale Mode
                     HStack(spacing: 14) {
                         VStack(alignment: .leading, spacing: 4) {

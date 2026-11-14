@@ -36,6 +36,8 @@ struct ModelStudioView: View {
                             .foregroundColor(SolarisTheme.mint)
                     }
 
+                    HazardStripesBar(height: 5, stripeWidth: 9, cornerRadius: 3, opacity: 0.85)
+
                     if vm.modelPresets.isEmpty {
                         VStack(alignment: .leading, spacing: 14) {
                             HStack(spacing: 10) {

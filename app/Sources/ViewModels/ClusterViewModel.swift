@@ -83,6 +83,7 @@ final class ClusterViewModel: ObservableObject {
 
     // Internet WAN Cluster & Participant Chat State
     @Published var wanRoomCode: String = "SSCCC-WAN-\(String(UUID().uuidString.prefix(8)))"
+    @Published var overviewScope: ClusterOverviewScope = .local
     @Published var wanRelayUrl: String = "ws://127.0.0.1:8000/ws/wan/"
     @Published var wanConnected: Bool = false
     @Published var isLocalClusterCoupledWithWan: Bool = false
@@ -1890,6 +1891,35 @@ final class ClusterViewModel: ObservableObject {
 
     var wanTotalUsableVramGB: Double {
         wanPeers.reduce(0.0) { $0 + $1.usableVramGB }
+    }
+
+    var wanRemotePeers: [WanPeerNode] {
+        wanPeers.filter { !$0.isLocalHost && !$0.id.hasPrefix("local-bridge-") }
+    }
+
+    var wanLocalIslandPeers: [WanPeerNode] {
+        wanPeers.filter { $0.isLocalHost || $0.id.hasPrefix("local-bridge-") }
+    }
+
+    var wanSubclustersByRegion: [(region: String, peers: [WanPeerNode])] {
+        let grouped = Dictionary(grouping: wanRemotePeers) { peer in
+            peer.region.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Global WAN" : peer.region
+        }
+        return grouped.keys.sorted().map { key in
+            (region: key, peers: grouped[key] ?? [])
+        }
+    }
+
+    var hybridCombinedRamGB: Double {
+        totalPhysicalRamGB + wanRemotePeers.reduce(0.0) { $0 + $1.ramGB }
+    }
+
+    var hybridCombinedUsableVramGB: Double {
+        totalUsableVramGB + wanRemotePeers.reduce(0.0) { $0 + $1.usableVramGB }
+    }
+
+    var hybridCombinedNodeCount: Int {
+        nodes.count + wanRemotePeers.count
     }
 
     var wanTotalRttMs: Double {

@@ -41,6 +41,7 @@ struct ScienceBenchmarksView: View {
 
     private var headerAndScopeCard: some View {
         SolarisCard(accent: SolarisTheme.amber) {
+            HazardStripesBar(height: 5, stripeWidth: 10, cornerRadius: 3, opacity: 0.85)
             VStack(alignment: .leading, spacing: 6) {
                 Text(vm.t("sci_title"))
                     .font(SolarisTheme.sectionTitle)

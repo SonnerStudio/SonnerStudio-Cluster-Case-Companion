@@ -196,6 +196,8 @@ struct MainStudioWindow: View {
                     .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.plain)
+
+                HazardStripesBar(height: 5, stripeWidth: 9, cornerRadius: 3, opacity: 0.85)
             }
             .padding(18)
             .frame(width: 280)

@@ -1069,6 +1069,61 @@ enum L10n {
         case ("upd_last_check", .ja): return "最終確認"
         case ("upd_last_check", .zh): return "上次检查"
 
+        // Cluster Overview 3-Scope Tabs & Industrial Hazard Zones
+        case ("ov_tab_local", .de): return "Lokaler Cluster"
+        case ("ov_tab_local", .en): return "Local Cluster"
+        case ("ov_tab_local", .fr): return "Grappe locale"
+        case ("ov_tab_local", .es): return "Clúster local"
+        case ("ov_tab_local", .pt): return "Agrupamento local"
+        case ("ov_tab_local", .ru): return "Локальный кластер"
+        case ("ov_tab_local", .ja): return "ローカルクラスター"
+        case ("ov_tab_local", .zh): return "本地集群"
+
+        case ("ov_tab_local_sub", .de): return "Thunderbolt / LAN vor Ort"
+        case ("ov_tab_local_sub", .en): return "Thunderbolt / On-Site LAN"
+        case ("ov_tab_local_sub", .fr): return "Thunderbolt / LAN sur site"
+        case ("ov_tab_local_sub", .es): return "Thunderbolt / LAN local"
+        case ("ov_tab_local_sub", .pt): return "Thunderbolt / LAN local"
+        case ("ov_tab_local_sub", .ru): return "Thunderbolt / локальная LAN"
+        case ("ov_tab_local_sub", .ja): return "Thunderbolt / ローカルLAN"
+        case ("ov_tab_local_sub", .zh): return "本地 Thunderbolt / 局域网"
+
+        case ("ov_tab_internet", .de): return "Internet-Cluster"
+        case ("ov_tab_internet", .en): return "Internet Cluster"
+        case ("ov_tab_internet", .fr): return "Grappe Internet"
+        case ("ov_tab_internet", .es): return "Clúster Internet"
+        case ("ov_tab_internet", .pt): return "Agrupamento Internet"
+        case ("ov_tab_internet", .ru): return "Интернет-кластер"
+        case ("ov_tab_internet", .ja): return "インターネットクラスター"
+        case ("ov_tab_internet", .zh): return "互联网集群"
+
+        case ("ov_tab_internet_sub", .de): return "WAN-Rechner & lokale Teilverbünde"
+        case ("ov_tab_internet_sub", .en): return "WAN Peers & Local Subclusters"
+        case ("ov_tab_internet_sub", .fr): return "Pairs WAN & sous-grappes locales"
+        case ("ov_tab_internet_sub", .es): return "Nodos WAN y subgrupos locales"
+        case ("ov_tab_internet_sub", .pt): return "Nós WAN e subgrupos locais"
+        case ("ov_tab_internet_sub", .ru): return "WAN-узлы и локальные подкластеры"
+        case ("ov_tab_internet_sub", .ja): return "WANノードとローカル部分群"
+        case ("ov_tab_internet_sub", .zh): return "WAN 节点与本地子集群"
+
+        case ("ov_tab_hybrid", .de): return "Lokal + Internet"
+        case ("ov_tab_hybrid", .en): return "Local + Internet"
+        case ("ov_tab_hybrid", .fr): return "Local + Internet"
+        case ("ov_tab_hybrid", .es): return "Local + Internet"
+        case ("ov_tab_hybrid", .pt): return "Local + Internet"
+        case ("ov_tab_hybrid", .ru): return "Локально + Интернет"
+        case ("ov_tab_hybrid", .ja): return "ローカル + インターネット"
+        case ("ov_tab_hybrid", .zh): return "本地 + 互联网"
+
+        case ("ov_tab_hybrid_sub", .de): return "Gekoppelter Gesamtverbund"
+        case ("ov_tab_hybrid_sub", .en): return "Coupled Unified Supercluster"
+        case ("ov_tab_hybrid_sub", .fr): return "Supergrappe unifiée couplée"
+        case ("ov_tab_hybrid_sub", .es): return "Superclúster unificado acoplado"
+        case ("ov_tab_hybrid_sub", .pt): return "Supergrupo unificado acoplado"
+        case ("ov_tab_hybrid_sub", .ru): return "Объединённый гибридный кластер"
+        case ("ov_tab_hybrid_sub", .ja): return "統合ハイブリッドクラスター"
+        case ("ov_tab_hybrid_sub", .zh): return "本地与广域网耦合超级集群"
+
         default: return key
         }
     }

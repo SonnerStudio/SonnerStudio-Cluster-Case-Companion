@@ -1,5 +1,21 @@
 import Foundation
 
+enum ClusterOverviewScope: String, CaseIterable, Identifiable {
+    case local = "local"
+    case internet = "internet"
+    case hybrid = "hybrid"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .local: return "macstudio.fill"
+        case .internet: return "globe.americas.fill"
+        case .hybrid: return "point.3.connected.trianglepath.dotted"
+        }
+    }
+}
+
 enum NavigationTab: String, CaseIterable, Identifiable {
     case overview = "Cluster-Übersicht"
     case devices = "Geräte & Vergleich"

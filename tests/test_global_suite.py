@@ -181,6 +181,46 @@ class GlobalProjectTests(unittest.TestCase):
                 continue
             self.assertIn(swift_file.name, script, f"{swift_file.name} missing from scripts/run_ssccc.sh")
 
+    def test_13_cluster_overview_three_scopes_and_localization(self):
+        """Verify 3-tab Cluster Overview (local, internet, hybrid) and 8-language localization."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        overview = (APP_SOURCES / "Views" / "ClusterOverviewView.swift").read_text(encoding="utf-8")
+        loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
+
+        self.assertIn("enum ClusterOverviewScope", models)
+        for case_name in ["case local", "case internet", "case hybrid"]:
+            self.assertIn(case_name, models)
+        for sym in ["overviewScope", "wanRemotePeers", "wanLocalIslandPeers", "wanSubclustersByRegion", "hybridCombinedRamGB"]:
+            self.assertIn(sym, vm)
+        for view_sym in ["scopeSelectorCard", "localClusterContent", "internetClusterContent", "hybridClusterContent"]:
+            self.assertIn(view_sym, overview)
+
+        for lang in [".de", ".en", ".fr", ".es", ".pt", ".ru", ".ja", ".zh"]:
+            self.assertIn(f'case ("ov_tab_local", {lang}):', loc)
+            self.assertIn(f'case ("ov_tab_internet", {lang}):', loc)
+            self.assertIn(f'case ("ov_tab_hybrid", {lang}):', loc)
+
+    def test_14_industrial_hazard_stripes_across_views(self):
+        """Verify yellow-black industrial hazard stripe components and their usage across views."""
+        theme = (APP_SOURCES / "Views" / "Theme.swift").read_text(encoding="utf-8")
+        self.assertIn("struct HazardStripesBar", theme)
+        self.assertIn("struct IndustrialHazardBanner", theme)
+
+        for rel in [
+            "Views/ClusterOverviewView.swift",
+            "Views/NetworkRdmaView.swift",
+            "Views/ModelStudioView.swift",
+            "Views/InternetClusterView.swift",
+            "Views/ScienceBenchmarksView.swift",
+            "SSCCCApp.swift",
+        ]:
+            src = (APP_SOURCES / rel).read_text(encoding="utf-8")
+            self.assertTrue(
+                "HazardStripesBar" in src or "IndustrialHazardBanner" in src,
+                f"Expected industrial hazard stripes in {rel}",
+            )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

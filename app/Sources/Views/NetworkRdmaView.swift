@@ -14,6 +14,8 @@ struct NetworkRdmaView: View {
                         .font(SolarisTheme.bodyLarge)
                         .foregroundColor(SolarisTheme.textSecondary)
 
+                    HazardStripesBar(height: 6, stripeWidth: 10, cornerRadius: 3, opacity: 0.88)
+
                     VStack(spacing: 12) {
                         ForEach(TransportMode.allCases) { mode in
                             let selected = vm.transportMode == mode
