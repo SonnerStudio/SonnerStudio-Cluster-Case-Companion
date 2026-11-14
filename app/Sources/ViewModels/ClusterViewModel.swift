@@ -6,7 +6,7 @@ import AppKit
 @MainActor
 final class ClusterViewModel: ObservableObject {
     @Published var selectedTab: NavigationTab = .overview
-    @Published var language: AppLanguage = .de
+    @Published var language: AppLanguage = .en
     @Published var simulateMacStudio: Bool = true
     @Published var transportMode: TransportMode = .autoHybrid
     @Published var daemonConnected: Bool = false
