@@ -251,6 +251,7 @@ def chat_completions(req: ChatCompletionRequest) -> dict[str, object]:
 
 
 _wan_rooms: dict[str, list[WebSocket]] = {}
+_wan_audio_rooms: dict[str, list[WebSocket]] = {}
 
 
 @app.websocket("/ws/wan/{room_id}")
@@ -268,6 +269,36 @@ async def wan_mesh_websocket(websocket: WebSocket, room_id: str) -> None:
                         await peer.send_text(raw_msg)
                     except Exception:
                         pass
+    except WebSocketDisconnect:
+        if websocket in room:
+            room.remove(websocket)
+
+
+@app.websocket("/ws/wan-audio/{room_id}")
+async def wan_audio_party_websocket(websocket: WebSocket, room_id: str) -> None:
+    """Echtzeit-Audio-Party-Relay (Opus/PCM-Frames & Party-Status) für Internet-Cluster-Teilnehmer."""
+    await websocket.accept()
+    room = _wan_audio_rooms.setdefault(room_id, [])
+    room.append(websocket)
+    try:
+        while True:
+            message = await websocket.receive()
+            if "bytes" in message and message["bytes"] is not None:
+                payload = message["bytes"]
+                for peer in list(room):
+                    if peer is not websocket:
+                        try:
+                            await peer.send_bytes(payload)
+                        except Exception:
+                            pass
+            elif "text" in message and message["text"] is not None:
+                txt = message["text"]
+                for peer in list(room):
+                    if peer is not websocket:
+                        try:
+                            await peer.send_text(txt)
+                        except Exception:
+                            pass
     except WebSocketDisconnect:
         if websocket in room:
             room.remove(websocket)

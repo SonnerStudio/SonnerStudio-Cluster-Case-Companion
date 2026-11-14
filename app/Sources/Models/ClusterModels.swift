@@ -678,3 +678,41 @@ struct ClusterChatMessage: Identifiable, Hashable {
     let isSystemEvent: Bool
     let isSelf: Bool
 }
+
+enum AudioPartyCodec: String, CaseIterable, Identifiable {
+    case opus16 = "Opus 16 kbps (WAN-Sparmodus)"
+    case opus32 = "Opus 32 kbps (Klar · Standard)"
+    case opus64 = "Opus 64 kbps (Studio-Sprache)"
+
+    var id: String { rawValue }
+
+    var kbps: Double {
+        switch self {
+        case .opus16: return 16.0
+        case .opus32: return 32.0
+        case .opus64: return 64.0
+        }
+    }
+}
+
+enum AudioPartyMicMode: String, CaseIterable, Identifiable {
+    case openMic = "Offenes Mikrofon"
+    case pushToTalk = "Sprech-Taste (PTT)"
+    case alertsOnly = "Nur Verbund-Warnungen"
+
+    var id: String { rawValue }
+}
+
+struct AudioPartyMember: Identifiable, Hashable {
+    let id: String
+    let displayName: String
+    let chip: String
+    let region: String
+    let assignedLayers: String
+    let roleBadge: String
+    let isSelf: Bool
+    var isSpeaking: Bool
+    var isMuted: Bool
+    var volumePercent: Double
+    let voicePingMs: Double
+}

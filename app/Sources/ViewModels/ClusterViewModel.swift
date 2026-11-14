@@ -1,5 +1,7 @@
 import Foundation
 import SwiftUI
+import AVFoundation
+import AppKit
 
 @MainActor
 final class ClusterViewModel: ObservableObject {
@@ -98,6 +100,22 @@ final class ClusterViewModel: ObservableObject {
     @Published var chatInput: String = ""
     @Published var wanStatusNote: String = ""
     private var wanWebSocketTask: URLSessionWebSocketTask? = nil
+
+    // Cluster Audio-Party (Xbox / PlayStation-style voice coordination for AI clusters)
+    @Published var audioPartyJoined: Bool = false
+    @Published var audioPartyMuted: Bool = false
+    @Published var audioPartyDeafened: Bool = false
+    @Published var audioPartyMicMode: AudioPartyMicMode = .openMic
+    @Published var audioPartyCodec: AudioPartyCodec = .opus16
+    @Published var audioPartyNoiseGate: Bool = true
+    @Published var audioPartyVoiceMixRatio: Double = 0.80 // 80% party voice vs 20% cluster alerts
+    @Published var audioPartyMicLevel: Double = 0.0
+    @Published var audioPartyPushToTalkActive: Bool = false
+    @Published var audioPartyStatusText: String = "Bereit · Sprach-Kanal für Verbund-Koordination"
+    @Published var audioPartyMembers: [AudioPartyMember] = []
+    private var partyAudioEngine: AVAudioEngine? = nil
+    private var partyAudioSocket: URLSessionWebSocketTask? = nil
+    private var partyPulseTask: Task<Void, Never>? = nil
 
     static let fallbackReferenceModels: [ModelPreset] = [
         ModelPreset(
@@ -2207,6 +2225,9 @@ final class ClusterViewModel: ObservableObject {
             )
         }
         wanPeers = updated
+        if audioPartyJoined || !audioPartyMembers.isEmpty {
+            syncAudioPartyMembers()
+        }
     }
 
     func sendClusterChatMessage(_ overrideText: String? = nil) {
@@ -2248,6 +2269,232 @@ final class ClusterViewModel: ObservableObject {
             if let data = try? JSONSerialization.data(withJSONObject: payload),
                let str = String(data: data, encoding: .utf8) {
                 task.send(.string(str)) { _ in }
+            }
+        }
+    }
+
+    // MARK: - Cluster Audio-Party (Xbox / PlayStation-style Voice Coordination)
+
+    var audioPartyBandwidthSharePercent: Double {
+        let minUplinkKbps = max(1000.0, (wanPeers.map(\.uplinkMbps).min() ?? 100.0) * 1000.0)
+        return (audioPartyCodec.kbps / minUplinkKbps) * 100.0
+    }
+
+    func toggleAudioParty() {
+        if audioPartyJoined {
+            leaveAudioParty()
+        } else {
+            joinAudioParty()
+        }
+    }
+
+    func joinAudioParty() {
+        audioPartyJoined = true
+        syncAudioPartyMembers()
+        startPartyAudioMonitor()
+        connectPartyAudioWebSocket()
+        audioPartyStatusText = "In Audio-Party (\(audioPartyMembers.count) Teilnehmer · \(audioPartyCodec.rawValue))"
+        chatMessages.append(
+            ClusterChatMessage(
+                senderName: "Audio-Party",
+                senderRegion: wanPeerRegionInput,
+                senderChip: localChipName,
+                timestamp: currentClockTime(),
+                text: "🎧 \(Host.current().localizedName ?? "Lokaler Mac") ist der Cluster-Audio-Party beigetreten (\(audioPartyCodec.rawValue)).",
+                isSystemEvent: true,
+                isSelf: false
+            )
+        )
+    }
+
+    func leaveAudioParty() {
+        audioPartyJoined = false
+        audioPartyMicLevel = 0.0
+        partyPulseTask?.cancel()
+        partyPulseTask = nil
+        partyAudioEngine?.inputNode.removeTap(onBus: 0)
+        partyAudioEngine?.stop()
+        partyAudioEngine = nil
+        partyAudioSocket?.cancel(with: .normalClosure, reason: nil)
+        partyAudioSocket = nil
+        audioPartyStatusText = "Audio-Party verlassen."
+        chatMessages.append(
+            ClusterChatMessage(
+                senderName: "Audio-Party",
+                senderRegion: wanPeerRegionInput,
+                senderChip: localChipName,
+                timestamp: currentClockTime(),
+                text: "🔇 \(Host.current().localizedName ?? "Lokaler Mac") hat die Audio-Party verlassen.",
+                isSystemEvent: true,
+                isSelf: false
+            )
+        )
+    }
+
+    func togglePartyMute() {
+        audioPartyMuted.toggle()
+        if audioPartyMuted { audioPartyMicLevel = 0.0 }
+        syncSelfSpeakingState(speaking: false)
+    }
+
+    func togglePartyDeafen() {
+        audioPartyDeafened.toggle()
+        if audioPartyDeafened {
+            audioPartyMuted = true
+            audioPartyMicLevel = 0.0
+        }
+        syncSelfSpeakingState(speaking: false)
+    }
+
+    func triggerPushToTalk(active: Bool) {
+        audioPartyPushToTalkActive = active
+        if active && audioPartyJoined && !audioPartyMuted && !audioPartyDeafened {
+            audioPartyMicLevel = 0.72
+            syncSelfSpeakingState(speaking: true)
+        } else {
+            syncSelfSpeakingState(speaking: false)
+        }
+    }
+
+    func syncAudioPartyMembers() {
+        let peers = wanPeers.isEmpty ? [
+            WanPeerNode(
+                id: "local-host",
+                displayName: Host.current().localizedName ?? "Lokaler Mac",
+                region: "Lokal",
+                chip: localChipName,
+                ramGB: localRamGB,
+                usableVramGB: AppleSiliconChipFamily.usableVramGB(for: localRamGB),
+                bandwidthGBs: AppleSiliconChipFamily.inferBandwidth(from: localChipName),
+                overlayIP: localLanIP,
+                rttMs: 0.0,
+                uplinkMbps: 300.0,
+                assignedLayers: "L0–L\(max(0, selectedModel.totalLayers - 1))",
+                transport: wanTransport,
+                isOnline: true,
+                isLocalHost: true
+            )
+        ] : wanPeers
+
+        let existingMap = Dictionary(uniqueKeysWithValues: audioPartyMembers.map { ($0.id, $0) })
+        audioPartyMembers = peers.prefix(16).enumerated().map { idx, peer in
+            let prev = existingMap[peer.id]
+            let role = idx == 0 ? "Party-Leiter (Rang 0)" : (peer.isLocalHost ? "TB-Insel-Knoten" : "WAN-Knoten")
+            return AudioPartyMember(
+                id: peer.id,
+                displayName: peer.displayName,
+                chip: peer.chip,
+                region: peer.region,
+                assignedLayers: peer.assignedLayers,
+                roleBadge: role,
+                isSelf: peer.id == "local-host",
+                isSpeaking: prev?.isSpeaking ?? false,
+                isMuted: peer.id == "local-host" ? audioPartyMuted : (prev?.isMuted ?? false),
+                volumePercent: prev?.volumePercent ?? 100.0,
+                voicePingMs: peer.isLocalHost ? 1.0 : peer.rttMs + audioPartyCodec.kbps * 0.1
+            )
+        }
+    }
+
+    func toggleMemberMute(id: String) {
+        if id == "local-host" {
+            togglePartyMute()
+            return
+        }
+        if let idx = audioPartyMembers.firstIndex(where: { $0.id == id }) {
+            audioPartyMembers[idx].isMuted.toggle()
+        }
+    }
+
+    func setMemberVolume(id: String, volume: Double) {
+        if let idx = audioPartyMembers.firstIndex(where: { $0.id == id }) {
+            audioPartyMembers[idx].volumePercent = volume
+        }
+    }
+
+    func sendPartyCallout(_ text: String) {
+        if !audioPartyDeafened {
+            NSSound.beep()
+        }
+        syncSelfSpeakingState(speaking: true)
+        sendClusterChatMessage("🎙️ [Party-Signal] \(text)")
+        Task {
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            syncSelfSpeakingState(speaking: false)
+        }
+    }
+
+    private func syncSelfSpeakingState(speaking: Bool) {
+        if let idx = audioPartyMembers.firstIndex(where: { $0.isSelf }) {
+            audioPartyMembers[idx].isSpeaking = speaking && !audioPartyMuted && !audioPartyDeafened
+        }
+    }
+
+    private func connectPartyAudioWebSocket() {
+        let base = wanRelayUrl
+            .replacingOccurrences(of: "/ws/wan/", with: "/ws/wan-audio/")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard let url = URL(string: "\(base)/\(wanRoomCode)") else { return }
+        let task = URLSession.shared.webSocketTask(with: url)
+        partyAudioSocket = task
+        task.resume()
+    }
+
+    private func startPartyAudioMonitor() {
+        partyPulseTask?.cancel()
+        if AVCaptureDevice.authorizationStatus(for: .audio) == .authorized {
+            let engine = AVAudioEngine()
+            let input = engine.inputNode
+            let format = input.outputFormat(forBus: 0)
+            if format.sampleRate > 0 && format.channelCount > 0 {
+                input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+                    guard let channelData = buffer.floatChannelData?[0] else { return }
+                    let frames = Int(buffer.frameLength)
+                    var sumSq: Float = 0
+                    for i in 0..<frames {
+                        let s = channelData[i]
+                        sumSq += s * s
+                    }
+                    let rms = frames > 0 ? sqrt(sumSq / Float(frames)) : 0
+                    let level = min(1.0, Double(rms) * 8.0)
+                    Task { @MainActor in
+                        guard let self, self.audioPartyJoined else { return }
+                        if self.audioPartyMuted || self.audioPartyDeafened {
+                            self.audioPartyMicLevel = 0.0
+                            self.syncSelfSpeakingState(speaking: false)
+                        } else {
+                            self.audioPartyMicLevel = level
+                            let threshold = self.audioPartyNoiseGate ? 0.14 : 0.04
+                            let active = self.audioPartyMicMode == .openMic
+                                ? (level > threshold)
+                                : self.audioPartyPushToTalkActive
+                            self.syncSelfSpeakingState(speaking: active)
+                        }
+                    }
+                }
+                do {
+                    try engine.start()
+                    partyAudioEngine = engine
+                    return
+                } catch {
+                    engine.stop()
+                }
+            }
+        }
+
+        // Graceful fallback pulse when microphone permission is not yet granted or running headless
+        partyPulseTask = Task {
+            var tick = 0
+            while !Task.isCancelled && audioPartyJoined {
+                tick += 1
+                if !audioPartyMuted && !audioPartyDeafened && audioPartyMicMode == .openMic {
+                    audioPartyMicLevel = (tick % 4 == 0) ? 0.35 : 0.08
+                    syncSelfSpeakingState(speaking: tick % 4 == 0)
+                } else if !audioPartyPushToTalkActive {
+                    audioPartyMicLevel = 0.0
+                    syncSelfSpeakingState(speaking: false)
+                }
+                try? await Task.sleep(nanoseconds: 450_000_000)
             }
         }
     }

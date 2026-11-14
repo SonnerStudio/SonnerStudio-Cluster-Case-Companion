@@ -176,10 +176,8 @@ struct InternetClusterView: View {
                     )
                 }
 
-                // 3. Split Area: WAN Nodes (Left) & Participant Chat (Right)
-                HStack(alignment: .top, spacing: 18) {
-                    // Left: WAN Peers + Add Remote Mac + Mega-Cluster Builder
-                    SolarisCard {
+                // 3. Connected Internet Macs & Mega-Cluster Builder
+                SolarisCard {
                         HStack {
                             Text("Verbundene Internet-Macs")
                                 .font(SolarisTheme.cardTitle)
@@ -263,8 +261,12 @@ struct InternetClusterView: View {
                             .tint(SolarisTheme.mint)
                             .foregroundColor(.black)
                         }
-                    }
-                    .frame(maxWidth: .infinity)
+                }
+
+                // 4. Side-by-Side: Cluster Audio-Party (Left) & Live Participant Chat (Right)
+                HStack(alignment: .top, spacing: 18) {
+                    audioPartyCard
+                        .frame(maxWidth: .infinity)
 
                     // Right: Live Participant Chat
                     SolarisCard(accent: SolarisTheme.mint) {
@@ -335,6 +337,211 @@ struct InternetClusterView: View {
                 }
             }
             .padding(24)
+        }
+        .onAppear {
+            if vm.audioPartyMembers.isEmpty {
+                vm.syncAudioPartyMembers()
+            }
+        }
+    }
+
+    // MARK: - Cluster Audio-Party Card (Xbox / PlayStation-Style for Distributed AI)
+
+    private var audioPartyCard: some View {
+        SolarisCard(accent: vm.audioPartyJoined ? SolarisTheme.emerald : SolarisTheme.amber) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Image(systemName: vm.audioPartyJoined ? "headphones.circle.fill" : "mic.circle.fill")
+                            .foregroundColor(vm.audioPartyJoined ? SolarisTheme.emerald : SolarisTheme.amberGlow)
+                        Text("Cluster Audio-Party")
+                            .font(SolarisTheme.cardTitle)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                    }
+                    Text(vm.audioPartyStatusText)
+                        .font(.caption)
+                        .foregroundColor(vm.audioPartyJoined ? SolarisTheme.emerald : SolarisTheme.textSecondary)
+                }
+                Spacer()
+                Button {
+                    vm.toggleAudioParty()
+                } label: {
+                    Label(
+                        vm.audioPartyJoined ? "Party verlassen" : "Party beitreten",
+                        systemImage: vm.audioPartyJoined ? "phone.down.fill" : "phone.fill"
+                    )
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(vm.audioPartyJoined ? SolarisTheme.coral : SolarisTheme.emerald)
+                .foregroundColor(.black)
+            }
+
+            // Party Controls: Mute, Deafen, Push-to-Talk, Noise Gate
+            HStack(spacing: 10) {
+                Button {
+                    vm.togglePartyMute()
+                } label: {
+                    Label(vm.audioPartyMuted ? "Stumm" : "Mikro an",
+                          systemImage: vm.audioPartyMuted ? "mic.slash.fill" : "mic.fill")
+                }
+                .buttonStyle(.bordered)
+                .tint(vm.audioPartyMuted ? SolarisTheme.coral : SolarisTheme.mint)
+
+                Button {
+                    vm.togglePartyDeafen()
+                } label: {
+                    Label(vm.audioPartyDeafened ? "Ton aus" : "Ton an",
+                          systemImage: vm.audioPartyDeafened ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                }
+                .buttonStyle(.bordered)
+                .tint(vm.audioPartyDeafened ? SolarisTheme.coral : SolarisTheme.amber)
+
+                if vm.audioPartyMicMode == .pushToTalk {
+                    Button {
+                        vm.triggerPushToTalk(active: !vm.audioPartyPushToTalkActive)
+                    } label: {
+                        Label(vm.audioPartyPushToTalkActive ? "Funk aktiv" : "Funk-Taste",
+                              systemImage: "waveform.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(vm.audioPartyPushToTalkActive ? SolarisTheme.amber : SolarisTheme.cardElevated)
+                }
+
+                Spacer()
+
+                // Live Mic Level Bar
+                HStack(spacing: 6) {
+                    Text("Pegel")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(SolarisTheme.textSecondary)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4).fill(SolarisTheme.cardElevated)
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(vm.audioPartyMicLevel > 0.14 ? SolarisTheme.emerald : SolarisTheme.mint)
+                                .frame(width: max(2, geo.size.width * CGFloat(vm.audioPartyMicLevel)))
+                        }
+                    }
+                    .frame(width: 72, height: 8)
+                }
+            }
+
+            // Codec, Mic Mode & Bandwidth Footprint
+            HStack(spacing: 12) {
+                Picker("Mikro-Modus", selection: $vm.audioPartyMicMode) {
+                    ForEach(AudioPartyMicMode.allCases) { m in
+                        Text(m.rawValue).tag(m)
+                    }
+                }
+                .labelsHidden()
+
+                Picker("Codec", selection: $vm.audioPartyCodec) {
+                    ForEach(AudioPartyCodec.allCases) { c in
+                        Text(c.rawValue).tag(c)
+                    }
+                }
+                .labelsHidden()
+
+                Toggle("Rausch-Sperre", isOn: $vm.audioPartyNoiseGate)
+                    .toggleStyle(.switch)
+                    .font(.caption)
+            }
+
+            Text(String(format: "Sprach-Anteil am WAN-Uplink: %.3f %% (Rest bleibt frei für Tensor-Aktivierungen)", vm.audioPartyBandwidthSharePercent))
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(SolarisTheme.mint)
+
+            // Party Member Roster (Xbox/PS-style cards with speaking rings & per-peer volume)
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(vm.audioPartyMembers) { member in
+                        HStack(spacing: 10) {
+                            ZStack {
+                                Circle()
+                                    .fill(member.isSelf ? SolarisTheme.amber.opacity(0.22) : SolarisTheme.mint.opacity(0.18))
+                                    .frame(width: 34, height: 34)
+                                Circle()
+                                    .stroke(member.isSpeaking ? SolarisTheme.emerald : (member.isMuted ? SolarisTheme.coral.opacity(0.5) : Color.white.opacity(0.14)),
+                                            lineWidth: member.isSpeaking ? 2.5 : 1.0)
+                                    .frame(width: 34, height: 34)
+                                Image(systemName: member.isMuted ? "mic.slash" : (member.isSpeaking ? "waveform" : "desktopcomputer"))
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(member.isSpeaking ? SolarisTheme.emerald : SolarisTheme.textPrimary)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text(member.displayName)
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(SolarisTheme.textPrimary)
+                                    Text(member.roleBadge)
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundColor(member.isSelf ? SolarisTheme.amberGlow : SolarisTheme.mint)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 1)
+                                        .background(SolarisTheme.cardElevated)
+                                        .cornerRadius(4)
+                                }
+                                Text("\(member.chip) · \(member.assignedLayers) · \(Int(member.voicePingMs)) ms")
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            }
+
+                            Spacer()
+
+                            if !member.isSelf {
+                                Slider(
+                                    value: Binding(
+                                        get: { member.volumePercent },
+                                        set: { vm.setMemberVolume(id: member.id, volume: $0) }
+                                    ),
+                                    in: 0...150,
+                                    step: 10
+                                )
+                                .frame(width: 70)
+                                .tint(SolarisTheme.mint)
+                            }
+
+                            Button {
+                                vm.toggleMemberMute(id: member.id)
+                            } label: {
+                                Image(systemName: member.isMuted ? "speaker.slash.fill" : "speaker.wave.2")
+                                    .foregroundColor(member.isMuted ? SolarisTheme.coral : SolarisTheme.textSecondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(member.isSpeaking ? SolarisTheme.emerald.opacity(0.10) : SolarisTheme.cardElevated)
+                        )
+                    }
+                }
+            }
+            .frame(height: 175)
+
+            // Cluster-Specific Quick Callouts
+            HStack(spacing: 8) {
+                Button("✓ Bereit") {
+                    vm.sendPartyCallout("Knoten bereit für verteilte Inferenz.")
+                }
+                .buttonStyle(.bordered)
+                Button("⚠ KV knapp") {
+                    vm.sendPartyCallout("Speicher/KV-Cache knapp — bitte auf 4-Bit KV wechseln!")
+                }
+                .buttonStyle(.bordered)
+                Button("↻ Schichten") {
+                    vm.recomputeWanLayerAssignments()
+                    vm.syncAudioPartyMembers()
+                    vm.sendPartyCallout("Schichtenverteilung im Verbund neu berechnet.")
+                }
+                .buttonStyle(.bordered)
+                Button("▶ T=0,0 Start") {
+                    vm.sendPartyCallout("Wissenschaftliche Messreihe (T=0,0) startet jetzt.")
+                }
+                .buttonStyle(.bordered)
+            }
+            .font(.caption)
         }
     }
 }

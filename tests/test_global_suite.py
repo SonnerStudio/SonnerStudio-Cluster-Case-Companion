@@ -159,6 +159,20 @@ class GlobalProjectTests(unittest.TestCase):
             self.assertIn(sym, vm)
         self.assertIn("toggleLocalClusterWanCoupling()", view)
 
+    def test_11_cluster_audio_party_present(self):
+        """Verify Xbox/PlayStation-style Cluster Audio-Party (AVAudioEngine + /ws/wan-audio) exists next to chat."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        view = (APP_SOURCES / "Views" / "InternetClusterView.swift").read_text(encoding="utf-8")
+        gateway = (ROOT / "core" / "api" / "gateway.py").read_text(encoding="utf-8")
+
+        for item in ["enum AudioPartyCodec", "enum AudioPartyMicMode", "struct AudioPartyMember"]:
+            self.assertIn(item, models)
+        for sym in ["toggleAudioParty", "togglePartyMute", "togglePartyDeafen", "triggerPushToTalk", "sendPartyCallout", "AVAudioEngine"]:
+            self.assertIn(sym, vm)
+        self.assertIn("audioPartyCard", view)
+        self.assertIn("/ws/wan-audio/{room_id}", gateway)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
