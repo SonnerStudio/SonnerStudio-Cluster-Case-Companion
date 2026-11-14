@@ -11,8 +11,8 @@
 1. **Universal Apple Silicon Clustering Across M1–M9+ Generations**
    SS-CCC removes fixed hardware pairings and supports any **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio, or Mac Pro** spanning **M1 through M6** as well as open-ended future **M7, M8, and M9+** processors. The node with the highest Unified Memory bandwidth automatically serves as **Rank 0 (Coordinator)**, protected by `iogpu.wired_limit_mb` macOS memory guards.
 
-2. **Global Internet WAN Cluster & Real-Time Participant Chat (`/ws/wan/{room_id}`)**
-   Through the new **Internet Cluster & Chat** sidebar module, Apple Silicon Macs worldwide can form encrypted distributed clusters over **Tailscale / WireGuard**, **libp2p / DERP P2P relays**, or manual endpoints — scaling from small private teams to **32–256+ Mac research swarms**. An integrated WebSocket room chat enables participants to share room codes, live telemetry, and proportional layer assignments in real time.
+2. **Global Internet WAN Cluster, Hybrid Local-to-WAN Bridge & Real-Time Chat (`/ws/wan/{room_id}`)**
+   Through the new **Internet Cluster & Chat** sidebar module, Apple Silicon Macs worldwide can form encrypted distributed clusters over **Tailscale / WireGuard**, **libp2p / DERP P2P relays**, or manual endpoints — scaling from small private teams to **32–256+ Mac research swarms**. With the new **Hybrid Bridge ("Couple Local + Internet")**, users can also link their entire local Thunderbolt/RDMA cluster as a high-speed Tier-0 island via their Rank 0 Gateway directly into the global WAN cluster, complete with unified layer sharding, one-click Science Lab analysis, and real-time WebSocket room chat.
 
    ![Global Internet WAN Cluster and Participant Chat](images/ssccc_internet_wan_mesh.jpg)
 

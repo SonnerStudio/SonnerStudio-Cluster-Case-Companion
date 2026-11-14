@@ -11,8 +11,8 @@
 1. **Beliebige Apple-Silicon-Macs von M1 bis M9+ im universellen Verbund**
    SS-CCC löst starre Gerätepaare vollständig ab und unterstützt sämtliche **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio und Mac Pro** über die Generationen **M1 bis M6** sowie nach oben offen künftige **M7-, M8- und M9+-Rechner**. Der Rechner mit der höchsten Speicherbandbreite übernimmt selbsttätig **Rang 0 (Leitrechner)**; die macOS-Schutzgrenze `iogpu.wired_limit_mb` verhindert Speicherüberläufe zuverlässig.
 
-2. **Weltweiter Internet-WAN-Verbund & Teilnehmer-Gespräch (`/ws/wan/{room_id}`)**
-   Über das neue Seitenmenü **Weltweiter Verbund & Gespräch** lassen sich Apple-Silicon-Macs über verschlüsselte Netzbrücken (**Tailscale / WireGuard**, dezentrale **libp2p/DERP-Weiterleitung** oder manuelle Endpunkte) über das Internet zu kleinen Teams, Forschungs-Schwärmen oder **großen Verbünden mit 32 bis 256+ Macs** zusammenschalten. Ein integriertes **Echtzeit-Gespräch über WebSocket** erlaubt den direkten Austausch von Raum-Kennungen, Hardware-Status und Schichten-Anteilen zwischen allen Teilnehmern.
+2. **Weltweiter Internet-WAN-Verbund, Hybrid-Brücke & Teilnehmer-Gespräch (`/ws/wan/{room_id}`)**
+   Über das neue Seitenmenü **Weltweiter Verbund & Gespräch** lassen sich Apple-Silicon-Macs über verschlüsselte Netzbrücken (**Tailscale / WireGuard**, dezentrale **libp2p/DERP-Weiterleitung** oder manuelle Endpunkte) über das Internet zu kleinen Teams, Forschungs-Schwärmen oder **großen Verbünden mit 32 bis 256+ Macs** zusammenschalten. Mit der neuen **Hybrid-Brücke („Lokal + Internet koppeln“)** lässt sich zudem der gesamte örtliche Thunderbolt-/RDMA-Verbund per Knopfdruck als schnelle Tier-0-Recheninsel über den Rang-0-Leitrechner in den weltweiten Internet-Cluster einhängen – samt gemeinsamer Schichtenverteilung, direktem Sprung ins Forschungslabor und **Echtzeit-Teilnehmergespräch über WebSocket**.
 
    ![Weltweiter Internet-WAN-Verbund und Teilnehmergespräch](images/ssccc_internet_wan_mesh.jpg)
 
