@@ -271,6 +271,13 @@ class GlobalProjectTests(unittest.TestCase):
         run_script = (APP_SOURCES.parent.parent / "scripts" / "run_ssccc.sh").read_text(encoding="utf-8")
         self.assertIn("pkill -f", run_script)
         self.assertIn("case .failed(", app, "UpdatePromptSheet must render .failed error state")
+        self.assertIn("upd_close_btn", app)
+        self.assertIn("upd_uptodate_subtitle", app)
+
+        loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
+        for key in ["upd_uptodate_subtitle", "upd_github_status_label", "upd_recent_changes_title", "upd_recheck_btn", "upd_close_btn"]:
+            for lang in [".de", ".en", ".fr", ".es", ".pt", ".ru", ".ja", ".zh"]:
+                self.assertIn(f'case ("{key}", {lang}):', loc)
 
 
 if __name__ == "__main__":

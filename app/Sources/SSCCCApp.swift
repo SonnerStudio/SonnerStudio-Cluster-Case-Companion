@@ -222,9 +222,17 @@ struct MainStudioWindow: View {
                         }
                     } label: {
                         HStack(spacing: 7) {
-                            Image(systemName: vm.updateStatus == .updateAvailable ? "arrow.down.circle.fill" : "arrow.triangle.2.circlepath")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(vm.updateStatus == .updateAvailable ? .black : SolarisTheme.mint)
+                            Image(
+                                systemName: vm.updateStatus == .updateAvailable
+                                    ? "arrow.down.circle.fill"
+                                    : (vm.updateStatus == .upToDate ? "checkmark.seal.fill" : "arrow.triangle.2.circlepath")
+                            )
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(
+                                vm.updateStatus == .updateAvailable
+                                    ? .black
+                                    : (vm.updateStatus == .upToDate ? SolarisTheme.emerald : SolarisTheme.mint)
+                            )
                             if vm.updateStatus == .updateAvailable, let info = vm.availableUpdate {
                                 Text(String(format: vm.t("upd_available_pill"), info.version))
                                     .font(.system(size: 12.5, weight: .bold))
@@ -236,7 +244,7 @@ struct MainStudioWindow: View {
                             } else {
                                 Text("v\(AppReleaseMetadata.currentVersion)")
                                     .font(.system(size: 12.5, weight: .semibold, design: .monospaced))
-                                    .foregroundColor(SolarisTheme.textSecondary)
+                                    .foregroundColor(SolarisTheme.textPrimary)
                             }
                         }
                         .padding(.horizontal, 12)
@@ -346,7 +354,9 @@ private struct UpdatePromptSheet: View {
         let info = vm.availableUpdate
         let hasUpdate = vm.updateStatus == .updateAvailable || vm.updateStatus == .updating || vm.updateStatus == .updatedNeedsRestart
 
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 16) {
+            HazardStripesBar(height: 6, stripeWidth: 10, cornerRadius: 3, opacity: 0.92)
+
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -361,7 +371,7 @@ private struct UpdatePromptSheet: View {
                     Text(hasUpdate ? vm.t("upd_prompt_title") : String(format: vm.t("upd_up_to_date"), AppReleaseMetadata.currentVersion))
                         .font(SolarisTheme.sectionTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
-                    Text(vm.t("upd_prompt_subtitle"))
+                    Text(hasUpdate ? vm.t("upd_prompt_subtitle") : vm.t("upd_uptodate_subtitle"))
                         .font(SolarisTheme.bodyLarge)
                         .foregroundColor(SolarisTheme.textSecondary)
                 }
@@ -383,7 +393,7 @@ private struct UpdatePromptSheet: View {
 
                 if let info {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(vm.t("upd_latest_ver"))
+                        Text(hasUpdate ? vm.t("upd_latest_ver") : vm.t("upd_github_status_label"))
                             .font(Font.caption)
                             .foregroundColor(SolarisTheme.textSecondary)
                         Text("v\(info.version) · \(info.sourceLabel)")
@@ -419,7 +429,7 @@ private struct UpdatePromptSheet: View {
 
             if let info, !info.notes.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(vm.t("upd_notes_title"))
+                    Text(hasUpdate ? vm.t("upd_notes_title") : vm.t("upd_recent_changes_title"))
                         .font(SolarisTheme.bodyBold)
                         .foregroundColor(SolarisTheme.mint)
                     ScrollView {
@@ -512,15 +522,33 @@ private struct UpdatePromptSheet: View {
                         Label(vm.t("upd_open_github_btn"), systemImage: "safari")
                     }
                     .buttonStyle(.bordered)
+                } else {
+                    Button {
+                        Task { await vm.checkForGitHubUpdates(userInitiated: true) }
+                    } label: {
+                        Label(vm.t("upd_recheck_btn"), systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        vm.openUpdateOnGitHub()
+                    } label: {
+                        Label(vm.t("upd_open_github_btn"), systemImage: "safari")
+                    }
+                    .buttonStyle(.bordered)
                 }
 
                 Spacer()
 
-                Button(vm.t("upd_later_btn")) {
+                Button(hasUpdate ? vm.t("upd_later_btn") : vm.t("upd_close_btn")) {
                     vm.showUpdatePromptSheet = false
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
+                .tint(hasUpdate ? SolarisTheme.cardElevated : SolarisTheme.emerald)
+                .foregroundColor(hasUpdate ? SolarisTheme.textPrimary : .black)
             }
+
+            HazardStripesBar(height: 5, stripeWidth: 10, cornerRadius: 3, opacity: 0.78)
         }
         .padding(24)
         .frame(width: 620)
