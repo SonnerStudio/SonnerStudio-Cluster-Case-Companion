@@ -179,8 +179,106 @@ struct AgentIntegrationsView: View {
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.38)))
                         .textSelection(.enabled)
                 }
+
+                // Cursor Integration
+                IDEIntegrationCard(
+                    title: "Cursor IDE",
+                    subtitle: "Schreibt ~/.cursor/ssccc_cluster.json für lokalen OpenAI-kompatiblen Verbund-Zugriff.",
+                    buttonTitle: "Cursor 1-Klick-Setup",
+                    accent: SolarisTheme.amber,
+                    snippet: vm.cursorConfigJSON,
+                    onInstall: { vm.installCursorConfig() },
+                    onCopy: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(vm.cursorConfigJSON, forType: .string)
+                        vm.agentStatusMessage = "Cursor-Konfiguration in Zwischenablage kopiert."
+                    }
+                )
+
+                // Visual Studio Code Integration
+                IDEIntegrationCard(
+                    title: "Visual Studio Code (VS Code)",
+                    subtitle: "Schreibt ~/.vscode/ssccc_cluster.json (für Continue, Cline & lokale OpenAI-Erweiterungen).",
+                    buttonTitle: "VS Code 1-Klick-Setup",
+                    accent: SolarisTheme.mint,
+                    snippet: vm.vscodeConfigJSON,
+                    onInstall: { vm.installVSCodeConfig() },
+                    onCopy: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(vm.vscodeConfigJSON, forType: .string)
+                        vm.agentStatusMessage = "VS-Code-Konfiguration in Zwischenablage kopiert."
+                    }
+                )
+
+                // Xcode Integration
+                IDEIntegrationCard(
+                    title: "Apple Xcode",
+                    subtitle: "Schreibt ~/Library/Developer/Xcode/UserData/SSCCCClusterProvider.json (OpenAI- & Ollama-Endpunkt).",
+                    buttonTitle: "Xcode 1-Klick-Setup",
+                    accent: SolarisTheme.emerald,
+                    snippet: vm.xcodeConfigJSON,
+                    onInstall: { vm.installXcodeConfig() },
+                    onCopy: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(vm.xcodeConfigJSON, forType: .string)
+                        vm.agentStatusMessage = "Xcode-Konfiguration in Zwischenablage kopiert."
+                    }
+                )
             }
             .padding(24)
+        }
+    }
+}
+
+private struct IDEIntegrationCard: View {
+    let title: String
+    let subtitle: String
+    let buttonTitle: String
+    let accent: Color
+    let snippet: String
+    let onInstall: () -> Void
+    let onCopy: () -> Void
+
+    var body: some View {
+        SolarisCard(accent: accent) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(SolarisTheme.sectionTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text(subtitle)
+                        .font(SolarisTheme.bodyLarge)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+                Spacer()
+                Button(action: onInstall) {
+                    Label(buttonTitle, systemImage: "wand.and.stars")
+                        .font(SolarisTheme.bodyBold)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(accent))
+                        .foregroundColor(.black)
+                }
+                .buttonStyle(.plain)
+
+                Button(action: onCopy) {
+                    Label("Kopieren", systemImage: "doc.on.doc")
+                        .font(SolarisTheme.bodyBold)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(SolarisTheme.cardElevated))
+                        .foregroundColor(SolarisTheme.textPrimary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text(snippet)
+                .font(SolarisTheme.monoCode)
+                .foregroundColor(SolarisTheme.textPrimary)
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.38)))
+                .textSelection(.enabled)
         }
     }
 }

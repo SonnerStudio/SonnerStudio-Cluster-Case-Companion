@@ -525,6 +525,89 @@ final class ClusterViewModel: ObservableObject {
         }
     }
 
+    private func writeIntegrationFiles(relativeDir: String, files: [(name: String, content: String)], successLabel: String) {
+        let fm = FileManager.default
+        let dir = fm.homeDirectoryForCurrentUser.appendingPathComponent(relativeDir)
+        do {
+            try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            for file in files {
+                try file.content.write(
+                    to: dir.appendingPathComponent(file.name),
+                    atomically: true,
+                    encoding: .utf8
+                )
+            }
+            agentStatusMessage = successLabel
+        } catch {
+            agentStatusMessage = "Fehler beim Schreiben (\(relativeDir)): \(error.localizedDescription)"
+        }
+    }
+
+    var cursorConfigJSON: String {
+        """
+        {
+          "name": "SonnerStudio Cluster (SS-CCC)",
+          "openAIBaseURL": "\(openCodeBaseURL)",
+          "model": "\(selectedModel.id)",
+          "contextLength": 65536
+        }
+        """
+    }
+
+    var vscodeConfigJSON: String {
+        """
+        {
+          "ssccc.clusterBaseURL": "\(openCodeBaseURL)",
+          "ssccc.defaultModel": "\(selectedModel.id)",
+          "models": [
+            {
+              "title": "SS-CCC (\(selectedModel.displayName))",
+              "provider": "openai",
+              "model": "\(selectedModel.id)",
+              "apiBase": "\(openCodeBaseURL)",
+              "apiKey": "ss-ccc-local"
+            }
+          ]
+        }
+        """
+    }
+
+    var xcodeConfigJSON: String {
+        """
+        {
+          "provider": "SonnerStudio Cluster (SS-CCC)",
+          "openaiEndpoint": "\(openCodeBaseURL)",
+          "ollamaEndpoint": "http://127.0.0.1:8000",
+          "model": "\(selectedModel.id)",
+          "fastModel": "mlx-community/Qwen2.5-32B-Instruct-4bit"
+        }
+        """
+    }
+
+    func installCursorConfig() {
+        writeIntegrationFiles(
+            relativeDir: ".cursor",
+            files: [("ssccc_cluster.json", cursorConfigJSON)],
+            successLabel: "Cursor konfiguriert: ~/.cursor/ssccc_cluster.json geschrieben."
+        )
+    }
+
+    func installVSCodeConfig() {
+        writeIntegrationFiles(
+            relativeDir: ".vscode",
+            files: [("ssccc_cluster.json", vscodeConfigJSON)],
+            successLabel: "Visual Studio Code konfiguriert: ~/.vscode/ssccc_cluster.json geschrieben."
+        )
+    }
+
+    func installXcodeConfig() {
+        writeIntegrationFiles(
+            relativeDir: "Library/Developer/Xcode/UserData",
+            files: [("SSCCCClusterProvider.json", xcodeConfigJSON)],
+            successLabel: "Xcode konfiguriert: ~/Library/Developer/Xcode/UserData/SSCCCClusterProvider.json geschrieben."
+        )
+    }
+
     func scanOllamaAndLlamaCppToMLX() {
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
