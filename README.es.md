@@ -48,6 +48,34 @@ flowchart LR
 
 ---
 
+## 🛠️ Compilar desde el código fuente (antes del primer uso)
+
+> [!NOTE]
+> Este repositorio contiene el **código fuente en Swift** de SS-CCC (no se incluye un programa ya compilado). Para obtener una versión ejecutable, primero debes **compilar el código localmente en tu Mac con Apple Silicon**.
+
+### Requisitos previos
+- Un Mac con Apple Silicon (**M1–M6**) y **macOS 14.0 o posterior**
+- **Herramientas de línea de comandos de Xcode** (incluyen `swiftc` y el SDK de macOS):
+  ```bash
+  xcode-select --install
+  ```
+
+### Paso a paso hasta el programa ejecutable
+```bash
+# 1. Clonar el repositorio y entrar en la carpeta
+git clone https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git
+cd SonnerStudio-Cluster-Case-Companion
+
+# 2. Dar permisos de ejecución al guion de compilación y arranque
+chmod +x scripts/run_ssccc.sh
+
+# 3. Compilar los archivos Swift en /tmp/SSCCCApp y abrir el programa
+./scripts/run_ssccc.sh
+```
+*(Opcional: también se puede compilar con Swift Package Manager mediante `cd app && swift build -c release`.)*
+
+---
+
 ## 🚀 Inicio rápido
 
 ```bash

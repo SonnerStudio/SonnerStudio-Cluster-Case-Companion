@@ -48,6 +48,34 @@ flowchart LR
 
 ---
 
+## 🛠️ Aus dem Quelltext übersetzen (Wichtig vor dem ersten Start)
+
+> [!NOTE]
+> Dieses Verzeichnis enthält den **Quelltext** von SS-CCC (es liegt keine fertig gebaute Programmdatei bei). Um eine startfähige Anwendung zu erhalten, muss das Programm zuerst auf deinem Apple-Silicon-Mac **örtlich übersetzt (kompiliert)** werden.
+
+### Voraussetzungen
+- Ein Apple-Silicon-Mac (**M1–M6**) mit **macOS 14.0 oder neuer**
+- **Xcode-Befehlszeilenwerkzeuge** (enthalten `swiftc` und das macOS-Entwicklungspaket):
+  ```bash
+  xcode-select --install
+  ```
+
+### Schritt für Schritt zur startfähigen App
+```bash
+# 1. Repository herunterladen und in den Ordner wechseln
+git clone https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git
+cd SonnerStudio-Cluster-Case-Companion
+
+# 2. Start- und Übersetzungsskript einmalig ausführbar machen
+chmod +x scripts/run_ssccc.sh
+
+# 3. Alle Swift-Quelltexte nach /tmp/SSCCCApp übersetzen und Programm sofort starten
+./scripts/run_ssccc.sh
+```
+*(Wahlweise lässt sich das Programm auch über Swift Package Manager bauen: `cd app && swift build -c release`.)*
+
+---
+
 ## 🚀 Schnellstart
 
 ```bash
