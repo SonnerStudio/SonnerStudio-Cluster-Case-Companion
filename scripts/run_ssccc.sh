@@ -25,6 +25,8 @@ swiftc -parse-as-library \
   "${ROOT_DIR}/app/Sources/SSCCCApp.swift"
 
 echo "Starte SS-CCC..."
+pkill -f "^${OUT_BIN}$" 2>/dev/null || true
+sleep 0.2
 export SSCCC_BG_PATH="${ROOT_DIR}/app/Resources/solaris_bg.png"
 export SSCCC_SIDEBAR_BG_PATH="${ROOT_DIR}/app/Resources/solaris_sidebar_bg.png"
 exec "${OUT_BIN}"

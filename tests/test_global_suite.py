@@ -261,9 +261,15 @@ class GlobalProjectTests(unittest.TestCase):
             "sanitizeGitNoise",
             "res.stdout",
             "if pullOut.exitCode != 0",
+            "isRemoteCommitAheadOfLocal",
+            "merge-base",
+            "processIdentifier",
+            "exit(0)",
         ]:
             self.assertIn(sym, vm, f"Expected updater safety symbol {sym} in ClusterViewModel.swift")
 
+        run_script = (APP_SOURCES.parent.parent / "scripts" / "run_ssccc.sh").read_text(encoding="utf-8")
+        self.assertIn("pkill -f", run_script)
         self.assertIn("case .failed(", app, "UpdatePromptSheet must render .failed error state")
 
 

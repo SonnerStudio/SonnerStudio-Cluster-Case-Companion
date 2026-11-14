@@ -2653,6 +2653,17 @@ final class ClusterViewModel: ObservableObject {
         localGitCommitSHA = AppReleaseMetadata.embeddedCommitSHA
     }
 
+    private func isRemoteCommitAheadOfLocal(_ remoteSHA: String) -> Bool {
+        let cleanRemote = remoteSHA.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanLocal = localGitCommitSHA.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanRemote.isEmpty, !cleanLocal.isEmpty, cleanRemote != cleanLocal, let repoRoot = localGitRepoRoot else {
+            return false
+        }
+        // If remoteSHA is already an ancestor of local HEAD (e.g. local is ahead of version.json), no update needed.
+        let ancestorCheck = Self.runCommandInDir(repoRoot, "/usr/bin/git", ["merge-base", "--is-ancestor", cleanRemote, "HEAD"])
+        return ancestorCheck.exitCode != 0
+    }
+
     func checkForGitHubUpdates(userInitiated: Bool = true) async {
         updateStatus = .checking
         refreshLocalCommitSHA()
@@ -2699,7 +2710,7 @@ final class ClusterViewModel: ObservableObject {
         let currentVer = AppReleaseMetadata.currentVersion
         let currentBuild = AppReleaseMetadata.currentBuild
         let versionCmp = Self.compareVersions(info.version, currentVer)
-        let shaChanged = !info.commitSHA.isEmpty && !localGitCommitSHA.isEmpty && info.commitSHA != localGitCommitSHA && localGitRepoRoot != nil
+        let shaChanged = isRemoteCommitAheadOfLocal(info.commitSHA)
         let isNewer = (versionCmp == .orderedDescending) || (versionCmp == .orderedSame && info.build > currentBuild) || shaChanged
 
         if isNewer {
@@ -2912,18 +2923,27 @@ final class ClusterViewModel: ObservableObject {
     }
 
     func relaunchApp() {
+        showUpdatePromptSheet = false
         if let repoRoot = localGitRepoRoot {
             let script = repoRoot.appendingPathComponent("scripts/run_ssccc.sh").path
             if FileManager.default.isExecutableFile(atPath: script) {
+                let oldPID = ProcessInfo.processInfo.processIdentifier
                 let proc = Process()
                 proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
-                proc.arguments = ["-c", "nohup \"\(script)\" >/dev/null 2>&1 &"]
+                proc.arguments = [
+                    "-c",
+                    "while kill -0 \(oldPID) 2>/dev/null; do sleep 0.1; done; exec \"\(script)\""
+                ]
                 proc.currentDirectoryURL = repoRoot
                 proc.standardInput = FileHandle.nullDevice
                 proc.standardOutput = FileHandle.nullDevice
                 proc.standardError = FileHandle.nullDevice
                 try? proc.run()
+
                 NSApplication.shared.terminate(nil)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    exit(0)
+                }
                 return
             }
         }
