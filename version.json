@@ -1,13 +1,13 @@
 {
-  "version": "1.6.9",
+  "version": "1.6.10",
   "build": 160,
-  "tag": "v1.6.9",
+  "tag": "v1.6.10",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• Merge remote-tracking branch 'origin/main' (73fc74a)\n• docs(readme): harmonize full structure, repo tree & contributing invite across all 8 READMEs (b27eaef)\n• chore(release): auto-bump v1.6.8 (build 160) [skip ci] (170f70a)\n• Merge remote-tracking branch 'origin/main' (e5190c1)\n• fix(docs): fix image filenames in Russian, Japanese & Chinese READMEs (ca1ce03)",
+  "notes": "• Merge remote-tracking branch 'origin/main' (772c0f3)\n• feat(ui): add 3-tab Cluster Overview, yellow-black industrial hazard stripes & expanded test suite (e02d4dc)\n• chore(release): auto-bump v1.6.9 (build 160) [skip ci] (51603d1)\n• Merge remote-tracking branch 'origin/main' (73fc74a)\n• docs(readme): harmonize full structure, repo tree & contributing invite across all 8 READMEs (b27eaef)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "73fc74a",
-  "updated_at": "2026-11-14T18:43:44Z"
+  "commit_sha": "772c0f3",
+  "updated_at": "2026-11-14T18:57:56Z"
 }
