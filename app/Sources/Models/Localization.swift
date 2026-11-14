@@ -291,17 +291,17 @@ enum L10n {
         case ("help_title", .es): return "Manual detallado y documentación"
         case ("help_title", .pt): return "Manual detalhado e documentação"
 
-        case ("help_sub", .de): return "Alle Grundlagen zu M1–M9+-Verbünden, Speicherschutz, Thunderbolt, Laufzeiten und KI-Agenten in der gewählten Sprache."
-        case ("help_sub", .en): return "Complete guide to M1–M9+ clustering, memory safety, Thunderbolt bridging, runtimes, and AI agents in your selected language."
-        case ("help_sub", .fr): return "Guide complet sur les grappes M1–M9+, la sécurité mémoire, Thunderbolt, les moteurs locaux et les agents."
-        case ("help_sub", .es): return "Guía completa sobre conjuntos M1–M9+, seguridad de memoria, Thunderbolt, motores locales y agentes."
-        case ("help_sub", .pt): return "Guia completo sobre conjuntos M1–M9+, segurança de memória, Thunderbolt, motores locais e agentes."
+        case ("help_sub", .de): return "Vollständiges Handbuch zu M1–M12+-Verbünden, Speicherschutz, Thunderbolt/RDMA, Internet-Verbund & Audio-Party, Forschungslabor & Verlaufsaufzeichnung."
+        case ("help_sub", .en): return "Complete guide to M1–M12+ clustering, memory safety, Thunderbolt/RDMA, Internet WAN & Audio-Party, Science Lab & History Recording."
+        case ("help_sub", .fr): return "Guide complet sur les grappes M1–M12+, sécurité mémoire, Thunderbolt/RDMA, grappe Internet & salon vocal, laboratoire scientifique et historique."
+        case ("help_sub", .es): return "Guía completa sobre conjuntos M1–M12+, seguridad de memoria, Thunderbolt/RDMA, conjunto de Internet y sala de audio, laboratorio e historial."
+        case ("help_sub", .pt): return "Guia completo sobre conjuntos M1–M12+, segurança de memória, Thunderbolt/RDMA, conjunto Internet e sala de áudio, laboratório e histórico."
 
-        case ("help_search_ph", .de): return "Handbuch durchsuchen (z. B. Thunderbolt, oMLX, M1, Reserve)..."
-        case ("help_search_ph", .en): return "Search documentation (e.g., Thunderbolt, oMLX, M1, reserve)..."
-        case ("help_search_ph", .fr): return "Rechercher dans le manuel (ex. Thunderbolt, oMLX, M1)..."
-        case ("help_search_ph", .es): return "Buscar en el manual (ej. Thunderbolt, oMLX, M1)..."
-        case ("help_search_ph", .pt): return "Pesquisar no manual (ex. Thunderbolt, oMLX, M1)..."
+        case ("help_search_ph", .de): return "Handbuch durchsuchen (z. B. Thunderbolt, Internet-Verbund, Audio-Party, Roofline, Verlauf, oMLX)..."
+        case ("help_search_ph", .en): return "Search documentation (e.g., Thunderbolt, Internet Cluster, Audio-Party, Roofline, History, oMLX)..."
+        case ("help_search_ph", .fr): return "Rechercher dans le manuel (ex. Thunderbolt, Internet, salon vocal, Roofline, historique, oMLX)..."
+        case ("help_search_ph", .es): return "Buscar en el manual (ej. Thunderbolt, Internet, sala de audio, Roofline, historial, oMLX)..."
+        case ("help_search_ph", .pt): return "Pesquisar no manual (ex. Thunderbolt, Internet, sala de áudio, Roofline, histórico, oMLX)..."
 
         // Agents
         case ("agents_title", .de): return "Lokale KI-Agenten & Entwicklungsumgebungen anbinden"
