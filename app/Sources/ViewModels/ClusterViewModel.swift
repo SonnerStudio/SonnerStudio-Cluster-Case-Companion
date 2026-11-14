@@ -63,6 +63,28 @@ final class ClusterViewModel: ObservableObject {
     @Published var sciStatusMessage: String = ""
     @Published var sciExportFeedback: String = ""
 
+    // Internet WAN Cluster & Participant Chat State
+    @Published var wanRoomCode: String = "SSCCC-WAN-\(String(UUID().uuidString.prefix(8)))"
+    @Published var wanRelayUrl: String = "ws://127.0.0.1:8000/ws/wan/"
+    @Published var wanConnected: Bool = false
+    @Published var wanTransport: WanOverlayTransport = .tailscaleMesh
+    @Published var wanScaleMode: InternetClusterScale = .privateTeam
+    @Published var wanTailscaleInstalled: Bool = false
+    @Published var wanWireGuardInstalled: Bool = false
+    @Published var wanTailscaleIP: String = ""
+    @Published var wanPeers: [WanPeerNode] = []
+    @Published var wanPeerNameInput: String = ""
+    @Published var wanPeerRegionInput: String = "EU-Central"
+    @Published var wanPeerIpInput: String = "100.64.0.12"
+    @Published var wanPeerChip: AppleSiliconChipFamily = .m4Max
+    @Published var wanPeerRamGB: Double = 64.0
+    @Published var wanPeerRttMs: Double = 24.0
+    @Published var wanPeerUplinkMbps: Double = 250.0
+    @Published var chatMessages: [ClusterChatMessage] = []
+    @Published var chatInput: String = ""
+    @Published var wanStatusNote: String = ""
+    private var wanWebSocketTask: URLSessionWebSocketTask? = nil
+
     static let fallbackReferenceModels: [ModelPreset] = [
         ModelPreset(
             id: "mlx-community/Qwen2.5-32B-Instruct-4bit",
@@ -115,6 +137,7 @@ final class ClusterViewModel: ObservableObject {
     init() {
         self.selectedModel = ClusterViewModel.fallbackReferenceModels[0]
         refreshLocalHardwareProbe()
+        probeWanOverlayTools()
         Task {
             await checkDaemonHealth()
             await refreshLiveModels()
@@ -1391,5 +1414,384 @@ final class ClusterViewModel: ObservableObject {
           booktitle={ACM SOSP}, year={2023}
         }
         """
+    }
+
+    // MARK: - Internet WAN Cluster & Participant Chat
+
+    var wanTotalRamGB: Double {
+        wanPeers.reduce(0.0) { $0 + $1.ramGB }
+    }
+
+    var wanTotalUsableVramGB: Double {
+        wanPeers.reduce(0.0) { $0 + $1.usableVramGB }
+    }
+
+    var wanTotalRttMs: Double {
+        guard wanPeers.count > 1 else { return 0.0 }
+        let remoteRtt = wanPeers.filter { !$0.isLocalHost }.reduce(0.0) { $0 + $1.rttMs }
+        return remoteRtt + Double(wanPeers.count - 1) * wanTransport.baseOverheadMs
+    }
+
+    var wanEstimatedTokPerSec: Double {
+        guard !wanPeers.isEmpty else { return 0.0 }
+        let avgBw = max(68.0, wanPeers.reduce(0.0) { $0 + $1.bandwidthGBs } / Double(wanPeers.count))
+        let computeMs = (selectedModel.estimatedGB / avgBw) * 1000.0
+        let minUplinkMbps = wanPeers.map(\.uplinkMbps).min() ?? 100.0
+        // ~16 KB activation hidden-state tensor per pipeline hop
+        let transferMs = wanPeers.count > 1 ? ((0.128 / max(10.0, minUplinkMbps)) * 1000.0) * Double(wanPeers.count - 1) : 0.0
+        let totalStepMs = max(5.0, computeMs + wanTotalRttMs + transferMs)
+        return 1000.0 / totalStepMs
+    }
+
+    func probeWanOverlayTools() {
+        let fm = FileManager.default
+        let tsPaths = [
+            "/Applications/Tailscale.app/Contents/MacOS/Tailscale",
+            "/opt/homebrew/bin/tailscale",
+            "/usr/local/bin/tailscale"
+        ]
+        let wgPaths = [
+            "/opt/homebrew/bin/wg",
+            "/usr/local/bin/wg"
+        ]
+        let tsBin = tsPaths.first { fm.fileExists(atPath: $0) } ?? ""
+        let wgBin = wgPaths.first { fm.fileExists(atPath: $0) } ?? ""
+        wanTailscaleInstalled = !tsBin.isEmpty
+        wanWireGuardInstalled = !wgBin.isEmpty
+
+        let localHost = Host.current().localizedName ?? "Lokaler Mac"
+        let localUsable = AppleSiliconChipFamily.usableVramGB(for: localRamGB)
+        let localBw = AppleSiliconChipFamily.inferBandwidth(from: localChipName)
+
+        var discovered: [WanPeerNode] = [
+            WanPeerNode(
+                id: "wan-local-host",
+                displayName: localHost,
+                region: "Lokal (Host)",
+                chip: localChipName,
+                ramGB: localRamGB,
+                usableVramGB: localUsable,
+                bandwidthGBs: localBw,
+                overlayIP: wanTailscaleIP.isEmpty ? localLanIP : wanTailscaleIP,
+                rttMs: 0.2,
+                uplinkMbps: 1000.0,
+                assignedLayers: "0–\(selectedModel.totalLayers)",
+                transport: wanTransport,
+                isOnline: true,
+                isLocalHost: true
+            )
+        ]
+
+        // Real Tailscale peer discovery if Tailscale CLI is installed & logged in
+        if !tsBin.isEmpty {
+            let statusJson = runShell(tsBin, ["status", "--json"])
+            if let data = statusJson.data(using: .utf8),
+               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let selfNode = obj["Self"] as? [String: Any],
+                   let ips = selfNode["TailscaleIPs"] as? [String],
+                   let firstIP = ips.first {
+                    wanTailscaleIP = firstIP
+                }
+                if let peerDict = obj["Peer"] as? [String: [String: Any]] {
+                    for (peerKey, info) in peerDict {
+                        let hostName = (info["HostName"] as? String) ?? peerKey
+                        let os = (info["OS"] as? String) ?? ""
+                        let online = (info["Online"] as? Bool) ?? false
+                        let ips = (info["TailscaleIPs"] as? [String]) ?? []
+                        if os.lowercased().contains("macos") || os.lowercased().contains("darwin") {
+                            discovered.append(
+                                WanPeerNode(
+                                    id: "ts-\(peerKey)",
+                                    displayName: hostName,
+                                    region: "Tailscale Mesh",
+                                    chip: "Apple Silicon (Tailscale)",
+                                    ramGB: 32.0,
+                                    usableVramGB: 26.0,
+                                    bandwidthGBs: 200.0,
+                                    overlayIP: ips.first ?? "100.64.0.x",
+                                    rttMs: 18.0,
+                                    uplinkMbps: 200.0,
+                                    assignedLayers: "Auto",
+                                    transport: .tailscaleMesh,
+                                    isOnline: online,
+                                    isLocalHost: false
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        wanPeers = discovered
+        recomputeWanLayerAssignments()
+
+        if chatMessages.isEmpty {
+            chatMessages = [
+                ClusterChatMessage(
+                    senderName: "SS-CCC Mesh",
+                    senderRegion: "System",
+                    senderChip: localChipName,
+                    timestamp: currentClockTime(),
+                    text: "Raum \(wanRoomCode) bereit. Verbinde Macs über Tailscale, WireGuard oder libp2p-QUIC und nutze /status oder /layers im Chat.",
+                    isSystemEvent: true,
+                    isSelf: false
+                )
+            ]
+        }
+        wanStatusNote = wanTailscaleInstalled
+            ? "Tailscale erkannt (\(wanTailscaleIP.isEmpty ? "bereit" : wanTailscaleIP)) · \(wanPeers.count) Knoten im Verbund."
+            : "Bereit für Tailscale / WireGuard / libp2p-QUIC Mesh (\(wanPeers.count) lokaler Knoten)."
+    }
+
+    func toggleWanConnection() {
+        if wanConnected {
+            wanWebSocketTask?.cancel(with: .normalClosure, reason: nil)
+            wanWebSocketTask = nil
+            wanConnected = false
+            chatMessages.append(
+                ClusterChatMessage(
+                    senderName: "SS-CCC Mesh",
+                    senderRegion: "System",
+                    senderChip: "",
+                    timestamp: currentClockTime(),
+                    text: "Verbindung zum Internet-Verbund \(wanRoomCode) getrennt.",
+                    isSystemEvent: true,
+                    isSelf: false
+                )
+            )
+            wanStatusNote = "Getrennt vom Internet-Verbund."
+            return
+        }
+
+        wanConnected = true
+        let endpoint = "\(wanRelayUrl)\(wanRoomCode)"
+        chatMessages.append(
+            ClusterChatMessage(
+                senderName: "SS-CCC Mesh",
+                senderRegion: "System",
+                senderChip: localChipName,
+                timestamp: currentClockTime(),
+                text: "Beigetreten: \(wanRoomCode) über \(wanTransport.rawValue) (MTU \(wanTransport.mtuBytes)).",
+                isSystemEvent: true,
+                isSelf: false
+            )
+        )
+
+        if let url = URL(string: endpoint) {
+            let task = URLSession.shared.webSocketTask(with: url)
+            wanWebSocketTask = task
+            task.resume()
+            listenForWanMessages(task)
+            let joinPayload: [String: Any] = [
+                "type": "join",
+                "sender": Host.current().localizedName ?? "Mac",
+                "chip": localChipName,
+                "ram_gb": Int(localRamGB),
+                "region": wanPeerRegionInput
+            ]
+            if let data = try? JSONSerialization.data(withJSONObject: joinPayload),
+               let str = String(data: data, encoding: .utf8) {
+                task.send(.string(str)) { _ in }
+            }
+        }
+        wanStatusNote = "Aktiv verbunden mit \(wanRoomCode) (\(wanPeers.count) Knoten · \(Int(wanTotalRamGB)) GB RAM)."
+    }
+
+    private func listenForWanMessages(_ task: URLSessionWebSocketTask) {
+        task.receive { [weak self] result in
+            guard let self else { return }
+            if case .success(let message) = result, case .string(let text) = message {
+                if let data = text.data(using: .utf8),
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let msgText = json["text"] as? String {
+                    let sender = (json["sender"] as? String) ?? "Remote Mac"
+                    let region = (json["region"] as? String) ?? "WAN"
+                    let chip = (json["chip"] as? String) ?? "Apple Silicon"
+                    Task { @MainActor in
+                        self.chatMessages.append(
+                            ClusterChatMessage(
+                                senderName: sender,
+                                senderRegion: region,
+                                senderChip: chip,
+                                timestamp: self.currentClockTime(),
+                                text: msgText,
+                                isSystemEvent: false,
+                                isSelf: false
+                            )
+                        )
+                    }
+                }
+                Task { @MainActor in
+                    if self.wanConnected {
+                        self.listenForWanMessages(task)
+                    }
+                }
+            }
+        }
+    }
+
+    func addManualWanPeer() {
+        let name = wanPeerNameInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalName = name.isEmpty ? "Remote-\(wanPeerChip.rawValue.replacingOccurrences(of: "Apple ", with: ""))" : name
+        let usable = AppleSiliconChipFamily.usableVramGB(for: wanPeerRamGB)
+        let peer = WanPeerNode(
+            id: "wan-\(UUID().uuidString.prefix(8))",
+            displayName: finalName,
+            region: wanPeerRegionInput.isEmpty ? "WAN" : wanPeerRegionInput,
+            chip: wanPeerChip.rawValue,
+            ramGB: wanPeerRamGB,
+            usableVramGB: usable,
+            bandwidthGBs: wanPeerChip.bandwidthGBs,
+            overlayIP: wanPeerIpInput.isEmpty ? "100.64.0.x" : wanPeerIpInput,
+            rttMs: wanPeerRttMs,
+            uplinkMbps: wanPeerUplinkMbps,
+            assignedLayers: "Auto",
+            transport: wanTransport,
+            isOnline: true,
+            isLocalHost: false
+        )
+        wanPeers.append(peer)
+        wanPeerNameInput = ""
+        recomputeWanLayerAssignments()
+        chatMessages.append(
+            ClusterChatMessage(
+                senderName: "SS-CCC Mesh",
+                senderRegion: peer.region,
+                senderChip: peer.chip,
+                timestamp: currentClockTime(),
+                text: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) ist dem Verbund beigetreten.",
+                isSystemEvent: true,
+                isSelf: false
+            )
+        )
+    }
+
+    func populateMegaClusterSwarm(count: Int) {
+        let regions = ["EU-Central", "EU-West", "US-East", "US-West", "AP-Tokyo", "AP-Singapore"]
+        let chips: [AppleSiliconChipFamily] = [.m3Max, .m4Pro, .m4Max, .m5Max, .m6Max, .m7Max, .m8Max, .m3Ultra]
+        // Keep local host, replace remote simulation peers
+        wanPeers = wanPeers.filter(\.isLocalHost)
+        for i in 1..<count {
+            let chip = chips[i % chips.count]
+            let ram = chip.defaultRamGB
+            let region = regions[i % regions.count]
+            wanPeers.append(
+                WanPeerNode(
+                    id: "mega-\(i)",
+                    displayName: "Swarm-Mac-\(String(format: "%02d", i))",
+                    region: region,
+                    chip: chip.rawValue,
+                    ramGB: ram,
+                    usableVramGB: AppleSiliconChipFamily.usableVramGB(for: ram),
+                    bandwidthGBs: chip.bandwidthGBs,
+                    overlayIP: "100.64.\(i / 250).\(10 + (i % 240))",
+                    rttMs: Double(12 + (i % 6) * 14),
+                    uplinkMbps: Double(250 + (i % 4) * 200),
+                    assignedLayers: "Auto",
+                    transport: wanTransport,
+                    isOnline: true,
+                    isLocalHost: false
+                )
+            )
+        }
+        wanScaleMode = count >= 32 ? .megaCluster : .researchSwarm
+        recomputeWanLayerAssignments()
+        chatMessages.append(
+            ClusterChatMessage(
+                senderName: "SS-CCC Mesh",
+                senderRegion: "Global",
+                senderChip: "Swarm-\(count)",
+                timestamp: currentClockTime(),
+                text: "Weltweiter Mega-Verbund mit \(wanPeers.count) Macs (\(Int(wanTotalRamGB)) GB Gesamt-RAM / \(Int(wanTotalUsableVramGB)) GB nutzbar) initialisiert.",
+                isSystemEvent: true,
+                isSelf: false
+            )
+        )
+    }
+
+    func recomputeWanLayerAssignments() {
+        guard !wanPeers.isEmpty else { return }
+        let totalLayers = max(8, selectedModel.totalLayers)
+        let totalBw = max(1.0, wanPeers.reduce(0.0) { $0 + $1.bandwidthGBs })
+        var cursor = 0
+        var updated: [WanPeerNode] = []
+        for (idx, peer) in wanPeers.enumerated() {
+            let share = peer.bandwidthGBs / totalBw
+            let count = (idx == wanPeers.count - 1)
+                ? max(0, totalLayers - cursor)
+                : max(1, Int((Double(totalLayers) * share).rounded()))
+            let end = min(totalLayers, cursor + count)
+            let rangeLabel = cursor < end ? "L\(cursor)–L\(end - 1)" : "Replica"
+            cursor = end
+            updated.append(
+                WanPeerNode(
+                    id: peer.id,
+                    displayName: peer.displayName,
+                    region: peer.region,
+                    chip: peer.chip,
+                    ramGB: peer.ramGB,
+                    usableVramGB: peer.usableVramGB,
+                    bandwidthGBs: peer.bandwidthGBs,
+                    overlayIP: peer.overlayIP,
+                    rttMs: peer.rttMs,
+                    uplinkMbps: peer.uplinkMbps,
+                    assignedLayers: rangeLabel,
+                    transport: peer.transport,
+                    isOnline: peer.isOnline,
+                    isLocalHost: peer.isLocalHost
+                )
+            )
+        }
+        wanPeers = updated
+    }
+
+    func sendClusterChatMessage(_ overrideText: String? = nil) {
+        let raw = (overrideText ?? chatInput).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { return }
+        if overrideText == nil { chatInput = "" }
+
+        let sender = Host.current().localizedName ?? "Lokaler Mac"
+        var finalText = raw
+        if raw == "/status" {
+            finalText = "📊 Status: \(localChipName) · \(Int(localRamGB)) GB RAM · \(localThermalLabel) · \(localPowerLabel) · Transport: \(wanTransport.rawValue)"
+        } else if raw == "/layers" {
+            let myLayers = wanPeers.first(where: \.isLocalHost)?.assignedLayers ?? "Auto"
+            finalText = "🧩 Schichten-Anteil: \(myLayers) für \(selectedModel.displayName) · Verbund-Summe: \(wanPeers.count) Macs (\(Int(wanTotalUsableVramGB)) GB nutzbar)"
+        } else if raw == "/ping" {
+            finalText = String(format: "🏓 WAN-Pipeline RTT: %.1f ms · Geschätzte Rate: %.2f tok/s", wanTotalRttMs, wanEstimatedTokPerSec)
+        }
+
+        chatMessages.append(
+            ClusterChatMessage(
+                senderName: sender,
+                senderRegion: "Lokal",
+                senderChip: localChipName,
+                timestamp: currentClockTime(),
+                text: finalText,
+                isSystemEvent: false,
+                isSelf: true
+            )
+        )
+
+        if let task = wanWebSocketTask, wanConnected {
+            let payload: [String: Any] = [
+                "type": "chat",
+                "sender": sender,
+                "region": wanPeerRegionInput,
+                "chip": localChipName,
+                "text": finalText
+            ]
+            if let data = try? JSONSerialization.data(withJSONObject: payload),
+               let str = String(data: data, encoding: .utf8) {
+                task.send(.string(str)) { _ in }
+            }
+        }
+    }
+
+    private func currentClockTime() -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "HH:mm:ss"
+        return fmt.string(from: Date())
     }
 }

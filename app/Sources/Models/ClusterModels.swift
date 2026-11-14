@@ -5,6 +5,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
     case devices = "Geräte & Vergleich"
     case models = "Modell-Studio"
     case network = "Netzwerk & RDMA"
+    case internetCluster = "Internet-Verbund & Chat"
     case agents = "Agenten & IDEs"
     case science = "Forschung & Roofline"
     case console = "API & Konsole"
@@ -18,6 +19,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .devices: return "macstudio.fill"
         case .models: return "square.stack.3d.up.fill"
         case .network: return "bolt.horizontal.circle.fill"
+        case .internetCluster: return "globe.americas.fill"
         case .agents: return "sparkles.rectangle.stack.fill"
         case .science: return "chart.xyaxis.line"
         case .console: return "terminal.fill"
@@ -31,6 +33,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .devices: return "Alle M-Macs & Vergleich"
         case .models: return "MLX, oMLX, Ollama & llama.cpp"
         case .network: return "TB3/4/5, RDMA & Hybrid"
+        case .internetCluster: return "WAN-Verbund & Teilnehmer-Chat"
         case .agents: return "Lokale Agenten, IDEs & SDKs"
         case .science: return "arXiv, Splitwise & Tuning"
         case .console: return "OpenAI / Ollama / oMLX API"
@@ -492,4 +495,81 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
             ? ("34–38 Gbps", 36.0, "\(badge) RDMA")
             : ("30–37 Gbps", 34.0, badge)
     }
+}
+
+// MARK: - Internet WAN Cluster & Participant Chat Models
+
+enum WanOverlayTransport: String, CaseIterable, Identifiable {
+    case tailscaleMesh = "Tailscale / WireGuard Mesh (100.64.x.x)"
+    case wireGuardDirect = "WireGuard P2P Tunnel (ChaCha20)"
+    case libp2pQuic = "libp2p / QUIC + DCUtR (Petals-Stil)"
+    case derpRelay = "Verschlüsselter DERP / WebSocket-Relay"
+
+    var id: String { rawValue }
+
+    var mtuBytes: Int {
+        switch self {
+        case .tailscaleMesh, .wireGuardDirect: return 1280
+        case .libp2pQuic: return 1350
+        case .derpRelay: return 1420
+        }
+    }
+
+    var baseOverheadMs: Double {
+        switch self {
+        case .wireGuardDirect: return 4.0
+        case .tailscaleMesh: return 6.0
+        case .libp2pQuic: return 9.0
+        case .derpRelay: return 28.0
+        }
+    }
+
+    var natNote: String {
+        switch self {
+        case .tailscaleMesh:
+            return "Automatisches UDP-Hole-Punching über CGNAT (100.64.0.0/10) mit DERP-Rückfall."
+        case .wireGuardDirect:
+            return "Direkter Layer-3-Tunnel (ChaCha20-Poly1305) mit minimalem Protokoll-Overhead."
+        case .libp2pQuic:
+            return "Dezentrales Kademlia-DHT & DCUtR-Hole-Punching ohne zentralen VPN-Server."
+        case .derpRelay:
+            return "Ende-zu-Ende-verschlüsselter TCP/WSS-Relay für strenge Firmen-Firewalls."
+        }
+    }
+}
+
+enum InternetClusterScale: String, CaseIterable, Identifiable {
+    case privateTeam = "Privates Team (2–8 Macs)"
+    case researchSwarm = "Forschungs-Schwarm (8–32 Macs)"
+    case megaCluster = "Riesiger Welt-Verbund (32–256+ Macs)"
+
+    var id: String { rawValue }
+}
+
+struct WanPeerNode: Identifiable, Hashable {
+    let id: String
+    let displayName: String
+    let region: String
+    let chip: String
+    let ramGB: Double
+    let usableVramGB: Double
+    let bandwidthGBs: Double
+    let overlayIP: String
+    let rttMs: Double
+    let uplinkMbps: Double
+    let assignedLayers: String
+    let transport: WanOverlayTransport
+    let isOnline: Bool
+    let isLocalHost: Bool
+}
+
+struct ClusterChatMessage: Identifiable, Hashable {
+    let id = UUID()
+    let senderName: String
+    let senderRegion: String
+    let senderChip: String
+    let timestamp: String
+    let text: String
+    let isSystemEvent: Bool
+    let isSelf: Bool
 }

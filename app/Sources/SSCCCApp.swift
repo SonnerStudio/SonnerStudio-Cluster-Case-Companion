@@ -233,6 +233,8 @@ struct MainStudioWindow: View {
                         ModelStudioView(vm: vm)
                     case .network:
                         NetworkRdmaView(vm: vm)
+                    case .internetCluster:
+                        InternetClusterView(vm: vm)
                     case .agents:
                         AgentIntegrationsView(vm: vm)
                     case .science:

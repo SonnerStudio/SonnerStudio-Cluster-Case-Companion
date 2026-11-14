@@ -63,6 +63,12 @@ enum L10n {
         case (.agents, .es): return "Agentes y entornos"
         case (.agents, .pt): return "Agentes e ambientes"
 
+        case (.internetCluster, .de): return "Internet-Verbund & Chat"
+        case (.internetCluster, .en): return "Internet Cluster & Chat"
+        case (.internetCluster, .fr): return "Grappe Internet & Discussion"
+        case (.internetCluster, .es): return "Red Internet y chat"
+        case (.internetCluster, .pt): return "Rede Internet e conversa"
+
         case (.science, .de): return "Forschung & Leistung"
         case (.science, .en): return "Science & Roofline"
         case (.science, .fr): return "Recherche & Limites"
@@ -108,6 +114,12 @@ enum L10n {
         case (.network, .fr): return "TB3/4/5, Accès direct & Hybride"
         case (.network, .es): return "TB3/4/5, Acceso directo e híbrido"
         case (.network, .pt): return "TB3/4/5, Acesso direto e híbrido"
+
+        case (.internetCluster, .de): return "Weltweiter Verbund & Chat"
+        case (.internetCluster, .en): return "Global WAN Mesh & Chat"
+        case (.internetCluster, .fr): return "Maillage mondial & Discussion"
+        case (.internetCluster, .es): return "Malla mundial y chat"
+        case (.internetCluster, .pt): return "Malha mundial e conversa"
 
         case (.agents, .de): return "Lokale Agenten & Werkzeuge"
         case (.agents, .en): return "Local Agents, IDEs & SDKs"
@@ -547,6 +559,25 @@ enum L10n {
         case ("api_output", .fr): return "Réponse / mesures :"
         case ("api_output", .es): return "Respuesta / telemetría:"
         case ("api_output", .pt): return "Resposta / telemetria:"
+
+        // Internet Cluster & Chat
+        case ("wan_title", .de): return "Weltweiter Internet-Mac-Verbund (WAN Pipeline Parallelism)"
+        case ("wan_title", .en): return "Global Internet Mac Cluster (WAN Pipeline Parallelism)"
+        case ("wan_title", .fr): return "Grappe Mac mondiale par Internet (parallélisme en pipeline)"
+        case ("wan_title", .es): return "Agrupación Mac mundial por Internet (paralelismo en canalización)"
+        case ("wan_title", .pt): return "Agrupamento Mac mundial pela Internet (paralelismo em cadeia)"
+
+        case ("wan_sub", .de): return "Verbinde Macs weltweit über Tailscale/WireGuard, libp2p-QUIC oder DERP-Relays zu kleinen Teams oder riesigen Schwärmen (32–256+ Macs) inklusive Teilnehmer-Chat."
+        case ("wan_sub", .en): return "Connect Macs worldwide via Tailscale/WireGuard, libp2p QUIC, or DERP relays into private teams or massive swarms (32–256+ Macs) with built-in participant chat."
+        case ("wan_sub", .fr): return "Reliez des Mac dans le monde entier via Tailscale/WireGuard, libp2p QUIC ou relais DERP en petites équipes ou vastes essaims (32–256+ Mac) avec discussion intégrée."
+        case ("wan_sub", .es): return "Conecta Mac de todo el mundo mediante Tailscale/WireGuard, libp2p QUIC o repetidores DERP en equipos o grandes enjambres (32–256+ Mac) con chat integrado."
+        case ("wan_sub", .pt): return "Ligue Macs em todo o mundo via Tailscale/WireGuard, libp2p QUIC ou retransmissores DERP em equipas ou grandes enxames (32–256+ Macs) com conversa integrada."
+
+        case ("wan_chat_title", .de): return "Teilnehmer-Chat & Telemetrie-Austausch"
+        case ("wan_chat_title", .en): return "Participant Chat & Telemetry Sharing"
+        case ("wan_chat_title", .fr): return "Discussion des participants et partage de télémétrie"
+        case ("wan_chat_title", .es): return "Chat de participantes e intercambio de telemetría"
+        case ("wan_chat_title", .pt): return "Conversa dos participantes e partilha de telemetria"
 
         default: return key
         }

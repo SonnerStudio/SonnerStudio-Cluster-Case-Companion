@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 import uuid
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 from core.adapters.system.macos_probe import MacOSSystemProbe
@@ -248,3 +248,26 @@ def chat_completions(req: ChatCompletionRequest) -> dict[str, object]:
             }
         ],
     }
+
+
+_wan_rooms: dict[str, list[WebSocket]] = {}
+
+
+@app.websocket("/ws/wan/{room_id}")
+async def wan_mesh_websocket(websocket: WebSocket, room_id: str) -> None:
+    """Echtzeit-WebSocket-Koordinator für Internet-Cluster-Teilnehmer und Gruppen-Chat."""
+    await websocket.accept()
+    room = _wan_rooms.setdefault(room_id, [])
+    room.append(websocket)
+    try:
+        while True:
+            raw_msg = await websocket.receive_text()
+            for peer in list(room):
+                if peer is not websocket:
+                    try:
+                        await peer.send_text(raw_msg)
+                    except Exception:
+                        pass
+    except WebSocketDisconnect:
+        if websocket in room:
+            room.remove(websocket)

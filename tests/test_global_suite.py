@@ -119,10 +119,24 @@ class GlobalProjectTests(unittest.TestCase):
     def test_07_five_language_localization_completeness(self):
         """Verify key UI strings are localized across all 5 languages (de, en, fr, es, pt)."""
         loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
-        for key in ["sci_title", "sci_workload_title", "sci_bench_run", "ms_title", "ms_sub", "net_checklist", "pool_bar_title"]:
+        for key in ["sci_title", "sci_workload_title", "sci_bench_run", "ms_title", "ms_sub", "net_checklist", "pool_bar_title", "wan_title", "wan_sub", "wan_chat_title"]:
             for lang in [".de", ".en", ".fr", ".es", ".pt"]:
                 pattern = rf'case\s*\(\s*"{key}"\s*,\s*{lang}\s*\)'
                 self.assertRegex(loc, pattern, f"Missing localization for ({key}, {lang})")
+
+    def test_08_internet_cluster_and_chat_present(self):
+        """Verify Internet WAN Cluster, Mega-Cluster swarm builder, participant chat, and WebSocket relay exist."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        view = (APP_SOURCES / "Views" / "InternetClusterView.swift").read_text(encoding="utf-8")
+        gateway = (ROOT / "core" / "api" / "gateway.py").read_text(encoding="utf-8")
+
+        for item in ["case internetCluster", "enum WanOverlayTransport", "enum InternetClusterScale", "struct WanPeerNode", "struct ClusterChatMessage"]:
+            self.assertIn(item, models)
+        for fn in ["probeWanOverlayTools", "toggleWanConnection", "populateMegaClusterSwarm", "sendClusterChatMessage", "recomputeWanLayerAssignments"]:
+            self.assertIn(fn, vm)
+        self.assertIn("struct InternetClusterView", view)
+        self.assertIn("/ws/wan/{room_id}", gateway)
 
 
 if __name__ == "__main__":
