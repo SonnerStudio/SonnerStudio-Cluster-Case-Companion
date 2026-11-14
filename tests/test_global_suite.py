@@ -173,6 +173,14 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("audioPartyCard", view)
         self.assertIn("/ws/wan-audio/{room_id}", gateway)
 
+    def test_12_run_ssccc_script_includes_all_swift_sources(self):
+        """Ensure scripts/run_ssccc.sh lists every .swift file in app/Sources."""
+        script = (ROOT / "scripts" / "run_ssccc.sh").read_text(encoding="utf-8")
+        for swift_file in (APP_SOURCES).rglob("*.swift"):
+            if swift_file.name.startswith("._"):
+                continue
+            self.assertIn(swift_file.name, script, f"{swift_file.name} missing from scripts/run_ssccc.sh")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -17,6 +17,7 @@ swiftc -parse-as-library \
   "${ROOT_DIR}/app/Sources/Views/DevicesCompareView.swift" \
   "${ROOT_DIR}/app/Sources/Views/ModelStudioView.swift" \
   "${ROOT_DIR}/app/Sources/Views/NetworkRdmaView.swift" \
+  "${ROOT_DIR}/app/Sources/Views/InternetClusterView.swift" \
   "${ROOT_DIR}/app/Sources/Views/AgentIntegrationsView.swift" \
   "${ROOT_DIR}/app/Sources/Views/ScienceBenchmarksView.swift" \
   "${ROOT_DIR}/app/Sources/Views/ApiConsoleView.swift" \
