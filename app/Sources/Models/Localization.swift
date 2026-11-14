@@ -85,11 +85,11 @@ enum L10n {
 
     static func tabSubtitle(_ tab: NavigationTab, _ lang: AppLanguage) -> String {
         switch (tab, lang) {
-        case (.overview, .de): return "52 GB Speicher & Topologie"
-        case (.overview, .en): return "52 GB Pool & Topology"
-        case (.overview, .fr): return "Mémoire 52 Go & Topologie"
-        case (.overview, .es): return "Memoria 52 GB y topología"
-        case (.overview, .pt): return "Memória 52 GB e topologia"
+        case (.overview, .de): return "Verbund-Speicher & Topologie"
+        case (.overview, .en): return "Cluster Pool & Topology"
+        case (.overview, .fr): return "Mémoire de grappe & Topologie"
+        case (.overview, .es): return "Memoria y topología"
+        case (.overview, .pt): return "Memória e topologia"
 
         case (.devices, .de): return "Einzeldaten & Vergleich"
         case (.devices, .en): return "Hardware & Comparison"
@@ -217,17 +217,17 @@ enum L10n {
         case ("topo_sub", .es): return "Control por LAN/Wi-Fi · Tensores aislados por Thunderbolt"
         case ("topo_sub", .pt): return "Controlo por LAN/Wi-Fi · Tensores isolados por Thunderbolt"
 
-        case ("pool_bar_title", .de): return "52-GB-Speicheraufteilung (iogpu.wired_limit_mb)"
-        case ("pool_bar_title", .en): return "52 GB Memory Allocation (iogpu.wired_limit_mb)"
-        case ("pool_bar_title", .fr): return "Répartition des 52 Go (iogpu.wired_limit_mb)"
-        case ("pool_bar_title", .es): return "Reparto de 52 GB (iogpu.wired_limit_mb)"
-        case ("pool_bar_title", .pt): return "Repartição de 52 GB (iogpu.wired_limit_mb)"
+        case ("pool_bar_title", .de): return "Verbund-Speicheraufteilung (iogpu.wired_limit_mb)"
+        case ("pool_bar_title", .en): return "Cluster Memory Allocation (iogpu.wired_limit_mb)"
+        case ("pool_bar_title", .fr): return "Répartition mémoire de grappe (iogpu.wired_limit_mb)"
+        case ("pool_bar_title", .es): return "Reparto de memoria (iogpu.wired_limit_mb)"
+        case ("pool_bar_title", .pt): return "Repartição de memória (iogpu.wired_limit_mb)"
 
-        case ("pool_bar_note", .de): return "Hinweis: Niemals 100 % des Arbeitsspeichers zuweisen — 6 GB (Studio) und 4 GB (Mini) bleiben fest für macOS reserviert."
-        case ("pool_bar_note", .en): return "Note: Never allocate 100% of RAM — keep 6 GB (Studio) and 4 GB (Mini) reserved for macOS."
-        case ("pool_bar_note", .fr): return "Remarque : ne jamais allouer 100 % de la RAM — réserver 6 Go (Studio) et 4 Go (Mini) pour macOS."
-        case ("pool_bar_note", .es): return "Nota: nunca asignar el 100 % de la RAM — reservar 6 GB (Studio) y 4 GB (Mini) para macOS."
-        case ("pool_bar_note", .pt): return "Nota: nunca alocar 100 % da RAM — reservar 6 GB (Studio) e 4 GB (Mini) para o macOS."
+        case ("pool_bar_note", .de): return "Hinweis: Niemals 100 % des Arbeitsspeichers zuweisen — je nach Knoten bleiben 4–8 GB fest für macOS reserviert."
+        case ("pool_bar_note", .en): return "Note: Never allocate 100% of RAM — keep 4–8 GB per node reserved for macOS."
+        case ("pool_bar_note", .fr): return "Remarque : ne jamais allouer 100 % de la RAM — réserver 4 à 8 Go par nœud pour macOS."
+        case ("pool_bar_note", .es): return "Nota: nunca asignar el 100 % de la RAM — reservar 4–8 GB por nodo para macOS."
+        case ("pool_bar_note", .pt): return "Nota: nunca alocar 100 % da RAM — reservar 4–8 GB por nó para o macOS."
 
         // Devices
         case ("dev_title", .de): return "Verbundene Geräte & Gerätedaten"
@@ -248,11 +248,11 @@ enum L10n {
         case ("dev_compare", .es): return "Comparación directa"
         case ("dev_compare", .pt): return "Comparação direta"
 
-        case ("dev_add_title", .de): return "Weiteren Apple Mac mit M-Prozessor (M1–M6) hinzufügen"
-        case ("dev_add_title", .en): return "Add Any Apple Silicon Mac (M1–M6) to Cluster"
-        case ("dev_add_title", .fr): return "Ajouter un autre Mac à puce M (M1–M6)"
-        case ("dev_add_title", .es): return "Añadir otro Mac con procesador M (M1–M6)"
-        case ("dev_add_title", .pt): return "Adicionar outro Mac com processador M (M1–M6)"
+        case ("dev_add_title", .de): return "Weiteren Apple Mac mit M-Prozessor (M1–M9+) hinzufügen"
+        case ("dev_add_title", .en): return "Add Any Apple Silicon Mac (M1–M9+) to Cluster"
+        case ("dev_add_title", .fr): return "Ajouter un autre Mac à puce M (M1–M9+)"
+        case ("dev_add_title", .es): return "Añadir otro Mac con procesador M (M1–M9+)"
+        case ("dev_add_title", .pt): return "Adicionar outro Mac com processador M (M1–M9+)"
 
         case ("dev_add_sub", .de): return "Alle Mac mini, MacBook Air/Pro, iMac, Mac Studio und Mac Pro mit M-Chip lassen sich zu einem Verbund zusammenschalten."
         case ("dev_add_sub", .en): return "Any Mac mini, MacBook Air/Pro, iMac, Mac Studio, or Mac Pro with an M-series chip can join the cluster."
@@ -279,11 +279,11 @@ enum L10n {
         case ("help_title", .es): return "Manual detallado y documentación"
         case ("help_title", .pt): return "Manual detalhado e documentação"
 
-        case ("help_sub", .de): return "Alle Grundlagen zu M1–M6-Verbünden, Speicherschutz, Thunderbolt, Laufzeiten und KI-Agenten in der gewählten Sprache."
-        case ("help_sub", .en): return "Complete guide to M1–M6 clustering, memory safety, Thunderbolt bridging, runtimes, and AI agents in your selected language."
-        case ("help_sub", .fr): return "Guide complet sur les grappes M1–M6, la sécurité mémoire, Thunderbolt, les moteurs locaux et les agents."
-        case ("help_sub", .es): return "Guía completa sobre conjuntos M1–M6, seguridad de memoria, Thunderbolt, motores locales y agentes."
-        case ("help_sub", .pt): return "Guia completo sobre conjuntos M1–M6, segurança de memória, Thunderbolt, motores locais e agentes."
+        case ("help_sub", .de): return "Alle Grundlagen zu M1–M9+-Verbünden, Speicherschutz, Thunderbolt, Laufzeiten und KI-Agenten in der gewählten Sprache."
+        case ("help_sub", .en): return "Complete guide to M1–M9+ clustering, memory safety, Thunderbolt bridging, runtimes, and AI agents in your selected language."
+        case ("help_sub", .fr): return "Guide complet sur les grappes M1–M9+, la sécurité mémoire, Thunderbolt, les moteurs locaux et les agents."
+        case ("help_sub", .es): return "Guía completa sobre conjuntos M1–M9+, seguridad de memoria, Thunderbolt, motores locales y agentes."
+        case ("help_sub", .pt): return "Guia completo sobre conjuntos M1–M9+, segurança de memória, Thunderbolt, motores locais e agentes."
 
         case ("help_search_ph", .de): return "Handbuch durchsuchen (z. B. Thunderbolt, oMLX, M1, Reserve)..."
         case ("help_search_ph", .en): return "Search documentation (e.g., Thunderbolt, oMLX, M1, reserve)..."
@@ -298,11 +298,11 @@ enum L10n {
         case ("agents_title", .es): return "Conectar agentes locales y entornos"
         case ("agents_title", .pt): return "Ligar agentes locais e ambientes"
 
-        case ("agents_sub", .de): return "Verbinde OpenCode, Hermes Agent, Google Antigravity sowie weitere Werkzeuge mit einem Klick mit dem 52-GB-Verbund."
-        case ("agents_sub", .en): return "Connect OpenCode, Hermes Agent, Google Antigravity, and other local tools to your 52 GB cluster in one click."
-        case ("agents_sub", .fr): return "Reliez OpenCode, Hermes Agent, Google Antigravity et d'autres outils locaux à la grappe de 52 Go en un clic."
-        case ("agents_sub", .es): return "Conecta OpenCode, Hermes Agent, Google Antigravity y otras herramientas locales al conjunto de 52 GB en un clic."
-        case ("agents_sub", .pt): return "Ligue o OpenCode, o Hermes Agent, o Google Antigravity e outras ferramentas ao conjunto de 52 GB com um clique."
+        case ("agents_sub", .de): return "Verbinde OpenCode, Hermes Agent, Google Antigravity sowie weitere Werkzeuge mit einem Klick mit dem aktiven Mac-Verbund."
+        case ("agents_sub", .en): return "Connect OpenCode, Hermes Agent, Google Antigravity, and other local tools to your active Mac cluster in one click."
+        case ("agents_sub", .fr): return "Reliez OpenCode, Hermes Agent, Google Antigravity et d'autres outils locaux à votre grappe Mac active en un clic."
+        case ("agents_sub", .es): return "Conecta OpenCode, Hermes Agent, Google Antigravity y otras herramientas locales a tu agrupación Mac activa en un clic."
+        case ("agents_sub", .pt): return "Ligue o OpenCode, o Hermes Agent, o Google Antigravity e outras ferramentas ao seu agrupamento Mac ativo com um clique."
 
         // Model Studio
         case ("ms_title", .de): return "Modell-Auswahl & Speicher-Prüfung"
@@ -311,11 +311,11 @@ enum L10n {
         case ("ms_title", .es): return "Selección de modelo y memoria"
         case ("ms_title", .pt): return "Seleção de modelo e memória"
 
-        case ("ms_sub", .de): return "Wähle ein MLX-Modell — SS-CCC berechnet selbsttätig die anteilige Schichten-Verteilung auf 36 GB + 16 GB."
-        case ("ms_sub", .en): return "Choose an MLX model — SS-CCC calculates the proportional layer split across 36 GB + 16 GB automatically."
-        case ("ms_sub", .fr): return "Choisissez un modèle MLX — SS-CCC calcule la répartition des couches sur 36 Go + 16 Go."
-        case ("ms_sub", .es): return "Elige un modelo MLX — SS-CCC calcula el reparto de capas entre 36 GB + 16 GB."
-        case ("ms_sub", .pt): return "Escolha um modelo MLX — o SS-CCC calcula a repartição de camadas entre 36 GB + 16 GB."
+        case ("ms_sub", .de): return "Wähle ein Modell aus oMLX, Ollama oder llama.cpp — SS-CCC berechnet selbsttätig die anteilige Schichten-Verteilung auf alle aktiven Knoten."
+        case ("ms_sub", .en): return "Choose a model from oMLX, Ollama, or llama.cpp — SS-CCC calculates the proportional layer split across all active nodes."
+        case ("ms_sub", .fr): return "Choisissez un modèle depuis oMLX, Ollama ou llama.cpp — SS-CCC calcule la répartition des couches sur tous les nœuds actifs."
+        case ("ms_sub", .es): return "Elige un modelo de oMLX, Ollama o llama.cpp — SS-CCC calcula el reparto proporcional de capas entre todos los nodos activos."
+        case ("ms_sub", .pt): return "Escolha um modelo do oMLX, Ollama ou llama.cpp — o SS-CCC calcula a repartição proporcional de camadas entre todos os nós ativos."
 
         case ("ms_plan_title", .de): return "Gewichteter Schichten-Aufteilungsplan"
         case ("ms_plan_title", .en): return "Weighted Pipeline Sharding Plan"
@@ -384,11 +384,11 @@ enum L10n {
         case ("net_title", .es): return "Modo de transporte (LAN/Wi-Fi + Thunderbolt)"
         case ("net_title", .pt): return "Modo de transporte (LAN/Wi-Fi + Thunderbolt)"
 
-        case ("net_sub", .de): return "Wähle, wie Aktivierungs-Felder zwischen M1–M6-Macs (Thunderbolt 3, 4 und 5) übertragen werden."
-        case ("net_sub", .en): return "Choose how activation tensors are transferred across M1–M6 Macs (Thunderbolt 3, 4, and 5)."
-        case ("net_sub", .fr): return "Choisissez le mode de transfert entre Mac M1–M6 (Thunderbolt 3, 4 et 5)."
-        case ("net_sub", .es): return "Elige cómo se transfieren los tensores entre Mac M1–M6 (Thunderbolt 3, 4 y 5)."
-        case ("net_sub", .pt): return "Escolha como os tensores circulam entre Mac M1–M6 (Thunderbolt 3, 4 e 5)."
+        case ("net_sub", .de): return "Wähle, wie Aktivierungs-Felder zwischen M1–M9+-Macs (Thunderbolt 3, 4 und 5) übertragen werden."
+        case ("net_sub", .en): return "Choose how activation tensors are transferred across M1–M9+ Macs (Thunderbolt 3, 4, and 5)."
+        case ("net_sub", .fr): return "Choisissez le mode de transfert entre Mac M1–M9+ (Thunderbolt 3, 4 et 5)."
+        case ("net_sub", .es): return "Elige cómo se transfieren los tensores entre Mac M1–M9+ (Thunderbolt 3, 4 y 5)."
+        case ("net_sub", .pt): return "Escolha como os tensores circulam entre Mac M1–M9+ (Thunderbolt 3, 4 e 5)."
 
         case ("net_fast_synch", .de): return "MLX_METAL_FAST_SYNCH=1 einschalten"
         case ("net_fast_synch", .en): return "Enable MLX_METAL_FAST_SYNCH=1"
@@ -402,11 +402,11 @@ enum L10n {
         case ("net_fast_synch_sub", .es): return "Reduce la espera GPU/CPU de ~180 µs a ~4 µs (45× más rápido entre etapas)."
         case ("net_fast_synch_sub", .pt): return "Reduz a sincronização GPU/CPU de ~180 µs para ~4 µs (45× mais rápida)."
 
-        case ("net_checklist", .de): return "Prüfliste sobald der Mac Studio M5 Max eintrifft:"
-        case ("net_checklist", .en): return "Checklist once the Mac Studio M5 Max arrives:"
-        case ("net_checklist", .fr): return "Liste de contrôle à l'arrivée du Mac Studio M5 Max :"
-        case ("net_checklist", .es): return "Lista de verificación al llegar el Mac Studio M5 Max:"
-        case ("net_checklist", .pt): return "Lista de verificação quando o Mac Studio M5 Max chegar:"
+        case ("net_checklist", .de): return "Prüfliste für den Aufbau eines Thunderbolt-Verbunds:"
+        case ("net_checklist", .en): return "Checklist for setting up a Thunderbolt cluster:"
+        case ("net_checklist", .fr): return "Liste de contrôle pour monter une grappe Thunderbolt :"
+        case ("net_checklist", .es): return "Lista de verificación para configurar una agrupación Thunderbolt:"
+        case ("net_checklist", .pt): return "Lista de verificação para configurar um agrupamento Thunderbolt:"
 
         // Science & Benchmarks
         case ("sci_title", .de): return "Wissenschaftliche Grundlagen & Leistungs-Grenzkurve"

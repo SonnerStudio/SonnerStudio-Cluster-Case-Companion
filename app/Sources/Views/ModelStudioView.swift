@@ -9,12 +9,32 @@ struct ModelStudioView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 SolarisCard {
-                    Text(vm.t("ms_title"))
-                        .font(SolarisTheme.sectionTitle)
-                        .foregroundColor(SolarisTheme.textPrimary)
-                    Text(vm.t("ms_sub"))
-                        .font(SolarisTheme.bodyLarge)
-                        .foregroundColor(SolarisTheme.textSecondary)
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(vm.t("ms_title"))
+                                .font(SolarisTheme.sectionTitle)
+                                .foregroundColor(SolarisTheme.textPrimary)
+                            Text(vm.t("ms_sub"))
+                                .font(SolarisTheme.bodyLarge)
+                                .foregroundColor(SolarisTheme.textSecondary)
+                        }
+                        Spacer()
+                        Button {
+                            Task { await vm.refreshLiveModels() }
+                        } label: {
+                            Label(vm.isRefreshingModels ? "..." : "Modelle neu einlesen", systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(SolarisTheme.amber)
+                        .foregroundColor(.black)
+                        .disabled(vm.isRefreshingModels)
+                    }
+
+                    if !vm.modelDiscoveryNote.isEmpty {
+                        Text(vm.modelDiscoveryNote)
+                            .font(.caption)
+                            .foregroundColor(SolarisTheme.mint)
+                    }
 
                     VStack(spacing: 12) {
                         ForEach(vm.modelPresets) { preset in
@@ -25,9 +45,17 @@ struct ModelStudioView: View {
                             } label: {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(preset.displayName)
-                                            .font(SolarisTheme.cardTitle)
-                                            .foregroundColor(SolarisTheme.textPrimary)
+                                        HStack(spacing: 8) {
+                                            Text(preset.displayName)
+                                                .font(SolarisTheme.cardTitle)
+                                                .foregroundColor(SolarisTheme.textPrimary)
+                                            Text(preset.sourceLabel)
+                                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 3)
+                                                .background(Capsule().fill((preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amber).opacity(0.22)))
+                                                .foregroundColor(preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amberGlow)
+                                        }
                                         Text("\(preset.quantization) · \(preset.totalLayers) Layer · ~\(String(format: "%.1f", preset.estimatedGB)) GB · \(preset.notes)")
                                             .font(SolarisTheme.bodyLarge)
                                             .foregroundColor(SolarisTheme.textSecondary)

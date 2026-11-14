@@ -105,7 +105,7 @@ enum HelpDocsContent {
                     id: "universal-m",
                     icon: "macstudio.fill",
                     accent: SolarisTheme.amber,
-                    title: "1. Alle Apple Mac mit M-Prozessor im Verbund (M1–M6)",
+                    title: "1. Alle Apple Mac mit M-Prozessor im Verbund (M1–M9+)",
                     summary: "Jeder Mac mit Apple-Silicon-Chip (M1, M2, M3, M4, M5, M6 — Basis, Pro, Max oder Ultra) kann als gleichberechtigter Rechner in den Verbund aufgenommen werden: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio und Mac Pro.",
                     bullets: [
                         "Automatische Rang-Vergabe: Der Mac mit dem höchsten Speicherdurchsatz (z. B. Ultra oder Max) übernimmt selbsttätig Rang 0 (Leitrechner).",
@@ -190,7 +190,7 @@ enum HelpDocsContent {
                     id: "universal-m",
                     icon: "macstudio.fill",
                     accent: SolarisTheme.amber,
-                    title: "1. Universal Apple Silicon M-Series Clustering (M1–M6)",
+                    title: "1. Universal Apple Silicon M-Series Clustering (M1–M9+)",
                     summary: "Any Mac with an Apple Silicon M-series processor (M1, M2, M3, M4, M5, M6 — Base, Pro, Max, or Ultra) can join the cluster: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio, and Mac Pro.",
                     bullets: [
                         "Automatic Rank Assignment: The Mac with the highest memory bandwidth (e.g., Ultra or Max) automatically becomes Rank 0 (Coordinator).",
@@ -351,7 +351,7 @@ enum HelpDocsContent {
                     id: "universal-m",
                     icon: "macstudio.fill",
                     accent: SolarisTheme.amber,
-                    title: "1. Todos los Mac con procesador M en conjunto (M1–M6)",
+                    title: "1. Todos los Mac con procesador M en conjunto (M1–M9+)",
                     summary: "Cualquier Mac con Apple Silicon (M1, M2, M3, M4, M5, M6 — Base, Pro, Max o Ultra) puede unirse al conjunto: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio y Mac Pro.",
                     bullets: [
                         "Asignación automática de rango: el Mac con mayor ancho de banda de memoria asume el rango 0.",
@@ -425,7 +425,7 @@ enum HelpDocsContent {
                     id: "universal-m",
                     icon: "macstudio.fill",
                     accent: SolarisTheme.amber,
-                    title: "1. Todos os Mac com processador M em conjunto (M1–M6)",
+                    title: "1. Todos os Mac com processador M em conjunto (M1–M9+)",
                     summary: "Qualquer Mac com Apple Silicon (M1, M2, M3, M4, M5, M6 — Base, Pro, Max ou Ultra) pode integrar o conjunto: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio e Mac Pro.",
                     bullets: [
                         "Atribuição automática de nível: o Mac com maior largura de banda assume o nível 0.",

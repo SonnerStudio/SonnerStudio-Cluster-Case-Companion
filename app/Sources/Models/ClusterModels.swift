@@ -201,6 +201,8 @@ struct ModelPreset: Identifiable, Hashable {
     let estimatedGB: Double
     let kvReserveGB: Double
     let notes: String
+    var sourceLabel: String = "Referenz"
+    var isLiveDiscovered: Bool = false
 }
 
 struct NodeLayerAllocation: Identifiable {
@@ -265,16 +267,25 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
     case m6 = "Apple M6"
     case m6Pro = "Apple M6 Pro"
     case m6Max = "Apple M6 Max"
+    case m7 = "Apple M7"
+    case m7Pro = "Apple M7 Pro"
+    case m7Max = "Apple M7 Max"
+    case m8 = "Apple M8"
+    case m8Pro = "Apple M8 Pro"
+    case m8Max = "Apple M8 Max"
+    case m9 = "Apple M9"
+    case m9Pro = "Apple M9 Pro"
+    case m9Max = "Apple M9 Max"
 
     var id: String { rawValue }
 
     var cpuCores: Int {
         switch self {
         case .m1, .m2, .m3: return 8
-        case .m1Pro, .m2Pro, .m1Max, .m2Max, .m4, .m5, .m6: return 10
+        case .m1Pro, .m2Pro, .m1Max, .m2Max, .m4, .m5, .m6, .m7, .m8, .m9: return 10
         case .m3Pro, .m4Pro: return 12
-        case .m3Max, .m4Max, .m5Pro, .m6Pro: return 16
-        case .m5Max, .m6Max: return 18
+        case .m3Max, .m4Max, .m5Pro, .m6Pro, .m7Pro, .m8Pro, .m9Pro: return 16
+        case .m5Max, .m6Max, .m7Max, .m8Max, .m9Max: return 18
         case .m1Ultra: return 20
         case .m2Ultra: return 24
         case .m3Ultra: return 32
@@ -283,10 +294,10 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
 
     var gpuCores: Int {
         switch self {
-        case .m1, .m2, .m3, .m4, .m5, .m6: return 10
+        case .m1, .m2, .m3, .m4, .m5, .m6, .m7, .m8, .m9: return 10
         case .m1Pro, .m2Pro, .m3Pro, .m4Pro: return 18
-        case .m5Pro, .m6Pro: return 20
-        case .m1Max, .m2Max, .m5Max, .m6Max: return 32
+        case .m5Pro, .m6Pro, .m7Pro, .m8Pro, .m9Pro: return 20
+        case .m1Max, .m2Max, .m5Max, .m6Max, .m7Max, .m8Max, .m9Max: return 32
         case .m3Max, .m4Max: return 40
         case .m1Ultra: return 64
         case .m2Ultra: return 76
@@ -303,45 +314,26 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
 
     var typicalPowerLabel: String {
         switch self {
-        case .m1, .m2, .m3, .m4, .m5, .m6: return "10–45 W (Netzteil)"
-        case .m1Pro, .m2Pro, .m3Pro, .m4Pro, .m5Pro, .m6Pro: return "20–95 W (Netzteil)"
-        case .m1Max, .m2Max, .m3Max, .m4Max, .m5Max, .m6Max: return "30–145 W (Netzteil)"
+        case .m1, .m2, .m3, .m4, .m5, .m6, .m7, .m8, .m9: return "10–45 W (Netzteil)"
+        case .m1Pro, .m2Pro, .m3Pro, .m4Pro, .m5Pro, .m6Pro, .m7Pro, .m8Pro, .m9Pro: return "20–95 W (Netzteil)"
+        case .m1Max, .m2Max, .m3Max, .m4Max, .m5Max, .m6Max, .m7Max, .m8Max, .m9Max: return "30–145 W (Netzteil)"
         case .m1Ultra, .m2Ultra, .m3Ultra: return "45–215 W (Netzteil)"
         }
     }
 
     var bandwidthGBs: Double {
-        switch self {
-        case .m1: return 68.0
-        case .m2, .m3: return 100.0
-        case .m4: return 120.0
-        case .m5: return 153.0
-        case .m6: return 180.0
-        case .m3Pro: return 150.0
-        case .m1Pro, .m2Pro: return 200.0
-        case .m4Pro, .m5Pro: return 273.0
-        case .m6Pro: return 310.0
-        case .m1Max, .m2Max, .m3Max: return 400.0
-        case .m5Max: return 460.0
-        case .m4Max: return 546.0
-        case .m6Max: return 580.0
-        case .m1Ultra, .m2Ultra, .m3Ultra: return 800.0
-        }
+        Self.inferBandwidth(from: rawValue)
     }
 
     var thunderboltGen: Int {
-        switch self {
-        case .m1, .m2: return 3
-        case .m3Ultra, .m4Pro, .m4Max, .m5, .m5Pro, .m5Max, .m6, .m6Pro, .m6Max: return 5
-        default: return 4
-        }
+        Self.inferThunderboltGen(from: rawValue)
     }
 
     var defaultRamGB: Double {
         switch self {
-        case .m1, .m2, .m3, .m4, .m5, .m6: return 16.0
-        case .m1Pro, .m2Pro, .m3Pro, .m4Pro, .m5Pro, .m6Pro: return 24.0
-        case .m1Max, .m2Max, .m3Max, .m4Max, .m5Max, .m6Max: return 36.0
+        case .m1, .m2, .m3, .m4, .m5, .m6, .m7, .m8, .m9: return 16.0
+        case .m1Pro, .m2Pro, .m3Pro, .m4Pro, .m5Pro, .m6Pro, .m7Pro, .m8Pro, .m9Pro: return 24.0
+        case .m1Max, .m2Max, .m3Max, .m4Max, .m5Max, .m6Max, .m7Max, .m8Max, .m9Max: return 36.0
         case .m1Ultra, .m2Ultra, .m3Ultra: return 128.0
         }
     }
@@ -352,76 +344,114 @@ enum AppleSiliconChipFamily: String, CaseIterable, Identifiable {
         return max(4.0, totalRamGB - 4.0)
     }
 
-    static func inferBandwidth(from chipName: String) -> Double {
+    /// Parses any Apple Silicon generation (M1..M99) and tier (base/pro/max/ultra) for open-ended future support.
+    static func parseGenerationAndTier(from chipName: String) -> (gen: Int, tier: String) {
         let lower = chipName.lowercased()
-        if lower.contains("ultra") { return 800.0 }
-        if lower.contains("m6 max") { return 580.0 }
-        if lower.contains("m4 max") { return 546.0 }
-        if lower.contains("m5 max") { return 460.0 }
-        if lower.contains("max") { return 400.0 }
-        if lower.contains("m6 pro") { return 310.0 }
-        if lower.contains("m4 pro") || lower.contains("m5 pro") { return 273.0 }
-        if lower.contains("m3 pro") { return 150.0 }
-        if lower.contains("pro") { return 200.0 }
-        if lower.contains("m6") { return 180.0 }
-        if lower.contains("m5") { return 153.0 }
-        if lower.contains("m4") { return 120.0 }
-        if lower.contains("m2") || lower.contains("m3") { return 100.0 }
-        return 68.0
+        let tier: String
+        if lower.contains("ultra") { tier = "ultra" }
+        else if lower.contains("max") { tier = "max" }
+        else if lower.contains("pro") { tier = "pro" }
+        else { tier = "base" }
+
+        if let regex = try? NSRegularExpression(pattern: "\\bm(\\d+)", options: []),
+           let match = regex.firstMatch(in: lower, options: [], range: NSRange(lower.startIndex..., in: lower)),
+           let range = Range(match.range(at: 1), in: lower),
+           let gen = Int(lower[range]) {
+            return (gen, tier)
+        }
+        return (1, tier)
+    }
+
+    static func inferBandwidth(from chipName: String) -> Double {
+        let (gen, tier) = parseGenerationAndTier(from: chipName)
+        switch (gen, tier) {
+        case (1, "base"): return 68.0
+        case (2, "base"), (3, "base"): return 100.0
+        case (4, "base"): return 120.0
+        case (5, "base"): return 153.0
+        case (6, "base"): return 180.0
+        case (_, "base"): return 180.0 + Double(max(0, gen - 6)) * 28.0
+
+        case (3, "pro"): return 150.0
+        case (1, "pro"), (2, "pro"): return 200.0
+        case (4, "pro"), (5, "pro"): return 273.0
+        case (6, "pro"): return 310.0
+        case (_, "pro"): return 310.0 + Double(max(0, gen - 6)) * 45.0
+
+        case (1, "max"), (2, "max"), (3, "max"): return 400.0
+        case (4, "max"): return 546.0
+        case (5, "max"): return 460.0
+        case (6, "max"): return 580.0
+        case (_, "max"): return 580.0 + Double(max(0, gen - 6)) * 80.0
+
+        case (1, "ultra"), (2, "ultra"), (3, "ultra"): return 800.0
+        default: return 800.0 + Double(max(0, gen - 3)) * 160.0
+        }
     }
 
     static func inferThunderboltGen(from chipName: String) -> Int {
-        let lower = chipName.lowercased()
-        if lower.contains("m6") || lower.contains("m5") || lower.contains("m3 ultra")
-            || lower.contains("m4 pro") || lower.contains("m4 max") {
+        let (gen, tier) = parseGenerationAndTier(from: chipName)
+        if gen >= 5 || (gen == 3 && tier == "ultra") || (gen == 4 && (tier == "pro" || tier == "max" || tier == "ultra")) {
             return 5
         }
-        if (lower.contains("m1") || lower.contains("m2"))
-            && !lower.contains("pro") && !lower.contains("max") && !lower.contains("ultra") {
+        if (gen == 1 || gen == 2) && tier == "base" {
             return 3
         }
         return 4
     }
 
     static func inferGPUCores(from chipName: String) -> Int {
-        let lower = chipName.lowercased()
-        if lower.contains("m3 ultra") { return 80 }
-        if lower.contains("m2 ultra") { return 76 }
-        if lower.contains("m1 ultra") { return 64 }
-        if lower.contains("m3 max") || lower.contains("m4 max") { return 40 }
-        if lower.contains("max") { return 32 }
-        if lower.contains("m5 pro") || lower.contains("m6 pro") { return 20 }
-        if lower.contains("pro") { return 18 }
-        return 10
+        let (gen, tier) = parseGenerationAndTier(from: chipName)
+        switch tier {
+        case "ultra":
+            if gen == 1 { return 64 }
+            if gen == 2 { return 76 }
+            return 80 + max(0, gen - 3) * 8
+        case "max":
+            if gen == 3 || gen == 4 { return 40 }
+            return gen >= 7 ? 32 + (gen - 6) * 4 : 32
+        case "pro":
+            return gen >= 5 ? 20 + max(0, gen - 6) * 2 : 18
+        default:
+            return gen >= 7 ? 10 + (gen - 6) * 2 : 10
+        }
     }
 
     static func inferANECores(from chipName: String) -> Int {
-        chipName.lowercased().contains("ultra") ? 32 : 16
+        let (gen, tier) = parseGenerationAndTier(from: chipName)
+        if tier == "ultra" { return 32 }
+        return gen >= 8 ? 32 : 16
     }
 
     static func inferFP16TFLOPS(from chipName: String) -> Double {
-        let lower = chipName.lowercased()
-        if lower.contains("m3 ultra") { return 114.6 }
-        if lower.contains("m2 ultra") { return 54.4 }
-        if lower.contains("m1 ultra") { return 42.0 }
-        if lower.contains("m6 max") { return 46.0 }
-        if lower.contains("m5 max") { return 41.0 }
-        if lower.contains("m4 max") { return 36.8 }
-        if lower.contains("m3 max") { return 32.8 }
-        if lower.contains("m2 max") { return 27.2 }
-        if lower.contains("m1 max") { return 20.8 }
-        if lower.contains("m6 pro") { return 23.0 }
-        if lower.contains("m5 pro") { return 20.8 }
-        if lower.contains("m4 pro") { return 18.4 }
-        if lower.contains("m3 pro") { return 14.8 }
-        if lower.contains("m2 pro") { return 13.6 }
-        if lower.contains("m1 pro") { return 10.6 }
-        if lower.contains("m6") { return 11.6 }
-        if lower.contains("m5") { return 10.4 }
-        if lower.contains("m4") { return 8.6 }
-        if lower.contains("m3") { return 8.2 }
-        if lower.contains("m2") { return 7.2 }
-        return 5.2
+        let (gen, tier) = parseGenerationAndTier(from: chipName)
+        switch (gen, tier) {
+        case (1, "ultra"): return 42.0
+        case (2, "ultra"): return 54.4
+        case (3, "ultra"): return 114.6
+        case (_, "ultra"): return 114.6 + Double(max(0, gen - 3)) * 18.0
+        case (1, "max"): return 20.8
+        case (2, "max"): return 27.2
+        case (3, "max"): return 32.8
+        case (4, "max"): return 36.8
+        case (5, "max"): return 41.0
+        case (6, "max"): return 46.0
+        case (_, "max"): return 46.0 + Double(max(0, gen - 6)) * 6.5
+        case (1, "pro"): return 10.6
+        case (2, "pro"): return 13.6
+        case (3, "pro"): return 14.8
+        case (4, "pro"): return 18.4
+        case (5, "pro"): return 20.8
+        case (6, "pro"): return 23.0
+        case (_, "pro"): return 23.0 + Double(max(0, gen - 6)) * 3.5
+        case (1, "base"): return 5.2
+        case (2, "base"): return 7.2
+        case (3, "base"): return 8.2
+        case (4, "base"): return 8.6
+        case (5, "base"): return 10.4
+        case (6, "base"): return 11.6
+        default: return 11.6 + Double(max(0, gen - 6)) * 1.8
+        }
     }
 
     static func inferTypicalWatts(from chipName: String) -> Double {

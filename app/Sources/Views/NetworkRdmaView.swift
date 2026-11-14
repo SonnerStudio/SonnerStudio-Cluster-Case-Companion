@@ -52,10 +52,10 @@ struct NetworkRdmaView: View {
                     }
                 }
 
-                // Thunderbolt-Klassen der Generationen M1–M6
+                // Thunderbolt-Klassen der Generationen M1–M9+
                 SolarisCard(accent: SolarisTheme.mint) {
                     HStack {
-                        Text("Thunderbolt-Klassen (M1–M6) & Übertragungsraten")
+                        Text("Thunderbolt-Klassen (M1–M9+) & Übertragungsraten")
                             .font(SolarisTheme.sectionTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Spacer()
@@ -92,7 +92,7 @@ struct NetworkRdmaView: View {
                         }
                         GridRow {
                             Text("Thunderbolt 5").foregroundColor(SolarisTheme.emerald)
-                            Text("M3 Ultra, M4 Pro/Max, M5–M6 Max").foregroundColor(SolarisTheme.textPrimary)
+                            Text("M3 Ultra, M4 Pro/Max, M5–M9+").foregroundColor(SolarisTheme.textPrimary)
                             Text("80–120 Gbps (65–80 Gbps real)").foregroundColor(SolarisTheme.textPrimary)
                             Text("Nativ (75–110 Gbps)").foregroundColor(SolarisTheme.emerald)
                         }
@@ -121,9 +121,9 @@ struct NetworkRdmaView: View {
                         Text(vm.t("net_checklist"))
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
-                        Text("1. Thunderbolt-Kabel verbinden & `scripts/setup_tb_network.sh studio` bzw. `mini` ausführen.")
-                        Text("2. Mit `iperf3 -c 10.99.1.1` Durchsatz prüfen (Ziel: 30–37 Gbps).")
-                        Text("3. Simulation oben rechts ausschalten — Bonjour erkennt den Mac Studio automatisch.")
+                        Text("1. Thunderbolt-Kabel zwischen den Macs verbinden & `scripts/setup_tb_network.sh` auf den Knoten ausführen.")
+                        Text("2. Mit `iperf3 -c 10.99.1.1` Durchsatz prüfen (TB3/4: ~26–37 Gbps, TB5: ~65–80+ Gbps).")
+                        Text("3. Nachbildung unten links bei Bedarf abschalten — Bonjour erkennt verbundene Macs selbsttätig.")
                     }
                     .font(SolarisTheme.bodyLarge)
                     .foregroundColor(SolarisTheme.textSecondary)

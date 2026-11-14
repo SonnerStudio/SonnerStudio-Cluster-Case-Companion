@@ -40,7 +40,7 @@ final class ClusterViewModel: ObservableObject {
     @Published var localPowerLabel: String = "10–45 W (Netzteil)"
     @Published var lastProbeTimestamp: String = "Gerade ausgelesen"
 
-    @Published var promptInput: String = "Erkläre kurz, wie 36 GB + 16 GB per Pipeline Parallelism gekoppelt werden."
+    @Published var promptInput: String = "Erkläre kurz, wie mehrere Apple-Silicon-Macs per Pipeline-Parallelität gekoppelt werden."
     @Published var consoleOutput: String = "Bereit. Starte den Python-Daemon (uvicorn core.api.gateway:app --port 8000) oder teste direkt im Vorschau-Modus."
     @Published var isSendingPrompt: Bool = false
     @Published var customNodes: [ClusterNodeModel] = []
@@ -49,6 +49,8 @@ final class ClusterViewModel: ObservableObject {
     @Published var newRamGB: Double = 36.0
     @Published var newCustomName: String = ""
     @Published var helpSearchText: String = ""
+    @Published var isRefreshingModels: Bool = false
+    @Published var modelDiscoveryNote: String = ""
 
     // Scientific Roofline & Benchmark State
     @Published var sciBatchSize: Int = 1
@@ -60,24 +62,17 @@ final class ClusterViewModel: ObservableObject {
     @Published var sciStatusMessage: String = ""
     @Published var sciExportFeedback: String = ""
 
-    let modelPresets: [ModelPreset] = [
-        ModelPreset(
-            id: "mlx-community/Llama-3.3-70B-Instruct-4bit",
-            displayName: "Llama 3.3 70B Instruct",
-            quantization: "4-bit MLX",
-            totalLayers: 80,
-            estimatedGB: 37.5,
-            kvReserveGB: 4.0,
-            notes: "Flaggschiff für 52-GB-Verbund · benötigt Studio + Mini"
-        ),
+    static let fallbackReferenceModels: [ModelPreset] = [
         ModelPreset(
             id: "mlx-community/Qwen2.5-32B-Instruct-4bit",
             displayName: "Qwen 2.5 32B Instruct",
             quantization: "4-bit MLX",
             totalLayers: 64,
             estimatedGB: 19.2,
-            kvReserveGB: 6.0,
-            notes: "Sehr schnell · viel Platz für langen Kontext"
+            kvReserveGB: 4.0,
+            notes: "Referenzprofil · kompakter Verbund oder Einzel-Mac ab 24 GB",
+            sourceLabel: "Referenz",
+            isLiveDiscovered: false
         ),
         ModelPreset(
             id: "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit",
@@ -85,24 +80,44 @@ final class ClusterViewModel: ObservableObject {
             quantization: "4-bit MLX",
             totalLayers: 64,
             estimatedGB: 19.5,
-            kvReserveGB: 6.0,
-            notes: "Starkes Reasoning-Modell im Hybrid-Cluster"
+            kvReserveGB: 4.0,
+            notes: "Referenzprofil · Schlussfolgerungs-Modell im Verbund",
+            sourceLabel: "Referenz",
+            isLiveDiscovered: false
+        ),
+        ModelPreset(
+            id: "mlx-community/Llama-3.3-70B-Instruct-4bit",
+            displayName: "Llama 3.3 70B Instruct",
+            quantization: "4-bit MLX",
+            totalLayers: 80,
+            estimatedGB: 37.5,
+            kvReserveGB: 4.0,
+            notes: "Referenzprofil · großer Verbund ab ~48 GB nutzbarem Speicher",
+            sourceLabel: "Referenz",
+            isLiveDiscovered: false
         ),
         ModelPreset(
             id: "mlx-community/Mistral-Large-Instruct-2411-4bit",
-            displayName: "Mistral Large 123B (zu groß)",
+            displayName: "Mistral Large 123B",
             quantization: "4-bit MLX",
             totalLayers: 88,
             estimatedGB: 68.0,
             kvReserveGB: 4.0,
-            notes: "Demonstriert OOM-Schutz: überschreitet 42 GB effektiv"
+            notes: "Referenzprofil · Hochkapazitäts-Verbund (z. B. Ultra / Multi-Max)",
+            sourceLabel: "Referenz",
+            isLiveDiscovered: false
         )
     ]
 
+    @Published var modelPresets: [ModelPreset] = ClusterViewModel.fallbackReferenceModels
+
     init() {
-        self.selectedModel = modelPresets[0]
+        self.selectedModel = ClusterViewModel.fallbackReferenceModels[0]
         refreshLocalHardwareProbe()
-        Task { await checkDaemonHealth() }
+        Task {
+            await checkDaemonHealth()
+            await refreshLiveModels()
+        }
     }
 
     private func runShell(_ launchPath: String, _ args: [String]) -> String {
@@ -532,7 +547,7 @@ final class ClusterViewModel: ObservableObject {
               },
               "models": {
                 "\(selectedModel.id)": {
-                  "name": "\(selectedModel.displayName) (52 GB Cluster)"
+                  "name": "\(selectedModel.displayName) (\(Int(totalPhysicalRamGB)) GB Cluster)"
                 },
                 "mlx-community/Qwen2.5-32B-Instruct-4bit": {
                   "name": "Qwen 2.5 32B (Fast)"
@@ -802,6 +817,221 @@ final class ClusterViewModel: ObservableObject {
         } catch {
             bridgeStatusMessage = "Fehler beim Bridge-Export: \(error.localizedDescription)"
         }
+    }
+
+    // MARK: - Live Model Discovery (oMLX, Ollama, llama.cpp & Local Cache)
+
+    static func inferModelSpecs(from modelId: String, knownSizeGB: Double? = nil, knownQuant: String? = nil) -> (layers: Int, gb: Double, quant: String) {
+        let lower = modelId.lowercased()
+        let quant: String
+        if let kq = knownQuant, !kq.isEmpty {
+            quant = kq
+        } else if lower.contains("8bit") || lower.contains("q8") {
+            quant = "8-bit"
+        } else if lower.contains("fp16") || lower.contains("bf16") {
+            quant = "FP16"
+        } else if lower.contains("q6") {
+            quant = "6-bit"
+        } else if lower.contains("q5") {
+            quant = "5-bit"
+        } else {
+            quant = "4-bit"
+        }
+
+        // Parse parameter count in billions from name (e.g. 70b, 32b, 14b, 8b, 7b, 3b, 1.5b)
+        var paramsB = 8.0
+        if let regex = try? NSRegularExpression(pattern: "(\\d+(?:\\.\\d+)?)\\s*b\\b", options: []),
+           let match = regex.firstMatch(in: lower, options: [], range: NSRange(lower.startIndex..., in: lower)),
+           let r = Range(match.range(at: 1), in: lower),
+           let parsed = Double(lower[r]) {
+            paramsB = parsed
+        }
+
+        let layers: Int
+        if paramsB >= 100 { layers = 88 }
+        else if paramsB >= 65 { layers = 80 }
+        else if paramsB >= 28 { layers = 64 }
+        else if paramsB >= 20 { layers = 48 }
+        else if paramsB >= 12 { layers = 40 }
+        else if paramsB >= 6 { layers = 32 }
+        else { layers = 24 }
+
+        let bytesPerParam: Double = quant.contains("FP16") ? 2.0 : (quant.contains("8") ? 1.05 : 0.56)
+        let gb = knownSizeGB ?? max(1.0, (paramsB * bytesPerParam * 1.05 * 10.0).rounded() / 10.0)
+        return (layers, gb, quant)
+    }
+
+    func refreshLiveModels() async {
+        isRefreshingModels = true
+        var live: [ModelPreset] = []
+        var seenIds = Set<String>()
+
+        // 1. oMLX / OpenAI-compatible endpoint (:8000)
+        if let url = URL(string: "http://127.0.0.1:8000/v1/models") {
+            var req = URLRequest(url: url)
+            req.timeoutInterval = 1.5
+            if let (data, resp) = try? await URLSession.shared.data(for: req),
+               let http = resp as? HTTPURLResponse, http.statusCode == 200,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let arr = json["data"] as? [[String: Any]] {
+                for item in arr {
+                    if let id = item["id"] as? String, !seenIds.contains(id) {
+                        seenIds.insert(id)
+                        let specs = Self.inferModelSpecs(from: id)
+                        live.append(ModelPreset(
+                            id: id,
+                            displayName: id.components(separatedBy: "/").last ?? id,
+                            quantization: "\(specs.quant) MLX",
+                            totalLayers: specs.layers,
+                            estimatedGB: specs.gb,
+                            kvReserveGB: 4.0,
+                            notes: "Live erkannt über oMLX (:8000)",
+                            sourceLabel: "oMLX Live",
+                            isLiveDiscovered: true
+                        ))
+                    }
+                }
+            }
+        }
+
+        // 2. Ollama API (:11434/api/tags) with exact byte sizes & quantization_level
+        if let url = URL(string: "http://127.0.0.1:11434/api/tags") {
+            var req = URLRequest(url: url)
+            req.timeoutInterval = 1.5
+            if let (data, resp) = try? await URLSession.shared.data(for: req),
+               let http = resp as? HTTPURLResponse, http.statusCode == 200,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let models = json["models"] as? [[String: Any]] {
+                for m in models {
+                    if let name = m["name"] as? String, !seenIds.contains(name) {
+                        seenIds.insert(name)
+                        let sizeBytes = (m["size"] as? NSNumber)?.doubleValue ?? 0
+                        let sizeGB = sizeBytes > 0 ? (sizeBytes / 1_073_741_824.0 * 10.0).rounded() / 10.0 : nil
+                        let details = m["details"] as? [String: Any]
+                        let qLevel = details?["quantization_level"] as? String
+                        let paramSize = details?["parameter_size"] as? String ?? ""
+                        let specs = Self.inferModelSpecs(from: "\(name) \(paramSize)", knownSizeGB: sizeGB, knownQuant: qLevel)
+                        live.append(ModelPreset(
+                            id: name,
+                            displayName: name,
+                            quantization: "Ollama · \(specs.quant)",
+                            totalLayers: specs.layers,
+                            estimatedGB: specs.gb,
+                            kvReserveGB: 4.0,
+                            notes: "Live erkannt über Ollama (:11434)",
+                            sourceLabel: "Ollama Live",
+                            isLiveDiscovered: true
+                        ))
+                    }
+                }
+            }
+        }
+
+        // 3. llama.cpp server (:8080/v1/models)
+        if let url = URL(string: "http://127.0.0.1:8080/v1/models") {
+            var req = URLRequest(url: url)
+            req.timeoutInterval = 1.5
+            if let (data, resp) = try? await URLSession.shared.data(for: req),
+               let http = resp as? HTTPURLResponse, http.statusCode == 200,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let arr = json["data"] as? [[String: Any]] {
+                for item in arr {
+                    if let id = item["id"] as? String, !seenIds.contains(id) {
+                        seenIds.insert(id)
+                        let specs = Self.inferModelSpecs(from: id)
+                        live.append(ModelPreset(
+                            id: id,
+                            displayName: URL(fileURLWithPath: id).lastPathComponent,
+                            quantization: "llama.cpp · \(specs.quant)",
+                            totalLayers: specs.layers,
+                            estimatedGB: specs.gb,
+                            kvReserveGB: 4.0,
+                            notes: "Live erkannt über llama.cpp (:8080)",
+                            sourceLabel: "llama.cpp Live",
+                            isLiveDiscovered: true
+                        ))
+                    }
+                }
+            }
+        }
+
+        // 4. Local GGUF & HuggingFace MLX cache scan (sync helper for Swift 6 concurrency)
+        let localDiskModels = Self.scanLocalDiskModels(excludingIds: seenIds)
+        live.append(contentsOf: localDiskModels)
+
+        if !live.isEmpty {
+            modelPresets = live
+            if !live.contains(where: { $0.id == selectedModel.id }) {
+                selectedModel = live[0]
+                kvCacheReserveGB = live[0].kvReserveGB
+            }
+            modelDiscoveryNote = "\(live.count) echte(s) Modell(e) aus oMLX / Ollama / llama.cpp / lokalem Speicher eingelesen."
+        } else {
+            modelPresets = Self.fallbackReferenceModels
+            modelDiscoveryNote = "Keine laufenden oMLX-/Ollama-/llama.cpp-Modelle gefunden — zeige neutrale Referenzprofile."
+        }
+        isRefreshingModels = false
+    }
+
+    private static func scanLocalDiskModels(excludingIds: Set<String>) -> [ModelPreset] {
+        var found: [ModelPreset] = []
+        var seenIds = excludingIds
+        let fm = FileManager.default
+        let home = fm.homeDirectoryForCurrentUser
+        let ggufDirs = [
+            home.appendingPathComponent("Models"),
+            home.appendingPathComponent(".cache/llama.cpp"),
+            home.appendingPathComponent("Downloads")
+        ]
+        for dir in ggufDirs {
+            if let enumerator = fm.enumerator(at: dir, includingPropertiesForKeys: [.fileSizeKey]) {
+                for case let fileURL as URL in enumerator where fileURL.pathExtension.lowercased() == "gguf" {
+                    let id = fileURL.lastPathComponent
+                    if !seenIds.contains(id) {
+                        seenIds.insert(id)
+                        let bytes = (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Double.init) ?? 0
+                        let sizeGB = bytes > 0 ? (bytes / 1_073_741_824.0 * 10.0).rounded() / 10.0 : nil
+                        let specs = inferModelSpecs(from: id, knownSizeGB: sizeGB)
+                        found.append(ModelPreset(
+                            id: fileURL.path,
+                            displayName: id,
+                            quantization: "GGUF · \(specs.quant)",
+                            totalLayers: specs.layers,
+                            estimatedGB: specs.gb,
+                            kvReserveGB: 4.0,
+                            notes: "Lokale GGUF-Datei (\(fileURL.deletingLastPathComponent().lastPathComponent))",
+                            sourceLabel: "Lokal GGUF",
+                            isLiveDiscovered: true
+                        ))
+                    }
+                }
+            }
+        }
+
+        let hfHub = home.appendingPathComponent(".cache/huggingface/hub")
+        if let entries = try? fm.contentsOfDirectory(at: hfHub, includingPropertiesForKeys: [.isDirectoryKey]) {
+            for dir in entries where dir.lastPathComponent.hasPrefix("models--") {
+                let repoId = dir.lastPathComponent
+                    .replacingOccurrences(of: "models--", with: "")
+                    .replacingOccurrences(of: "--", with: "/")
+                if !seenIds.contains(repoId) {
+                    seenIds.insert(repoId)
+                    let specs = inferModelSpecs(from: repoId)
+                    found.append(ModelPreset(
+                        id: repoId,
+                        displayName: repoId.components(separatedBy: "/").last ?? repoId,
+                        quantization: "HF/MLX · \(specs.quant)",
+                        totalLayers: specs.layers,
+                        estimatedGB: specs.gb,
+                        kvReserveGB: 4.0,
+                        notes: "Lokaler HuggingFace-/MLX-Cache",
+                        sourceLabel: "MLX Cache",
+                        isLiveDiscovered: true
+                    ))
+                }
+            }
+        }
+        return found
     }
 
     // MARK: - Scientific Roofline, Energetics & Reproducible Benchmarking
