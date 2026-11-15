@@ -2562,6 +2562,9 @@ final class ClusterViewModel: ObservableObject {
                 mmmLastResult = res
                 mmmHistory.insert(res, at: 0)
                 if mmmHistory.count > 20 { mmmHistory.removeLast(mmmHistory.count - 20) }
+                if sciAutoRecordHistory {
+                    recordScienceHistoryFromMMM(res)
+                }
                 mmmStatusMessage = "Simulation abgeschlossen (\(active.count) Modelle · \(String(format: "%.1f", combinedTok)) tok/s)."
                 isRunningMultiModel = false
                 return
@@ -2618,6 +2621,9 @@ final class ClusterViewModel: ObservableObject {
             mmmLastResult = res
             mmmHistory.insert(res, at: 0)
             if mmmHistory.count > 20 { mmmHistory.removeLast(mmmHistory.count - 20) }
+            if sciAutoRecordHistory {
+                recordScienceHistoryFromMMM(res)
+            }
             mmmStatusMessage = "Live-Ausführung abgeschlossen (\(successCount) Modelle · \(String(format: "%.1f", combined)) tok/s)."
             isRunningMultiModel = false
         }
@@ -2626,6 +2632,46 @@ final class ClusterViewModel: ObservableObject {
     /// Estimated tokens/sec available per concurrent IDE / Agent Harness drawing from the unified cluster.
     var mmmPerClientTokPerSec: Double {
         mmmEstimatedCombinedTokPerSec / Double(max(1, mmmActiveClientCount))
+    }
+
+    var mmmMeanObservedTokPerSec: Double {
+        guard !mmmHistory.isEmpty else { return mmmLastResult?.combinedTokPerSec ?? mmmEstimatedCombinedTokPerSec }
+        return mmmHistory.reduce(0.0) { $0 + $1.combinedTokPerSec } / Double(mmmHistory.count)
+    }
+
+    var mmmMeanSpeedupFactor: Double {
+        guard !mmmHistory.isEmpty else { return mmmLastResult?.speedupFactor ?? 1.0 }
+        return mmmHistory.reduce(0.0) { $0 + $1.speedupFactor } / Double(mmmHistory.count)
+    }
+
+    /// Feeds Multi-Model-Mode (MMM) orchestration runs directly into the Science & Roofline telemetry history.
+    func recordScienceHistoryFromMMM(_ res: MultiModelRunResult) {
+        let tpot = res.combinedTokPerSec > 0 ? (1000.0 / res.combinedTokPerSec) : activeTPOTMs
+        let jPerTok = res.combinedTokPerSec > 0 ? (activeWatts / res.combinedTokPerSec) : activeJoulesPerToken
+        let edp = jPerTok * (tpot / 1000.0)
+        let co2 = ((jPerTok * 1_000_000.0) / 3_600_000.0) * sciCarbonRegion.gco2PerKwh
+        let entry = ScienceHistoryEntry(
+            timestamp: currentClockTime(),
+            positionFilter: .globalAll,
+            scopeLabel: "MMM · \(res.scope.rawValue)",
+            modelName: "\(res.strategy.rawValue) (\(res.activeModelsCount)x)",
+            nodeCount: max(1, mmmAvailableTargets.count),
+            usableVramGB: res.usableVramPoolGB,
+            ttftMs: res.aggregateTtftMs,
+            tpotMs: tpot,
+            tokPerSec: res.combinedTokPerSec,
+            wanRttMs: res.scope == .local ? 0.2 : activeStepRttMs,
+            bubblePercent: activePipelineBubbleFraction * 100.0,
+            joulesPerToken: jPerTok,
+            edpJouleSec: edp,
+            co2PerMillionTok: co2,
+            bottleneckRegime: res.isLiveExecution ? "MMM Live SSE" : "MMM Simulation",
+            note: String(format: "MMM Speedup %.2fx · %d IDEs/Harnesses", res.speedupFactor, mmmActiveClientCount)
+        )
+        sciHistoryEntries.insert(entry, at: 0)
+        if sciHistoryEntries.count > 120 {
+            sciHistoryEntries.removeLast(sciHistoryEntries.count - 120)
+        }
     }
 
     /// Generates a unified OpenAI-compatible Multi-IDE & Harness routing config for simultaneous cluster consumption.

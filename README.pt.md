@@ -92,7 +92,7 @@ flowchart LR
 | **5. Agrupamento Internet, Audio-Party e conversa** | Ligar Mac TB/RDMA locais a nós WAN globais, monitorizar em tempo real a **largura de banda e débito WAN** (`netstat`, ping/jitter, `networkQuality -c`) e coordenar via Audio-Party e conversa (`/ws/wan-audio`, `/ws/wan`). |
 | **6. Modo Multimodelo (MMM)** | Orquestrar vários modelos em conjunto **Local**, **Internet-WAN** ou **Híbrido** (*Pool paralelo*, *Mixture-of-Agents*, *Speculative Decoding*, *Pipeline*) com proteção VRAM e consumo simultâneo **Multi-IDE / Harnesses** (`:8000/v1`). |
 | **7. Agentes e ambientes** | Configuração num clique para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** e **Xcode**. |
-| **8. Ciência e Roofline** | Laboratório de 6 separadores com **streaming SSE real e ping ICMP** em modo real (simulação realista identificada): curva Roofline, escala `N=1..128`, *Petals/SWARM* e *DiLoCo*, equação KV, `J/token` / `EDP` / `CO₂`, `IC₉₅`, exportação `CSV / JSON / LaTeX / BibTeX` e **Histórico**. |
+| **8. Ciência e Roofline** | Laboratório de 6 separadores com **streaming SSE real e ping ICMP** em modo real (simulação realista identificada), **avaliação direta do Modo Multimodelo (MMM)** (aceleração, `tok/s` combinados, VRAM e carga multi-IDE), curva Roofline, `N=1..128`, *Petals/SWARM* e *DiLoCo*, equação KV, `J/token` / `EDP` / `CO₂`, `IC₉₅`, exportação `CSV / JSON / LaTeX / BibTeX` e **Histórico**. |
 | **9. API e consola** | Pontos de extremidade compatíveis com OpenAI / Ollama / oMLX, registo de atividade e comandos de arranque prontos a copiar. |
 | **10. Ajuda e documentação** | Manual integrado de 12 capítulos em 8 idiomas (`⌘?`) com pesquisa integral e guia passo a passo. |
 

@@ -443,6 +443,54 @@ struct ScienceBenchmarksView: View {
                         .foregroundColor(SolarisTheme.textSecondary)
                 }
             }
+
+            // Multi-Model-Mode (MMM) Scientific Evaluation Card
+            mmmScienceEvaluationCard
+        }
+    }
+
+    private var mmmScienceEvaluationCard: some View {
+        SolarisCard(accent: SolarisTheme.mint) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Multi-Model-Mode (MMM) — Wissenschaftliche Auswertung")
+                        .font(SolarisTheme.cardTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text("Direkte Auswertung der zusammengeführten Multi-Modell-Läufe (\(vm.mmmScope.rawValue) · \(vm.mmmStrategy.rawValue)) inkl. Multi-IDE-Last.")
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+                Spacer()
+                if let lastMmm = vm.mmmLastResult {
+                    Button("MMM-Lauf in Verlauf übernehmen") {
+                        vm.recordScienceHistoryFromMMM(lastMmm)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(SolarisTheme.mint)
+                    .foregroundColor(.black)
+                }
+            }
+
+            HStack(spacing: 14) {
+                ScienceMetricTile(
+                    label: "MMM Durchsatz (Mittel)",
+                    value: String(format: "%.1f tok/s", vm.mmmMeanObservedTokPerSec),
+                    sub: "\(vm.mmmHistory.count) Läufe · \(vm.mmmActiveSlots.count) aktive Slots",
+                    accent: SolarisTheme.mint
+                )
+                ScienceMetricTile(
+                    label: "Speedup vs. Einzelmodell",
+                    value: String(format: "%.2fx", vm.mmmMeanSpeedupFactor),
+                    sub: vm.mmmLastResult.map { $0.isLiveExecution ? "Live SSE" : "Simulation" } ?? "Theoretische Schätzung",
+                    accent: SolarisTheme.amberGlow
+                )
+                ScienceMetricTile(
+                    label: "VRAM-Pool & Multi-IDE",
+                    value: String(format: "%.1f / %.1f GB", vm.mmmTotalRequiredVramGB, vm.mmmUsableVramPoolGB),
+                    sub: String(format: "%.1f tok/s je Client (%d IDEs)", vm.mmmPerClientTokPerSec, vm.mmmActiveClientCount),
+                    accent: vm.mmmFitsInClusterPool ? SolarisTheme.emerald : SolarisTheme.coral
+                )
+            }
         }
     }
 

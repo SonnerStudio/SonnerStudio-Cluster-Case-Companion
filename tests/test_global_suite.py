@@ -367,9 +367,14 @@ class GlobalProjectTests(unittest.TestCase):
             "mmmFitsInClusterPool",
             "mmmPerClientTokPerSec",
             "exportMultiIdeMmmGatewayConfig",
+            "recordScienceHistoryFromMMM",
+            "mmmMeanObservedTokPerSec",
+            "mmmMeanSpeedupFactor",
         ]:
             self.assertIn(vm_sym, vm)
 
+        sci_view = (APP_SOURCES / "Views" / "ScienceBenchmarksView.swift").read_text(encoding="utf-8")
+        self.assertIn("mmmScienceEvaluationCard", sci_view)
         self.assertIn("Multi-Model-Mode (MMM)", mmm_view)
         self.assertIn("multiIdeHarnessConsumptionCard", mmm_view)
         self.assertIn("Multi-Model-Mode (MMM)", impl_plan)

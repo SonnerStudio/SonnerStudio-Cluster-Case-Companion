@@ -92,7 +92,7 @@ flowchart LR
 | **5. Grappe Internet, Audio-Party & messagerie** | Coupler les Mac TB/RDMA locaux au réseau WAN mondial, surveiller la **bande passante & le débit WAN** (`netstat`, ping/jitter, `networkQuality -c`) et coordonner en Audio-Party & messagerie (`/ws/wan-audio`, `/ws/wan`). |
 | **6. Mode Multi-Modèles (MMM)** | Orchestrer plusieurs modèles sur grappe **Locale**, **Internet-WAN** ou **Hybride** (*Pool parallèle*, *Mixture-of-Agents*, *Speculative Decoding*, *Pipeline*) avec garde VRAM et consommation simultanée **Multi-IDE / Harnesses** (`:8000/v1`). |
 | **7. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
-| **8. Science et Roofline** | Laboratoire 6 onglets avec **streaming SSE réel & ping ICMP** en mode réel (simulation réaliste étiquetée) : courbe Roofline, montée `N=1..128`, *Petals/SWARM* & *DiLoCo*, équation KV, `J/jeton` / `EDP` / `CO₂`, `IC₉₅`, export `CSV / JSON / LaTeX / BibTeX` et **Historique**. |
+| **8. Science et Roofline** | Laboratoire 6 onglets avec **streaming SSE réel & ping ICMP** en mode réel (simulation réaliste étiquetée), **évaluation directe du Mode Multi-Modèles (MMM)** (accélération, `tok/s` combinés, VRAM & charge multi-EDI), courbe Roofline, `N=1..128`, *Petals/SWARM* & *DiLoCo*, mémoire KV, `J/jeton` / `EDP` / `CO₂`, `IC₉₅`, export `CSV / JSON / LaTeX / BibTeX` et **Historique**. |
 | **9. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |
 | **10. Aide et documentation** | Manuel intégré à 12 chapitres en 8 langues (`⌘?`) avec recherche plein texte et guide pas à pas. |
 
