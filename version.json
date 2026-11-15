@@ -1,13 +1,13 @@
 {
-  "version": "1.6.20",
+  "version": "1.6.21",
   "build": 160,
-  "tag": "v1.6.20",
+  "tag": "v1.6.21",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• Merge remote-tracking branch 'origin/main' (420c1fa)\n• feat(mmm): add 10th sidebar Multi-Model-Mode, Multi-IDE cluster consumption, plan, roadmap & 8-lang READMEs (1c9cac6)\n• chore(release): auto-bump v1.6.19 (build 160) [skip ci] (286de1e)\n• docs(readme): replace first two README screenshots with latest v1.6.18 cluster & standalone views (c652be0)\n• chore(release): auto-bump v1.6.18 (build 160) [skip ci] (80883f3)",
+  "notes": "• Merge remote-tracking branch 'origin/main' (b0008da)\n• feat(science): integrate Multi-Model-Mode telemetry & evaluation into Science & Roofline + READMEs (d67e7d7)\n• chore(release): auto-bump v1.6.20 (build 160) [skip ci] (1582137)\n• Merge remote-tracking branch 'origin/main' (420c1fa)\n• feat(mmm): add 10th sidebar Multi-Model-Mode, Multi-IDE cluster consumption, plan, roadmap & 8-lang READMEs (1c9cac6)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "420c1fa",
-  "updated_at": "2026-11-15T00:20:36Z"
+  "commit_sha": "b0008da",
+  "updated_at": "2026-11-15T00:25:02Z"
 }
