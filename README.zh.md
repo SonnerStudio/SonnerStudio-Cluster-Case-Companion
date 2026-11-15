@@ -62,6 +62,14 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 
 ---
 
+## 🌐 互联网集群 WAN 带宽与数据吞吐量监控
+
+![SS-CCC 互联网集群 WAN 带宽与数据吞吐量监控](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+
+在**互联网集群与实时聊天**面板中，SS-CCC 通过 `netstat`、`ping` 与 `networkQuality` 实时监控真实 WAN 链路性能（**下行/上行 Mbps**、**WAN RTT 延迟 ms**、**抖动**、**丢包率**与**Token 同步效率**），并将其直接关联到跨节点分布式推理速度（`tok/s`）。
+
+---
+
 ## ✨ 核心功能
 
 ![本地 AI 智能体与 IDE 生态](docs/images/ssccc_agents_ide_ecosystem.jpg)
@@ -201,6 +209,15 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 4. **Parallel Fan-Out（多流并行扇出与多副本加速）**
    - 将大型文件集、测试套件或并行智能体工作流同时分发至多个本地与 WAN 节点执行，最大化集群总吞吐量（汇总 `tok/s`）。
+
+### ⚙️ 一键自动配置与后期实时编辑器
+
+![SS-CCC Multi-Model-Mode 一键自动配置与后期实时编辑器](docs/images/ssccc_mmm_autosetup_editor.jpg)
+
+在集群中部署多模型变得极简高效，且部署后随时可自由调整：
+- **一键自动配置预设**：提供 **Coding & IDE 蜂群**、**共识与审计**、**Turbo（Draft + Target）** 与 **分阶段流水线** 四种预设，自动扫描可用节点、安全显存池（`iogpu.wired_limit_mb`）与已加载模型并智能分配。
+- **全面支持后期调整与修改**：随时上/下移动流水线顺序、一键复制副本至其他节点、独立开关任意槽位，或展开**行内槽位编辑器**修改显示名称、模型 ID、端点 URL（`:8000/v1`、`:11434/v1`）与 VRAM 限额。
+- **VRAM-Fit 自动优化与 JSON 持久化**：拓扑变化时一键自动适配显存上限，并支持本地持久化保存与 JSON 配置导出。
 
 ### 🔌 多 IDE 与 Agent Harness 共享消费 (`:8000/v1`)
 

@@ -65,6 +65,14 @@ flowchart LR
 
 ---
 
+## 🌐 Internet-Cluster: Bandbreiten- & Datendurchsatz-Monitor
+
+![SS-CCC Internet-Cluster Bandbreiten- & Datendurchsatz-Monitor](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+
+Im Bereich **Internet-Verbund & Chat** überwacht SS-CCC kontinuierlich die reale WAN-Verbindungsleistung (`netstat`, `ping`, `networkQuality`) — inklusive **Downlink / Uplink (Mbps)**, **WAN-RTT-Latenz (ms)**, **Jitter**, **Paketverlust** sowie **Token-Sync-Effizienz** — und korreliert den Datendurchsatz direkt mit den verteilten `tok/s` über alle Partner-Knoten hinweg.
+
+---
+
 ## ✨ Hauptfunktionen
 
 - **Alle Apple-Silicon-Macs (M1–M9+) im Verbund:** Kopple beliebige **Mac mini, MacBook Air/Pro, iMac, Mac Studio oder Mac Pro** von **M1 bis M6** sowie künftige **M7-, M8-, M9+-Generationen** (Basis, Pro, Max, Ultra). Der schnellste Rechner übernimmt selbsttätig **Rang 0 (Leitrechner)**; die Schutzgrenze `iogpu.wired_limit_mb` hält macOS jederzeit flüssig.
@@ -247,6 +255,15 @@ Der **Multi-Model-Mode (MMM)** (10. Seitenmenüpunkt) führt die Rechen- und Spe
 2. **Mixture-of-Agents (MoA):** Sendet denselben Prompt parallel an mehrere Spezialisten-Modelle und führt die Stärken über einen `Aggregator`-Slot zu einer hochwertigeren Antwort zusammen.
 3. **Speculative Decoding (Draft + Target):** Kombiniert ein schnelles lokales `Draft`-Modell (z. B. Mac mini M4) mit einem großen `Target`-Modell auf dem TB5- oder Hybrid-Verbund für bis zu $1{,}6\times$–$2{,}3\times$ höhere Decode-Raten.
 4. **Sequenzielle Modell-Pipeline:** Verkettet Modelle als spezialisierte Stufen (*Planer → Coder → Reviewer*) über lokale Niedriglatenz-Knoten und speicherstarke WAN-Peers.
+
+### ⚙️ Automatische 1-Klick-Einrichtung & Nachträglicher Live-Editor
+
+![SS-CCC Multi-Model-Mode Auto-Setup & Nachträglicher Konfigurations-Editor](docs/images/ssccc_mmm_autosetup_editor.jpg)
+
+Die Einrichtung mehrerer Modelle im Cluster gelingt mühelos und bleibt jederzeit nachträglich veränderbar:
+- **1-Klick-Auto-Setup-Profile**: Wähle zwischen **Coding & IDE-Schwarm**, **Konsens & Audit**, **Turbo (Draft + Target)** oder **Stufen-Pipeline**. MMM erkennt automatisch verfügbare Zielknoten, freien VRAM (`iogpu.wired_limit_mb`) sowie live geladene Modelle und platziert passende Slots sicher im Pool.
+- **Nachträgliche Anpassungen jederzeit möglich**: Jeder Slot lässt sich im Nachhinein frei bearbeiten — Pipeline-Reihenfolge verschieben (`Hoch`/`Runter`), Slots für weitere Knoten duplizieren, einzeln deaktivieren oder über den **Inline-Slot-Editor** (Anzeigename, Modell-ID, Endpunkt-URL `:8000/v1` / `:11434/v1`, VRAM-Limit) anpassen.
+- **VRAM-Fit-Optimierer & Persistenz**: Ein Klick passt aktive Slots automatisch an ein geändertes VRAM-Budget an; alle Konfigurationen lassen sich dauerhaft speichern und als JSON exportieren.
 
 ### Gemeinsame Leistungsentnahme durch mehrere IDEs & Agent-Harnesses (`:8000/v1`)
 Mehrere IDEs und Agent-Harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) können **gleichzeitig** über das OpenAI-kompatible Gateway Leistung aus dem zusammengeführten Verbund entnehmen (`exportMultiIdeMmmGatewayConfig()`) — inklusive Live-Berechnung der verfügbaren Rate pro aktivem Client (`tok/s` je IDE/Harness).

@@ -65,6 +65,14 @@ flowchart LR
 
 ---
 
+## 🌐 Internet-Cluster WAN Bandwidth & Throughput Monitor
+
+![SS-CCC Internet-Cluster WAN Bandwidth & Throughput Monitor](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+
+Inside **Internet-Cluster & Chat**, SS-CCC continuously monitors real WAN link performance (`netstat`, `ping`, `networkQuality`) — tracking **Downlink / Uplink Mbps**, **WAN RTT Latency (ms)**, **Jitter**, **Packet Loss**, and **Token Sync Efficiency** — and correlates internet throughput directly with distributed `tok/s` across partner nodes.
+
+---
+
 ## ✨ Key Capabilities
 
 - **Universal Apple Silicon Clustering (M1–M9+):** Combine any **Mac mini, MacBook Air/Pro, iMac, Mac Studio, or Mac Pro** across **M1 through M6** and future **M7, M8, M9+** generations (Base, Pro, Max, Ultra). The fastest node by memory bandwidth automatically assumes **Rank 0 (Coordinator)**, with safe `iogpu.wired_limit_mb` macOS memory guards.
@@ -247,6 +255,15 @@ The **Multi-Model-Mode (MMM)** (10th sidebar tab) unifies the compute and memory
 2. **Mixture-of-Agents (MoA):** Dispatches the same prompt to multiple specialist slots in parallel and synthesizes a superior final answer via an `Aggregator` model.
 3. **Speculative Decoding (Draft + Target):** Pairs a fast local `Draft` model (e.g., on Mac mini M4) with a large `Target` model on the TB5 or Hybrid cluster for $1.6\times$–$2.3\times$ decode speedups.
 4. **Sequential Model Pipeline:** Chains models as specialized stages (*Planner → Coder → Reviewer*) across local low-latency nodes and high-VRAM WAN peers.
+
+### ⚙️ 1-Click Auto-Setup & Post-Configuration Live Editor
+
+![SS-CCC Multi-Model-Mode Auto-Setup & Post-Configuration Editor](docs/images/ssccc_mmm_autosetup_editor.jpg)
+
+Setting up multiple models across local and WAN nodes is effortless and fully customizable at any time:
+- **1-Click Auto-Setup Profiles**: Choose between **Coding & IDE Swarm**, **Consensus & Audit**, **Turbo (Draft + Target)**, and **Stage Pipeline**. MMM automatically scans active target nodes, usable VRAM (`iogpu.wired_limit_mb`), and live-discovered models to pack and place optimal slots.
+- **Full Post-Setup Customization**: Every slot can be modified **afterwards** at any time — reorder pipeline stages (`Up`/`Down`), duplicate replicas onto other nodes, toggle slots on/off, or open the inline **Slot Inspector** to edit Display Name, Model ID, Endpoint URL (`:8000/v1`, `:11434/v1`), and VRAM limits.
+- **VRAM-Fit Optimizer & Persistence**: 1 click trims excess slots if your topology changes, and configurations are saved persistently (`UserDefaults`) or exported as JSON.
 
 ### Shared Multi-IDE & Agent-Harness Consumption (`:8000/v1`)
 Multiple IDEs and coding harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) can draw compute from the unified cluster **at the same time** via the OpenAI-compatible gateway (`exportMultiIdeMmmGatewayConfig()`), with live per-client throughput estimation (`tok/s` per concurrent client).

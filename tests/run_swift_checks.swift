@@ -69,4 +69,19 @@ check(ScienceLabTab.allCases.count == 6, "Science Lab has 6 dedicated tabs")
 check(ScienceHistoryPosition.allCases.count == 6, "Science History has 6 position filters")
 check(!AppReleaseMetadata.currentVersion.isEmpty && AppReleaseMetadata.currentBuild > 0, "Release metadata must be populated")
 
-print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, 5-language localization) passed!")
+// 8. Multi-Model-Mode (MMM) Auto-Profile & Codable persistence checks
+check(MultiModelAutoProfile.allCases.count == 4, "MMM has 4 auto-setup profiles")
+check(MultiModelAutoProfile.fastSpeculative.recommendedStrategy == .speculativeDecoding, "Fast speculative profile maps to speculativeDecoding")
+let sampleSlot = MultiModelSlot(
+    modelId: "qwen2.5-coder:7b",
+    displayName: "Qwen 2.5 Coder 7B",
+    role: .primary,
+    assignedTarget: "Mac Studio",
+    endpointURL: "http://127.0.0.1:8000/v1",
+    estimatedRamGB: 6.0
+)
+let encodedSlot = try! JSONEncoder().encode(sampleSlot)
+let decodedSlot = try! JSONDecoder().decode(MultiModelSlot.self, from: encodedSlot)
+check(decodedSlot.modelId == sampleSlot.modelId && decodedSlot.role == .primary, "MultiModelSlot Codable round-trip preserves modelId & role")
+
+print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, MMM Auto-Setup, 5-language localization) passed!")

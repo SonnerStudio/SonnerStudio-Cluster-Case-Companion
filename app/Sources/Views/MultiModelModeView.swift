@@ -8,6 +8,7 @@ struct MultiModelModeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 headerAndScopeCard
+                autoSetupCard
                 vramAndThroughputCard
                 modelSlotsCard
                 executionAndResultsCard
@@ -17,7 +18,9 @@ struct MultiModelModeView: View {
         }
         .onAppear {
             if vm.mmmSlots.isEmpty {
-                vm.syncMultiModelSlotsFromCluster()
+                if !vm.loadMultiModelConfiguration() {
+                    vm.autoConfigureMultiModelSetup()
+                }
             }
         }
     }
@@ -90,6 +93,87 @@ struct MultiModelModeView: View {
                 Text(vm.mmmStrategy.summary)
                     .font(Font.caption)
                     .foregroundColor(SolarisTheme.textSecondary)
+            }
+        }
+    }
+
+    // MARK: - 1b. Automatische Cluster-Einrichtung & Nachträgliche Konfiguration
+
+    private var autoSetupCard: some View {
+        SolarisCard(accent: SolarisTheme.mint) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Automatische MMM-Einrichtung (1-Klick-Assistent)")
+                        .font(SolarisTheme.cardTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text("Erkennt automatisch verfügbare Knoten, VRAM-Pools und geladene Modelle. Jede Einstellung lässt sich anschließend jederzeit im Slot-Editor anpassen, umsortieren oder duplizieren.")
+                        .font(Font.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+                Spacer()
+                Button {
+                    vm.autoConfigureMultiModelSetup()
+                } label: {
+                    Label("Automatisch einrichten", systemImage: "wand.and.stars")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(SolarisTheme.amber)
+                .foregroundColor(.black)
+            }
+
+            HStack(spacing: 10) {
+                Text("Profil:")
+                    .font(SolarisTheme.bodyBold)
+                    .foregroundColor(SolarisTheme.textSecondary)
+                Picker("Auto-Profil", selection: $vm.mmmAutoProfile) {
+                    ForEach(MultiModelAutoProfile.allCases) { profile in
+                        Text(profile.rawValue).tag(profile)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+            }
+
+            Text(vm.mmmAutoProfile.summary)
+                .font(Font.caption)
+                .foregroundColor(SolarisTheme.textSecondary)
+
+            HStack(spacing: 10) {
+                Button {
+                    vm.optimizeMultiModelSlotsForVram()
+                } label: {
+                    Label("VRAM-Fit optimieren", systemImage: "checkmark.shield")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    vm.saveMultiModelConfiguration()
+                    vm.mmmStatusMessage = "MMM-Konfiguration dauerhaft gespeichert."
+                } label: {
+                    Label("Konfiguration speichern", systemImage: "square.and.arrow.down")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    let json = vm.exportMultiModelConfigurationJSON()
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(json, forType: .string)
+                    vm.mmmConfigCopiedBanner = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        vm.mmmConfigCopiedBanner = false
+                    }
+                } label: {
+                    Label(vm.mmmConfigCopiedBanner ? "JSON kopiert!" : "Config-JSON kopieren", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(.bordered)
+
+                Spacer()
+            }
+
+            if !vm.mmmAutoSetupSummary.isEmpty {
+                Text(vm.mmmAutoSetupSummary)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(SolarisTheme.emerald)
             }
         }
     }
@@ -169,53 +253,145 @@ struct MultiModelModeView: View {
 
             VStack(spacing: 10) {
                 ForEach($vm.mmmSlots) { $slot in
-                    HStack(spacing: 12) {
-                        Toggle("", isOn: $slot.isEnabled)
+                    let isExpanded = vm.mmmExpandedSlotId == slot.id
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
+                            Toggle("", isOn: $slot.isEnabled)
+                                .labelsHidden()
+                                .toggleStyle(.switch)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(slot.displayName)
+                                    .font(SolarisTheme.bodyBold)
+                                    .foregroundColor(SolarisTheme.textPrimary)
+                                Text(slot.modelId)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            }
+                            .frame(minWidth: 165, alignment: .leading)
+
+                            Picker("Rolle", selection: $slot.role) {
+                                ForEach(MultiModelRole.allCases) { r in
+                                    Text(r.rawValue).tag(r)
+                                }
+                            }
                             .labelsHidden()
-                            .toggleStyle(.switch)
+                            .frame(width: 115)
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(slot.displayName)
-                                .font(SolarisTheme.bodyBold)
-                                .foregroundColor(SolarisTheme.textPrimary)
-                            Text(slot.modelId)
-                                .font(.system(size: 11, design: .monospaced))
-                                .foregroundColor(SolarisTheme.textSecondary)
-                        }
-                        .frame(minWidth: 180, alignment: .leading)
+                            Picker("Knoten", selection: $slot.assignedTarget) {
+                                ForEach(vm.mmmAvailableTargets.isEmpty ? ["Lokal"] : vm.mmmAvailableTargets, id: \.self) { t in
+                                    Text(t).tag(t)
+                                }
+                            }
+                            .labelsHidden()
+                            .frame(width: 155)
 
-                        Picker("Rolle", selection: $slot.role) {
-                            ForEach(MultiModelRole.allCases) { r in
-                                Text(r.rawValue).tag(r)
+                            Text(String(format: "%.1f GB", slot.estimatedRamGB))
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(SolarisTheme.amberGlow)
+                                .frame(width: 62, alignment: .trailing)
+
+                            Text(slot.lastTokPerSec > 0 ? String(format: "%.1f tok/s", slot.lastTokPerSec) : "—")
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(SolarisTheme.emerald)
+                                .frame(width: 78, alignment: .trailing)
+
+                            HStack(spacing: 4) {
+                                Button {
+                                    vm.moveMultiModelSlot(slot.id, direction: -1)
+                                } label: {
+                                    Image(systemName: "arrow.up")
+                                }
+                                .buttonStyle(.borderless)
+                                .help("Nach oben verschieben")
+
+                                Button {
+                                    vm.moveMultiModelSlot(slot.id, direction: 1)
+                                } label: {
+                                    Image(systemName: "arrow.down")
+                                }
+                                .buttonStyle(.borderless)
+                                .help("Nach unten verschieben")
+
+                                Button {
+                                    vm.duplicateMultiModelSlot(slot.id)
+                                } label: {
+                                    Image(systemName: "plus.square.on.square")
+                                }
+                                .buttonStyle(.borderless)
+                                .help("Slot für weiteren Knoten duplizieren")
+
+                                Button {
+                                    vm.mmmExpandedSlotId = isExpanded ? nil : slot.id
+                                } label: {
+                                    Image(systemName: isExpanded ? "chevron.up.circle.fill" : "slider.horizontal.3")
+                                        .foregroundColor(isExpanded ? SolarisTheme.amber : SolarisTheme.textSecondary)
+                                }
+                                .buttonStyle(.borderless)
+                                .help("Slot-Details nachträglich anpassen")
+
+                                Button(role: .destructive) {
+                                    vm.removeMultiModelSlot(slot.id)
+                                } label: {
+                                    Image(systemName: "trash")
+                                }
+                                .buttonStyle(.borderless)
+                                .help("Slot entfernen")
                             }
                         }
-                        .labelsHidden()
-                        .frame(width: 120)
 
-                        Picker("Knoten", selection: $slot.assignedTarget) {
-                            ForEach(vm.mmmAvailableTargets.isEmpty ? ["Lokal"] : vm.mmmAvailableTargets, id: \.self) { t in
-                                Text(t).tag(t)
+                        if isExpanded {
+                            Divider().opacity(0.2)
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 10) {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("Anzeigename")
+                                            .font(Font.caption)
+                                            .foregroundColor(SolarisTheme.textSecondary)
+                                        TextField("Anzeigename", text: $slot.displayName)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("Modell-ID")
+                                            .font(Font.caption)
+                                            .foregroundColor(SolarisTheme.textSecondary)
+                                        TextField("Modell-ID", text: $slot.modelId)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("VRAM-Limit")
+                                            .font(Font.caption)
+                                            .foregroundColor(SolarisTheme.textSecondary)
+                                        Stepper(String(format: "%.0f GB", slot.estimatedRamGB), value: $slot.estimatedRamGB, in: 1...256, step: 2)
+                                            .frame(width: 120)
+                                    }
+                                }
+                                HStack(spacing: 10) {
+                                    Text("Endpunkt-URL:")
+                                        .font(Font.caption)
+                                        .foregroundColor(SolarisTheme.textSecondary)
+                                    TextField("http://127.0.0.1:8000/v1", text: $slot.endpointURL)
+                                        .textFieldStyle(.roundedBorder)
+                                    Button(":8000/v1") {
+                                        slot.endpointURL = "http://127.0.0.1:8000/v1"
+                                    }
+                                    .buttonStyle(.bordered)
+                                    Button(":11434/v1") {
+                                        slot.endpointURL = "http://127.0.0.1:11434/v1"
+                                    }
+                                    .buttonStyle(.bordered)
+                                    Button("Übernehmen & Speichern") {
+                                        vm.saveMultiModelConfiguration()
+                                        vm.mmmExpandedSlotId = nil
+                                        vm.mmmStatusMessage = "Slot '\(slot.displayName)' aktualisiert und gespeichert."
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .tint(SolarisTheme.emerald)
+                                    .foregroundColor(.black)
+                                }
                             }
+                            .padding(.top, 4)
                         }
-                        .labelsHidden()
-                        .frame(width: 170)
-
-                        Text(String(format: "%.1f GB", slot.estimatedRamGB))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(SolarisTheme.amberGlow)
-                            .frame(width: 68, alignment: .trailing)
-
-                        Text(slot.lastTokPerSec > 0 ? String(format: "%.1f tok/s", slot.lastTokPerSec) : "—")
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(SolarisTheme.emerald)
-                            .frame(width: 82, alignment: .trailing)
-
-                        Button(role: .destructive) {
-                            vm.removeMultiModelSlot(slot.id)
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .buttonStyle(.borderless)
                     }
                     .padding(10)
                     .background(SolarisTheme.cardElevated)

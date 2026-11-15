@@ -374,7 +374,7 @@ struct WanBandwidthSample: Identifiable, Hashable {
     let isLiveMeasurement: Bool
 }
 
-enum MultiModelScope: String, CaseIterable, Identifiable {
+enum MultiModelScope: String, CaseIterable, Identifiable, Codable {
     case local = "Lokaler Cluster"
     case internet = "Internet-Cluster"
     case hybrid = "Lokal + Internet (Hybrid)"
@@ -382,7 +382,7 @@ enum MultiModelScope: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-enum MultiModelStrategy: String, CaseIterable, Identifiable {
+enum MultiModelStrategy: String, CaseIterable, Identifiable, Codable {
     case parallelPool = "Paralleler Multi-Modell-Pool"
     case mixtureOfAgents = "Mixture-of-Agents (MoA)"
     case speculativeDecoding = "Speculative Decoding (Draft + Target)"
@@ -404,7 +404,7 @@ enum MultiModelStrategy: String, CaseIterable, Identifiable {
     }
 }
 
-enum MultiModelRole: String, CaseIterable, Identifiable {
+enum MultiModelRole: String, CaseIterable, Identifiable, Codable {
     case primary = "Primary"
     case draft = "Draft"
     case specialist = "Specialist"
@@ -413,7 +413,38 @@ enum MultiModelRole: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-struct MultiModelSlot: Identifiable, Hashable {
+enum MultiModelAutoProfile: String, CaseIterable, Identifiable, Codable {
+    case balancedCoding = "Coding & IDE-Schwarm"
+    case consensusReview = "Konsens & Audit"
+    case fastSpeculative = "Turbo (Draft + Target)"
+    case hybridPipeline = "Stufen-Pipeline"
+
+    var id: String { rawValue }
+
+    var recommendedStrategy: MultiModelStrategy {
+        switch self {
+        case .balancedCoding: return .parallelPool
+        case .consensusReview: return .mixtureOfAgents
+        case .fastSpeculative: return .speculativeDecoding
+        case .hybridPipeline: return .sequentialPipeline
+        }
+    }
+
+    var summary: String {
+        switch self {
+        case .balancedCoding:
+            return "Verteilt Haupt-Coder, Spezialist und Prüfer gleichmäßig über lokale & WAN-Knoten für mehrere IDEs."
+        case .consensusReview:
+            return "Wählt bis zu 4 diverse Modelle im sicheren VRAM-Budget für parallele Abstimmung & Synthese."
+        case .fastSpeculative:
+            return "Koppelt das kleinste schnelle Draft-Modell mit dem leistungsstärksten passenden Target-Modell."
+        case .hybridPipeline:
+            return "Baut eine geordnete Kette (Planer → Coder → Reviewer) über TB5- und Internet-Knoten auf."
+        }
+    }
+}
+
+struct MultiModelSlot: Identifiable, Hashable, Codable {
     let id: UUID
     var modelId: String
     var displayName: String

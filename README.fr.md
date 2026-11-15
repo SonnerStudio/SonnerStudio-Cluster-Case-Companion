@@ -65,6 +65,14 @@ flowchart LR
 
 ---
 
+## 🌐 Moniteur de bande passante et de débit WAN (Grappe Internet)
+
+![Moniteur de bande passante et de débit WAN SS-CCC](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+
+Dans **Grappe Internet & Discussion**, SS-CCC mesure en continu les performances réseau réelles (`netstat`, `ping`, `networkQuality`) — **débit descendant/montant (Mbps)**, **latence RTT WAN (ms)**, **gigue**, **perte de paquets** et **efficacité de synchronisation des tokens** — en reliant directement le débit WAN aux `tok/s` distribués.
+
+---
+
 ## ✨ Fonctionnalités principales
 
 - **Couplage universel Apple Silicon (M1 – M9+) :** Réunit librement plusieurs Mac (Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro) des générations M1 à M6 ainsi que les futures puces **M7, M8, M9+** dans une grappe commune avec calcul automatique de la bande passante mémoire.
@@ -230,6 +238,15 @@ Le **Mode Multi-Modèles (MMM)** (10ᵉ onglet du menu latéral) unifie la puiss
 2. **Mixture-of-Agents (MoA) :** Envoie la même invite en parallèle à plusieurs modèles spécialistes et synthétise une réponse consolidée via un modèle `Aggregator`.
 3. **Speculative Decoding (Draft + Target) :** Associe un modèle `Draft` local rapide à un grand modèle `Target` sur la grappe pour accélérer le décodage ($1{,}6\times$–$2{,}3\times$).
 4. **Pipeline séquentiel de modèles :** Chaîne les modèles par étapes (*Planificateur → Codeur → Réviseur*) entre nœuds locaux et pairs WAN.
+
+### ⚙️ Configuration Automatique en 1 Clic & Éditeur Post-Configuration
+
+![Configuration Automatique et Éditeur Live du Mode Multi-Modèles SS-CCC](docs/images/ssccc_mmm_autosetup_editor.jpg)
+
+Le déploiement de plusieurs modèles sur la grappe est automatisé et reste entièrement modifiable à tout moment :
+- **Profils Auto-Setup en 1 Clic** : Choisissez **Coding & IDE Swarm**, **Consensus & Audit**, **Turbo (Draft + Target)** ou **Pipeline par Étapes**. MMM détecte automatiquement les nœuds cibles, la VRAM utilisable (`iogpu.wired_limit_mb`) et les modèles actifs.
+- **Personnalisation Complète a posteriori** : Réordonnez les étapes (`Haut`/`Bas`), dupliquez des réplicas sur d'autres nœuds, activez/désactivez chaque slot ou modifiez à chaud le nom, l'ID du modèle, l'URL d'API (`:8000/v1`, `:11434/v1`) et le budget VRAM.
+- **Optimiseur VRAM-Fit & Sauvegarde JSON** : Ajustez en un clic les slots actifs au budget VRAM disponible et sauvegardez/exportez votre configuration en JSON.
 
 ### Consommation simultanée Multi-EDI & Harnesses (`:8000/v1`)
 Plusieurs EDI et harnais d'agents (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) peuvent puiser simultanément dans la grappe unifiée (`exportMultiIdeMmmGatewayConfig()`) avec calcul en direct du débit par client (`tok/s`).

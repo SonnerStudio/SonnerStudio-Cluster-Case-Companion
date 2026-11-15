@@ -350,7 +350,7 @@ class GlobalProjectTests(unittest.TestCase):
         roadmap = (APP_SOURCES.parent.parent / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
 
         self.assertIn("case multiModelMode", models)
-        for sym in ["enum MultiModelScope", "enum MultiModelStrategy", "struct MultiModelSlot", "struct MultiModelRunResult"]:
+        for sym in ["enum MultiModelScope", "enum MultiModelStrategy", "enum MultiModelAutoProfile", "struct MultiModelSlot", "struct MultiModelRunResult"]:
             self.assertIn(sym, models)
 
         for lang in [".de", ".en", ".fr", ".es", ".pt", ".ru", ".ja", ".zh"]:
@@ -370,12 +370,19 @@ class GlobalProjectTests(unittest.TestCase):
             "recordScienceHistoryFromMMM",
             "mmmMeanObservedTokPerSec",
             "mmmMeanSpeedupFactor",
+            "autoConfigureMultiModelSetup",
+            "moveMultiModelSlot",
+            "duplicateMultiModelSlot",
+            "optimizeMultiModelSlotsForVram",
+            "saveMultiModelConfiguration",
+            "exportMultiModelConfigurationJSON",
         ]:
             self.assertIn(vm_sym, vm)
 
         sci_view = (APP_SOURCES / "Views" / "ScienceBenchmarksView.swift").read_text(encoding="utf-8")
         self.assertIn("mmmScienceEvaluationCard", sci_view)
         self.assertIn("Multi-Model-Mode (MMM)", mmm_view)
+        self.assertIn("autoSetupCard", mmm_view)
         self.assertIn("multiIdeHarnessConsumptionCard", mmm_view)
         self.assertIn("Multi-Model-Mode (MMM)", impl_plan)
         self.assertIn("Multi-Model-Mode (MMM)", roadmap)

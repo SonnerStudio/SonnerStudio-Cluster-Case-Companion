@@ -129,6 +129,10 @@ final class ClusterViewModel: ObservableObject {
     @Published var mmmNewModelRole: MultiModelRole = .specialist
     @Published var mmmNewModelRamGB: Double = 8.0
     @Published var mmmActiveClientCount: Int = 2
+    @Published var mmmAutoProfile: MultiModelAutoProfile = .balancedCoding
+    @Published var mmmAutoSetupSummary: String = ""
+    @Published var mmmExpandedSlotId: UUID? = nil
+    @Published var mmmConfigCopiedBanner: Bool = false
 
     // Cluster Audio-Party (Xbox / PlayStation-style voice coordination for AI clusters)
     @Published var audioPartyJoined: Bool = false
@@ -2500,6 +2504,196 @@ final class ClusterViewModel: ObservableObject {
 
     func removeMultiModelSlot(_ id: UUID) {
         mmmSlots.removeAll { $0.id == id }
+        saveMultiModelConfiguration()
+    }
+
+    func moveMultiModelSlot(_ id: UUID, direction: Int) {
+        guard let idx = mmmSlots.firstIndex(where: { $0.id == id }) else { return }
+        let targetIdx = idx + direction
+        guard mmmSlots.indices.contains(targetIdx) else { return }
+        mmmSlots.swapAt(idx, targetIdx)
+        saveMultiModelConfiguration()
+    }
+
+    func duplicateMultiModelSlot(_ id: UUID) {
+        guard let idx = mmmSlots.firstIndex(where: { $0.id == id }) else { return }
+        let source = mmmSlots[idx]
+        let targets = mmmAvailableTargets.isEmpty ? ["Lokal"] : mmmAvailableTargets
+        let nextTarget: String
+        if let curTIdx = targets.firstIndex(of: source.assignedTarget), targets.count > 1 {
+            nextTarget = targets[(curTIdx + 1) % targets.count]
+        } else {
+            nextTarget = source.assignedTarget
+        }
+        let copy = MultiModelSlot(
+            modelId: source.modelId,
+            displayName: "\(source.displayName) (Replikat)",
+            role: source.role == .primary ? .specialist : source.role,
+            assignedTarget: nextTarget,
+            endpointURL: source.endpointURL,
+            estimatedRamGB: source.estimatedRamGB,
+            isEnabled: source.isEnabled
+        )
+        mmmSlots.insert(copy, at: idx + 1)
+        saveMultiModelConfiguration()
+        mmmStatusMessage = "Slot '\(source.displayName)' dupliziert auf \(nextTarget)."
+    }
+
+    /// 1-Click Automatic Cluster Setup for Multi-Model-Mode (MMM).
+    /// Scans usable VRAM across the active scope (Local / Internet-WAN / Hybrid), picks fitting models
+    /// (preferring live-discovered models), assigns roles and target nodes, and saves the configuration.
+    func autoConfigureMultiModelSetup(profile: MultiModelAutoProfile? = nil) {
+        let chosenProfile = profile ?? mmmAutoProfile
+        mmmAutoProfile = chosenProfile
+        mmmStrategy = chosenProfile.recommendedStrategy
+
+        let targets = mmmAvailableTargets.isEmpty ? [nodes.first?.name ?? "Lokal"] : mmmAvailableTargets
+        let usablePool = max(8.0, mmmUsableVramPoolGB)
+        let liveModels = modelPresets.filter(\.isLiveDiscovered)
+        let sourcePool = liveModels.isEmpty ? modelPresets : liveModels
+
+        // Sort candidates by RAM ascending so we can pack reliably, or select smallest+largest for speculative
+        let sortedAsc = sourcePool.sorted { $0.estimatedGB < $1.estimatedGB }
+        var selectedModels: [ModelPreset] = []
+        var usedRam = 0.0
+
+        switch chosenProfile {
+        case .fastSpeculative:
+            // Pick smallest model as Draft + largest model that still fits alongside it
+            if let draft = sortedAsc.first {
+                selectedModels.append(draft)
+                usedRam += draft.estimatedGB
+                if let target = sortedAsc.reversed().first(where: { $0.id != draft.id && usedRam + $0.estimatedGB <= usablePool }) {
+                    selectedModels.append(target)
+                    usedRam += target.estimatedGB
+                } else if let secondSmallest = sortedAsc.dropFirst().first {
+                    selectedModels.append(secondSmallest)
+                    usedRam += secondSmallest.estimatedGB
+                }
+            }
+        case .balancedCoding, .consensusReview, .hybridPipeline:
+            let maxCount = chosenProfile == .consensusReview ? 4 : 3
+            for candidate in sortedAsc {
+                if selectedModels.count >= maxCount { break }
+                if usedRam + candidate.estimatedGB <= usablePool || selectedModels.isEmpty {
+                    selectedModels.append(candidate)
+                    usedRam += candidate.estimatedGB
+                }
+            }
+        }
+
+        let rolesForProfile: [MultiModelRole]
+        switch chosenProfile {
+        case .fastSpeculative:
+            rolesForProfile = [.draft, .primary, .aggregator, .specialist]
+        case .consensusReview:
+            rolesForProfile = [.primary, .specialist, .specialist, .aggregator]
+        case .hybridPipeline:
+            rolesForProfile = [.primary, .specialist, .aggregator, .draft]
+        case .balancedCoding:
+            rolesForProfile = [.primary, .specialist, .aggregator, .draft]
+        }
+
+        mmmSlots = selectedModels.enumerated().map { idx, model in
+            let role = rolesForProfile[min(idx, rolesForProfile.count - 1)]
+            let target = targets[idx % targets.count]
+            return MultiModelSlot(
+                modelId: model.id,
+                displayName: model.displayName,
+                role: role,
+                assignedTarget: target,
+                endpointURL: openCodeBaseURL,
+                estimatedRamGB: model.estimatedGB,
+                isEnabled: true
+            )
+        }
+
+        saveMultiModelConfiguration()
+        let sourceNote = liveModels.isEmpty ? "Katalog-Referenz" : "Live-Erkennung"
+        mmmAutoSetupSummary = "Auto-Setup (\(chosenProfile.rawValue)): \(mmmSlots.count) Modelle (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM) auf \(targets.count) Knoten (\(sourceNote)) eingerichtet."
+        mmmStatusMessage = mmmAutoSetupSummary
+    }
+
+    /// Trims/disables lower-priority slots if the current configuration exceeds usable cluster VRAM.
+    func optimizeMultiModelSlotsForVram() {
+        let pool = mmmUsableVramPoolGB
+        var running = 0.0
+        var keptActive = 0
+        var disabledCount = 0
+
+        for idx in mmmSlots.indices {
+            guard mmmSlots[idx].isEnabled else { continue }
+            let ram = mmmSlots[idx].estimatedRamGB
+            if keptActive == 0 || (running + ram <= pool) {
+                running += ram
+                keptActive += 1
+            } else {
+                mmmSlots[idx].isEnabled = false
+                disabledCount += 1
+            }
+        }
+        saveMultiModelConfiguration()
+        if disabledCount > 0 {
+            mmmStatusMessage = "VRAM-Optimierung: \(disabledCount) Slot(s) pausiert, \(keptActive) aktiv (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB)."
+        } else {
+            mmmStatusMessage = "VRAM-Prüfung OK: Alle \(keptActive) aktiven Modelle passen sicher in \(String(format: "%.1f", pool)) GB."
+        }
+    }
+
+    private static let mmmConfigDefaultsKey = "ssccc.mmm.config.v1"
+
+    private struct MultiModelPersistedConfig: Codable {
+        let scope: MultiModelScope
+        let strategy: MultiModelStrategy
+        let autoProfile: MultiModelAutoProfile
+        let activeClientCount: Int
+        let slots: [MultiModelSlot]
+    }
+
+    func saveMultiModelConfiguration() {
+        let payload = MultiModelPersistedConfig(
+            scope: mmmScope,
+            strategy: mmmStrategy,
+            autoProfile: mmmAutoProfile,
+            activeClientCount: mmmActiveClientCount,
+            slots: mmmSlots
+        )
+        if let data = try? JSONEncoder().encode(payload) {
+            UserDefaults.standard.set(data, forKey: Self.mmmConfigDefaultsKey)
+        }
+    }
+
+    @discardableResult
+    func loadMultiModelConfiguration() -> Bool {
+        guard let data = UserDefaults.standard.data(forKey: Self.mmmConfigDefaultsKey),
+              let decoded = try? JSONDecoder().decode(MultiModelPersistedConfig.self, from: data),
+              !decoded.slots.isEmpty else {
+            return false
+        }
+        mmmScope = decoded.scope
+        mmmStrategy = decoded.strategy
+        mmmAutoProfile = decoded.autoProfile
+        mmmActiveClientCount = max(1, decoded.activeClientCount)
+        mmmSlots = decoded.slots
+        mmmStatusMessage = "Gespeicherte MMM-Konfiguration (\(decoded.slots.count) Slots) geladen."
+        return true
+    }
+
+    func exportMultiModelConfigurationJSON() -> String {
+        let payload = MultiModelPersistedConfig(
+            scope: mmmScope,
+            strategy: mmmStrategy,
+            autoProfile: mmmAutoProfile,
+            activeClientCount: mmmActiveClientCount,
+            slots: mmmSlots
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(payload),
+              let text = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return text
     }
 
     func executeMultiModelOrchestration() {

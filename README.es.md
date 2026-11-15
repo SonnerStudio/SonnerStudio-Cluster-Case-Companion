@@ -65,6 +65,14 @@ flowchart LR
 
 ---
 
+## 🌐 Monitor de Ancho de Banda y Rendimiento WAN (Clúster Internet)
+
+![Monitor de Ancho de Banda y Rendimiento WAN SS-CCC](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+
+En **Clúster Internet y Chat**, SS-CCC supervisa en tiempo real el rendimiento WAN (`netstat`, `ping`, `networkQuality`) — midiendo **bajada/subida (Mbps)**, **latencia RTT WAN (ms)**, **jitter**, **pérdida de paquetes** y **eficiencia de sincronización de tokens** — correlacionando el ancho de banda directamente con los `tok/s` distribuidos.
+
+---
+
 ## ✨ Funciones principales
 
 - **Unión universal Apple Silicon (M1 – M9+):** Conecta libremente varios Mac (Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro) de las generaciones M1 a M6 y futuras **M7, M8, M9+** en una agrupación común con cálculo automático del ancho de banda de memoria.
@@ -230,6 +238,15 @@ El **Modo Multimodelo (MMM)** (10.ª pestaña del menú lateral) unifica la pote
 2. **Mixture-of-Agents (MoA):** Envía el mismo prompt en paralelo a varios especialistas y consolida una respuesta superior mediante un modelo `Aggregator`.
 3. **Speculative Decoding (Draft + Target):** Combina un modelo `Draft` local rápido con un modelo `Target` grande en el clúster para acelerar la decodificación ($1{,}6\times$–$2{,}3\times$).
 4. **Pipeline secuencial de modelos:** Encadena modelos por etapas (*Planificador → Programador → Revisor*) entre nodos locales y pares WAN.
+
+### ⚙️ Configuración Automática en 1 Clic y Editor en Vivo Posterior
+
+![Configuración Automática y Editor en Vivo del Modo Multimodelo SS-CCC](docs/images/ssccc_mmm_autosetup_editor.jpg)
+
+Configurar múltiples modelos en el clúster es automático y totalmente editable en cualquier momento posterior:
+- **Perfiles Auto-Setup en 1 Clic**: Elige entre **Coding & IDE Swarm**, **Consenso y Auditoría**, **Turbo (Draft + Target)** o **Pipeline por Etapas**. MMM detecta automáticamente nodos activos, VRAM disponible (`iogpu.wired_limit_mb`) y modelos en ejecución.
+- **Edición Completa a Posteriori**: Reordena etapas (`Subir`/`Bajar`), duplica réplicas hacia otros nodos, activa/desactiva slots o edita en línea el nombre, ID de modelo, URL de endpoint (`:8000/v1`, `:11434/v1`) y límite VRAM.
+- **Optimizador VRAM-Fit y Persistencia JSON**: Ajusta en 1 clic los slots activos si cambia el pool de memoria y guarda o exporta la configuración completa en JSON.
 
 ### Consumo simultáneo Multi-IDE y Agent-Harness (`:8000/v1`)
 Varios IDE y harnesses de agentes (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) pueden extraer rendimiento simultáneamente del clúster unificado (`exportMultiIdeMmmGatewayConfig()`) con cálculo en vivo de `tok/s` por cliente.

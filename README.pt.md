@@ -65,6 +65,14 @@ flowchart LR
 
 ---
 
+## 🌐 Monitor de Largura de Banda e Débito WAN (Agrupamento Internet)
+
+![Monitor de Largura de Banda e Débito WAN SS-CCC](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+
+Em **Agrupamento Internet & Chat**, o SS-CCC monitoriza continuamente o desempenho real da ligação WAN (`netstat`, `ping`, `networkQuality`) — **downlink/uplink (Mbps)**, **latência RTT WAN (ms)**, **jitter**, **perda de pacotes** e **eficiência de sincronização de tokens** — correlacionando diretamente o débito WAN com os `tok/s` distribuídos.
+
+---
+
 ## ✨ Funcionalidades principais
 
 - **Acoplamento universal Apple Silicon (M1 – M9+):** Liga livremente vários Mac (Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro) das gerações M1 a M6 e futuras **M7, M8, M9+** num agrupamento comum com cálculo automático da largura de banda de memória.
@@ -241,6 +249,15 @@ O **Multi-Model-Mode (MMM)** — acessível como o **10.º item do menu lateral 
 
 4. **Parallel Fan-Out (Execução Simultânea Multi-Fluxo & Multi-Réplica)**
    - Divide grandes conjuntos de ficheiros, suítes de testes ou fluxos de trabalho de agentes paralelos por vários nós locais e WAN ao mesmo tempo, combinando o débito agregado (`tok/s` total do agrupamento).
+
+### ⚙️ Configuração Automática em 1 Clique & Editor Pós-Configuração
+
+![Configuração Automática e Editor ao Vivo Multi-Model-Mode (MMM) SS-CCC](docs/images/ssccc_mmm_autosetup_editor.jpg)
+
+Configurar vários modelos no agrupamento é automático e totalmente editável posteriormente:
+- **Perfis Auto-Setup em 1 Clique**: Escolha entre **Coding & IDE Swarm**, **Consenso & Auditoria**, **Turbo (Draft + Target)** ou **Pipeline por Etapas**. O MMM deteta automaticamente nós disponíveis, VRAM utilizável (`iogpu.wired_limit_mb`) e modelos ativos.
+- **Personalização Pós-Configuração Completa**: Reordene etapas (`Subir`/`Descer`), duplique réplicas noutros nós, ative/desative slots ou edite em linha o nome, ID do modelo, URL do endpoint (`:8000/v1`, `:11434/v1`) e limite de VRAM.
+- **Otimizador VRAM-Fit & Persistência JSON**: Ajuste os slots ativos ao orçamento de VRAM com 1 clique e guarde ou exporte a configuração completa em JSON.
 
 ### 🔌 Consumo Partilhado por Múltiplos IDEs & Agent Harnesses (`:8000/v1`)
 

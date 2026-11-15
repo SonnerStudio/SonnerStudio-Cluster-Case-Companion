@@ -62,6 +62,14 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 
 ---
 
+## 🌐 インターネットクラスター WAN 帯域幅・スループット監視
+
+![SS-CCC インターネットクラスター WAN 帯域幅・スループット監視](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+
+**インターネットクラスター＆チャット**では、`netstat`・`ping`・`networkQuality` を用いて実際の WAN 回線品質（**下り/上り Mbps**、**WAN RTT 遅延 ms**、**ジッター**、**パケット損失**、**トークン同期効率**）をリアルタイム監視し、分散推論スループット（`tok/s`）との相関を可視化します。
+
+---
+
 ## ✨ 主な機能
 
 ![ローカル AI エージェントと IDE エコシステム](docs/images/ssccc_agents_ide_ecosystem.jpg)
@@ -201,6 +209,15 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 4. **Parallel Fan-Out（マルチストリーム＆マルチレプリカ同時実行）**
    - 大規模なファイル群、テストスイート、または並列エージェントタスクをローカル・WAN の複数ノードへ同時にファンアウトし、クラスター全体の合算スループット（`tok/s`）を最大化します。
+
+### ⚙️ 1クリック自動セットアップ & 事後ライブ設定エディター
+
+![SS-CCC Multi-Model-Mode 自動セットアップ & 事後設定エディター](docs/images/ssccc_mmm_autosetup_editor.jpg)
+
+クラスター全体への複数モデル配備を自動化し、後からいつでも柔軟に調整できます：
+- **1クリック Auto-Setup プロファイル**: **Coding & IDE Swarm**、**Consensus & Audit**、**Turbo (Draft + Target)**、**Stage Pipeline** から選択すると、利用可能なノード・VRAM 上限（`iogpu.wired_limit_mb`）・ライブ検出モデルを自動解析して最適配置します。
+- **導入後のフルカスタマイズ**: パイプライン順序の入れ替え（上/下）、他ノードへのレプリカ複製、個別スロットの有効/無効化、さらにインラインエディターで表示名・モデル ID・エンドポイント URL（`:8000/v1` / `:11434/v1`）・VRAM 上限をいつでも変更可能。
+- **VRAM-Fit 最適化 & JSON 保存**: 構成変更時も 1 クリックで VRAM 予算内に最適化でき、設定の永続保存および JSON エクスポートに対応しています。
 
 ### 🔌 複数 IDE & Agent Harness による共有消費 (`:8000/v1`)
 
