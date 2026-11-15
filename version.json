@@ -1,13 +1,13 @@
 {
-  "version": "1.6.18",
+  "version": "1.6.19",
   "build": 160,
-  "tag": "v1.6.18",
+  "tag": "v1.6.19",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• Merge remote-tracking branch 'origin/main' (eb8fd0f)\n• feat(wan): add Internet bandwidth, throughput & cluster performance monitor (c1625ac)\n• chore(release): auto-bump v1.6.17 (build 160) [skip ci] (20aee89)\n• feat(science): use real SSE streaming and ICMP RTT in real mode, realistic labeled simulation (468716a)\n• chore(release): auto-bump v1.6.16 (build 160) [skip ci] (f0d77ab)",
+  "notes": "• docs(readme): replace first two README screenshots with latest v1.6.18 cluster & standalone views (c652be0)\n• chore(release): auto-bump v1.6.18 (build 160) [skip ci] (80883f3)\n• Merge remote-tracking branch 'origin/main' (eb8fd0f)\n• feat(wan): add Internet bandwidth, throughput & cluster performance monitor (c1625ac)\n• chore(release): auto-bump v1.6.17 (build 160) [skip ci] (20aee89)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "eb8fd0f",
-  "updated_at": "2026-11-14T20:05:22Z"
+  "commit_sha": "c652be0",
+  "updated_at": "2026-11-14T20:18:12Z"
 }
