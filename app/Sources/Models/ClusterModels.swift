@@ -957,3 +957,129 @@ enum AppUpdateStatus: Equatable {
     case updatedNeedsRestart
     case failed(String)
 }
+
+// MARK: - Phase 11: 2026 SOTA Architecture Upgrade Models (Points 1-5)
+
+/// Punkt 1: TB5 RDMA Tensor Parallelism Topologie (Ring vs. Full-Mesh JACCL)
+enum ClusterMeshTopology: String, CaseIterable, Identifiable, Codable {
+    case ring = "Ring (Pipeline)"
+    case fullMesh = "Full-Mesh (TB5 RDMA Tensor Parallelism)"
+
+    var id: String { rawValue }
+
+    var shortLabel: String {
+        switch self {
+        case .ring: return "Ring (PP)"
+        case .fullMesh: return "Full-Mesh (TP/JACCL)"
+        }
+    }
+
+    var bandwidthEfficiencyFactor: Double {
+        switch self {
+        case .ring: return 0.88
+        case .fullMesh: return 1.18
+        }
+    }
+}
+
+/// Punkt 1: WAN-Transport-Protokoll (QUIC/Iroh P2P ohne TCP HoL-Blocking vs. Tailscale/WireGuard)
+enum WanTransportProtocol: String, CaseIterable, Identifiable, Codable {
+    case tailscaleWireGuard = "Tailscale / WireGuard (UDP/TCP)"
+    case quicIrohP2P = "QUIC / Iroh P2P (0-RTT Multiplex)"
+    case libp2pDerp = "libp2p + DERP Relay"
+
+    var id: String { rawValue }
+
+    var latencyFactor: Double {
+        switch self {
+        case .tailscaleWireGuard: return 1.00
+        case .quicIrohP2P: return 0.72
+        case .libp2pDerp: return 1.12
+        }
+    }
+
+    var zeroRttEnabled: Bool {
+        self == .quicIrohP2P
+    }
+}
+
+/// Punkt 2: Disaggregiertes Prefill / Decode (ANE-Prefill + MLX-Decode Split-Phase)
+enum SplitPhaseComputeMode: String, CaseIterable, Identifiable, Codable {
+    case unifiedGpu = "Unified GPU (Standard)"
+    case anePrefillGpuDecode = "ANE Prefill + MLX GPU Decode (Split-Phase)"
+
+    var id: String { rawValue }
+
+    var prefillEdpGainFactor: Double {
+        switch self {
+        case .unifiedGpu: return 1.00
+        case .anePrefillGpuDecode: return 1.42
+        }
+    }
+
+    var wattSavingsPercent: Double {
+        switch self {
+        case .unifiedGpu: return 0.0
+        case .anePrefillGpuDecode: return 31.5
+        }
+    }
+}
+
+/// Punkt 2: 3-Tier KV-Cache & CacheGen Kompression
+enum KVCacheTierMode: String, CaseIterable, Identifiable, Codable {
+    case ramOnly = "Tier 1: Unified RAM Only"
+    case ramNvmeTiered = "Tier 1+2: RAM + NVMe SSD Offload"
+    case distributedCacheGen = "Tier 1–3: RAM + NVMe + Peer CacheGen"
+
+    var id: String { rawValue }
+
+    var compressionRatio: Double {
+        switch self {
+        case .ramOnly: return 1.0
+        case .ramNvmeTiered: return 1.8
+        case .distributedCacheGen: return 3.6
+        }
+    }
+}
+
+struct CacheGenCompressionMetrics: Equatable {
+    let tierMode: KVCacheTierMode
+    let prefixHitRatePct: Double
+    let rawKvSizeGB: Double
+    let compressedTransferGB: Double
+    let compressionRatio: Double
+    let estimatedTtftReductionPct: Double
+}
+
+/// Punkt 3: MMM Next-Gen Speculative Decoding Engine
+enum SpeculativeEngineMode: String, CaseIterable, Identifiable, Codable {
+    case standardDraftTarget = "Standard Draft + Target"
+    case eagle3Fusion = "EAGLE-3 Multi-Layer Feature Fusion"
+
+    var id: String { rawValue }
+
+    var speedupBonusMultiplier: Double {
+        switch self {
+        case .standardDraftTarget: return 1.00
+        case .eagle3Fusion: return 1.38
+        }
+    }
+}
+
+/// Punkt 4: Moderne Agenten- & Gateway-Protokolle
+enum AgentGatewayProtocol: String, CaseIterable, Identifiable, Codable {
+    case chatCompletions = "OpenAI /v1/chat/completions"
+    case responsesWithMcp = "OpenAI /v1/responses + MCP"
+    case a2aAgentCard = "A2A Agent Card (/.well-known/agent.json)"
+
+    var id: String { rawValue }
+}
+
+/// Punkt 5: Thermal- & Carbon-Aware Workload Placement
+enum ThermalCarbonSchedulingPolicy: String, CaseIterable, Identifiable, Codable {
+    case performanceFirst = "Max Performance (Ignore Thermal/Carbon)"
+    case balancedThermal = "Thermal-Balanced (Throttle .serious/.critical)"
+    case ecoCarbonAware = "Eco Carbon-Aware (Min Watt/Token)"
+
+    var id: String { rawValue }
+}

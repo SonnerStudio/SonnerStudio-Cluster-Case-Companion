@@ -439,6 +439,49 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn('vm.t("ov_guard_zone")', overview)
         self.assertNotIn("GB für KI", overview)
 
+    def test_23_sota_2026_points_1_to_5(self):
+        """Verify Phase 11 (2026 SOTA Points 1-5) models, ViewModel logic, and UI controls."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        net_view = (APP_SOURCES / "Views" / "NetworkRdmaView.swift").read_text(encoding="utf-8")
+        wan_view = (APP_SOURCES / "Views" / "InternetClusterView.swift").read_text(encoding="utf-8")
+        ms_view = (APP_SOURCES / "Views" / "ModelStudioView.swift").read_text(encoding="utf-8")
+        mmm_view = (APP_SOURCES / "Views" / "MultiModelModeView.swift").read_text(encoding="utf-8")
+        agent_view = (APP_SOURCES / "Views" / "AgentIntegrationsView.swift").read_text(encoding="utf-8")
+        api_view = (APP_SOURCES / "Views" / "ApiConsoleView.swift").read_text(encoding="utf-8")
+
+        for sym in [
+            "enum ClusterMeshTopology",
+            "enum WanTransportProtocol",
+            "enum SplitPhaseComputeMode",
+            "enum KVCacheTierMode",
+            "enum SpeculativeEngineMode",
+            "enum AgentGatewayProtocol",
+            "enum ThermalCarbonSchedulingPolicy",
+        ]:
+            self.assertIn(sym, models)
+
+        for vm_sym in [
+            "rdmaPreflightCommand()",
+            "generateMlxDistributedHostfileJSON()",
+            "aneSplitSpeedupAndEnergyRatio()",
+            "cacheGenCompressionMetrics(",
+            "generateOpenAIResponsesMcpPayload()",
+            "generateMcpRegistryJSON()",
+            "generateA2AAgentCardJSON()",
+            "thermalAndCarbonAdjustedTargets(",
+        ]:
+            self.assertIn(vm_sym, vm)
+
+        self.assertIn("clusterMeshTopology", net_view)
+        self.assertIn("wanTransportProtocol", wan_view)
+        self.assertIn("splitPhaseComputeMode", ms_view)
+        self.assertIn("kvCacheTierMode", ms_view)
+        self.assertIn("mmmSpeculativeEngine", mmm_view)
+        self.assertIn("mmmThermalCarbonAwareScheduling", mmm_view)
+        self.assertIn("generateA2AAgentCardJSON()", agent_view)
+        self.assertIn("selectedGatewayProtocol", api_view)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

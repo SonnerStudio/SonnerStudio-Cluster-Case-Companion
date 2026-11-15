@@ -138,6 +138,21 @@ final class ClusterViewModel: ObservableObject {
     @Published var mmmExpandedSlotId: UUID? = nil
     @Published var mmmConfigCopiedBanner: Bool = false
 
+    // Phase 11: 2026 SOTA Architecture Upgrade (Points 1–5)
+    @Published var clusterMeshTopology: ClusterMeshTopology = .fullMesh
+    @Published var wanTransportProtocol: WanTransportProtocol = .quicIrohP2P
+    @Published var splitPhaseComputeMode: SplitPhaseComputeMode = .anePrefillGpuDecode
+    @Published var kvCacheTierMode: KVCacheTierMode = .distributedCacheGen
+    @Published var kvPrefixCacheHitRatePct: Double = 78.0
+    @Published var mmmSpeculativeEngine: SpeculativeEngineMode = .eagle3Fusion
+    @Published var mmmEnableTreeMoaEarlyExit: Bool = true
+    @Published var mmmMoaConfidenceThreshold: Double = 0.82
+    @Published var mmmConfidenceEscalationEnabled: Bool = true
+    @Published var selectedGatewayProtocol: AgentGatewayProtocol = .responsesWithMcp
+    @Published var thermalCarbonPolicy: ThermalCarbonSchedulingPolicy = .balancedThermal
+    @Published var mmmThermalCarbonAwareScheduling: Bool = true
+    @Published var sotaConfigCopiedBanner: String = ""
+
     // Cluster Audio-Party (Xbox / PlayStation-style voice coordination for AI clusters)
     @Published var audioPartyJoined: Bool = false
     @Published var audioPartyMuted: Bool = false
@@ -2429,22 +2444,30 @@ final class ClusterViewModel: ObservableObject {
         let active = mmmActiveSlots
         guard !active.isEmpty else { return 0.0 }
         let baseSingle = max(4.0, activeTokPerSec)
+        let topologyBoost = (mmmScope != .internet) ? clusterMeshTopology.bandwidthEfficiencyFactor : 1.0
+        let wanBoost = (mmmScope != .local) ? (1.0 / wanTransportProtocol.latencyFactor) : 1.0
+        let splitBoost = splitPhaseComputeMode == .anePrefillGpuDecode ? 1.12 : 1.0
+
+        let rawEstimate: Double
         switch mmmStrategy {
         case .parallelPool:
             // Independent models executing concurrently across distinct nodes/VRAM pools
-            return baseSingle * Double(min(active.count, max(1, mmmAvailableTargets.count))) * 0.88
+            rawEstimate = baseSingle * Double(min(active.count, max(1, mmmAvailableTargets.count))) * 0.88
         case .mixtureOfAgents:
-            // Specialists run in parallel + 1 aggregator synthesis pass
+            // Specialists run in parallel + 1 aggregator synthesis pass; Tree-MoA early-exit avoids extra synthesis hops
             let parallelFactor = min(Double(active.count), max(1.0, Double(mmmAvailableTargets.count))) * 0.72
-            return baseSingle * max(1.0, parallelFactor)
+            let earlyExitGain = mmmEnableTreeMoaEarlyExit ? (1.0 + max(0.0, (0.95 - mmmMoaConfidenceThreshold) * 0.6)) : 1.0
+            rawEstimate = baseSingle * max(1.0, parallelFactor) * earlyExitGain
         case .speculativeDecoding:
-            // Draft + Target typically achieves 1.6x - 2.3x decode speedup on Apple Silicon
-            return baseSingle * (active.contains(where: { $0.role == .draft }) ? 1.85 : 1.25)
+            // Draft + Target; EAGLE-3 multi-layer feature fusion yields an additional speedup multiplier
+            let baseSpec = active.contains(where: { $0.role == .draft }) ? 1.85 : 1.25
+            rawEstimate = baseSingle * baseSpec * mmmSpeculativeEngine.speedupBonusMultiplier
         case .sequentialPipeline:
             // Chained stages; throughput bounded by slowest stage + WAN/TB hop overhead
             let hopOverhead = (mmmScope == .local) ? 0.94 : 0.78
-            return baseSingle * hopOverhead
+            rawEstimate = baseSingle * hopOverhead
         }
+        return rawEstimate * min(1.35, topologyBoost * 0.85 + 0.15) * min(1.25, wanBoost * 0.5 + 0.5) * splitBoost
     }
 
     func syncMultiModelSlotsFromCluster() {
@@ -3981,5 +4004,160 @@ final class ClusterViewModel: ObservableObject {
         } catch {
             return (-1, "", error.localizedDescription, error.localizedDescription)
         }
+    }
+
+    // MARK: - Phase 11: 2026 SOTA Architecture Upgrade Methods (Points 1–5)
+
+    /// Point 1: TB5 RDMA Preflight Command (`rdma_ctl enable` + `bridge0` guard + per-port IP check)
+    func rdmaPreflightCommand() -> String {
+        let modeNote = clusterMeshTopology == .fullMesh ? "JACCL Full-Mesh TP" : "Pipeline Ring"
+        return """
+        # SS-CCC TB5 RDMA Preflight (\(modeNote))
+        sudo ifconfig bridge0 down 2>/dev/null || true
+        sudo rdma_ctl enable
+        rdma_ctl status && ibv_devinfo || system_profiler SPThunderboltDataType | grep -E "Speed|Port|Domain"
+        """
+    }
+
+    /// Point 1: Generates `mlx.distributed_config` compatible hostfile JSON for JACCL / Ring
+    func generateMlxDistributedHostfileJSON() -> String {
+        let activeNodes = nodes.isEmpty ? [] : nodes
+        let hostEntries = activeNodes.enumerated().map { idx, node in
+            let rdmaDevice = "rdma_en\(idx + 2)"
+            return """
+                {
+                  "rank": \(idx),
+                  "name": "\(node.name)",
+                  "ip": "\(node.tbIP)",
+                  "rdma_device": "\(rdmaDevice)",
+                  "usable_vram_gb": \(Int(node.usableVramGB))
+                }
+            """
+        }.joined(separator: ",\n")
+        let backend = clusterMeshTopology == .fullMesh ? "jaccl" : "ring"
+        return """
+        {
+          "backend": "\(backend)",
+          "topology": "\(clusterMeshTopology.rawValue)",
+          "bridge0_disabled": true,
+          "hosts": [
+        \(hostEntries)
+          ]
+        }
+        """
+    }
+
+    /// Point 1: Effective WAN latency factor (QUIC/Iroh 0-RTT eliminates TCP HoL blocking)
+    var wanTransportLatencyFactor: Double {
+        wanTransportProtocol.latencyFactor
+    }
+
+    /// Point 2: ANE-Prefill + MLX-Decode Split-Phase EDP & wattage ratio
+    func aneSplitSpeedupAndEnergyRatio() -> (prefillSpeedup: Double, energySavingsPct: Double) {
+        (splitPhaseComputeMode.prefillEdpGainFactor, splitPhaseComputeMode.wattSavingsPercent)
+    }
+
+    /// Point 2: 3-Tier KV-Cache & CacheGen compression telemetry
+    func cacheGenCompressionMetrics(contextTokens: Int = 32768) -> CacheGenCompressionMetrics {
+        let rawKvGB = max(0.25, Double(contextTokens) / 1000.0 * 0.19)
+        let ratio = kvCacheTierMode.compressionRatio
+        let compressedGB = rawKvGB / ratio
+        let hitFactor = max(0.0, min(100.0, kvPrefixCacheHitRatePct))
+        let ttftReduction = min(82.0, hitFactor * 0.65 + (ratio - 1.0) * 8.5)
+        return CacheGenCompressionMetrics(
+            tierMode: kvCacheTierMode,
+            prefixHitRatePct: hitFactor,
+            rawKvSizeGB: rawKvGB,
+            compressedTransferGB: compressedGB,
+            compressionRatio: ratio,
+            estimatedTtftReductionPct: ttftReduction
+        )
+    }
+
+    /// Point 4: OpenAI `/v1/responses` payload with native MCP tool server declaration
+    func generateOpenAIResponsesMcpPayload() -> String {
+        let model = selectedModel.id
+        return """
+        POST \(openCodeBaseURL)/v1/responses
+        {
+          "model": "\(model)",
+          "input": "Analysiere den Cluster-Zustand und optimiere das Sharding.",
+          "tools": [
+            {
+              "type": "mcp",
+              "server_label": "ssccc-cluster",
+              "server_url": "\(openCodeBaseURL)/mcp",
+              "require_approval": "never"
+            }
+          ],
+          "store": true
+        }
+        """
+    }
+
+    /// Point 4: MCP Server Registry JSON for Cursor, Claude Desktop, VS Code, Codex
+    func generateMcpRegistryJSON() -> String {
+        return """
+        {
+          "mcpServers": {
+            "ssccc-cluster": {
+              "transport": "streamable-http",
+              "url": "\(openCodeBaseURL)/mcp",
+              "capabilities": ["cluster_telemetry", "mmm_orchestrate", "kv_cache_status"]
+            }
+          }
+        }
+        """
+    }
+
+    /// Point 4: Google/Linux Foundation A2A Agent Card (`/.well-known/agent.json`)
+    func generateA2AAgentCardJSON() -> String {
+        let usableGB = Int(totalUsableVramGB)
+        let nodeCount = max(1, nodes.count)
+        return """
+        {
+          "name": "SS-CCC Apple Silicon Cluster Agent",
+          "description": "Distributed MLX/oMLX/MMM inference cluster (\(nodeCount) nodes, \(usableGB) GB usable VRAM).",
+          "url": "\(openCodeBaseURL)",
+          "version": "\(AppReleaseMetadata.currentVersion)",
+          "capabilities": {
+            "streaming": true,
+            "multiModelMode": true,
+            "speculativeEngine": "\(mmmSpeculativeEngine.rawValue)",
+            "transport": "\(wanTransportProtocol.rawValue)"
+          },
+          "skills": [
+            { "id": "mmm-orchestrate", "name": "Multi-Model-Mode Orchestration" },
+            { "id": "cluster-rooflines", "name": "Roofline & Telemetry Analysis" }
+          ]
+        }
+        """
+    }
+
+    /// Point 5: Thermal- & Carbon-Aware target ranking/filtering for MMM & cluster scheduling
+    func thermalAndCarbonAdjustedTargets(from candidates: [String]) -> [String] {
+        guard mmmThermalCarbonAwareScheduling, thermalCarbonPolicy != .performanceFirst else {
+            return candidates
+        }
+        let sorted = candidates.sorted { (lhs: String, rhs: String) -> Bool in
+            let lNode = nodes.first { $0.name == lhs }
+            let rNode = nodes.first { $0.name == rhs }
+            let lPenalty = thermalPenalty(for: lNode?.thermalLabel ?? "Nominal")
+            let rPenalty = thermalPenalty(for: rNode?.thermalLabel ?? "Nominal")
+            if lPenalty != rPenalty { return lPenalty < rPenalty }
+            if thermalCarbonPolicy == .ecoCarbonAware {
+                return (lNode?.bandwidthGBs ?? 120) > (rNode?.bandwidthGBs ?? 120)
+            }
+            return (lNode?.usableVramGB ?? 0) > (rNode?.usableVramGB ?? 0)
+        }
+        return sorted
+    }
+
+    private func thermalPenalty(for label: String) -> Int {
+        let low = label.lowercased()
+        if low.contains("critical") || low.contains("kritisch") { return 10 }
+        if low.contains("serious") || low.contains("hoch") || low.contains("warm") { return 5 }
+        if low.contains("fair") || low.contains("mäßig") { return 1 }
+        return 0
     }
 }

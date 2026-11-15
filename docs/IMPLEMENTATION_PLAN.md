@@ -188,3 +188,59 @@ Der **Multi-Model-Mode (MMM)** ergänzt SS-CCC als **10. Kategorie im linken Sei
   * `mmmFitsInClusterPool` prüft vorab gegen `mmmUsableVramPoolGB`, sodass der Speicherschutz-Puffer nie verletzt wird.
   * `executeMultiModelOrchestration()` nutzt im **Echtbetrieb** (`!simulateMacStudio`) reales SSE-Streaming (`runLiveChatCompletionTrial`) ohne Fake-Werte; im **Simulationsmodus** liefert er realistische, klar als `SIMULATION` markierte Referenzwerte.
 * **UI (`MultiModelModeView.swift` & `SSCCCApp.swift`):** Scrollbare 10-Tab-Sidebar im Solaris-Design mit Scope-/Strategie-Auswahl, VRAM-Füllbalken, Slot-Editor und Live-Ausführungsprotokoll.
+
+---
+
+## 8. Phase 11 — 2026 SOTA Architecture Upgrade (Punkte 1–5)
+
+Dieser Implementierungsplan fasst die fünf auf aktuellen Forschungsergebnissen basierenden Modernisierungen zusammen und definiert die konkrete Umsetzung in `ClusterModels.swift`, `ClusterViewModel.swift`, den zugehörigen SwiftUI-Views sowie der Test-Suite:
+
+### 8.1 Punkt 1: TB5 RDMA Tensor Parallelism & QUIC / Iroh WAN-Transport
+* **Domain-Modelle (`ClusterModels.swift`):**
+  * `ClusterMeshTopology` (`ring`, `fullMesh`) für JACCL/MLX Tensor Parallelism vs. Pipeline-Ring.
+  * `WanTransportProtocol` (`tailscaleWireGuard`, `quicIrohP2P`, `libp2pDerp`) für WAN-Peers ohne TCP Head-of-Line-Blocking.
+* **ViewModel-Logik (`ClusterViewModel.swift`):**
+  * `@Published var clusterMeshTopology: ClusterMeshTopology = .fullMesh`
+  * `@Published var wanTransportProtocol: WanTransportProtocol = .quicIrohP2P`
+  * `rdmaPreflightCommand()` (`rdma_ctl enable`, `bridge0`-Check, Per-Port-IP) und `generateMlxDistributedHostfileJSON()` (`mlx.distributed_config`-kompatibles Hostfile).
+  * `wanTransportLatencyFactor` (QUIC 0-RTT & Stream-Multiplexing reduzieren effektive WAN-Latenz um ~28 % gegenüber TCP/Relay).
+* **Views:** `NetworkRdmaView.swift` (Full-Mesh vs. Ring, `rdma_ctl`-Preflight & `bridge0`-Guard, `mlx.distributed_config`-Export) und `InternetClusterView.swift` (QUIC / Iroh P2P Selektor & Telemetrie).
+
+### 8.2 Punkt 2: Disaggregiertes Prefill/Decode, ANE-Split & 3-Tier KV-Cache / CacheGen
+* **Domain-Modelle (`ClusterModels.swift`):**
+  * `SplitPhaseComputeMode` (`unifiedGpu`, `anePrefillGpuDecode`) für Energy-Delay-Product-(EDP)-Optimierung auf Apple Silicon.
+  * `KVCacheTierMode` (`ramOnly`, `ramNvmeTiered`, `distributedCacheGen`) inkl. `CacheGenCompressionMetrics`.
+* **ViewModel-Logik (`ClusterViewModel.swift`):**
+  * `@Published var splitPhaseComputeMode: SplitPhaseComputeMode = .anePrefillGpuDecode`
+  * `@Published var kvCacheTierMode: KVCacheTierMode = .distributedCacheGen`
+  * `@Published var kvPrefixCacheHitRatePct: Double = 78.0`
+  * `aneSplitSpeedupAndEnergyRatio()` & `cacheGenCompressionMetrics()` (Kompressionsfaktor ~3.6× für KV-Tensoren über TB/WAN).
+* **Views:** `ModelStudioView.swift` & `ScienceBenchmarksView.swift` (Split-Phase ANE/MLX Steuerung + 3-Tier KV-Cache / CacheGen-Rechner).
+
+### 8.3 Punkt 3: MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit & Adaptive Confidence Router)
+* **Domain-Modelle (`ClusterModels.swift`):**
+  * `SpeculativeEngineMode` (`standardDraftTarget`, `eagle3Fusion`) für Hidden-State-Fusion (`arXiv:2503.01840`).
+* **ViewModel-Logik (`ClusterViewModel.swift`):**
+  * `@Published var mmmSpeculativeEngine: SpeculativeEngineMode = .eagle3Fusion`
+  * `@Published var mmmEnableTreeMoaEarlyExit: Bool = true`
+  * `@Published var mmmMoaConfidenceThreshold: Double = 0.82`
+  * `@Published var mmmConfidenceEscalationEnabled: Bool = true`
+  * Integration in `mmmEstimatedCombinedTokPerSec` und `executeMultiModelOrchestration()`.
+* **Views:** `MultiModelModeView.swift` (EAGLE-3 Toggle, Tree-MoA Early-Exit & Confidence-Schwellenwert-Slider, Adaptive Confidence Escalation).
+
+### 8.4 Punkt 4: Moderne Agenten- & Gateway-Standards (`/v1/responses`, MCP Registry & A2A Agent Card)
+* **Domain-Modelle (`ClusterModels.swift`):**
+  * `AgentGatewayProtocol` (`chatCompletions`, `responsesWithMcp`, `a2aAgentCard`).
+* **ViewModel-Logik (`ClusterViewModel.swift`):**
+  * `@Published var selectedGatewayProtocol: AgentGatewayProtocol = .responsesWithMcp`
+  * `generateOpenAIResponsesMcpPayload()`, `generateMcpRegistryJSON()`, `generateA2AAgentCardJSON()` (`/.well-known/agent.json`).
+* **Views:** `AgentIntegrationsView.swift` & `ApiConsoleView.swift` (Live-Generator & Vorschau für `/v1/responses`, MCP-Server-Registry & `/.well-known/agent.json`).
+
+### 8.5 Punkt 5: Thermal- & Carbon-Aware Workload Placement
+* **Domain-Modelle (`ClusterModels.swift`):**
+  * `ThermalCarbonSchedulingPolicy` (`performanceFirst`, `balancedThermal`, `ecoCarbonAware`).
+* **ViewModel-Logik (`ClusterViewModel.swift`):**
+  * `@Published var thermalCarbonPolicy: ThermalCarbonSchedulingPolicy = .balancedThermal`
+  * `@Published var mmmThermalCarbonAwareScheduling: Bool = true`
+  * `thermalAndCarbonAdjustedTargets(from:)` bewertet `ThermalState` und Effizienz pro Node und priorisiert kühle/effiziente Knoten in MMM & Routing.
+* **Views:** `MultiModelModeView.swift` (Thermal-/Carbon-Aware Scheduler Toggle & Policy-Auswahl).

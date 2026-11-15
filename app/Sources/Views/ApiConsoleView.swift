@@ -86,6 +86,38 @@ struct ApiConsoleView: View {
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.35)))
                         .textSelection(.enabled)
                 }
+
+                // Punkt 4: /v1/responses + MCP + A2A Agent Card Gateway-Vorschau
+                SolarisCard(accent: SolarisTheme.mint) {
+                    HStack {
+                        Label("Gateway-Protokolle (/v1/responses · MCP · A2A)", systemImage: "arrow.left.arrow.right.circle.fill")
+                            .font(SolarisTheme.cardTitle)
+                            .foregroundColor(SolarisTheme.mint)
+                        Spacer()
+                    }
+                    Picker("Gateway-Protokoll", selection: $vm.selectedGatewayProtocol) {
+                        ForEach(AgentGatewayProtocol.allCases) { proto in
+                            Text(proto.rawValue).tag(proto)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    let gatewayPayload: String = {
+                        switch vm.selectedGatewayProtocol {
+                        case .chatCompletions: return "POST \(vm.openCodeBaseURL)/v1/chat/completions"
+                        case .responsesWithMcp: return vm.generateOpenAIResponsesMcpPayload()
+                        case .a2aAgentCard: return vm.generateA2AAgentCardJSON()
+                        }
+                    }()
+
+                    Text(gatewayPayload)
+                        .font(SolarisTheme.monoCode)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.35)))
+                        .textSelection(.enabled)
+                }
             }
             .padding(24)
         }

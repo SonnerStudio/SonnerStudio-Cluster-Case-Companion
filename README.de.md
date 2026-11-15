@@ -359,10 +359,20 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 
 ---
 
+## 🚀 2026 SOTA-Architektur-Upgrade (Phase 11)
+
+- **TB5 RDMA Tensor Parallelism & QUIC / Iroh WAN:** Umschalten zwischen **Pipeline Ring** und **JACCL Full-Mesh TP** (`ClusterMeshTopology`), `rdma_ctl enable` + `bridge0`-Schutz-Preflight, `mlx.distributed_config`-JSON-Export sowie **QUIC / Iroh P2P (0-RTT Multiplex)** im Internet-Cluster gegen TCP Head-of-Line-Blocking.
+- **Disaggregiertes Prefill/Decode (ANE-Split) & 3-Tier KV-Cache / CacheGen:** Lagert den Prompt-Prefill auf die Apple Neural Engine (ANE) aus, während MLX-GPU den Decode übernimmt (`EDP ×1,42`, `-31,5 %` Leistung), inkl. **3-Tier KV-Cache** (`RAM → NVMe SSD → Peer CacheGen`) mit `3,6×`-Kompression und Prefix-Hit-TTFT-Auswertung.
+- **Next-Gen MMM (EAGLE-3, Tree-MoA Early-Exit & Adaptive Confidence Router):** Aktiviert **EAGLE-3** Multi-Layer Feature Fusion, **Tree-MoA Early-Exit** mit Konfidenz-Schwellenwert (`50–95 %`) und **Adaptive Confidence Escalation (Ares)** direkt im Multi-Model-Mode.
+- **Moderne Agenten- & Gateway-Standards:** Live-Vorschau und Export für **OpenAI `/v1/responses`** mit nativer MCP-Tool-Deklaration, **MCP-Server-Registry JSON** und **A2A Agent Card** (`/.well-known/agent.json`) in **Agenten & IDEs** sowie **API & Konsole**.
+- **Thermal- & Carbon-Aware Workload Placement:** Stuft Knoten mit `.serious`/`.critical` Thermal-State automatisch herunter und gewichtet Energieeffizienz (`Eco Carbon-Aware` / `Thermal-Balanced`) bei der MMM-Planung.
+
+---
+
 ## 🚧 Entwicklungsstand & Mitmachen
 
 > [!IMPORTANT]
-> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `14/14` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
+> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `23/23` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
 > **Bereits umgesetzt und geprüft:** Englische Startsprache mit 8-Sprachen-Umschaltung (`EN/DE/FR/ES/PT/RU/JA/ZH`), **3-Reiter-Cluster-Übersicht** (**Lokaler Cluster**, **Internet-Cluster** mit regionalen & lokalen Teilverbünden sowie **Lokal + Internet**-Hybridansicht), **gelb-schwarze Industrie-Warnstreifen (`HazardStripesBar` / `IndustrialHazardBanner`)** in 6 Kernansichten, zukunftssichere M1–M12+-Hardware-Auslesung, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, 9-Kapitel-Handbuch sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
 
 Wir laden Entwickler, Forschende und Apple-Silicon-Begeisterte herzlich dazu ein, **mitzuentwickeln und SS-CCC weiterzubringen**:

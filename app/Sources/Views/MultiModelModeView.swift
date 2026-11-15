@@ -9,6 +9,7 @@ struct MultiModelModeView: View {
             VStack(alignment: .leading, spacing: 20) {
                 headerAndScopeCard
                 autoSetupCard
+                nextGenSotaOrchestrationCard
                 vramAndThroughputCard
                 modelSlotsCard
                 executionAndResultsCard
@@ -174,6 +175,76 @@ struct MultiModelModeView: View {
                 Text(vm.mmmAutoSetupSummary)
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundColor(SolarisTheme.emerald)
+            }
+        }
+    }
+
+    // MARK: - 1b. Next-Gen SOTA MMM Controls (EAGLE-3, Tree-MoA Early-Exit, Confidence Router & Thermal/Carbon)
+
+    private var nextGenSotaOrchestrationCard: some View {
+        SolarisCard(accent: SolarisTheme.emerald) {
+            HStack {
+                Label("Next-Gen MMM Engine (EAGLE-3 · Tree-MoA · Thermal/Carbon)", systemImage: "sparkles.rectangle.stack.fill")
+                    .font(SolarisTheme.cardTitle)
+                    .foregroundColor(SolarisTheme.emerald)
+                Spacer()
+                Text(String(format: "%.1f tok/s geschätzt", vm.mmmEstimatedCombinedTokPerSec))
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(SolarisTheme.emerald)
+                    .cornerRadius(6)
+            }
+
+            // Punkt 3: EAGLE-3 Speculative Engine
+            Picker("Speculative-Engine", selection: $vm.mmmSpeculativeEngine) {
+                ForEach(SpeculativeEngineMode.allCases) { engine in
+                    Text(engine.rawValue).tag(engine)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            // Punkt 3: Tree-MoA Early-Exit & Adaptive Confidence Escalation
+            HStack(spacing: 16) {
+                Toggle("Tree-MoA Early-Exit", isOn: $vm.mmmEnableTreeMoaEarlyExit)
+                    .toggleStyle(.switch)
+                    .tint(SolarisTheme.mint)
+
+                Toggle("Adaptive Confidence Escalation (Ares)", isOn: $vm.mmmConfidenceEscalationEnabled)
+                    .toggleStyle(.switch)
+                    .tint(SolarisTheme.amber)
+            }
+            .font(SolarisTheme.bodyBold)
+            .foregroundColor(SolarisTheme.textPrimary)
+
+            HStack {
+                Text(String(format: "MoA-Konfidenz-Schwellenwert: %.0f %%", vm.mmmMoaConfidenceThreshold * 100))
+                    .font(SolarisTheme.bodyBold)
+                    .foregroundColor(SolarisTheme.textSecondary)
+                Slider(value: $vm.mmmMoaConfidenceThreshold, in: 0.50...0.95, step: 0.01)
+                    .tint(SolarisTheme.emerald)
+            }
+
+            Divider().opacity(0.2)
+
+            // Punkt 5: Thermal- & Carbon-Aware Workload Placement
+            HStack(spacing: 12) {
+                Toggle("Thermal- & Carbon-Aware Scheduling", isOn: $vm.mmmThermalCarbonAwareScheduling)
+                    .toggleStyle(.switch)
+                    .tint(SolarisTheme.emerald)
+                    .font(SolarisTheme.bodyBold)
+                    .foregroundColor(SolarisTheme.textPrimary)
+
+                Spacer()
+
+                Picker("Scheduling-Policy", selection: $vm.thermalCarbonPolicy) {
+                    ForEach(ThermalCarbonSchedulingPolicy.allCases) { policy in
+                        Text(policy.rawValue).tag(policy)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
             }
         }
     }

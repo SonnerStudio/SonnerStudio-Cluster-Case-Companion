@@ -491,6 +491,23 @@ struct ScienceBenchmarksView: View {
                     accent: vm.mmmFitsInClusterPool ? SolarisTheme.emerald : SolarisTheme.coral
                 )
             }
+
+            let aneMetrics = vm.aneSplitSpeedupAndEnergyRatio()
+            let kvMetrics = vm.cacheGenCompressionMetrics()
+            HStack(spacing: 14) {
+                ScienceMetricTile(
+                    label: "ANE-Prefill / MLX-Decode",
+                    value: String(format: "EDP ×%.2f", aneMetrics.prefillSpeedup),
+                    sub: String(format: "-%.1f %% Energie · %@", aneMetrics.energySavingsPct, vm.splitPhaseComputeMode.rawValue),
+                    accent: SolarisTheme.emerald
+                )
+                ScienceMetricTile(
+                    label: "KV-CacheGen & Prefix-Hit",
+                    value: String(format: "%.1f× · %.0f %%", kvMetrics.compressionRatio, kvMetrics.prefixHitRatePct),
+                    sub: String(format: "%.2f GB → %.2f GB (-%.0f %% TTFT)", kvMetrics.rawKvSizeGB, kvMetrics.compressedTransferGB, kvMetrics.estimatedTtftReductionPct),
+                    accent: SolarisTheme.amberGlow
+                )
+            }
         }
     }
 

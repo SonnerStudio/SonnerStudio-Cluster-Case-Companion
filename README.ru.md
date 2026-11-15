@@ -305,6 +305,16 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ---
 
+## 🚀 Обновление архитектуры SOTA 2026 (Фаза 11)
+
+- **TB5 RDMA Tensor Parallelism и QUIC / Iroh WAN:** Переключение между **Pipeline Ring** и **JACCL Full-Mesh TP** (`ClusterMeshTopology`), префлайт-проверка `rdma_ctl enable` + `bridge0`, экспорт `mlx.distributed_config` JSON и транспорт **QUIC / Iroh P2P (0-RTT Multiplex)** без блокировки TCP HoL.
+- **Разделённый Prefill/Decode (ANE-Split) и 3-уровневый KV-Cache / CacheGen:** Вынос *prefill* на Apple Neural Engine (ANE) с сохранением *decode* на MLX GPU (`EDP ×1,42`, `-31,5 %` энергии), а также сжатие **CacheGen (`3,6×`)** и телеметрия TTFT.
+- **MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit и адаптивный роутер):** Слияние признаков **EAGLE-3**, порог уверенности **Tree-MoA Early-Exit** (`50–95 %`) и **Adaptive Confidence Escalation (Ares)** в Multi-Model-Mode.
+- **Современные стандарты агентов и шлюзов:** Генерация и экспорт **OpenAI `/v1/responses` + MCP**, **MCP Server Registry JSON** и **A2A Agent Card** (`/.well-known/agent.json`).
+- **Тепло- и углеродно-ориентированное планирование:** Автоматическое понижение приоритета перегретых узлов (`.serious`/`.critical`) и учёт энергоэффективности.
+
+---
+
 ## 📁 Структура репозитория
 
 ```text

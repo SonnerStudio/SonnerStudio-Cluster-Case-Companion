@@ -224,6 +224,57 @@ struct AgentIntegrationsView: View {
                         vm.agentStatusMessage = "Xcode-Konfiguration in Zwischenablage kopiert."
                     }
                 )
+
+                // Punkt 4: Moderne Agenten- & Gateway-Standards (/v1/responses, MCP Registry & A2A Agent Card)
+                SolarisCard(accent: SolarisTheme.amberGlow) {
+                    HStack {
+                        Label("Moderne Gateway-Standards (/v1/responses · MCP · A2A)", systemImage: "network.badge.shield.half.filled")
+                            .font(SolarisTheme.sectionTitle)
+                            .foregroundColor(SolarisTheme.amberGlow)
+                        Spacer()
+                    }
+
+                    Picker("Protokoll-Vorschau", selection: $vm.selectedGatewayProtocol) {
+                        ForEach(AgentGatewayProtocol.allCases) { proto in
+                            Text(proto.rawValue).tag(proto)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    let previewSnippet: String = {
+                        switch vm.selectedGatewayProtocol {
+                        case .chatCompletions: return vm.cursorConfigJSON
+                        case .responsesWithMcp: return vm.generateOpenAIResponsesMcpPayload()
+                        case .a2aAgentCard: return vm.generateA2AAgentCardJSON()
+                        }
+                    }()
+
+                    Text(previewSnippet)
+                        .font(SolarisTheme.monoCode)
+                        .foregroundColor(SolarisTheme.textPrimary)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.38)))
+                        .textSelection(.enabled)
+
+                    HStack(spacing: 10) {
+                        Button("MCP Registry kopieren") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(vm.generateMcpRegistryJSON(), forType: .string)
+                            vm.agentStatusMessage = "MCP-Server-Registry (JSON) in Zwischenablage kopiert."
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(SolarisTheme.mint)
+                        .foregroundColor(.black)
+
+                        Button("A2A /.well-known/agent.json kopieren") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(vm.generateA2AAgentCardJSON(), forType: .string)
+                            vm.agentStatusMessage = "A2A Agent Card JSON in Zwischenablage kopiert."
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
             }
             .padding(24)
         }

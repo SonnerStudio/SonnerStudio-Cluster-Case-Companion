@@ -315,6 +315,16 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 
 ---
 
+## 🚀 Atualização de Arquitetura SOTA 2026 (Fase 11)
+
+- **TB5 RDMA Tensor Parallelism & QUIC / Iroh WAN:** Alterne entre **Pipeline Ring** e **JACCL Full-Mesh TP** (`ClusterMeshTopology`), execute verificações `rdma_ctl enable` + `bridge0`, exporte `mlx.distributed_config` em JSON e ative **QUIC / Iroh P2P (0-RTT Multiplex)** sem bloqueio TCP HoL.
+- **Prefill/Decode Desagregado (ANE-Split) & KV-Cache de 3 Camadas / CacheGen:** Transfira o *prefill* para o Apple Neural Engine (ANE) mantendo o *decode* na GPU MLX (`EDP ×1,42`, `-31,5 %` energia), com compressão **CacheGen (`3,6×`)** e telemetria de acerto de prefixo.
+- **MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit & Roteador Adaptativo):** Fusão **EAGLE-3**, limiar de confiança **Tree-MoA Early-Exit** (`50–95 %`) e **Adaptive Confidence Escalation (Ares)** integrados no Modo Multimodelo.
+- **Padrões Modernos de Agentes e Gateway:** Pré-visualização e exportação de **OpenAI `/v1/responses` + MCP**, **MCP Server Registry JSON** e **A2A Agent Card** (`/.well-known/agent.json`).
+- **Agendamento Térmico e Consciente de Carbono:** Desprioriza automaticamente nós em estado térmico `.serious`/`.critical` e prioriza eficiência energética.
+
+---
+
 ## 📁 Estrutura do repositório
 
 ```text

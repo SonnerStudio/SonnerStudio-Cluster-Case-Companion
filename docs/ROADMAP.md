@@ -122,3 +122,14 @@ Die Analyse des `exo-explore/exo`-Repositories liefert entscheidende Best Practi
   * **Scope- & Strategie-Steuerung:** Umschaltung zwischen *Lokaler Cluster*, *Internet-Cluster* und *Lokal + Internet (Hybrid)* sowie 4 Modi (*Paralleler Multi-Modell-Pool*, *Mixture-of-Agents*, *Speculative Decoding*, *Sequenzielle Modell-Pipeline*).
   * **VRAM-Pool-Schutz & Slot-Zuweisung:** Pro-Modell-Zuweisung auf lokale TB/RDMA-Knoten oder WAN-Peers inkl. `iogpu.wired_limit_mb`-Budgetprüfung.
   * **Echtzeit-SSE-Ausführung & Simulation:** Reale Token/s- und TTFT-Messung über aktive Endpunkte sowie klar gekennzeichnete Simulationsläufe.
+
+---
+
+### Phase 11: 2026 SOTA Architecture Upgrade (Punkte 1–5)
+* **Ziel:** Integration moderner 2025/2026er Forschungs- und Industriestandards in alle Cluster-, Modell-, Forschungs- und Agentenbereiche.
+* **Meilensteine:**
+  * **TB5 RDMA Full-Mesh & QUIC/Iroh WAN:** `ClusterMeshTopology` (Ring vs. Full-Mesh), `rdma_ctl enable` Preflight-Check, `bridge0`-Schutz, `mlx.distributed_config`-Export sowie QUIC/Iroh 0-RTT WAN-Transport.
+  * **Disaggregated Prefill/Decode & KV-Cache Tiering:** ANE-Prefill + MLX-Decode Split-Phase, 3-Tier KV-Cache (`RAM -> NVMe -> Peer`) & CacheGen-Kompression.
+  * **MMM Next-Gen:** EAGLE-3 Speculative Fusion, Tree-MoA Early-Exit mit Konfidenz-Schwellenwert & Adaptive Confidence Escalation Routing.
+  * **Moderne Gateway-Standards:** OpenAI `/v1/responses` + MCP Registry + A2A Agent Card (`/.well-known/agent.json`).
+  * **Thermal- & Carbon-Aware Scheduling:** Automatische Drosselung bzw. Umverteilung bei `.serious`/`.critical` Thermal-State und Energieeffizienz-Gewichtung.

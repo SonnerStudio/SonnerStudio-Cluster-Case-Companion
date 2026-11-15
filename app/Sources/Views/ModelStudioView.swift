@@ -353,6 +353,58 @@ struct ModelStudioView: View {
                         .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.35)))
                     }
                 }
+
+                // Punkt 2: Disaggregiertes Prefill/Decode (ANE-Split) & 3-Tier KV-Cache / CacheGen
+                SolarisCard(accent: SolarisTheme.mint) {
+                    let aneMetrics = vm.aneSplitSpeedupAndEnergyRatio()
+                    let kvMetrics = vm.cacheGenCompressionMetrics()
+
+                    HStack {
+                        Label("Disaggregiertes Prefill/Decode (ANE-Split) & 3-Tier KV-Cache", systemImage: "cpu.fill")
+                            .font(SolarisTheme.cardTitle)
+                            .foregroundColor(SolarisTheme.mint)
+                        Spacer()
+                        Text(String(format: "EDP ×%.2f · -%.1f%% Watt", aneMetrics.prefillSpeedup, aneMetrics.energySavingsPct))
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(SolarisTheme.mint)
+                            .cornerRadius(6)
+                    }
+
+                    Picker("Compute-Aufteilung", selection: $vm.splitPhaseComputeMode) {
+                        ForEach(SplitPhaseComputeMode.allCases) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Picker("KV-Cache Tiering & CacheGen", selection: $vm.kvCacheTierMode) {
+                        ForEach(KVCacheTierMode.allCases) { tier in
+                            Text(tier.rawValue).tag(tier)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    HStack {
+                        Text(String(format: "Prefix-Cache-Trefferrate: %.0f %%", vm.kvPrefixCacheHitRatePct))
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Slider(value: $vm.kvPrefixCacheHitRatePct, in: 0...100, step: 1)
+                            .tint(SolarisTheme.mint)
+                    }
+
+                    HStack(spacing: 14) {
+                        Text(String(format: "Roh-KV (32K): %.2f GB", kvMetrics.rawKvSizeGB))
+                        Text(String(format: "CacheGen-Transfer: %.2f GB (%.1f×)", kvMetrics.compressedTransferGB, kvMetrics.compressionRatio))
+                            .foregroundColor(SolarisTheme.emerald)
+                        Text(String(format: "TTFT-Reduktion: -%.1f %%", kvMetrics.estimatedTtftReductionPct))
+                            .foregroundColor(SolarisTheme.amberGlow)
+                    }
+                    .font(SolarisTheme.monoCode)
+                    .foregroundColor(SolarisTheme.textSecondary)
+                }
             }
             .padding(24)
         }

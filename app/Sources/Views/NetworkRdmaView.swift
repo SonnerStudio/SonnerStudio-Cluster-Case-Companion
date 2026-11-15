@@ -130,6 +130,70 @@ struct NetworkRdmaView: View {
                     .font(SolarisTheme.bodyLarge)
                     .foregroundColor(SolarisTheme.textSecondary)
                 }
+
+                // Punkt 1: TB5 RDMA Tensor Parallelism (JACCL Full-Mesh vs. Ring) & mlx.distributed_config
+                SolarisCard(accent: SolarisTheme.emerald) {
+                    HStack {
+                        Label("TB5 RDMA Tensor Parallelism & JACCL Full-Mesh", systemImage: "point.3.connected.trianglepath.dotted")
+                            .font(SolarisTheme.cardTitle)
+                            .foregroundColor(SolarisTheme.emerald)
+                        Spacer()
+                        Text(vm.clusterMeshTopology.shortLabel)
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(SolarisTheme.emerald)
+                            .cornerRadius(6)
+                    }
+
+                    Picker("Cluster-Topologie", selection: $vm.clusterMeshTopology) {
+                        ForEach(ClusterMeshTopology.allCases) { topo in
+                            Text(topo.rawValue).tag(topo)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text("• `bridge0`-Schutz & `rdma_ctl enable`: Verhindert Kernel-Panics durch parallele Thunderbolt-IP-Bridges und nutzt dedizierte Per-Port-IPs (`10.99.x.y`).")
+                        .font(.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+
+                    Text(vm.rdmaPreflightCommand())
+                        .font(SolarisTheme.monoCode)
+                        .foregroundColor(SolarisTheme.mint)
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.black.opacity(0.45))
+                        .cornerRadius(8)
+
+                    HStack(spacing: 12) {
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(vm.generateMlxDistributedHostfileJSON(), forType: .string)
+                            vm.sotaConfigCopiedBanner = "mlx.distributed_config JSON kopiert"
+                        } label: {
+                            Label("mlx.distributed_config kopieren", systemImage: "doc.on.doc.fill")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(SolarisTheme.emerald)
+                        .foregroundColor(.black)
+
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(vm.rdmaPreflightCommand(), forType: .string)
+                            vm.sotaConfigCopiedBanner = "RDMA-Preflight-Befehl kopiert"
+                        } label: {
+                            Label("Preflight-Befehl kopieren", systemImage: "terminal.fill")
+                        }
+                        .buttonStyle(.bordered)
+
+                        if !vm.sotaConfigCopiedBanner.isEmpty {
+                            Text(vm.sotaConfigCopiedBanner)
+                                .font(.caption.bold())
+                                .foregroundColor(SolarisTheme.amberGlow)
+                        }
+                    }
+                }
             }
             .padding(24)
         }

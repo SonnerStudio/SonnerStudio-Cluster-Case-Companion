@@ -492,6 +492,33 @@ struct InternetClusterView: View {
                     .cornerRadius(10)
                 }
             }
+
+            // Punkt 1: QUIC / Iroh P2P WAN-Transport (0-RTT Multiplex ohne TCP HoL-Blocking)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Label("WAN-Transport-Protokoll (QUIC / Iroh P2P)", systemImage: "bolt.horizontal.circle.fill")
+                        .font(SolarisTheme.bodyBold)
+                        .foregroundColor(SolarisTheme.mint)
+                    Spacer()
+                    Text(String(format: "Latenz-Faktor %.2f× · 0-RTT %@", vm.wanTransportLatencyFactor, vm.wanTransportProtocol.zeroRttEnabled ? "AKTIV" : "AUS"))
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(vm.wanTransportProtocol.zeroRttEnabled ? SolarisTheme.emerald : SolarisTheme.amber)
+                        .cornerRadius(5)
+                }
+
+                Picker("WAN-Transport", selection: $vm.wanTransportProtocol) {
+                    ForEach(WanTransportProtocol.allCases) { proto in
+                        Text(proto.rawValue).tag(proto)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            .padding(10)
+            .background(SolarisTheme.cardElevated)
+            .cornerRadius(10)
         }
     }
 
