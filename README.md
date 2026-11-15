@@ -28,7 +28,7 @@
 **SonnerStudio Cluster-Case-Companion (SS-CCC)** unifies the memory and compute of any **Apple Silicon Macs (M1–M9+)** — from a single Mac mini or MacBook Pro to multi-Mac **Thunderbolt 3/4/5 & RDMA** desks or **global Internet WAN clusters (2–256+ Macs)** — with native **MLX**, **oMLX**, **Ollama**, and **llama.cpp** integration.
 
 <div align="center">
-  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC Universal Apple Silicon M1–M9+ & 1-Click Ecosystem" width="94%"/>
+  <img src="docs/images/i18n/ssccc_ecosystem_en.jpg" alt="SS-CCC Universal Apple Silicon M1–M12+ & 11-Module Ecosystem" width="94%"/>
 </div>
 
 ---
@@ -83,24 +83,25 @@ Inside **Internet-Cluster & Chat**, SS-CCC continuously monitors real WAN link p
 - **Global Internet WAN Cluster & Participant Chat (`/ws/wan/{room_id}`):** Connect any Apple Silicon Macs worldwide into large distributed clusters over encrypted tunnels (Tailscale / WireGuard, libp2p / DERP P2P relay, or manual endpoint) with built-in real-time participant chat.
 - **6-Tab Science & Internet-WAN Research Lab + History Recording:** Switch seamlessly between **Local (TB/RDMA)**, **Internet WAN**, and **Side-by-Side Comparison** across 6 dedicated tabs: **Roofline & Bottleneck** (effective WAN ceiling, $B^*$ critical batch), **WAN Topology & Scaling** ($N=1\dots128$ scaling curves, *Petals/SWARM* activation compression, straggler simulation, *DiLoCo* vs. DDP), **Memory & KV Analysis**, **Energy, CO₂ & Cost** (`J/token`, `EDP`, regional `gCO₂eq/kWh`), **Trials, Stats & Export** (`CI₉₅`, `CV%`, `Goodput%`, `CSV / JSON / LaTeX / 8-paper BibTeX`), and **History Recording** (per-position or global snapshots, auto-recording, dual-line trend chart, and CSV export).
 - **GitHub-Controlled Program Updates & Automatic Version Control:** Checks `version.json`, GitHub Releases, and `commits/main` SHA automatically on launch and every 30 minutes (`⌘U` or header pill). Displays an in-app update prompt with changelog, 1-click `git pull` + `swift build` + relaunch for source installs, and browser download for packaged releases — backed by `scripts/bump_version.py` and `.github/workflows/auto-version-control.yml`.
-- **SonnerStudio Yellow (`#FFD400`) UI, 5-Language Manual & Global Test Suite (`tests/`):** Full interface and searchable 9-chapter Help Center (`⌘?`) in **English, German, French, Spanish, and Portuguese**, verified by `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
+- **SonnerStudio Yellow (`#FFD400`) UI, 8-Language Manual, Hover Shorttips & Global Test Suite (`tests/`):** Full interface, **app-wide hover shorttips** (macOS tooltips + floating **Solaris Shorttip Banner**), **Click-to-Detail interactive Help Center** (12 chapters with deep-dive graphics & glow highlights, `⌘?`) in **English, German, French, Spanish, Portuguese, Russian, Japanese, and Chinese**, and live real-time telemetry (no mock data when Simulation Mode is off), verified by `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
 
-### 🖥️ Program Modules at a Glance
+### 🖥️ Program Modules at a Glance (All 11 Sidebar Tabs)
 
 ![SS-CCC 1-Click Local AI Agents & IDE Ecosystem](docs/images/ssccc_agents_ide_ecosystem.jpg)
 
 | Sidebar Tab | Purpose |
 | :--- | :--- |
-| **1. Cluster Overview** | Live memory pool bar, active M1–M9+ topology, and pairwise Thunderbolt/RDMA link throughput |
-| **2. Devices & Compare** | Add/remove any M1–M9+ Mac, inspect CPU/GPU/ANE/SSD/thermal/power telemetry, and compare bars |
-| **3. Model Studio** | Live model discovery (oMLX / Ollama / llama.cpp / GGUF), runtime readiness check, proportional layer splits, and KV-cache tuning |
-| **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, and inspect TB3/TB4/TB5 classes |
-| **5. Internet Cluster, Audio-Party & Chat** | Couple local TB/RDMA Macs with global WAN peers (Tailscale/WireGuard/libp2p/DERP), monitor live **Internet Bandwidth & WAN Throughput** (`netstat`, ICMP ping/jitter, `networkQuality -c`, cluster impact), and coordinate via Audio-Party & Chat (`/ws/wan-audio`, `/ws/wan`) |
-| **6. Multi-Model-Mode (MMM)** | Combine multiple models across **Local**, **Internet-WAN**, or **Hybrid** clusters (*Parallel Pool*, *Mixture-of-Agents*, *Speculative Draft+Target*, *Sequential Pipeline*) with VRAM guards & simultaneous **Multi-IDE / Harness** cluster consumption (`:8000/v1`) |
-| **7. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
-| **8. Science & Roofline** | 6-tab Local & Internet-WAN research lab using **real SSE streaming & ICMP RTT** in live mode (labeled realistic simulation in sim mode), **direct Multi-Model-Mode (MMM) evaluation** (speedup, combined `tok/s`, VRAM & multi-IDE load), Log-Log Roofline, `N=1..128` scaling, *Petals/SWARM* & *DiLoCo*, KV memory, `J/tok` / `EDP` / `CO₂`, `CI₉₅` trials, `CSV / JSON / LaTeX / BibTeX`, and **History Recording** |
-| **9. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
-| **10. Help & Documentation** | Searchable 12-chapter, 8-language user manual (`⌘?`) covering M1–M12+ clustering, safety limits, WAN coupling, Audio-Party, MMM, Science Lab, and agents |
+| **1. Cluster Overview** | Live memory pool bar, active M1–M12+ topology, pairwise Thunderbolt/RDMA link throughput, and **4-state Setup & Readiness status card** |
+| **2. Devices & Compare** | Add/remove any M1–M12+ Mac, inspect real-time CPU/GPU/ANE/SSD/thermal/power telemetry, and compare bars |
+| **3. Model Studio** | Live model discovery (oMLX / Ollama / llama.cpp / GGUF), runtime readiness check, proportional layer splits, ANE-Split & 3-tier KV-cache/CacheGen tuning |
+| **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, switch Pipeline Ring vs. JACCL Full-Mesh TP, and inspect TB3/TB4/TB5 classes |
+| **5. Internet Cluster, Audio-Party & Chat** | Couple local TB/RDMA Macs with global WAN peers (QUIC/Iroh 0-RTT, Tailscale/WireGuard, libp2p/DERP), monitor live **Internet Bandwidth & WAN Throughput** (`netstat`, ICMP ping/jitter, `networkQuality -c`), and coordinate via Audio-Party & Chat (`/ws/wan-audio`, `/ws/wan`) |
+| **6. Multi-Model-Mode (MMM)** | Combine multiple models across **Local**, **Internet-WAN**, or **Hybrid** clusters (*Parallel Pool*, *Mixture-of-Agents*, *EAGLE-3 / Speculative*, *Tree-MoA Early-Exit*, *Ares Adaptive Router*) with VRAM/thermal/carbon guards & simultaneous **Multi-IDE / Harness** consumption (`:8000/v1`) |
+| **7. Agents & IDEs** | 1-click setup & copyable configs (incl. **MCP Registry JSON** & **A2A Agent Card**) for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
+| **8. Science & Roofline** | 6-tab Local & Internet-WAN research lab using **real SSE streaming & ICMP RTT** in live mode (labeled realistic simulation in sim mode), **direct Multi-Model-Mode (MMM) evaluation**, Log-Log Roofline, `N=1..128` scaling, *Petals/SWARM* & *DiLoCo*, KV memory, `J/tok` / `EDP` / `CO₂`, `CI₉₅` trials, `CSV / JSON / LaTeX / BibTeX`, and **History Recording** |
+| **9. API & Console** | Test OpenAI (`/v1/chat/completions`, `/v1/responses` + MCP) & Ollama (`/api/tags`) endpoints, inspect **A2A Agent Cards** (`/.well-known/agent.json`), and run live local cluster prompts |
+| **10. Setup & Provision** | Auto-discover local Thunderbolt/LAN Macs (Bonjour/mDNS), Internet WAN peers (`QUIC Iroh` / `Tailscale`), or Hybrid clusters; provision SSH trust, `iogpu.wired_limit_mb` & `mlx.distributed_config` across all nodes; verify **Operational Readiness** (**Ready / Not Ready / Partially Configured / Unconfigured**) |
+| **11. Help & Documentation** | Searchable **12-chapter, 8-language Click-to-Detail manual** (`⌘?`) with interactive deep-dive diagrams, glow highlights, M1–M12+ clustering, safety limits, WAN coupling, Audio-Party, MMM, Science Lab, and agents |
 
 ---
 
@@ -204,12 +205,17 @@ SS-CCC supports **every Mac with an Apple Silicon M-series processor** (**M1–M
 | :--- | :--- | :--- | :--- |
 | **M1 / M2** (Base) | 68 – 100 GB/s | TB 3 / USB4 (26–32 Gbps) | **4 GB** (≤ 24 GB RAM) |
 | **M3 / M4** (Base) | 100 – 120 GB/s | TB 4 (30–37 Gbps) | **4 GB** (≤ 24 GB RAM) |
-| **M5 / M6+** (Base) | 153 – 180+ GB/s | TB 5 (80 Gbps/dir, 160 Gbps bidir) | **4 GB** (≤ 24 GB RAM) |
+| **M5 / M6** (Base, M6 2nm) | **153 – 170 GB/s** (`M6`: 153 GB/s @ 16 GB, 170 GB/s @ 24–32 GB) | TB 4 / TB 5 (`80/120 Gbps`) | **4 GB** (≤ 32 GB RAM) |
 | **M1–M3 Pro** | 150 – 200 GB/s | TB 4 (30–37 Gbps) | **4 – 6 GB** |
-| **M4–M6+ Pro** | 273 – 310+ GB/s | TB 5 (80–120 Gbps boost) | **4 – 6 GB** |
+| **M4 / M5 Pro** | 273 – 307+ GB/s | TB 5 (`80/120 Gbps` boost) | **4 – 6 GB** |
 | **M1–M3 Max** | 400 GB/s | TB 4 (30–37 Gbps) | **6 GB** (32–64 GB RAM) |
-| **M4 Max** | **410 – 546 GB/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` latency) | **6 GB** (32–64 GB RAM) |
+| **M4 Max** | **410 – 546 GB/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` latency) | **6 GB** (32–128 GB RAM) |
+| **M5 Max** | **460 – 614 GB/s** (32-core / 40-core GPU) | TB 5 + RDMA (`~3 µs` JACCL) | **6 GB** (36–128 GB RAM) |
 | **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (≥ 96 GB RAM) |
+| **M5 Ultra** | **1.2 TB/s** (~1,228 GB/s, up to 512 GB RAM, 80-core GPU) | TB 5 RDMA (`JACCL`) | **8 GB** (96–512 GB RAM) |
+
+> [!NOTE]
+> **M6 Availability Note:** Apple launched the 2nm **M6** base chip (`153–170 GB/s` unified memory bandwidth) in Sep/Oct 2026; **M6 Pro, M6 Max, and M6 Ultra** have **not been released yet** as of November 2026 (high-end MacBook Pro and Mac Studio tiers continue on M5 Pro, M5 Max, and M5 Ultra). SS-CCC's open-ended `M1–M12+` probing automatically recognizes future M6 Pro/Max/Ultra and M7–M12+ models as soon as they ship.
 
 ### 2. Thunderbolt 5 RDMA (`JACCL`) & Memory Safety
 
@@ -345,14 +351,14 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 │   │   └── Localization.swift      # Complete 8-language UI & Help dictionary (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Hardware probes, model discovery, WAN/Audio-Party & GitHub updater
-│   └── Views/                      # 9 modular SwiftUI views + Theme.swift (3-tab Cluster Overview, industrial hazard stripes, 6-tab lab & help)
+│   └── Views/                      # 12 modular SwiftUI views + Theme.swift (11 sidebar tabs, Setup & Provision, interactive Help deep-dives, hazard stripes & glow highlights)
 ├── core/                           # Python FastAPI gateway, WebSocket WAN/Audio relays & MLX sharding
 ├── scripts/
 │   ├── run_ssccc.sh                # Compiles & launches the macOS app
 │   ├── bump_version.py             # Synchronizes version.json & ClusterModels.swift with Git
 │   ├── setup_tb_network.sh         # Configures 10.99.1.x Thunderbolt bridge
 │   └── setup_wired_limit.sh        # Applies safe iogpu.wired_limit_mb limits
-├── tests/                          # 14-test global verification suite (Swift + Python)
+├── tests/                          # 24-test global verification suite (Swift + Python)
 ├── .github/workflows/              # Automated CI version control & tagging
 └── version.json                    # GitHub-hosted update control manifest
 ```
@@ -368,9 +374,13 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 - **Thermal- & Carbon-Aware Workload Placement:** Automatically deprioritize `.serious`/`.critical` thermal nodes and weight energy efficiency (`Eco Carbon-Aware` / `Thermal-Balanced`) during MMM scheduling.
 
 ### 🛠️ Phase 12: Cluster Auto-Setup (`Setup & Provision`), Readiness Check & App-Wide Shorttips
+
+![SS-CCC Auto-Setup, Provisioning & 4-State Readiness](docs/images/i18n/ssccc_setup_readiness_en.jpg)
+
 - **11th Sidebar Category (`ClusterSetupView`):** Auto-discovers local Thunderbolt/LAN Macs (Bonjour/mDNS), Internet peers (`QUIC Iroh` / `Tailscale`), or Hybrid clusters, provisions SSH trust, `iogpu.wired_limit_mb` & `mlx.distributed_config`, and runs multi-step verification.
 - **4-State Readiness Lifecycle (also visible in Cluster Overview):** Reports **Ready (Operational)**, **Not Ready**, **Partially Configured**, or **Unconfigured** across all 8 languages with remediation hints.
 - **App-Wide Hover Shorttips:** Moving the mouse cursor over any sidebar item, card, or view displays localized shorttips via macOS `.help(...)` and the floating **Solaris Shorttip Banner**.
+- **Interactive Click-to-Detail Help & Live Data:** All 12 Help chapters open interactive deep-dive cards with diagrams and glow highlights; turning off Simulation Mode immediately switches all metrics and readiness checks to live real-time hardware probes (zero mock data).
 
 ---
 
@@ -378,7 +388,7 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 
 > [!IMPORTANT]
 > **SS-CCC v1.6+ is actively runnable and tested (`24/24` automated checks passing), while real-world multi-node endurance benchmarks continue.**
-> **Currently implemented & verified:** English default startup with 8-language UI (`EN/DE/FR/ES/PT/RU/JA/ZH`), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** across 6 operational views, open-ended M1–M12+ hardware probing, live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, 9-chapter Help Center, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
+> **Currently implemented & verified:** English default startup with 8-language UI (`EN/DE/FR/ES/PT/RU/JA/ZH`), **11-tab sidebar** incl. **Setup & Provision** (auto-discovery + 4-state Readiness Check), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** & **Solaris glow highlights**, open-ended M1–M12+ hardware probing (incl. M5 Max/Ultra & M6), live real-time telemetry (no mock data when Simulation Mode is off), live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, **12-chapter interactive Click-to-Detail Help Center**, **app-wide 8-language Hover Shorttips**, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
 
 We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:
 - **Test on your hardware:** Try SS-CCC with your M1–M12+ Macs and share throughput, memory, and RDMA/JACCL stability findings.

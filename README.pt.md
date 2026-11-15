@@ -28,7 +28,7 @@
 O **Assistente de conjunto SonnerStudio (SS-CCC)** acopla a memória unificada de qualquer **Mac Apple Silicon (M1–M9+)** — desde um Mac mini ou MacBook Pro até agrupamentos locais **Thunderbolt 3/4/5 e RDMA** ou **redes mundiais pela Internet (2–256+ Macs)** — com ligação direta ao **MLX**, **oMLX**, **Ollama** e **llama.cpp**.
 
 <div align="center">
-  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC Ecossistema universal Apple Silicon M1–M9+" width="94%"/>
+  <img src="docs/images/i18n/ssccc_ecosystem_pt.jpg" alt="SS-CCC Ecossistema universal Apple Silicon M1–M12+ (11 módulos)" width="94%"/>
 </div>
 
 ---
@@ -85,24 +85,25 @@ Em **Agrupamento Internet & Chat**, o SS-CCC monitoriza continuamente o desempen
 - **Atualizações via GitHub e controlo automático de versões:** Verifica `version.json`, *GitHub Releases* e o SHA de `commits/main` no arranque e a cada 30 minutos (`⌘U`). Apresenta um aviso de atualização integrado com `git pull` + `swift build` + reinício num clique ou transferência via GitHub, suportado por `scripts/bump_version.py` e `.github/workflows/auto-version-control.yml`.
 - **Agentes e ambientes num clique:** Configuração imediata para **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** e **Xcode**.
 - **Modo de simulação comutável, tema amarelo SonnerStudio (`#FFD400`) e testes globais (`tests/`):** A simulação de demonstração mantém-se na barra lateral; todo o projeto é verificado por `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
-- **Interface multilingue e centro de ajuda integrado:** Alternância imediata entre inglês, alemão, francês, espanhol e português, bem como um centro de ajuda pesquisável diretamente na aplicação.
+- **Interface multilingue, dicas rápidas e centro de ajuda interativo:** Alternância imediata entre **8 idiomas** (inglês, alemão, francês, espanhol, português, russo, japonês e chinês), **Shorttips ao passar o cursor** em toda a aplicação, **ajuda interativa de 12 capítulos** com gráficos detalhados e realce luminoso, e telemetria em tempo real (sem dados fictícios fora da simulação).
 
-### 🖥️ As nove áreas do programa num relance
+### 🖥️ As 11 áreas do programa num relance
 
 ![Ecossistema local de agentes de IA e IDEs num clique](docs/images/ssccc_agents_ide_ecosystem.jpg)
 
 | Área | Conteúdo e função |
 | :--- | :--- |
-| **1. Visão do agrupamento** | Memória conjunta, nós ativos, velocidade da ligação de dados, topologia visual e barra de alocação `iogpu.wired_limit_mb`. |
-| **2. Dispositivos e comparação** | Telemetria em tempo real de cada Mac (CPU, GPU, ANE, RAM, largura de banda, SSD, temperatura, potência) e adição de Mac M1–M9+. |
-| **3. Oficina de modelos** | Leitura real de modelos (oMLX, Ollama, llama.cpp, GGUF), estado dos serviços, divisão de camadas e memória KV. |
-| **4. Rede e RDMA** | Matriz de classes Thunderbolt 3/4/5 para M1–M9+, estado RDMA e encaminhamento da ponte LAN/Thunderbolt. |
-| **5. Agrupamento Internet, Audio-Party e conversa** | Ligar Mac TB/RDMA locais a nós WAN globais, monitorizar em tempo real a **largura de banda e débito WAN** (`netstat`, ping/jitter, `networkQuality -c`) e coordenar via Audio-Party e conversa (`/ws/wan-audio`, `/ws/wan`). |
-| **6. Modo Multimodelo (MMM)** | Orquestrar vários modelos em conjunto **Local**, **Internet-WAN** ou **Híbrido** (*Pool paralelo*, *Mixture-of-Agents*, *Speculative Decoding*, *Pipeline*) com proteção VRAM e consumo simultâneo **Multi-IDE / Harnesses** (`:8000/v1`). |
-| **7. Agentes e ambientes** | Configuração num clique para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** e **Xcode**. |
-| **8. Ciência e Roofline** | Laboratório de 6 separadores com **streaming SSE real e ping ICMP** em modo real (simulação realista identificada), **avaliação direta do Modo Multimodelo (MMM)** (aceleração, `tok/s` combinados, VRAM e carga multi-IDE), curva Roofline, `N=1..128`, *Petals/SWARM* e *DiLoCo*, equação KV, `J/token` / `EDP` / `CO₂`, `IC₉₅`, exportação `CSV / JSON / LaTeX / BibTeX` e **Histórico**. |
-| **9. API e consola** | Pontos de extremidade compatíveis com OpenAI / Ollama / oMLX, registo de atividade e comandos de arranque prontos a copiar. |
-| **10. Ajuda e documentação** | Manual integrado de 12 capítulos em 8 idiomas (`⌘?`) com pesquisa integral e guia passo a passo. |
+| **1. Visão do agrupamento** | Memória conjunta, nós ativos, velocidade da ligação de dados, topologia visual, barra `iogpu.wired_limit_mb` e **cartão de estado operacional de 4 níveis** |
+| **2. Dispositivos e comparação** | Telemetria em tempo real de cada Mac (CPU, GPU, ANE, RAM, largura de banda, SSD, temperatura, potência) e adição de Mac M1–M12+ |
+| **3. Oficina de modelos** | Leitura real de modelos (oMLX, Ollama, llama.cpp, GGUF), estado dos serviços, divisão de camadas, ANE-Split e memória KV de 3 níveis / CacheGen |
+| **4. Rede e RDMA** | Matriz de classes Thunderbolt 3/4/5 para M1–M12+, estado RDMA, Pipeline Ring vs. JACCL Full-Mesh TP e encaminhamento LAN/Thunderbolt |
+| **5. Agrupamento Internet, Audio-Party e conversa** | Ligar Mac TB/RDMA locais a nós WAN globais (QUIC/Iroh 0-RTT, Tailscale/WireGuard, libp2p/DERP), monitorizar em tempo real a **largura de banda e débito WAN** (`netstat`, ping/jitter, `networkQuality -c`) e coordenar via Audio-Party e conversa (`/ws/wan-audio`, `/ws/wan`) |
+| **6. Modo Multimodelo (MMM)** | Orquestrar vários modelos em conjunto **Local**, **Internet-WAN** ou **Híbrido** (*Pool paralelo*, *Mixture-of-Agents*, *EAGLE-3 / Speculative*, *Tree-MoA Early-Exit*, *Ares*) com proteção VRAM/térmica/carbono e consumo simultâneo **Multi-IDE / Harnesses** (`:8000/v1`) |
+| **7. Agentes e ambientes** | Configuração num clique (incl. **MCP Registry JSON** e **A2A Agent Card**) para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** e **Xcode** |
+| **8. Ciência e Roofline** | Laboratório de 6 separadores com **streaming SSE real e ping ICMP** em modo real (simulação realista identificada), **avaliação direta do Modo Multimodelo (MMM)**, curva Roofline, `N=1..128`, *Petals/SWARM* e *DiLoCo*, equação KV, `J/token` / `EDP` / `CO₂`, `IC₉₅`, exportação `CSV / JSON / LaTeX / BibTeX` e **Histórico** |
+| **9. API e consola** | Pontos de extremidade compatíveis com OpenAI (`/v1/chat/completions`, `/v1/responses` + MCP), Ollama (`/api/tags`) e **A2A Agent Card** (`/.well-known/agent.json`), registo de atividade e testes ao vivo |
+| **10. Configurar e provisionar** | Deteção automática de Mac locais (Bonjour/mDNS), pares WAN (`QUIC Iroh` / `Tailscale`) ou clusters híbridos; provisionamento de confiança SSH, `iogpu.wired_limit_mb` e `mlx.distributed_config`, e **verificação de prontidão operacional** (**Pronto / Não pronto / Parcialmente configurado / Não configurado**) |
+| **11. Ajuda e documentação** | Manual interativo de **12 capítulos em 8 idiomas** (`⌘?`) com cartões clicáveis, gráficos detalhados, realce luminoso e guia passo a passo |
 
 ---
 
@@ -193,16 +194,21 @@ chmod +x scripts/run_ssccc.sh
 ### 1. Todos os Mac com processador M em conjunto (M1–M6)
 O SS-CCC suporta **qualquer Mac com processador Apple Silicon** (**M1, M2, M3, M4, M5, M6** — Base, Pro, Max e Ultra): **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio e Mac Pro**. Em **Dispositivos e Comparação**, adicione quantos Mac desejar; o equipamento com maior largura de banda assume automaticamente o **nível 0 (coordenador)**.
 
-| Família de chip | Largura de banda | Thunderbolt | Reserva recomendada para macOS |
+| Família de chip | Largura de banda | Thunderbolt e RDMA | Reserva recomendada para macOS |
 | :--- | :--- | :--- | :--- |
 | **M1 / M2** (Base) | 68 – 100 GB/s | TB 3 / USB4 (26–32 Gbps) | **4 GB** (≤ 24 GB RAM) |
 | **M3 / M4** (Base) | 100 – 120 GB/s | TB 4 (30–37 Gbps) | **4 GB** (≤ 24 GB RAM) |
-| **M5 / M6** (Base) | 153 – 180 GB/s | TB 5 (65–80 Gbps) | **4 GB** (≤ 24 GB RAM) |
+| **M5 / M6** (Base, M6 2nm) | **153 – 170 GB/s** (`M6`: 153 GB/s @ 16 GB, 170 GB/s @ 24–32 GB) | TB 4 / TB 5 (`80/120 Gbps`) | **4 GB** (≤ 32 GB RAM) |
 | **M1–M3 Pro** | 150 – 200 GB/s | TB 4 (30–37 Gbps) | **4 – 6 GB** |
-| **M4–M6+ Pro** | 273 – 310+ GB/s | TB 5 (80–120 Gbps boost) | **4 – 6 GB** |
+| **M4 / M5 Pro** | 273 – 307+ GB/s | TB 5 (`80/120 Gbps` boost) | **4 – 6 GB** |
 | **M1–M3 Max** | 400 GB/s | TB 4 (30–37 Gbps) | **6 GB** (32–64 GB RAM) |
-| **M4 Max** | **410 – 546 GB/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` latência) | **6 GB** (32–64 GB RAM) |
+| **M4 Max** | **410 – 546 GB/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` latência) | **6 GB** (32–128 GB RAM) |
+| **M5 Max** | **460 – 614 GB/s** (GPU 32 / 40 núcleos) | TB 5 + RDMA (`~3 µs` JACCL) | **6 GB** (36–128 GB RAM) |
 | **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (≥ 96 GB RAM) |
+| **M5 Ultra** | **1,2 TB/s** (~1.228 GB/s, até 512 GB RAM, GPU 80 núcleos) | TB 5 RDMA (`JACCL`) | **8 GB** (96–512 GB RAM) |
+
+> [!NOTE]
+> **Disponibilidade do M6:** A Apple lançou o chip base **M6** de 2 nm (N2) (`153–170 GB/s`) em set./out. de 2026; **M6 Pro, M6 Max e M6 Ultra** **ainda não foram lançados** até novembro de 2026 (os MacBook Pro e Mac Studio topo de gama continuam com M5 Pro, M5 Max e M5 Ultra). A deteção aberta `M1–M12+` do SS-CCC reconhecerá automaticamente os futuros M6 Pro/Max/Ultra assim que chegarem ao mercado.
 
 ### 2. Thunderbolt 5 RDMA (`JACCL`), proteção de memória e repartição ponderada
 
@@ -322,7 +328,9 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 - **MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit & Roteador Adaptativo):** Fusão **EAGLE-3**, limiar de confiança **Tree-MoA Early-Exit** (`50–95 %`) e **Adaptive Confidence Escalation (Ares)** integrados no Modo Multimodelo.
 - **Padrões Modernos de Agentes e Gateway:** Pré-visualização e exportação de **OpenAI `/v1/responses` + MCP**, **MCP Server Registry JSON** e **A2A Agent Card** (`/.well-known/agent.json`).
 - **Agendamento Térmico e Consciente de Carbono:** Desprioriza automaticamente nós em estado térmico `.serious`/`.critical` e prioriza eficiência energética.
-- **Fase 12 — Auto-Setup de Cluster (`Configuração e Setup`), Prontidão & Shorttips:** 11.ª categoria lateral para detetar e configurar automaticamente Local/WAN/Híbrido, reportar **Pronto / Não pronto / Incompleto / Não configurado** (também na Visão Geral) e exibir *Shorttips* ao passar o rato nos 8 idiomas.
+- **Fase 12 — Auto-Setup de Cluster (`Configuração e Setup`), Prontidão & Shorttips:** 11.ª categoria lateral para detetar e configurar automaticamente Local/WAN/Híbrido, reportar **Pronto / Não pronto / Incompleto / Não configurado** (também na Visão Geral), exibir *Shorttips* ao passar o rato nos 8 idiomas, abrir ajuda interativa ao clicar e operar com telemetria real em direto ao desativar a simulação.
+
+![Configuração Auto e Prontidão Operacional](docs/images/i18n/ssccc_setup_readiness_pt.jpg)
 
 ---
 
@@ -336,14 +344,14 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 │   │   └── Localization.swift      # Dicionário completo em 8 idiomas (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Sondagem de hardware, modelos, Audio-Party WAN e atualizador GitHub
-│   └── Views/                      # 9 vistas SwiftUI modulares + Theme.swift (Vista geral 3 separadores, faixas de aviso, lab. 6 separadores e ajuda)
+│   └── Views/                      # 12 vistas SwiftUI modulares + Theme.swift (11 separadores laterais, Setup, ajuda interativa, faixas e brilho)
 ├── core/                           # Gateway Python FastAPI, retransmissores WebSocket WAN/Áudio e MLX
 ├── scripts/
 │   ├── run_ssccc.sh                # Compila e inicia a aplicação macOS
 │   ├── bump_version.py             # Sincroniza version.json e ClusterModels.swift com Git
 │   ├── setup_tb_network.sh         # Configura a ponte Thunderbolt 10.99.1.x
 │   └── setup_wired_limit.sh        # Aplica limites seguros de iogpu.wired_limit_mb
-├── tests/                          # Conjunto de verificação global de 14 testes (Swift + Python)
+├── tests/                          # Conjunto de verificação global de 24 testes (Swift + Python)
 ├── .github/workflows/              # Controlo automático de versões CI e etiquetagem
 └── version.json                    # Manifesto de controlo de atualizações alojado no GitHub
 ```
@@ -353,8 +361,8 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 ## 🚧 Estado de desenvolvimento e colaboração
 
 > [!IMPORTANT]
-> **O SS-CCC (v1.6+) é totalmente executável e validado por `14/14` testes automatizados; os ensaios de resistência multinó continuam.**
-> **Já implementado e verificado:** idioma inicial em inglês com 8 idiomas (`EN/DE/FR/ES/PT/RU/JA/ZH`), **visão geral do cluster em 3 separadores** (**Cluster local**, **Cluster da Internet** com subclusters regionais/locais e vista híbrida **Local + Internet**), **faixas industriais de aviso amarelo-preto (`HazardStripesBar` / `IndustrialHazardBanner`)** em 6 vistas, deteção aberta M1–M12+, descoberta em tempo real de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratório científico de 6 separadores com histórico por posição e global, ponte híbrida Local ↔ Internet-WAN, Audio-Party com `AVAudioEngine`, manual de 9 capítulos e atualização automática controlada via GitHub + CI.
+> **O SS-CCC (v1.6+) é totalmente executável e validado por `24/24` testes automatizados; os ensaios de resistência multinó continuam.**
+> **Já implementado e verificado:** idioma inicial em inglês com 8 idiomas (`EN/DE/FR/ES/PT/RU/JA/ZH`), **barra lateral de 11 separadores** incl. **Configurar e Provisionar**, **visão geral em 3 separadores**, **faixas industriais de aviso amarelo-preto** e **realce luminoso Solaris**, deteção aberta M1–M12+ (incl. M5 Max/Ultra e M6), telemetria real em direto (sem dados fictícios ao desativar a simulação), descoberta em tempo real de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratório científico de 6 separadores, ponte híbrida Local ↔ Internet-WAN, Audio-Party com `AVAudioEngine`, **manual interativo de 12 capítulos**, **Shorttips em 8 idiomas** e atualização automática controlada via GitHub + CI.
 
 Convidamos programadores, investigadores e entusiastas de Apple Silicon a **participar no desenvolvimento e a fazer evoluir o SS-CCC**:
 - **Testar no seu equipamento:** Experimente o SS-CCC nos seus Mac M1–M12+ e partilhe medições de débito, memória e RDMA/JACCL.

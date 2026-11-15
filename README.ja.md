@@ -53,7 +53,7 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 ## 🏗️ ハイブリッド構成（制御プレーン・Thunderbolt・WAN）
 
 <div align="center">
-  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC ハイブリッド構成図" width="100%"/>
+  <img src="docs/images/i18n/ssccc_ecosystem_ja.jpg" alt="SS-CCC ハイブリッドエコシステム (全11モジュール)" width="100%"/>
 </div>
 
 - **制御プレーン (LAN / Wi-Fi):** ノード探索、OpenAI/Anthropic/Ollama 互換 API (`:8000`)、ヘルス監視。
@@ -83,11 +83,25 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 
 ---
 
-## 🧩 新機能ハイライト（10タブ構成 & Multi-Model-Mode）
+## 🧩 全11サイドバーモジュール & 新機能ハイライト
 
-- **Multi-Model-Mode (MMM / 10番目のメニュー):** ローカルクラスター、インターネットWAN、またはハイブリッド（ローカル＋WAN）上で複数モデルを統合（*Parallel Pool*・*Mixture-of-Agents*・*Speculative Draft+Target*・*Sequential Pipeline*）。VRAM予算保護（`iogpu.wired_limit_mb`）および **複数の IDE / エージェント・ハーネス（Cursor, VS Code, Xcode, OpenCode, Hermes, Antigravity）による `:8000/v1` 同時利用**に対応。
-- **インターネット帯域幅・WANスループット監視:** `netstat`・ICMP Ping/ジッター・`/usr/bin/networkQuality -c` を用いた実測とクラスター性能影響の可視化。
-- **Science & Roofline 実測データ対応・MMM評価統合:** 実運用ではライブ SSE ストリーミング & ICMP RTT を実測し、シミュレーションモードでは明確にラベル付けされた現実的な Apple Silicon 参照値を表示。さらに **Multi-Model-Mode (MMM) の実行結果（速度向上比・合算 `tok/s`・VRAM効率・マルチIDE負荷）** を直接 Science タブと履歴に自動記録・評価。
+- **Multi-Model-Mode (MMM / 6番目のメニュー):** ローカルクラスター、インターネットWAN、またはハイブリッド（ローカル＋WAN）上で複数モデルを統合（*Parallel Pool*・*Mixture-of-Agents*・*EAGLE-3 / Speculative*・*Tree-MoA Early-Exit*・*Ares*）。VRAM・熱・カーボン保護および **複数の IDE / エージェントによる `:8000/v1` 同時利用**に対応。
+- **セットアップと準備 (`Setup & Provision`, 10番目のメニュー):** ローカル Thunderbolt/LAN Mac（Bonjour/mDNS）、WAN ピア（`QUIC Iroh` / `Tailscale`）、ハイブリッド構成を自動検出・構築し、**4段階の稼働準備ステータス**（**稼働可能 / 未準備 / 一部設定済み / 未設定**）を検証・表示。
+- **実測テレメトリ・全画面 Shorttips・クリック詳細ヘルプ:** 全8言語のホバー **Shorttips**、クリック展開・図解付きの **12章インタラクティブマニュアル**、およびシミュレーションOFF時の100%リアルタイム実測データに対応。
+
+| サイドバー項目 | 主な機能 |
+| :--- | :--- |
+| **1. クラスター概要** | 統合メモリバー、稼働 M1–M12+ トポロジ、TB/RDMA 帯域、**4段階稼働準備カード** |
+| **2. デバイスと比較** | M1–M12+ Mac の追加・削除、CPU/GPU/ANE/SSD/温度/電力のリアルタイム比較 |
+| **3. モデルスタジオ** | oMLX / Ollama / llama.cpp / GGUF 実測検出、層分割、ANE-Split、3層 KV キャッシュ / CacheGen |
+| **4. ネットワークと RDMA** | Auto-Hybrid / TB / LAN / RDMA 切替、`FAST_SYNCH=1`、Pipeline Ring vs JACCL Full-Mesh TP |
+| **5. インターネットクラスターとチャット** | ローカル TB/RDMA と WAN ピア（QUIC/Iroh 0-RTT, Tailscale）を結合、**WAN 帯域監視**＆Audio-Party |
+| **6. Multi-Model-Mode (MMM)** | *Parallel Pool*・*MoA*・*EAGLE-3*・*Tree-MoA*・*Ares* 統合、VRAM/熱制御、マルチ IDE 共有 |
+| **7. エージェントと IDE** | OpenCode, Hermes, Antigravity, Cursor, VS Code, Xcode 向けワンクリック設定 (**MCP / A2A** 対応) |
+| **8. 科学分析と Roofline** | 6タブ科学ラボ（実測 SSE/ICMP・MMM 直接評価・Roofline・`N=1..128`・`J/tok`/`CO₂`・履歴記録） |
+| **9. API とコンソール** | OpenAI (`/v1/chat/completions`, `/v1/responses` + MCP), Ollama (`/api/tags`), **A2A Agent Card** テスト |
+| **10. セットアップと準備** | Mac 自動検出・一括プロビジョニング（SSH / `wired_limit` / `mlx.distributed`）＆稼働準備検証 |
+| **11. ヘルプとマニュアル** | 検索可能な **12章・8言語クリック展開式マニュアル** (`⌘?`)（図解・グロー強調付き） |
 
 ---
 
@@ -165,13 +179,31 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 | **5. ハイブリッド Office LAN + 自宅 WAN** | 2× TB4/10GbE + 2× WAN (`192 GB` 有効, `35 ms` WAN RTT) | `Llama-3.1-405B` (`3/4-bit`, ~170 GB) | `~6 – 11 s` | **`2.2 – 4.5 tok/s`** (`~280 ms/tok`) | `~28 J/tok` · WAN 遅延 (`M=8` で緩和) |
 | **6. 世界規模コミュニティ WAN 群** | 16+ Mac 世界各地 (`1.5+ TB` 有効, `60–120 ms` WAN RTT) | `671B–1T+` Frontier (`4/8-bit`) | `~12 – 25 s` | **`1.2 – 3.0 tok/s`** (`~500 ms/tok`) | WAN 遅延（バッチングで拡張） |
 
+### 5. Apple Silicon チップファミリー（M1–M12+・M5 Max/Ultra & M6 対応）
+
+| チップファミリー | メモリ帯域幅 | Thunderbolt & RDMA | 推奨 macOS 予約メモリ |
+| :--- | :--- | :--- | :--- |
+| **M1 / M2** (Base) | 68 – 100 GB/s | TB 3 / USB4 (26–32 Gbps) | **4 GB** (≤ 24 GB RAM) |
+| **M3 / M4** (Base) | 100 – 120 GB/s | TB 4 (30–37 Gbps) | **4 GB** (≤ 24 GB RAM) |
+| **M5 / M6** (Base, M6 2nm) | **153 – 170 GB/s** (`M6`: 16 GB で 153 GB/s、24–32 GB で 170 GB/s) | TB 4 / TB 5 (`80/120 Gbps`) | **4 GB** (≤ 32 GB RAM) |
+| **M1–M3 Pro** | 150 – 200 GB/s | TB 4 (30–37 Gbps) | **4 – 6 GB** |
+| **M4 / M5 Pro** | 273 – 307+ GB/s | TB 5 (`80/120 Gbps`) | **4 – 6 GB** |
+| **M1–M3 Max** | 400 GB/s | TB 4 (30–37 Gbps) | **6 GB** (32–64 GB RAM) |
+| **M4 Max** | **410 – 546 GB/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` JACCL) | **6 GB** (32–128 GB RAM) |
+| **M5 Max** | **460 – 614 GB/s** (32 / 40コア GPU) | TB 5 + RDMA (`~3 µs` JACCL) | **6 GB** (36–128 GB RAM) |
+| **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (≥ 96 GB RAM) |
+| **M5 Ultra** | **1.2 TB/s** (~1,228 GB/s・最大 512 GB RAM・80コア GPU) | TB 5 RDMA (`JACCL`) | **8 GB** (96–512 GB RAM) |
+
+> [!NOTE]
+> **M6 シリーズの提供状況：** Apple は 2nm（N2）プロセスのベースチップ **M6**（`153–170 GB/s`）を 2026年9〜10月に発売しましたが、**M6 Pro / M6 Max / M6 Ultra は 2026年11月時点で未発売**です（上位 MacBook Pro / Mac Studio は M5 Pro / M5 Max / M5 Ultra を継続採用）。SS-CCC の将来対応 `M1–M12+` 検出機能により、今後の M6 Pro/Max/Ultra も発売と同時に自動認識されます。
+
 ---
 
 ## 📚 ドキュメント & Thunderbolt 5 RDMA (`JACCL`)
 
 ![Thunderbolt 5 RDMA JACCL とメモリ保護](docs/images/ssccc_tb5_rdma_jaccl.jpg)
 
-アプリ内の **ヘルプとマニュアル** タブに 9 セクションの完全ガイドを内蔵しています。
+アプリ内の **ヘルプとマニュアル** タブに、クリック展開式の図解付き **全12章インタラクティブガイド**（8言語対応）を内蔵しています。
 
 ---
 
@@ -191,7 +223,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ![SS-CCC Multi-Model-Mode (MMM) アーキテクチャ & 複数IDE共有利用](docs/images/ssccc_multi_model_mode.jpg)
 
-**Multi-Model-Mode (MMM)**（左サイドバーの**第10メニュー項目**）は、**ローカル Thunderbolt/RDMA クラスター**、**インターネット WAN クラスター**、または **ハイブリッドクラスター（ローカル＋インターネット）** の計算能力と統合メモリを 1 つのオーケストレーション基盤へと集約します。ノードごとに単一モデルを動かすのではなく、複数の専門モデルとレプリカを**並列・カスケード・合議（コンセンサス）**で同時稼働させ、共有エンドポイント `:8000/v1` を通じて**複数の IDE や Agent Harness** から同時に利用できます。
+**Multi-Model-Mode (MMM)**（左サイドバーの**第6メニュー項目**）は、**ローカル Thunderbolt/RDMA クラスター**、**インターネット WAN クラスター**、または **ハイブリッドクラスター（ローカル＋インターネット）** の計算能力と統合メモリを 1 つのオーケストレーション基盤へと集約します。ノードごとに単一モデルを動かすのではなく、複数の専門モデルとレプリカを**並列・カスケード・合議（コンセンサス）**で同時稼働させ、共有エンドポイント `:8000/v1` を通じて**複数の IDE や Agent Harness** から同時に利用できます。
 
 ### 🎛️ 4つのオーケストレーション戦略
 
@@ -312,7 +344,9 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **次世代 MMM（EAGLE-3・Tree-MoA Early-Exit・適応型信頼度ルーター）:** Multi-Model-Mode に **EAGLE-3** 特徴融合、**Tree-MoA Early-Exit** 信頼度しきい値（`50–95%`）、**Adaptive Confidence Escalation (Ares)** を統合。
 - **最新エージェント & ゲートウェイ標準:** **OpenAI `/v1/responses` + MCP**、**MCP Server Registry JSON**、および **A2A Agent Card**（`/.well-known/agent.json`）をライブ生成・エクスポート。
 - **熱・カーボン考慮型スケジューリング:** `.serious`/`.critical` の熱状態にあるノードを自動抑制し、エネルギー効率を優先配置。
-- **Phase 12 — 自動クラスターセットアップ（`セットアップと準備`）・稼働判定・全画面 Shorttips:** ローカル/WAN/ハイブリッド構成を自動検出・構成し、**稼働可能 / 未準備 / 設定未完了 / 未設定** を概要画面にも表示。全8言語のホバー Shorttips に対応。
+- **Phase 12 — 自動クラスターセットアップ（`セットアップと準備`）・稼働判定・全画面 Shorttips:** ローカル/WAN/ハイブリッド構成を自動検出・構成し、**稼働可能 / 未準備 / 設定未完了 / 未設定** を概要画面にも表示。全8言語のホバー Shorttips、クリック詳細ヘルプ、シミュレーションOFF時の実測テレメトリに対応。
+
+![自動セットアップと稼働準備チェック](docs/images/i18n/ssccc_setup_readiness_ja.jpg)
 
 ---
 
@@ -326,14 +360,14 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   │   └── Localization.swift      # 8 言語完全対応 UI & ヘルプ辞書 (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # ハードウェア探索、モデル検出、WAN/Audio-Party & GitHub 更新
-│   └── Views/                      # 9 つの SwiftUI ビュー + Theme.swift（3 タブ概要、黄黒の警告ストライプ、6 タブ科学ラボ & ヘルプ）
+│   └── Views/                      # 12 個の SwiftUI ビュー + Theme.swift（11 サイドバータブ、Setup、図解ヘルプ、警告ストライプ & グロー強調）
 ├── core/                           # Python FastAPI ゲートウェイ、WebSocket WAN/音声リレー & MLX 分割
 ├── scripts/
 │   ├── run_ssccc.sh                # macOS アプリをコンパイルして起動
 │   ├── bump_version.py             # version.json & ClusterModels.swift を Git と同期
 │   ├── setup_tb_network.sh         # 10.99.1.x Thunderbolt ブリッジを設定
 │   └── setup_wired_limit.sh        # 安全な iogpu.wired_limit_mb 上限を適用
-├── tests/                          # 14 項目の総合テストスイート (Swift + Python)
+├── tests/                          # 24 項目の総合テストスイート (Swift + Python)
 ├── .github/workflows/              # 自動 CI バージョン管理とタグ付け
 └── version.json                    # GitHub ホスト型アップデート制御マニフェスト
 ```
@@ -343,8 +377,8 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 ## 🚧 開発状況とコントリビューションのお誘い
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) は完全に動作可能で `14/14` の自動テストを通過しており、異種マルチノード環境での連続耐久ベンチマークを継続中です。**
-> **実装・検証済み機能：** 英語デフォルト起動＋8 言語切替 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**3 タブ構成のクラスター概要**（**ローカルクラスター**、地域・ローカルサブクラスター付きの **インターネットクラスター**、および **ローカル + インターネット** ハイブリッド表示）、6 つの主要画面に配置された **黄黒の産業用警告ストライプ (`HazardStripesBar` / `IndustrialHazardBanner`)**、将来対応 M1–M12+ ハードウェア検出、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、単一項目・全体履歴記録付き 6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、9 章ヘルプセンター、および CI 連動 GitHub 自動アップデート。
+> **SS-CCC (v1.6+) は完全に動作可能で `24/24` の自動テストを通過しており、異種マルチノード環境での連続耐久ベンチマークを継続中です。**
+> **実装・検証済み機能：** 英語デフォルト起動＋8 言語切替 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**11 タブ構成サイドバー**（**セットアップと準備** 含む）、**3 タブ構成のクラスター概要**、**黄黒の産業用警告ストライプ** & **Solaris グロー強調**、将来対応 M1–M12+ ハードウェア検出（M5 Max/Ultra & M6 対応）、ライブ実測テレメトリ（モック無し）、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、**12 章インタラクティブヘルプ**、**全画面 8 言語 Shorttips**、および CI 連動 GitHub 自動アップデート。
 
 開発者、研究者、Apple Silicon 愛好家の皆様からの **貢献・参加を心より歓迎します**：
 - **実機でのテスト：** お持ちの M1–M12+ Mac で SS-CCC を試し、スループット・メモリ・RDMA/JACCL の安定性レポートを共有してください。

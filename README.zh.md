@@ -53,7 +53,7 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 ## 🏗️ 混合架构（控制平面、Thunderbolt 与 WAN）
 
 <div align="center">
-  <img src="docs/images/ssccc_ecosystem_banner.jpg" alt="SS-CCC 混合架构图" width="100%"/>
+  <img src="docs/images/i18n/ssccc_ecosystem_zh.jpg" alt="SS-CCC 混合生态系统 (11 大模块)" width="100%"/>
 </div>
 
 - **控制平面 (LAN / Wi-Fi):** 节点发现、OpenAI/Anthropic/Ollama 兼容接口 (`:8000`) 与健康监测。
@@ -83,11 +83,25 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 
 ---
 
-## 🧩 核心新特性（10 大侧边栏模块与多模型协同模式）
+## 🧩 11 大侧边栏模块与核心新特性
 
-- **多模型协同模式 (Multi-Model-Mode / MMM，第 10 项菜单)：** 在**本地集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**中聚合多个模型的算力（支持 *Parallel Pool*、*Mixture-of-Agents*、*Speculative Draft+Target*、*Sequential Pipeline*），内置 `iogpu.wired_limit_mb` 显存保护，并支持 **多个 IDE 与智能体框架（Cursor, VS Code, Xcode, OpenCode, Hermes, Antigravity）同时通过 `:8000/v1` 共享调用集群算力**。
-- **互联网带宽与 WAN 吞吐量监控：** 通过 `netstat`、ICMP Ping/抖动与 `/usr/bin/networkQuality -c` 实时测量上下行带宽并计算对集群推理效率的影响。
-- **Science & Roofline 真实数据与 MMM 科学评估联动：** 实测模式采用真实 SSE 流式首字延迟与 ICMP RTT 测量，模拟模式提供清晰标注的逼真 Apple Silicon 参考值；**多模型协同模式 (MMM) 的加速比、聚合 `tok/s`、VRAM 效率与多 IDE 负载数据**会自动汇入科学评估面板与历史记录。
+- **多模型协同模式 (Multi-Model-Mode / MMM，第 6 项菜单)：** 在**本地集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**中聚合多个模型的算力（支持 *Parallel Pool*、*Mixture-of-Agents*、*EAGLE-3 / Speculative*、*Tree-MoA Early-Exit* 与 *Ares*），内置 `iogpu.wired_limit_mb` 显存与热/碳感知保护，并支持 **多个 IDE 与智能体框架通过 `:8000/v1` 同时调用**。
+- **安装与自动配置 (`Setup & Provision`，第 10 项菜单)：** 自动发现本地 Thunderbolt/LAN Mac（Bonjour/mDNS）、互联网对等节点（`QUIC Iroh` / `Tailscale`）或混合集群，自动完成 SSH 互信、`iogpu.wired_limit_mb` 与 `mlx.distributed_config` 配置，并执行 **4 种就绪状态检查**（**已就绪 / 未就绪 / 配置不完整 / 未配置**）。
+- **实时遥测、悬停提示 Shorttips 与交互式图文手册：** 支持全界面 8 语言悬停 **Shorttips**、可点击展开图解与高亮发光的 **12 章交互式帮助中心**，以及关闭模拟模式后的 100% 真实实时硬件数据。
+
+| 侧边栏菜单 | 核心功能与职责 |
+| :--- | :--- |
+| **1. 集群概览** | 统一显存分配条、活跃 M1–M12+ 拓扑、TB/RDMA 速率与 **4 状态就绪卡片** |
+| **2. 设备对比** | 添加/移除任意 M1–M12+ Mac，实时对比 CPU/GPU/ANE/SSD/温度/功耗 |
+| **3. 模型工坊** | 实时探测 oMLX / Ollama / llama.cpp / GGUF 模型、按内存加权分层、ANE-Split 与三层 KV/CacheGen |
+| **4. 网络与 RDMA** | 切换 Auto-Hybrid / TB / LAN / RDMA、`FAST_SYNCH=1`、Pipeline Ring 与 JACCL Full-Mesh TP |
+| **5. 互联网集群与聊天** | 将本地 TB/RDMA 节点与全球 WAN 节点耦合（QUIC/Iroh 0-RTT, Tailscale），**实时 WAN 带宽监控**与 Audio-Party |
+| **6. 多模型协同模式 (MMM)** | *Parallel Pool*、*MoA*、*EAGLE-3*、*Tree-MoA* 与 *Ares* 协同，VRAM/热管理与多 IDE 并发共享 |
+| **7. 智能体与 IDE** | 为 OpenCode、Hermes、Antigravity、Cursor、VS Code、Xcode 提供一键配置（含 **MCP / A2A**） |
+| **8. 科学与 Roofline** | 6 标签页科学实验室（真实 SSE/ICMP、MMM 直接评估、Roofline、`N=1..128`、`J/tok`/`CO₂`、历史记录） |
+| **9. API 与控制台** | 测试 OpenAI (`/v1/chat/completions`, `/v1/responses` + MCP)、Ollama (`/api/tags`) 与 **A2A Agent Card** |
+| **10. 安装与自动配置** | 自动发现 Mac、跨节点配置（SSH / `wired_limit` / `mlx.distributed`）与 **4 状态就绪校验** |
+| **11. 帮助与手册** | 可全文搜索的 **12 章 8 语言交互式图文手册** (`⌘?`)（含点击展开图解与发光高亮） |
 
 ---
 
@@ -165,13 +179,31 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 | **5. 混合 办公室 LAN + 家庭 WAN** | 2× TB4/10GbE + 2× WAN (`192 GB` 可用, `35 ms` WAN RTT) | `Llama-3.1-405B` (`3/4-bit`, ~170 GB) | `~6 – 11 s` | **`2.2 – 4.5 tok/s`** (`~280 ms/tok`) | `~28 J/tok` · WAN 延迟 (`M=8` 缓解) |
 | **6. 全球社区 WAN 集群** | 16+ Mac 全球互联 (`1.5+ TB` 可用, `60–120 ms` WAN RTT) | `671B–1T+` Frontier (`4/8-bit`) | `~12 – 25 s` | **`1.2 – 3.0 tok/s`** (`~500 ms/tok`) | WAN 延迟（批处理可扩展吞吐） |
 
+### 5. Apple Silicon 芯片家族参数（M1–M12+，含 M5 Max/Ultra 与 M6）
+
+| 芯片家族 | 统一内存带宽 | Thunderbolt 与 RDMA | 推荐 macOS 预留内存 |
+| :--- | :--- | :--- | :--- |
+| **M1 / M2** (基础版) | 68 – 100 GB/s | TB 3 / USB4 (26–32 Gbps) | **4 GB** (≤ 24 GB RAM) |
+| **M3 / M4** (基础版) | 100 – 120 GB/s | TB 4 (30–37 Gbps) | **4 GB** (≤ 24 GB RAM) |
+| **M5 / M6** (基础版, M6 2nm) | **153 – 170 GB/s** (`M6`: 16 GB 版 153 GB/s，24–32 GB 版 170 GB/s) | TB 4 / TB 5 (`80/120 Gbps`) | **4 GB** (≤ 32 GB RAM) |
+| **M1–M3 Pro** | 150 – 200 GB/s | TB 4 (30–37 Gbps) | **4 – 6 GB** |
+| **M4 / M5 Pro** | 273 – 307+ GB/s | TB 5 (`80/120 Gbps`) | **4 – 6 GB** |
+| **M1–M3 Max** | 400 GB/s | TB 4 (30–37 Gbps) | **6 GB** (32–64 GB RAM) |
+| **M4 Max** | **410 – 546 GB/s** (LPDDR5X-8533) | TB 5 + RDMA (`~3 µs` JACCL) | **6 GB** (32–128 GB RAM) |
+| **M5 Max** | **460 – 614 GB/s** (32 / 40 核 GPU) | TB 5 + RDMA (`~3 µs` JACCL) | **6 GB** (36–128 GB RAM) |
+| **M1–M2 Ultra / M3 Ultra** | **800 – 819 GB/s** (UltraFusion) | TB 4 / TB 5 RDMA (JACCL) | **8 GB** (≥ 96 GB RAM) |
+| **M5 Ultra** | **1.2 TB/s** (~1,228 GB/s，最高 512 GB 内存，80 核 GPU) | TB 5 RDMA (`JACCL`) | **8 GB** (96–512 GB RAM) |
+
+> [!NOTE]
+> **M6 系列发布说明：** Apple 已于 2026 年 9–10 月发布采用 2nm（N2）工艺的基础版 **M6** 芯片（`153–170 GB/s` 内存带宽）；截至 2026 年 11 月，**M6 Pro、M6 Max 与 M6 Ultra 尚未发布**（高配 MacBook Pro 与 Mac Studio 仍搭载 M5 Pro、M5 Max 与 M5 Ultra）。SS-CCC 的开放式 `M1–M12+` 探测会在未来 M6 Pro/Max/Ultra 发布后立即自动识别支持。
+
 ---
 
 ## 📚 文档中心与 Thunderbolt 5 RDMA (`JACCL`)
 
 ![Thunderbolt 5 RDMA JACCL 与内存安全](docs/images/ssccc_tb5_rdma_jaccl.jpg)
 
-完整 9 章用户手册已内置于应用的 **帮助与手册** 标签页中。
+完整 **12 章交互式图文用户手册**（支持 8 种语言与点击展开图解）已内置于应用的 **帮助与手册** 标签页中。
 
 ---
 
@@ -191,7 +223,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ![SS-CCC Multi-Model-Mode (MMM) 架构与多 IDE 共享调用](docs/images/ssccc_multi_model_mode.jpg)
 
-**Multi-Model-Mode (MMM)**（位于左侧边栏**第 10 个菜单项**）将**本地 Thunderbolt/RDMA 集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**的计算能力与统一内存汇聚为一个统一的编排层。无需在每个节点上仅运行单一巨型模型，多个专业模型和副本可以**并行、级联或共识**运行，并通过共享端点 `:8000/v1` 同时服务于**多个 IDE 和 Agent Harness**。
+**Multi-Model-Mode (MMM)**（位于左侧边栏**第 6 个菜单项**）将**本地 Thunderbolt/RDMA 集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**的计算能力与统一内存汇聚为一个统一的编排层。无需在每个节点上仅运行单一巨型模型，多个专业模型和副本可以**并行、级联或共识**运行，并通过共享端点 `:8000/v1` 同时服务于**多个 IDE 和 Agent Harness**。
 
 ### 🎛️ 4 种核心编排策略
 
@@ -312,7 +344,9 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **下一代 MMM（EAGLE-3、Tree-MoA Early-Exit 与自适应置信度路由）：** 在多模型模式中集成 **EAGLE-3** 多层特征融合、**Tree-MoA Early-Exit** 置信度阈值（`50–95%`）与 **Adaptive Confidence Escalation (Ares)**。
 - **现代智能体与网关标准：** 实时预览并导出 **OpenAI `/v1/responses` + MCP**、**MCP Server Registry JSON** 以及 **A2A Agent Card**（`/.well-known/agent.json`）。
 - **热感知与碳感知调度：** 自动降级 `.serious`/`.critical` 热状态节点并优先调度高能效节点。
-- **第 12 阶段 — 集群自动配置（`安装与自动配置`）、就绪检查与全局 Shorttips：** 新增第 11 个侧边栏分类，自动发现并配置本地/WAN/混合集群，在概览与设置页报告 **就绪 / 未就绪 / 配置不完整 / 未配置**，并支持全界面 8 语言悬停 Shorttips。
+- **第 12 阶段 — 集群自动配置（`安装与自动配置`）、就绪检查与全局 Shorttips：** 新增第 11 个侧边栏分类，自动发现并配置本地/WAN/混合集群，在概览与设置页报告 **就绪 / 未就绪 / 配置不完整 / 未配置**，并支持全界面 8 语言悬停 Shorttips、点击展开图文帮助及真实实时数据。
+
+![自动集群配置与就绪状态检查](docs/images/i18n/ssccc_setup_readiness_zh.jpg)
 
 ---
 
@@ -326,14 +360,14 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   │   └── Localization.swift      # 完整 8 种语言界面与帮助词典 (EN/DE/FR/ES/PT/RU/JA/ZH)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # 硬件探测、模型发现、WAN/Audio-Party 与 GitHub 更新器
-│   └── Views/                      # 9 个模块化 SwiftUI 视图 + Theme.swift（3 标签页集群概览、黄黑工业警示条纹、6 标签页科学实验室与帮助）
+│   └── Views/                      # 12 个模块化 SwiftUI 视图 + Theme.swift（11 侧边栏、Setup、交互式帮助、警示条与发光高亮）
 ├── core/                           # Python FastAPI 网关、WebSocket WAN/音频中继与 MLX 分片
 ├── scripts/
 │   ├── run_ssccc.sh                # 编译并启动 macOS 应用
 │   ├── bump_version.py             # 将 version.json 与 ClusterModels.swift 同步至 Git
 │   ├── setup_tb_network.sh         # 配置 10.99.1.x Thunderbolt 桥接网络
 │   └── setup_wired_limit.sh        # 应用安全的 iogpu.wired_limit_mb 内存上限
-├── tests/                          # 14 项全局自动化测试套件 (Swift + Python)
+├── tests/                          # 24 项全局自动化测试套件 (Swift + Python)
 ├── .github/workflows/              # 自动 CI 版本控制与打标
 └── version.json                    # 托管于 GitHub 的更新控制清单
 ```
@@ -343,8 +377,8 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 ## 🚧 开发状态与诚邀参与
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `14/14` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
-> **已实现并验证：** 英文默认启动与 8 语言即时切换 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**3 标签页集群概览**（**本地集群**、包含区域与本地子集群的 **互联网集群** 以及 **本地 + 互联网** 混合视图）、覆盖 6 大核心界面的 **黄黑斜纹工业警示条 (`HazardStripesBar` / `IndustrialHazardBanner`)**、开放式 M1–M12+ 硬件探测、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、带单指标与全局历史记录的 6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、9 章内置帮助中心以及由 GitHub + CI 驱动的自动更新机制。
+> **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `24/24` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
+> **已实现并验证：** 英文默认启动与 8 语言即时切换 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**11 项侧边栏模块**（含 **安装与自动配置**）、**3 标签页集群概览**、**黄黑斜纹工业警示条**与 **Solaris 发光高亮**、开放式 M1–M12+ 硬件探测（含 M5 Max/Ultra 与 M6）、真实实时遥测数据（关闭模拟即无虚假数据）、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、**12 章交互式图文帮助中心**、**全界面 8 语言悬停 Shorttips** 以及由 GitHub + CI 驱动的自动更新机制。
 
 我们热忱邀请开发者、研究人员与 Apple Silicon 爱好者 **共同参与并推动 SS-CCC 不断完善**：
 - **在您的硬件上实测：** 在 M1–M12+ Mac 上运行 SS-CCC，并分享吞吐量、显存占用及 RDMA/JACCL 稳定性数据。
