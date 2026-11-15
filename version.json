@@ -1,13 +1,13 @@
 {
-  "version": "1.6.27",
+  "version": "1.6.28",
   "build": 160,
-  "tag": "v1.6.27",
+  "tag": "v1.6.28",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• feat(sota-2026): implement phase 11 upgrades (points 1-5), tests & 8-language READMEs (c102b38)\n• chore(release): auto-bump v1.6.26 (build 160) [skip ci] (24f4969)\n• fix(i18n): translate all Cluster Overview, AI/OS split, Guard Zone & Node Card strings across all 8 languages (3150810)\n• chore(release): auto-bump v1.6.25 (build 160) [skip ci] (729f04c)\n• feat(ui): add hover & active Solaris glow highlights across sidebar, Help & Manual, Overview & MMM (9d0ce06)",
+  "notes": "• feat(phase-12): add auto-setup & readiness verification tab, overview status & app-wide hover shorttips (69d0482)\n• chore(release): auto-bump v1.6.27 (build 160) [skip ci] (69f4fcc)\n• feat(sota-2026): implement phase 11 upgrades (points 1-5), tests & 8-language READMEs (c102b38)\n• chore(release): auto-bump v1.6.26 (build 160) [skip ci] (24f4969)\n• fix(i18n): translate all Cluster Overview, AI/OS split, Guard Zone & Node Card strings across all 8 languages (3150810)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "c102b38",
-  "updated_at": "2026-11-15T01:57:16Z"
+  "commit_sha": "69d0482",
+  "updated_at": "2026-11-15T02:41:42Z"
 }
