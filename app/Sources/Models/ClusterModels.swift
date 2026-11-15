@@ -22,6 +22,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
     case models = "Modell-Studio"
     case network = "Netzwerk & RDMA"
     case internetCluster = "Internet-Verbund & Chat"
+    case multiModelMode = "Multi-Model-Mode"
     case agents = "Agenten & IDEs"
     case science = "Forschung & Roofline"
     case console = "API & Konsole"
@@ -36,6 +37,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .models: return "square.stack.3d.up.fill"
         case .network: return "bolt.horizontal.circle.fill"
         case .internetCluster: return "globe.americas.fill"
+        case .multiModelMode: return "rectangle.3.group.fill"
         case .agents: return "sparkles.rectangle.stack.fill"
         case .science: return "chart.xyaxis.line"
         case .console: return "terminal.fill"
@@ -50,6 +52,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .models: return "MLX, oMLX, Ollama & llama.cpp"
         case .network: return "TB3/4/5, RDMA & Hybrid"
         case .internetCluster: return "WAN-Verbund & Teilnehmer-Chat"
+        case .multiModelMode: return "Ensemble, MoA & Speculative"
         case .agents: return "Lokale Agenten, IDEs & SDKs"
         case .science: return "arXiv, Splitwise & Tuning"
         case .console: return "OpenAI / Ollama / oMLX API"
@@ -369,6 +372,97 @@ struct WanBandwidthSample: Identifiable, Hashable {
     let packetLossPct: Double
     let tensorSyncMBs: Double
     let isLiveMeasurement: Bool
+}
+
+enum MultiModelScope: String, CaseIterable, Identifiable {
+    case local = "Lokaler Cluster"
+    case internet = "Internet-Cluster"
+    case hybrid = "Lokal + Internet (Hybrid)"
+
+    var id: String { rawValue }
+}
+
+enum MultiModelStrategy: String, CaseIterable, Identifiable {
+    case parallelPool = "Paralleler Multi-Modell-Pool"
+    case mixtureOfAgents = "Mixture-of-Agents (MoA)"
+    case speculativeDecoding = "Speculative Decoding (Draft + Target)"
+    case sequentialPipeline = "Sequenzielle Modell-Pipeline"
+
+    var id: String { rawValue }
+
+    var summary: String {
+        switch self {
+        case .parallelPool:
+            return "Hält mehrere Modelle gleichzeitig in getrennten VRAM-Budgets (lokal & WAN) für parallele Anfragen."
+        case .mixtureOfAgents:
+            return "Sendet den Prompt parallel an mehrere Spezialisten-Modelle und führt die Antworten über einen Aggregator zusammen."
+        case .speculativeDecoding:
+            return "Kombiniert ein schnelles lokales Draft-Modell mit einem großen Target-Modell im Verbund zur Beschleunigung."
+        case .sequentialPipeline:
+            return "Verkettet Modelle als Stufen (z. B. Planer → Coder → Reviewer) über lokale TB- und WAN-Knoten."
+        }
+    }
+}
+
+enum MultiModelRole: String, CaseIterable, Identifiable {
+    case primary = "Primary"
+    case draft = "Draft"
+    case specialist = "Specialist"
+    case aggregator = "Aggregator"
+
+    var id: String { rawValue }
+}
+
+struct MultiModelSlot: Identifiable, Hashable {
+    let id: UUID
+    var modelId: String
+    var displayName: String
+    var role: MultiModelRole
+    var assignedTarget: String
+    var endpointURL: String
+    var estimatedRamGB: Double
+    var isEnabled: Bool
+    var lastTokPerSec: Double
+    var lastTtftMs: Double
+
+    init(
+        id: UUID = UUID(),
+        modelId: String,
+        displayName: String,
+        role: MultiModelRole,
+        assignedTarget: String,
+        endpointURL: String,
+        estimatedRamGB: Double,
+        isEnabled: Bool = true,
+        lastTokPerSec: Double = 0.0,
+        lastTtftMs: Double = 0.0
+    ) {
+        self.id = id
+        self.modelId = modelId
+        self.displayName = displayName
+        self.role = role
+        self.assignedTarget = assignedTarget
+        self.endpointURL = endpointURL
+        self.estimatedRamGB = estimatedRamGB
+        self.isEnabled = isEnabled
+        self.lastTokPerSec = lastTokPerSec
+        self.lastTtftMs = lastTtftMs
+    }
+}
+
+struct MultiModelRunResult: Identifiable, Hashable {
+    let id = UUID()
+    let timestamp: String
+    let strategy: MultiModelStrategy
+    let scope: MultiModelScope
+    let activeModelsCount: Int
+    let combinedTokPerSec: Double
+    let aggregateTtftMs: Double
+    let totalVramUsedGB: Double
+    let usableVramPoolGB: Double
+    let speedupFactor: Double
+    let responsePreview: String
+    let isLiveExecution: Bool
 }
 
 struct ModelPreset: Identifiable, Hashable {

@@ -89,11 +89,12 @@ flowchart LR
 | **2. Equipos y comparación** | Telemetría en directo de cada Mac (CPU, GPU, ANE, RAM, ancho de banda, SSD, temperatura, potencia) y adición de Mac M1–M9+. |
 | **3. Taller de modelos** | Lectura real de modelos (oMLX, Ollama, llama.cpp, GGUF), estado de servicios, reparto de capas y caché KV. |
 | **4. Red y RDMA** | Matriz de clases Thunderbolt 3/4/5 para M1–M9+, estado RDMA y enrutamiento del puente LAN/Thunderbolt. |
-| **5. Agrupación Internet, Audio-Party y mensajería** | Acoplar Mac TB/RDMA locales con nodos WAN globales, coordinar con Audio-Party (estilo consola) y chat (`/ws/wan-audio`, `/ws/wan`). |
-| **6. Agentes y entornos** | Configuración en un clic para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** y **Xcode**. |
-| **7. Ciencia y Roofline** | Laboratorio de 6 pestañas (Local y WAN): curva `P = min(β·I, π_eff)`, escala `N=1..128`, *Petals/SWARM* y *DiLoCo*, ecuación KV, `J/token` / `EDP` / `CO₂`, `IC₉₅` y `Goodput%`, exportación `CSV / JSON / LaTeX / BibTeX` e **Historial** por posición/global |
-| **8. API y consola** | Puntos de acceso compatibles con OpenAI / Ollama / oMLX, registro de actividad y órdenes de arranque listas para copiar. |
-| **9. Ayuda y documentación** | Manual integrado de 9 capítulos en 5 idiomas (`⌘?`) con búsqueda de texto completo y guía paso a paso. |
+| **5. Agrupación Internet, Audio-Party y mensajería** | Acoplar Mac TB/RDMA locales con nodos WAN globales, supervisar en vivo el **ancho de banda y rendimiento WAN** (`netstat`, ping/jitter, `networkQuality -c`) y coordinar con Audio-Party y chat (`/ws/wan-audio`, `/ws/wan`). |
+| **6. Modo Multimodelo (MMM)** | Combinar múltiples modelos en conjunto **Local**, **Internet-WAN** o **Híbrido** (*Pool paralelo*, *Mixture-of-Agents*, *Speculative Decoding*, *Pipeline*) con protección VRAM y consumo simultáneo **Multi-IDE / Harnesses** (`:8000/v1`). |
+| **7. Agentes y entornos** | Configuración en un clic para **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** y **Xcode**. |
+| **8. Ciencia y Roofline** | Laboratorio de 6 pestañas con **streaming SSE real y ping ICMP** en modo real (simulación realista etiquetada): curva Roofline, escala `N=1..128`, *Petals/SWARM* y *DiLoCo*, ecuación KV, `J/token` / `EDP` / `CO₂`, `IC₉₅`, exportación `CSV / JSON / LaTeX / BibTeX` e **Historial**. |
+| **9. API y consola** | Puntos de acceso compatibles con OpenAI / Ollama / oMLX, registro de actividad y órdenes de arranque listas para copiar. |
+| **10. Ayuda y documentación** | Manual integrado de 12 capítulos en 8 idiomas (`⌘?`) con búsqueda de texto completo y guía paso a paso. |
 
 ---
 

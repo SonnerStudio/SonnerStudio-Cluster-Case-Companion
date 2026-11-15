@@ -122,6 +122,15 @@ enum L10n {
         case (.help, .ru): return "Справка и руководство"
         case (.help, .ja): return "ヘルプとマニュアル"
         case (.help, .zh): return "帮助与手册"
+
+        case (.multiModelMode, .de): return "Multi-Model-Mode"
+        case (.multiModelMode, .en): return "Multi-Model Mode"
+        case (.multiModelMode, .fr): return "Mode Multi-Modèles"
+        case (.multiModelMode, .es): return "Modo Multimodelo"
+        case (.multiModelMode, .pt): return "Modo Multimodelo"
+        case (.multiModelMode, .ru): return "Мульти-модельный режим"
+        case (.multiModelMode, .ja): return "マルチモデルモード"
+        case (.multiModelMode, .zh): return "多模型协同模式"
         }
     }
 
@@ -207,6 +216,15 @@ enum L10n {
         case (.help, .ru): return "Инструкция и настройка"
         case (.help, .ja): return "マニュアルとセットアップ"
         case (.help, .zh): return "手册与配置指南"
+
+        case (.multiModelMode, .de): return "Ensemble, MoA & Speculative"
+        case (.multiModelMode, .en): return "Ensemble, MoA & Speculative"
+        case (.multiModelMode, .fr): return "Ensemble, MoA & Spéculatif"
+        case (.multiModelMode, .es): return "Conjunto, MoA y Especulativo"
+        case (.multiModelMode, .pt): return "Conjunto, MoA e Especulativo"
+        case (.multiModelMode, .ru): return "Ансамбль, MoA и Speculative"
+        case (.multiModelMode, .ja): return "アンサンブル・MoA・投機実行"
+        case (.multiModelMode, .zh): return "集成、MoA 与投机解码"
         }
     }
 

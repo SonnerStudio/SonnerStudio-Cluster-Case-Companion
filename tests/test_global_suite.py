@@ -339,6 +339,42 @@ class GlobalProjectTests(unittest.TestCase):
         ]:
             self.assertIn(ui_sym, wan_view, f"Missing WAN monitor UI symbol {ui_sym} in InternetClusterView.swift")
 
+    def test_19_multi_model_mode_and_docs(self):
+        """Verify 10th sidebar menu item Multi-Model-Mode (MMM), localization, view, implementation plan & roadmap."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
+        app = (APP_SOURCES / "SSCCCApp.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        mmm_view = (APP_SOURCES / "Views" / "MultiModelModeView.swift").read_text(encoding="utf-8")
+        impl_plan = (APP_SOURCES.parent.parent / "docs" / "IMPLEMENTATION_PLAN.md").read_text(encoding="utf-8")
+        roadmap = (APP_SOURCES.parent.parent / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+
+        self.assertIn("case multiModelMode", models)
+        for sym in ["enum MultiModelScope", "enum MultiModelStrategy", "struct MultiModelSlot", "struct MultiModelRunResult"]:
+            self.assertIn(sym, models)
+
+        for lang in [".de", ".en", ".fr", ".es", ".pt", ".ru", ".ja", ".zh"]:
+            self.assertIn(f"case (.multiModelMode, {lang}):", loc)
+
+        self.assertIn("case .multiModelMode:", app)
+        self.assertIn("MultiModelModeView(vm: vm)", app)
+        for vm_sym in [
+            "mmmScope",
+            "mmmStrategy",
+            "mmmSlots",
+            "syncMultiModelSlotsFromCluster",
+            "executeMultiModelOrchestration",
+            "mmmFitsInClusterPool",
+            "mmmPerClientTokPerSec",
+            "exportMultiIdeMmmGatewayConfig",
+        ]:
+            self.assertIn(vm_sym, vm)
+
+        self.assertIn("Multi-Model-Mode (MMM)", mmm_view)
+        self.assertIn("multiIdeHarnessConsumptionCard", mmm_view)
+        self.assertIn("Multi-Model-Mode (MMM)", impl_plan)
+        self.assertIn("Multi-Model-Mode (MMM)", roadmap)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

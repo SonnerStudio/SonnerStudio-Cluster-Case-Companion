@@ -89,11 +89,12 @@ flowchart LR
 | **2. Appareils et comparaison** | Télémétrie en direct de chaque Mac (CPU, GPU, ANE, RAM, bande passante, SSD, température, puissance) et ajout de Mac M1–M9+. |
 | **3. Atelier de modèles** | Découverte réelle (oMLX, Ollama, llama.cpp, GGUF), vérification d'état, découpage des couches et réglage du cache KV. |
 | **4. Réseau et RDMA** | Matrice des classes Thunderbolt 3/4/5 pour M1–M9+, état RDMA et routage du pont LAN/Thunderbolt. |
-| **5. Grappe Internet, Audio-Party & messagerie** | Coupler les Mac TB/RDMA locaux au réseau WAN mondial, coordonner en Audio-Party (style console) et messagerie (`/ws/wan-audio`, `/ws/wan`). |
-| **6. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
-| **7. Science et Roofline** | Laboratoire 6 onglets (Local & WAN) : courbe `P = min(β·I, π_eff)`, montée `N=1..128`, *Petals/SWARM* & *DiLoCo*, équation KV, `J/jeton` / `EDP` / `CO₂`, `IC₉₅` & `Goodput%`, export `CSV / JSON / LaTeX / BibTeX` et **Historique** par position/global |
-| **8. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |
-| **9. Aide et documentation** | Manuel intégré à 9 chapitres en 5 langues (`⌘?`) avec recherche plein texte et guide pas à pas. |
+| **5. Grappe Internet, Audio-Party & messagerie** | Coupler les Mac TB/RDMA locaux au réseau WAN mondial, surveiller la **bande passante & le débit WAN** (`netstat`, ping/jitter, `networkQuality -c`) et coordonner en Audio-Party & messagerie (`/ws/wan-audio`, `/ws/wan`). |
+| **6. Mode Multi-Modèles (MMM)** | Orchestrer plusieurs modèles sur grappe **Locale**, **Internet-WAN** ou **Hybride** (*Pool parallèle*, *Mixture-of-Agents*, *Speculative Decoding*, *Pipeline*) avec garde VRAM et consommation simultanée **Multi-IDE / Harnesses** (`:8000/v1`). |
+| **7. Agents et environnements** | Configuration en un clic pour **OpenCode**, **Hermes Agent**, **Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**. |
+| **8. Science et Roofline** | Laboratoire 6 onglets avec **streaming SSE réel & ping ICMP** en mode réel (simulation réaliste étiquetée) : courbe Roofline, montée `N=1..128`, *Petals/SWARM* & *DiLoCo*, équation KV, `J/jeton` / `EDP` / `CO₂`, `IC₉₅`, export `CSV / JSON / LaTeX / BibTeX` et **Historique**. |
+| **9. API et console** | Points de terminaison compatibles OpenAI / Ollama / oMLX, journal d'activité et commandes de démarrage prêtes à copier. |
+| **10. Aide et documentation** | Manuel intégré à 12 chapitres en 8 langues (`⌘?`) avec recherche plein texte et guide pas à pas. |
 
 ---
 

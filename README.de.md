@@ -87,11 +87,12 @@ flowchart LR
 | **2. Geräte & Vergleich** | Beliebige M1–M9+-Macs hinzufügen/entfernen, CPU/GPU/ANE/SSD/Thermik/Strom auslesen und vergleichen |
 | **3. Modell-Werkstatt** | Echte Modelle aus oMLX / Ollama / llama.cpp einlesen, Dienstbereitschaft prüfen, anteilige Schichtenverteilung & KV-Speicher regeln |
 | **4. Netzwerk & Direktspeicher** | Mischbetrieb / TB / LAN / RDMA umschalten, `FAST_SYNCH=1` setzen und TB3/TB4/TB5-Klassen einsehen |
-| **5. Weltweiter Verbund, Audio-Party & Gespräch** | Lokale TB/RDMA-Macs per Hybrid-Brücke mit weltweiten WAN-Macs koppeln, per Audio-Party (Xbox/PS-Stil) & Echtzeit-Gespräch (`/ws/wan-audio`, `/ws/wan`) abstimmen |
-| **6. Agenten & Werkzeuge** | Ein-Klick-Einrichtung für OpenCode, Hermes Agent, Antigravity, Cursor, VS Code und Xcode |
-| **7. Forschung & Grenzkurve** | 6-Reiter-Forschungslabor (Lokal & Internet-WAN): Log-Log-Grenzkurve (`P = min(β·I, π_eff)`), Skalierung `N=1..128`, *Petals/SWARM* & *DiLoCo*, KV-Speichergleichung, `J/Token` / `EDP` / `CO₂`, `CI₉₅` & `Goodput%`, `CSV / JSON / LaTeX / BibTeX` sowie Einzel-Positions- & Global-**Verlaufsaufzeichnung** |
-| **8. Schnittstelle & Konsole** | OpenAI- (`/v1`) & Ollama-Endpunkte (`/api/tags`) prüfen und Verbund-Anfragen direkt testen |
-| **9. Hilfe & Handbuch** | Durchsuchbares 9-Kapitel-Handbuch in fünf Sprachen (`⌘?`) zu M1–M12+-Verbund, Speicherschutz, WAN-Kopplung, Audio-Party, Forschungslabor und Agenten |
+| **5. Weltweiter Verbund, Audio-Party & Gespräch** | Lokale TB/RDMA-Macs per Hybrid-Brücke mit weltweiten WAN-Macs koppeln, **Internetbandbreite & WAN-Datendurchsatz** (`netstat`, ICMP-Ping/Jitter, `networkQuality -c`, Cluster-Effizienz) live überwachen und per Audio-Party & Gespräch (`/ws/wan-audio`, `/ws/wan`) abstimmen |
+| **6. Multi-Model-Mode (MMM)** | Mehrere Modelle im **Lokalen Cluster**, **Internet-Cluster** oder **Hybrid (Lokal + Internet)** als *Parallel-Pool*, *Mixture-of-Agents*, *Speculative Decoding* oder *Pipeline* zusammenführen — inkl. gleichzeitiger Leistungsentnahme durch mehrere IDEs & Agent-Harnesses (`:8000/v1`) |
+| **7. Agenten & Werkzeuge** | Ein-Klick-Einrichtung für OpenCode, Hermes Agent, Antigravity, Cursor, VS Code und Xcode |
+| **8. Forschung & Grenzkurve** | 6-Reiter-Forschungslabor mit **echtem SSE-Token-Streaming & ICMP-RTT** im Echtbetrieb (klar markierte Simulation im Sim-Modus): Log-Log-Grenzkurve, Skalierung `N=1..128`, *Petals/SWARM* & *DiLoCo*, KV-Speicher, `J/Token` / `EDP` / `CO₂`, `CI₉₅`-Messreihen, `CSV / JSON / LaTeX / BibTeX` und **Verlaufsaufzeichnung** |
+| **9. Schnittstelle & Konsole** | OpenAI- (`/v1`) & Ollama-Endpunkte (`/api/tags`) prüfen und Verbund-Anfragen direkt testen |
+| **10. Hilfe & Handbuch** | Durchsuchbares 12-Kapitel-Handbuch in 8 Sprachen (`⌘?`) zu M1–M12+-Verbund, Speicherschutz, WAN-Kopplung, Audio-Party, MMM, Forschungslabor und Agenten |
 
 ---
 

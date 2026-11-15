@@ -75,6 +75,14 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 
 ---
 
+## 🧩 核心新特性（10 大侧边栏模块与多模型协同模式）
+
+- **多模型协同模式 (Multi-Model-Mode / MMM，第 10 项菜单)：** 在**本地集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**中聚合多个模型的算力（支持 *Parallel Pool*、*Mixture-of-Agents*、*Speculative Draft+Target*、*Sequential Pipeline*），内置 `iogpu.wired_limit_mb` 显存保护，并支持 **多个 IDE 与智能体框架（Cursor, VS Code, Xcode, OpenCode, Hermes, Antigravity）同时通过 `:8000/v1` 共享调用集群算力**。
+- **互联网带宽与 WAN 吞吐量监控：** 通过 `netstat`、ICMP Ping/抖动与 `/usr/bin/networkQuality -c` 实时测量上下行带宽并计算对集群推理效率的影响。
+- **Science & Roofline 真实数据重构：** 实测模式采用真实 SSE 流式首字延迟与 ICMP RTT 测量；模拟模式提供清晰标注的逼真 Apple Silicon 参考值。
+
+---
+
 ## 🛠️ 从源码编译（首次运行前必读）
 
 > **说明：** 本仓库仅包含源代码、脚本与文档，不包含预编译二进制文件。

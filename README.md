@@ -87,11 +87,12 @@ flowchart LR
 | **2. Devices & Compare** | Add/remove any M1–M9+ Mac, inspect CPU/GPU/ANE/SSD/thermal/power telemetry, and compare bars |
 | **3. Model Studio** | Live model discovery (oMLX / Ollama / llama.cpp / GGUF), runtime readiness check, proportional layer splits, and KV-cache tuning |
 | **4. Network & RDMA** | Switch Auto-Hybrid / TB-Only / LAN / RDMA, toggle `FAST_SYNCH=1`, and inspect TB3/TB4/TB5 classes |
-| **5. Internet Cluster, Audio-Party & Chat** | Couple local TB/RDMA Macs with global WAN peers (Tailscale/WireGuard/libp2p/DERP), coordinate via Xbox/PS-style Audio-Party & Chat (`/ws/wan-audio`, `/ws/wan`) |
-| **6. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
-| **7. Science & Roofline** | 6-tab Local & Internet-WAN research lab: Log-Log Roofline (`P = min(β·I, π_eff)`), `N=1..128` scaling, *Petals/SWARM* & *DiLoCo*, KV memory equation, `J/tok` / `EDP` / `CO₂`, `CI₉₅` & `Goodput%` trials, `CSV / JSON / LaTeX / BibTeX` export, and per-position/global **History Recording** |
-| **8. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
-| **9. Help & Documentation** | Searchable 9-chapter, 5-language user manual (`⌘?`) covering M1–M12+ clustering, safety limits, WAN coupling, Audio-Party, Science Lab, and agents |
+| **5. Internet Cluster, Audio-Party & Chat** | Couple local TB/RDMA Macs with global WAN peers (Tailscale/WireGuard/libp2p/DERP), monitor live **Internet Bandwidth & WAN Throughput** (`netstat`, ICMP ping/jitter, `networkQuality -c`, cluster impact), and coordinate via Audio-Party & Chat (`/ws/wan-audio`, `/ws/wan`) |
+| **6. Multi-Model-Mode (MMM)** | Combine multiple models across **Local**, **Internet-WAN**, or **Hybrid** clusters (*Parallel Pool*, *Mixture-of-Agents*, *Speculative Draft+Target*, *Sequential Pipeline*) with VRAM guards & simultaneous **Multi-IDE / Harness** cluster consumption (`:8000/v1`) |
+| **7. Agents & IDEs** | 1-click setup & copyable configs for OpenCode, Hermes Agent, Antigravity, Cursor, VS Code, and Xcode |
+| **8. Science & Roofline** | 6-tab Local & Internet-WAN research lab using **real SSE streaming & ICMP RTT** in live mode (labeled realistic simulation in sim mode): Log-Log Roofline, `N=1..128` scaling, *Petals/SWARM* & *DiLoCo*, KV memory, `J/tok` / `EDP` / `CO₂`, `CI₉₅` trials, `CSV / JSON / LaTeX / BibTeX`, and **History Recording** |
+| **9. API & Console** | Test OpenAI (`/v1`) & Ollama (`/api/tags`) endpoints or run local cluster preview prompts |
+| **10. Help & Documentation** | Searchable 12-chapter, 8-language user manual (`⌘?`) covering M1–M12+ clustering, safety limits, WAN coupling, Audio-Party, MMM, Science Lab, and agents |
 
 ---
 

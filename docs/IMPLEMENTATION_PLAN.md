@@ -164,3 +164,27 @@ Um aus **36 GB + 16 GB = 52 GB** das Maximum stabil herauszuholen:
 ## 6. Sicherheits- & Stabilitäts-Hinweise
 * **`iogpu.wired_limit_mb`:** Niemals auf 100 % des physischen RAM setzen; mindestens 4 GB (Mini) bzw. 6 GB (Studio) für macOS reservieren.
 * **RDMA auf Thunderbolt 4:** Falls das experimentelle `tb4-rdma-enabler`-Verfahren getestet wird, ist zu beachten, dass das Deaktivieren von SIP (`csrutil`) und das Setzen auf *Permissive Security* (`bputil`) die DMA-Angriffsfläche des Mac mini erhöht. Für den produktiven Alltag bleibt **IP-over-Thunderbolt (30–37 Gbps)** der sichere Standard.
+
+---
+
+## 7. Multi-Model-Mode (MMM) — Architektur & Implementierungsplan
+
+### 7.1 Zielsetzung & Einordnung im Gesamtkonzept
+Der **Multi-Model-Mode (MMM)** ergänzt SS-CCC als **10. Kategorie im linken Seitenmenü** (`NavigationTab.multiModelMode`) und verknüpft bestehende Bausteine (Modell-Werkstatt, Netzwerk & RDMA, Internet-Verbund) zu einer gemeinsamen Multi-Modell-Orchestrierung über drei Cluster-Bereiche (`MultiModelScope`):
+1. **Lokaler Cluster:** Verteilt spezialisierte Modelle auf lokale Thunderbolt-/RDMA-Macs mit minimaler Latenz.
+2. **Internet-Cluster:** Nutzt weltweite Tailscale-, WireGuard- oder libp2p-QUIC-Peers für große VRAM-Pools.
+3. **Lokal + Internet (Hybrid):** Koppelt lokale Schnell-Modelle (z. B. Draft/Router auf Mac mini/Studio) mit großen Remote-Target- oder Spezialisten-Modellen im Internet-Verbund.
+
+### 7.2 Unterstützte Orchestrierungs-Strategien (`MultiModelStrategy`)
+* **Paralleler Multi-Modell-Pool:** Hält mehrere Modelle gleichzeitig in getrennten VRAM-Budgets (`usableVramGB` mit `iogpu.wired_limit_mb`-Schutz) für parallele Anfragen ohne Reload.
+* **Mixture-of-Agents (MoA):** Sendet denselben Prompt parallel an mehrere Spezialisten-Slots und konsolidiert die Antworten über einen `Aggregator`-Slot.
+* **Speculative Decoding (Draft + Target):** Kombiniert ein schnelles lokales `Draft`-Modell mit einem großen `Target`-Modell im Verbund zur Beschleunigung der effektiven Token-Rate.
+* **Sequenzielle Modell-Pipeline:** Verkettet Modelle als spezialisierte Stufen (z. B. *Planer → Coder → Reviewer*) über lokale und WAN-Knoten hinweg.
+
+### 7.3 Datenmodell, Echtzeit-Ausführung & Sicherheit
+* **Domain-Modelle (`ClusterModels.swift`):** `MultiModelScope`, `MultiModelStrategy`, `MultiModelRole`, `MultiModelSlot` (inkl. Zielknoten, RAM-Bedarf, Endpunkt-URL und gemessener `lastTokPerSec` / `lastTtftMs`) sowie `MultiModelRunResult`.
+* **ViewModel-Logik (`ClusterViewModel.swift`):**
+  * `syncMultiModelSlotsFromCluster()` übernimmt automatisch erkannte Modelle (oMLX, Ollama, llama.cpp, GGUF) und mappt sie auf verfügbare Knoten im gewählten Scope.
+  * `mmmFitsInClusterPool` prüft vorab gegen `mmmUsableVramPoolGB`, sodass der Speicherschutz-Puffer nie verletzt wird.
+  * `executeMultiModelOrchestration()` nutzt im **Echtbetrieb** (`!simulateMacStudio`) reales SSE-Streaming (`runLiveChatCompletionTrial`) ohne Fake-Werte; im **Simulationsmodus** liefert er realistische, klar als `SIMULATION` markierte Referenzwerte.
+* **UI (`MultiModelModeView.swift` & `SSCCCApp.swift`):** Scrollbare 10-Tab-Sidebar im Solaris-Design mit Scope-/Strategie-Auswahl, VRAM-Füllbalken, Slot-Editor und Live-Ausführungsprotokoll.

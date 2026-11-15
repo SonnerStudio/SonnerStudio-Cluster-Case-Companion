@@ -115,6 +115,21 @@ final class ClusterViewModel: ObservableObject {
     @Published var wanBandwidthSourceLabel: String = "Bereit"
     private var wanWebSocketTask: URLSessionWebSocketTask? = nil
 
+    // Multi-Model-Mode (MMM): Orchestrate multiple models across Local, Internet-WAN or Hybrid clusters
+    @Published var mmmScope: MultiModelScope = .hybrid
+    @Published var mmmStrategy: MultiModelStrategy = .mixtureOfAgents
+    @Published var mmmSlots: [MultiModelSlot] = []
+    @Published var mmmPromptInput: String = "Analysiere die Leistungsverteilung im Verbund und erstelle einen kompakten Optimierungsvorschlag."
+    @Published var isRunningMultiModel: Bool = false
+    @Published var mmmStatusMessage: String = ""
+    @Published var mmmLastResult: MultiModelRunResult? = nil
+    @Published var mmmHistory: [MultiModelRunResult] = []
+    @Published var mmmNewModelId: String = ""
+    @Published var mmmNewModelName: String = ""
+    @Published var mmmNewModelRole: MultiModelRole = .specialist
+    @Published var mmmNewModelRamGB: Double = 8.0
+    @Published var mmmActiveClientCount: Int = 2
+
     // Cluster Audio-Party (Xbox / PlayStation-style voice coordination for AI clusters)
     @Published var audioPartyJoined: Bool = false
     @Published var audioPartyMuted: Bool = false
@@ -2362,6 +2377,274 @@ final class ClusterViewModel: ObservableObject {
         let ulBps = (obj["ul_throughput"] as? Double) ?? 0.0
         guard dlBps > 0 || ulBps > 0 else { return nil }
         return (dlBps / 1_000_000.0, ulBps / 1_000_000.0)
+    }
+
+    // MARK: - Multi-Model-Mode (MMM)
+
+    var mmmAvailableTargets: [String] {
+        switch mmmScope {
+        case .local:
+            return nodes.map(\.name)
+        case .internet:
+            return wanPeers.map(\.displayName)
+        case .hybrid:
+            var seen = Set<String>()
+            var combined: [String] = []
+            for n in nodes.map(\.name) + wanRemotePeers.map(\.displayName) {
+                if seen.insert(n).inserted { combined.append(n) }
+            }
+            return combined
+        }
+    }
+
+    var mmmUsableVramPoolGB: Double {
+        switch mmmScope {
+        case .local: return totalUsableVramGB
+        case .internet: return wanTotalUsableVramGB
+        case .hybrid: return hybridCombinedUsableVramGB
+        }
+    }
+
+    var mmmActiveSlots: [MultiModelSlot] {
+        mmmSlots.filter(\.isEnabled)
+    }
+
+    var mmmTotalRequiredVramGB: Double {
+        mmmActiveSlots.reduce(0.0) { $0 + $1.estimatedRamGB }
+    }
+
+    var mmmFitsInClusterPool: Bool {
+        mmmTotalRequiredVramGB <= mmmUsableVramPoolGB
+    }
+
+    var mmmEstimatedCombinedTokPerSec: Double {
+        let active = mmmActiveSlots
+        guard !active.isEmpty else { return 0.0 }
+        let baseSingle = max(4.0, activeTokPerSec)
+        switch mmmStrategy {
+        case .parallelPool:
+            // Independent models executing concurrently across distinct nodes/VRAM pools
+            return baseSingle * Double(min(active.count, max(1, mmmAvailableTargets.count))) * 0.88
+        case .mixtureOfAgents:
+            // Specialists run in parallel + 1 aggregator synthesis pass
+            let parallelFactor = min(Double(active.count), max(1.0, Double(mmmAvailableTargets.count))) * 0.72
+            return baseSingle * max(1.0, parallelFactor)
+        case .speculativeDecoding:
+            // Draft + Target typically achieves 1.6x - 2.3x decode speedup on Apple Silicon
+            return baseSingle * (active.contains(where: { $0.role == .draft }) ? 1.85 : 1.25)
+        case .sequentialPipeline:
+            // Chained stages; throughput bounded by slowest stage + WAN/TB hop overhead
+            let hopOverhead = (mmmScope == .local) ? 0.94 : 0.78
+            return baseSingle * hopOverhead
+        }
+    }
+
+    func syncMultiModelSlotsFromCluster() {
+        let targets = mmmAvailableTargets
+        let primaryTarget = targets.first ?? (nodes.first?.name ?? "Lokal")
+        let secondaryTarget = targets.count > 1 ? targets[1] : primaryTarget
+
+        let liveModels = modelPresets.filter(\.isLiveDiscovered)
+        if !liveModels.isEmpty {
+            mmmSlots = liveModels.prefix(4).enumerated().map { idx, model in
+                let role: MultiModelRole = idx == 0 ? .primary : (idx == 1 ? .specialist : .aggregator)
+                let target = idx % 2 == 0 ? primaryTarget : secondaryTarget
+                return MultiModelSlot(
+                    modelId: model.id,
+                    displayName: model.displayName,
+                    role: role,
+                    assignedTarget: target,
+                    endpointURL: openCodeBaseURL,
+                    estimatedRamGB: model.estimatedGB,
+                    isEnabled: true
+                )
+            }
+            mmmStatusMessage = "MMM-Slots aus \(mmmSlots.count) erkannten Live-Modellen synchronisiert."
+            return
+        }
+
+        // Fallback to catalog presets mapped onto active targets without fabricating fake runtime discovery
+        let basePresets = Array(modelPresets.prefix(3))
+        mmmSlots = basePresets.enumerated().map { idx, preset in
+            let role: MultiModelRole = idx == 0 ? .primary : (idx == 1 ? .draft : .aggregator)
+            let target = idx % 2 == 0 ? primaryTarget : secondaryTarget
+            return MultiModelSlot(
+                modelId: preset.id,
+                displayName: preset.displayName,
+                role: role,
+                assignedTarget: target,
+                endpointURL: openCodeBaseURL,
+                estimatedRamGB: preset.estimatedGB,
+                isEnabled: idx < 2
+            )
+        }
+        mmmStatusMessage = "MMM-Slots auf aktive \(mmmScope.rawValue)-Knoten ausgerichtet."
+    }
+
+    func addMultiModelSlot(modelId: String, displayName: String, role: MultiModelRole, estimatedRamGB: Double) {
+        let cleanId = modelId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanId.isEmpty else { return }
+        let target = mmmAvailableTargets.first ?? (nodes.first?.name ?? "Lokal")
+        mmmSlots.append(
+            MultiModelSlot(
+                modelId: cleanId,
+                displayName: displayName.isEmpty ? cleanId : displayName,
+                role: role,
+                assignedTarget: target,
+                endpointURL: openCodeBaseURL,
+                estimatedRamGB: max(1.0, estimatedRamGB),
+                isEnabled: true
+            )
+        )
+    }
+
+    func removeMultiModelSlot(_ id: UUID) {
+        mmmSlots.removeAll { $0.id == id }
+    }
+
+    func executeMultiModelOrchestration() {
+        guard !isRunningMultiModel else { return }
+        let active = mmmActiveSlots
+        guard !active.isEmpty else {
+            mmmStatusMessage = "Bitte mindestens einen Modell-Slot aktivieren."
+            return
+        }
+
+        isRunningMultiModel = true
+        let isSimulated = simulateMacStudio
+        let strategy = mmmStrategy
+        let scope = mmmScope
+        let promptText = mmmPromptInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "State the Roofline equation in one sentence."
+            : mmmPromptInput
+        let usedVram = mmmTotalRequiredVramGB
+        let poolVram = mmmUsableVramPoolGB
+        let formatter = ISO8601DateFormatter()
+
+        mmmStatusMessage = isSimulated
+            ? "Simuliere \(strategy.rawValue) über \(active.count) Modelle (\(scope.rawValue))..."
+            : "Führe \(strategy.rawValue) über \(active.count) Live-Modelle aus..."
+
+        Task {
+            if isSimulated {
+                try? await Task.sleep(nanoseconds: 280_000_000)
+                var updatedSlots = mmmSlots
+                var sumTok = 0.0
+                var maxTtft = 0.0
+                for idx in updatedSlots.indices where updatedSlots[idx].isEnabled {
+                    let slot = updatedSlots[idx]
+                    let baseSlotTok = max(8.0, (activeTokPerSec * (slot.role == .draft ? 2.4 : 1.0)) * (scope == .local ? 1.0 : 0.78))
+                    let slotTtft = max(18.0, activeTTFTMs * (slot.role == .draft ? 0.35 : 1.0) * (scope == .local ? 1.0 : 1.4))
+                    updatedSlots[idx].lastTokPerSec = baseSlotTok
+                    updatedSlots[idx].lastTtftMs = slotTtft
+                    sumTok += baseSlotTok
+                    maxTtft = max(maxTtft, slotTtft)
+                }
+                mmmSlots = updatedSlots
+
+                let combinedTok = strategy == .sequentialPipeline ? (sumTok / Double(max(1, active.count))) : sumTok * 0.86
+                let baselineSingle = max(1.0, activeTokPerSec)
+                let speedup = combinedTok / baselineSingle
+
+                let res = MultiModelRunResult(
+                    timestamp: formatter.string(from: Date()),
+                    strategy: strategy,
+                    scope: scope,
+                    activeModelsCount: active.count,
+                    combinedTokPerSec: combinedTok,
+                    aggregateTtftMs: maxTtft,
+                    totalVramUsedGB: usedVram,
+                    usableVramPoolGB: poolVram,
+                    speedupFactor: speedup,
+                    responsePreview: "Simulation (\(strategy.rawValue)): \(active.count) Modelle auf \(scope.rawValue) kombiniert (\(String(format: "%.1f", combinedTok)) tok/s, \(String(format: "%.2fx", speedup)) vs. Einzelmodell).",
+                    isLiveExecution: false
+                )
+                mmmLastResult = res
+                mmmHistory.insert(res, at: 0)
+                if mmmHistory.count > 20 { mmmHistory.removeLast(mmmHistory.count - 20) }
+                mmmStatusMessage = "Simulation abgeschlossen (\(active.count) Modelle · \(String(format: "%.1f", combinedTok)) tok/s)."
+                isRunningMultiModel = false
+                return
+            }
+
+            // REAL EXECUTION MODE: Query live OpenAI-compatible endpoints via SSE streaming
+            var updatedSlots = mmmSlots
+            var totalTok = 0.0
+            var worstTtft = 0.0
+            var successCount = 0
+            var lastError = ""
+
+            for idx in updatedSlots.indices where updatedSlots[idx].isEnabled {
+                let slot = updatedSlots[idx]
+                let base = slot.endpointURL.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard let url = URL(string: "\(base)/chat/completions") else {
+                    lastError = "Ungültige URL für \(slot.displayName)"
+                    continue
+                }
+                do {
+                    let sample = try await runLiveChatCompletionTrial(endpointURL: url, modelId: slot.modelId)
+                    updatedSlots[idx].lastTokPerSec = sample.tokensPerSec
+                    updatedSlots[idx].lastTtftMs = sample.ttftMs
+                    totalTok += sample.tokensPerSec
+                    worstTtft = max(worstTtft, sample.ttftMs)
+                    successCount += 1
+                } catch {
+                    lastError = error.localizedDescription
+                }
+            }
+            mmmSlots = updatedSlots
+
+            guard successCount > 0 else {
+                mmmStatusMessage = "Echtbetrieb: Kein aktiver MMM-Endpunkt erreichbar (\(lastError.isEmpty ? openCodeBaseURL : lastError)). Starte oMLX, Ollama oder llama.cpp – oder aktiviere den Simulationsmodus."
+                isRunningMultiModel = false
+                return
+            }
+
+            let combined = strategy == .sequentialPipeline ? (totalTok / Double(successCount)) : totalTok
+            let speedup = combined / max(1.0, activeTokPerSec)
+            let res = MultiModelRunResult(
+                timestamp: formatter.string(from: Date()),
+                strategy: strategy,
+                scope: scope,
+                activeModelsCount: successCount,
+                combinedTokPerSec: combined,
+                aggregateTtftMs: worstTtft,
+                totalVramUsedGB: usedVram,
+                usableVramPoolGB: poolVram,
+                speedupFactor: speedup,
+                responsePreview: "Live-Ausführung (\(promptText.prefix(64))...): \(successCount)/\(active.count) Modelle erfolgreich gestreamt.",
+                isLiveExecution: true
+            )
+            mmmLastResult = res
+            mmmHistory.insert(res, at: 0)
+            if mmmHistory.count > 20 { mmmHistory.removeLast(mmmHistory.count - 20) }
+            mmmStatusMessage = "Live-Ausführung abgeschlossen (\(successCount) Modelle · \(String(format: "%.1f", combined)) tok/s)."
+            isRunningMultiModel = false
+        }
+    }
+
+    /// Estimated tokens/sec available per concurrent IDE / Agent Harness drawing from the unified cluster.
+    var mmmPerClientTokPerSec: Double {
+        mmmEstimatedCombinedTokPerSec / Double(max(1, mmmActiveClientCount))
+    }
+
+    /// Generates a unified OpenAI-compatible Multi-IDE & Harness routing config for simultaneous cluster consumption.
+    func exportMultiIdeMmmGatewayConfig() -> String {
+        let slotEntries = mmmActiveSlots.map { slot in
+            "    { \"model\": \"\(slot.modelId)\", \"role\": \"\(slot.role.rawValue)\", \"targetNode\": \"\(slot.assignedTarget)\", \"vramGB\": \(String(format: "%.1f", slot.estimatedRamGB)) }"
+        }.joined(separator: ",\n")
+        return """
+        {
+          "sscccGateway": "\(openCodeBaseURL)",
+          "scope": "\(mmmScope.rawValue)",
+          "strategy": "\(mmmStrategy.rawValue)",
+          "concurrentIdesAndHarnesses": \(mmmActiveClientCount),
+          "clients": ["Cursor", "VS Code", "Xcode", "OpenCode", "Hermes Agent", "Google Antigravity"],
+          "modelSlots": [
+        \(slotEntries)
+          ]
+        }
+        """
     }
 
     func probeWanOverlayTools() {

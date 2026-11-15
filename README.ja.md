@@ -75,6 +75,14 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 
 ---
 
+## 🧩 新機能ハイライト（10タブ構成 & Multi-Model-Mode）
+
+- **Multi-Model-Mode (MMM / 10番目のメニュー):** ローカルクラスター、インターネットWAN、またはハイブリッド（ローカル＋WAN）上で複数モデルを統合（*Parallel Pool*・*Mixture-of-Agents*・*Speculative Draft+Target*・*Sequential Pipeline*）。VRAM予算保護（`iogpu.wired_limit_mb`）および **複数の IDE / エージェント・ハーネス（Cursor, VS Code, Xcode, OpenCode, Hermes, Antigravity）による `:8000/v1` 同時利用**に対応。
+- **インターネット帯域幅・WANスループット監視:** `netstat`・ICMP Ping/ジッター・`/usr/bin/networkQuality -c` を用いた実測とクラスター性能影響の可視化。
+- **Science & Roofline 実測データ対応:** 実運用ではライブ SSE ストリーミング & ICMP RTT を実測し、シミュレーションモードでは明確にラベル付けされた現実的な Apple Silicon 参照値を表示。
+
+---
+
 ## 🛠️ ソースからのビルド（初回起動前に重要）
 
 > **注意:** このリポジトリにはソースコード・スクリプト・ドキュメントのみが含まれ、ビルド済みバイナリは同梱されていません。

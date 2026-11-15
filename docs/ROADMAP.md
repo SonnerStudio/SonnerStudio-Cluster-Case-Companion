@@ -112,3 +112,13 @@ Die Analyse des `exo-explore/exo`-Repositories liefert entscheidende Best Practi
   * Graceful Node-Join / Node-Leave (Hot-Reconnect bei Kabelwechsel).
   * LaunchAgent/Daemon-Autostart für Headless-Betrieb des Mac mini M4.
   * Optional: `llama.cpp` RPC-Backend als Alternative für GGUF-Modelle.
+
+---
+
+### Phase 6: Multi-Model-Mode (MMM) & Cross-Cluster-Orchestrierung (10. Seitenmenü-Kategorie)
+* **Ziel:** Mehrere Modelle innerhalb des lokalen Clusters, des Internet-Clusters oder eines gekoppelten Hybrid-Verbunds (Lokal + Internet) parallel, als Ensemble (MoA), per Speculative Decoding oder als Pipeline zu einer gemeinsamen Gesamtleistung zusammenführen.
+* **Meilensteine:**
+  * **10. Menüpunkt `Multi-Model-Mode` in der Studio-Sidebar:** Scrollbare Navigation in allen 8 App-Sprachen (`NavigationTab.multiModelMode`).
+  * **Scope- & Strategie-Steuerung:** Umschaltung zwischen *Lokaler Cluster*, *Internet-Cluster* und *Lokal + Internet (Hybrid)* sowie 4 Modi (*Paralleler Multi-Modell-Pool*, *Mixture-of-Agents*, *Speculative Decoding*, *Sequenzielle Modell-Pipeline*).
+  * **VRAM-Pool-Schutz & Slot-Zuweisung:** Pro-Modell-Zuweisung auf lokale TB/RDMA-Knoten oder WAN-Peers inkl. `iogpu.wired_limit_mb`-Budgetprüfung.
+  * **Echtzeit-SSE-Ausführung & Simulation:** Reale Token/s- und TTFT-Messung über aktive Endpunkte sowie klar gekennzeichnete Simulationsläufe.
