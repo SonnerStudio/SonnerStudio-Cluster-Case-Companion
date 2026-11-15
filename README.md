@@ -234,6 +234,33 @@ SS-CCC includes an integrated, **GitHub-driven update and version-control pipeli
 
 ---
 
+---
+
+## 🧠 Multi-Model-Mode (MMM) — Unified Cross-Cluster Model Orchestration & Multi-IDE Consumption
+
+![SS-CCC Multi-Model-Mode (MMM) Architecture & Multi-IDE Consumption](docs/images/ssccc_multi_model_mode.jpg)
+
+The **Multi-Model-Mode (MMM)** (10th sidebar tab) unifies the compute and memory of **multiple AI models simultaneously** across the **Local Cluster** (Thunderbolt / RDMA), the **Internet Cluster** (Tailscale / WireGuard / libp2p QUIC), or a **Hybrid Cluster (Local + Internet)** — complete with `iogpu.wired_limit_mb` VRAM pool protection, live SSE execution, and direct export into **Science & Roofline**.
+
+### 4 Orchestration Strategies
+1. **Parallel Multi-Model Pool:** Keeps multiple specialized models resident across separate VRAM budgets (local + WAN) for simultaneous zero-reload inference.
+2. **Mixture-of-Agents (MoA):** Dispatches the same prompt to multiple specialist slots in parallel and synthesizes a superior final answer via an `Aggregator` model.
+3. **Speculative Decoding (Draft + Target):** Pairs a fast local `Draft` model (e.g., on Mac mini M4) with a large `Target` model on the TB5 or Hybrid cluster for $1.6\times$–$2.3\times$ decode speedups.
+4. **Sequential Model Pipeline:** Chains models as specialized stages (*Planner → Coder → Reviewer*) across local low-latency nodes and high-VRAM WAN peers.
+
+### Shared Multi-IDE & Agent-Harness Consumption (`:8000/v1`)
+Multiple IDEs and coding harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) can draw compute from the unified cluster **at the same time** via the OpenAI-compatible gateway (`exportMultiIdeMmmGatewayConfig()`), with live per-client throughput estimation (`tok/s` per concurrent client).
+
+### Real-World MMM Use Cases
+- **Multi-IDE & Multi-Agent Development:** Run Cursor, OpenCode, and Hermes Agent concurrently against one shared local/hybrid cluster without model-reloading stalls.
+- **Speculative Decoding Turbo on Heterogeneous Macs:** Use a 16 GB Mac mini as a high-speed Draft generator while a Mac Studio or WAN cluster verifies tokens on a 70B+ Target model.
+- **Mixture-of-Agents (MoA) Research & Code Review:** Combine a coding model, a math/reasoning model, and an aggregator model to eliminate single-model blind spots.
+- **Hybrid Local + WAN Specialization:** Keep latency-critical autocomplete/draft models on your local Thunderbolt desk while offloading heavy reasoning or 405B stages to remote WAN peers.
+- **Automated Multi-Stage CI / Refactoring Pipelines:** Route *Architecture Planning → Implementation → Security Audit* sequentially through dedicated model slots.
+- **Scientific Ensemble Benchmarking:** Every MMM run automatically feeds combined `tok/s`, speedup factor, VRAM efficiency, and multi-IDE load into **Science & Roofline** (`recordScienceHistoryFromMMM`).
+
+---
+
 ## 🎙️ Cluster Audio-Party & Live WAN Collaboration
 
 ![Cluster Audio-Party & Live WAN Collaboration](docs/images/ssccc_audio_party_collab.jpg)

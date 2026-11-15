@@ -234,6 +234,33 @@ SS-CCC verfügt über eine integrierte, **über GitHub gesteuerte Update- und Ve
 
 ---
 
+---
+
+## 🧠 Multi-Model-Mode (MMM) — Verbund-Orchestrierung & Multi-IDE-Leistungsentnahme
+
+![SS-CCC Multi-Model-Mode (MMM) Architektur & Multi-IDE-Leistungsentnahme](docs/images/ssccc_multi_model_mode.jpg)
+
+Der **Multi-Model-Mode (MMM)** (10. Seitenmenüpunkt) führt die Rechen- und Speicherleistung **mehrerer KI-Modelle gleichzeitig** im **Lokalen Cluster** (Thunderbolt / RDMA), im **Internet-Cluster** (Tailscale / WireGuard / libp2p QUIC) oder im gekoppelten **Hybrid-Verbund (Lokal + Internet)** zusammen — inklusive `iogpu.wired_limit_mb`-VRAM-Schutz, Echtzeit-SSE-Ausführung und direkter Übernahme in **Forschung & Leistung**.
+
+### 4 Orchestrierungs-Strategien
+1. **Paralleler Multi-Modell-Pool:** Hält mehrere spezialisierte Modelle gleichzeitig in getrennten VRAM-Budgets (lokal & WAN) für parallele Anfragen ohne Modell-Reload bereit.
+2. **Mixture-of-Agents (MoA):** Sendet denselben Prompt parallel an mehrere Spezialisten-Modelle und führt die Stärken über einen `Aggregator`-Slot zu einer hochwertigeren Antwort zusammen.
+3. **Speculative Decoding (Draft + Target):** Kombiniert ein schnelles lokales `Draft`-Modell (z. B. Mac mini M4) mit einem großen `Target`-Modell auf dem TB5- oder Hybrid-Verbund für bis zu $1{,}6\times$–$2{,}3\times$ höhere Decode-Raten.
+4. **Sequenzielle Modell-Pipeline:** Verkettet Modelle als spezialisierte Stufen (*Planer → Coder → Reviewer*) über lokale Niedriglatenz-Knoten und speicherstarke WAN-Peers.
+
+### Gemeinsame Leistungsentnahme durch mehrere IDEs & Agent-Harnesses (`:8000/v1`)
+Mehrere IDEs und Agent-Harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) können **gleichzeitig** über das OpenAI-kompatible Gateway Leistung aus dem zusammengeführten Verbund entnehmen (`exportMultiIdeMmmGatewayConfig()`) — inklusive Live-Berechnung der verfügbaren Rate pro aktivem Client (`tok/s` je IDE/Harness).
+
+### Konkrete Anwendungsfälle (Use Cases)
+- **Paralleles Multi-IDE- & Multi-Agent-Coding:** Cursor, OpenCode und Hermes Agent arbeiten gleichzeitig auf demselben lokalen oder hybriden Verbund ohne Wartezeiten durch Modell-Neuladen.
+- **Speculative-Decoding-Turbo auf heterogenen Macs:** Ein 16-GB-Mac-mini erzeugt blitzschnell Draft-Token, während ein Mac Studio oder WAN-Verbund ein 70B+-Target-Modell parallel verifiziert.
+- **Mixture-of-Agents (MoA) für Architektur & Code-Reviews:** Kombination aus Coder-, Reasoning- und Aggregator-Modell reduziert Halluzinationen und steigert die Antwortqualität messbar.
+- **Hybride Lokal+WAN-Aufgabenteilung:** Latenzkritische Autocomplete- und Draft-Modelle laufen lokal über Thunderbolt, während schwere Reasoning- oder 405B-Stufen auf entfernte WAN-Peers ausgelagert werden.
+- **Automatisierte Multi-Stage-Pipelines:** Sequenzielle Abarbeitung von *Planung → Implementierung → Sicherheits-Audit* über dedizierte Modell-Slots.
+- **Wissenschaftlicher Ensemble-Benchmark:** Jeder MMM-Lauf überträgt kombinierte `tok/s`, Speedup-Faktor, VRAM-Effizienz und Multi-IDE-Last direkt in **Forschung & Leistung** (`recordScienceHistoryFromMMM`).
+
+---
+
 ## 🎙️ Verbund-Audio-Party & Echtzeit-Zusammenarbeit
 
 ![Verbund-Audio-Party & Echtzeit-Zusammenarbeit](docs/images/ssccc_audio_party_collab.jpg)

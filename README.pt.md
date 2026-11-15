@@ -217,6 +217,54 @@ O SS-CCC suporta **qualquer Mac com processador Apple Silicon** (**M1, M2, M3, M
 
 ---
 
+---
+
+## 🧠 Multi-Model-Mode (MMM) — Orquestração de Múltiplos Modelos, Fusão de Desempenho e Uso Partilhado de IDE
+
+![Arquitetura Multi-Model-Mode (MMM) SS-CCC e Consumo Multi-IDE](docs/images/ssccc_multi_model_mode.jpg)
+
+O **Multi-Model-Mode (MMM)** — acessível como o **10.º item do menu lateral esquerdo** — agrega o poder de cálculo e a memória unificada de **agrupamentos locais Thunderbolt/RDMA**, **agrupamentos da Internet WAN** ou **agrupamentos híbridos (Local + Internet)** numa superfície de orquestração única e coerente. Em vez de executar um único modelo monolítico por nó, vários modelos e réplicas especializadas trabalham **em paralelo, em cascata ou em consenso** e podem ser consumidos simultaneamente por **múltiplos IDEs e Agent Harnesses** através do endpoint partilhado `:8000/v1`.
+
+### 🎛️ As 4 Estratégias de Orquestração
+
+1. **Ensemble / Consensus (Votação Multi-Modelo)**
+   - Envia o mesmo prompt simultaneamente a vários modelos distribuídos (por ex., `Qwen3-Coder-30B` no nó local TB5 + `DeepSeek-R1-Distill` num nó parceiro WAN + `Llama-3.3-70B` em shard híbrido) e sintetiza uma resposta verificada por consenso.
+   - Ideal para auditorias críticas, decisões de arquitetura e deteção de alucinações.
+
+2. **Pipeline / Cascade (Especialista por Fase)**
+   - Encadeia modelos com diferentes tamanhos e pontos fortes numa linha de produção ordenada: um modelo rápido de triagem/planeamento local encaminha sub-tarefas para modelos grandes de raciocínio ou programação na malha híbrida e entrega a um modelo compacto de validação/formatação.
+   - Reduz drasticamente o tempo até ao primeiro token (**TTFT**) mantendo máxima profundidade de raciocínio.
+
+3. **Specialist Router (Encaminhamento Inteligente por Tipo de Tarefa)**
+   - Classifica pedidos recebidos do IDE/Harness (`code_edit`, `refactor`, `test_gen`, `reasoning`, `vision`, `docs`) e encaminha cada pedido para o modelo mais rápido e adequado do agrupamento.
+   - Os ganhos de latência e débito são medidos em tempo real e enviados diretamente para **🔬 Ciência & Desempenho (Modelo Roofline)**.
+
+4. **Parallel Fan-Out (Execução Simultânea Multi-Fluxo & Multi-Réplica)**
+   - Divide grandes conjuntos de ficheiros, suítes de testes ou fluxos de trabalho de agentes paralelos por vários nós locais e WAN ao mesmo tempo, combinando o débito agregado (`tok/s` total do agrupamento).
+
+### 🔌 Consumo Partilhado por Múltiplos IDEs & Agent Harnesses (`:8000/v1`)
+
+- **Um agrupamento, múltiplos consumidores**: O **MMM** expõe um proxy compatível com OpenAI em `:8000/v1`, permitindo que **Xcode, VS Code, Cursor, Antigravity, Claude Code, Codex CLI, Goose** e scripts personalizados acedam ao mesmo pool de modelos ao mesmo tempo.
+- **Proteção VRAM & Limites de Segurança (`iogpu.wired_limit_mb`)**: Antes de carregar vários modelos em simultâneo, o MMM verifica os limites rígidos de memória do sistema macOS (reservando 4–8 GB por nó para o SO) e impede sobrecargas OOM em topologias locais, WAN e híbridas.
+- **Telemetria científica direta**: Cada execução MMM exporta métricas por modelo e agregadas (TTFT, `tok/s`, utilização do barramento RDMA/WAN, eficiência de paralelismo e sobrecarga de orquestração) diretamente para **🔬 Ciência & Desempenho** para análise Roofline e exportação CSV/Markdown.
+
+### 💡 Casos de Utilização Práticos do Multi-Model-Mode (MMM)
+
+1. **Enxame de Programação Multi-IDE em Simultâneo**
+   - Enquanto um programador gera código Swift no **Xcode** (modelo local de baixa latência no Mac Studio), uma segunda janela do **Cursor/VS Code** executa revisões de segurança e o **Claude Code** no terminal corre testes unitários — tudo alimentado pelo mesmo agrupamento MMM híbrido sem bloqueios mútuos.
+2. **Revisão de Arquitetura e Código por Consenso (Ensemble)**
+   - Alterações críticas de infraestrutura ou criptografia são avaliadas em paralelo por 3 modelos distintos (`Qwen3-Coder`, `DeepSeek-R1`, `Mistral-Large`); o MMM compara divergências e destaca riscos antes de aprovar o commit.
+3. **Pipeline Híbrido Local + Internet para Projetos de Grande Escala**
+   - O agrupamento local **Thunderbolt 5** trata instantaneamente do autocompletar e da indexação de ficheiros (latência < 50 ms), enquanto um agrupamento parceiro **WAN** assume o planeamento profundo e a refatoração de centenas de ficheiros sem saturar os nós locais.
+4. **Avaliação Comparativa Científica (Benchmark A/B em Tempo Real)**
+   - Um investigador executa o mesmo conjunto de prompts simultaneamente contra 4 modelos quantizados (`4-bit MLX`, `8-bit MLX`, `Q4_K_M`, `FP16`) em modo Fan-Out; o painel **🔬 Ciência & Desempenho** compara automaticamente curvas Roofline, `tok/s` por watt e qualidade de saída.
+5. **Orquestração Multimodal (Visão + Código + Documentação)**
+   - Um agente de UI envia capturas de ecrã para um modelo VLM dedicado num nó trabalhador, o plano de correção para um modelo de raciocínio e a geração do patch SwiftUI/HTML para um especialista de código — tudo num único fluxo contínuo do MMM.
+6. **Balanceamento de Carga em Equipas Distribuídas (Dev-Mesh)**
+   - Vários membros de uma equipa ligam os seus Macs locais através do **Agrupamento Internet WAN**; o **Specialist Router** do MMM distribui automaticamente os pedidos dos seus IDEs pelos Macs com maior VRAM livre e menor carga térmica.
+
+---
+
 ## 🎙️ Audio-Party de agrupamento e colaboração WAN em direto
 
 ![Audio-Party de agrupamento e colaboração WAN em direto](docs/images/ssccc_audio_party_collab.jpg)

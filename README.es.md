@@ -217,6 +217,33 @@ SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, 
 
 ---
 
+---
+
+## 🧠 Modo Multimodelo (MMM) — Orquestación entre clústeres y consumo Multi-IDE
+
+![Arquitectura del Modo Multimodelo (MMM) SS-CCC y consumo Multi-IDE](docs/images/ssccc_multi_model_mode.jpg)
+
+El **Modo Multimodelo (MMM)** (10.ª pestaña del menú lateral) unifica la potencia de cómputo y memoria de **varios modelos de IA simultáneamente** en el clúster **Local** (Thunderbolt / RDMA), el clúster **Internet WAN** (Tailscale / WireGuard / libp2p QUIC) o un entorno **Híbrido (Local + Internet)** — con protección VRAM `iogpu.wired_limit_mb`, ejecución SSE en tiempo real e integración directa en **Ciencia y Roofline**.
+
+### 4 estrategias de orquestación
+1. **Pool multimodelo paralelo:** Mantiene varios modelos especializados residentes en presupuestos VRAM separados (locales y WAN) sin recargas.
+2. **Mixture-of-Agents (MoA):** Envía el mismo prompt en paralelo a varios especialistas y consolida una respuesta superior mediante un modelo `Aggregator`.
+3. **Speculative Decoding (Draft + Target):** Combina un modelo `Draft` local rápido con un modelo `Target` grande en el clúster para acelerar la decodificación ($1{,}6\times$–$2{,}3\times$).
+4. **Pipeline secuencial de modelos:** Encadena modelos por etapas (*Planificador → Programador → Revisor*) entre nodos locales y pares WAN.
+
+### Consumo simultáneo Multi-IDE y Agent-Harness (`:8000/v1`)
+Varios IDE y harnesses de agentes (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) pueden extraer rendimiento simultáneamente del clúster unificado (`exportMultiIdeMmmGatewayConfig()`) con cálculo en vivo de `tok/s` por cliente.
+
+### Casos de uso reales
+- **Desarrollo Multi-IDE y Multi-Agente:** Ejecutar Cursor, OpenCode y Hermes Agent a la vez sobre el mismo clúster sin pausas por recarga de modelos.
+- **Turbo Speculative Decoding en Mac heterogéneos:** Un Mac mini de 16 GB genera borradores a alta velocidad mientras un Mac Studio o la red WAN verifica un modelo 70B+.
+- **Síntesis y revisión de código MoA:** Combinar modelos de código, razonamiento y agregación para reducir errores.
+- **Especialización híbrida Local + WAN:** Mantener el autocompletado de baja latencia en Thunderbolt y delegar cargas pesadas (405B) a nodos WAN.
+- **Pipelines automatizados multietapa:** Ejecutar secuencialmente *Planificación → Implementación → Auditoría de seguridad*.
+- **Benchmarking científico integrado:** Cada ejecución MMM envía `tok/s` combinados, aceleración y eficiencia VRAM directamente a **Ciencia y Roofline** (`recordScienceHistoryFromMMM`).
+
+---
+
 ## 🎙️ Audio-Party de agrupación y colaboración WAN en directo
 
 ![Audio-Party de agrupación y colaboración WAN en directo](docs/images/ssccc_audio_party_collab.jpg)

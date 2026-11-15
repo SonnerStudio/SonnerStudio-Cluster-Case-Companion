@@ -177,6 +177,54 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ---
 
+---
+
+## 🧠 Multi-Model-Mode (MMM) — 多模型编排、算力聚合与多 IDE 共享调用
+
+![SS-CCC Multi-Model-Mode (MMM) 架构与多 IDE 共享调用](docs/images/ssccc_multi_model_mode.jpg)
+
+**Multi-Model-Mode (MMM)**（位于左侧边栏**第 10 个菜单项**）将**本地 Thunderbolt/RDMA 集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**的计算能力与统一内存汇聚为一个统一的编排层。无需在每个节点上仅运行单一巨型模型，多个专业模型和副本可以**并行、级联或共识**运行，并通过共享端点 `:8000/v1` 同时服务于**多个 IDE 和 Agent Harness**。
+
+### 🎛️ 4 种核心编排策略
+
+1. **Ensemble / Consensus（多模型共识投票）**
+   - 将同一提示词同时发送至多个分布式模型（例如：本地 TB5 节点上的 `Qwen3-Coder-30B` + WAN 伙伴节点上的 `DeepSeek-R1-Distill` + 混合分片中的 `Llama-3.3-70B`），综合生成经过交叉验证的共识结果。
+   - 非常适用于关键代码审计、架构决策和幻觉检测。
+
+2. **Pipeline / Cascade（分阶段专家级联）**
+   - 将不同规模与特长的模型串联为流水线：高速本地模型负责初步分类与规划，将复杂子任务路由至混合网络中的大型推理或编程模型，最后交由轻量模型完成校验与格式化输出。
+   - 在保持深度推理质量的同时大幅降低首字延迟（**TTFT**）。
+
+3. **Specialist Router（按任务类型智能路由）**
+   - 自动识别来自 IDE / Harness 的请求类型（`code_edit`、`refactor`、`test_gen`、`reasoning`、`vision`、`docs`），并将其路由至集群中最快、最匹配的模型。
+   - 延迟与吞吐量收益会实时采集并直接送入 **🔬 科研与性能（Roofline 模型）**。
+
+4. **Parallel Fan-Out（多流并行扇出与多副本加速）**
+   - 将大型文件集、测试套件或并行智能体工作流同时分发至多个本地与 WAN 节点执行，最大化集群总吞吐量（汇总 `tok/s`）。
+
+### 🔌 多 IDE 与 Agent Harness 共享消费 (`:8000/v1`)
+
+- **单集群多端共享**：**MMM** 在 `:8000/v1` 暴露 OpenAI 兼容代理，使 **Xcode、VS Code、Cursor、Antigravity、Claude Code、Codex CLI、Goose** 以及自定义脚本能够同时并发访问同一模型池。
+- **VRAM 安全保护与内存上限 (`iogpu.wired_limit_mb`)**：在同时加载多个模型前，MMM 会校验每个节点的 macOS 系统保留内存（4–8 GB），防止本地、WAN 或混合拓扑发生 OOM 崩溃。
+- **科研级遥测直连**：每次 MMM 运行都会将单模型及汇总指标（TTFT、`tok/s`、RDMA/WAN 总线利用率、并行效率与编排开销）直接导出至 **🔬 科研与性能** 面板，用于 Roofline 分析与 CSV/Markdown 导出。
+
+### 💡 Multi-Model-Mode (MMM) 典型应用场景
+
+1. **多 IDE 并发智能体开发蜂群**
+   - 开发者在 **Xcode** 中进行低延迟 Swift 代码补全（由本地 Mac Studio 响应），同时在 **Cursor / VS Code** 中运行安全审计，并在终端通过 **Claude Code** 批量生成单元测试——全部共享同一个混合 MMM 集群且互不阻塞。
+2. **多模型共识代码审查与架构把关（Ensemble）**
+   - 涉及核心基础设施或加密逻辑的变更由 3 个异构模型（`Qwen3-Coder`、`DeepSeek-R1`、`Mistral-Large`）并行评审；MMM 自动比对分歧并在提交前标出潜在风险。
+3. **“本地 + 互联网”混合大规模仓库重构**
+   - 本地 **Thunderbolt 5** 集群以低于 50 ms 的延迟负责实时补全与文件索引，而 **WAN** 伙伴集群承担数百个文件的深度规划与跨模块重构，避免本地节点过载。
+4. **实时科研基准测试与量化模型 A/B 对比**
+   - 研究人员使用 Fan-Out 模式将同一批测试集同时发送给 4 个不同量化精度模型（`4-bit MLX`、`8-bit MLX`、`Q4_K_M`、`FP16`）；**🔬 科研与性能** 面板自动对比 Roofline 曲线、每瓦特 `tok/s` 与输出质量。
+5. **多模态开发流水线（Vision + Code + Docs）**
+   - UI 智能体将界面截图发送给工作节点上的视觉语言模型（VLM），将修复规划交给推理模型，再由代码专精模型生成 SwiftUI/HTML 补丁——全流程在单一 MMM 流水线中无缝完成。
+6. **分布式团队动态负载均衡（Dev-Mesh）**
+   - 团队成员通过 **互联网 WAN 集群** 互联各自的 Mac；MMM 的 **Specialist Router** 自动将各成员 IDE 的请求分配给当前可用显存最充裕、温度负载最低的节点。
+
+---
+
 ## 🎙️ 集群 Audio-Party 语音派对与实时 WAN 协作
 
 ![集群 Audio-Party 与实时聊天](docs/images/ssccc_audio_party_collab.jpg)

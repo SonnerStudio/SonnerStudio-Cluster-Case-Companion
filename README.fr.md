@@ -217,6 +217,33 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 ---
 
+---
+
+## 🧠 Mode Multi-Modèles (MMM) — Orchestration inter-grappes & consommation Multi-EDI
+
+![Architecture du Mode Multi-Modèles (MMM) SS-CCC et consommation Multi-EDI](docs/images/ssccc_multi_model_mode.jpg)
+
+Le **Mode Multi-Modèles (MMM)** (10ᵉ onglet du menu latéral) unifie la puissance de calcul et la mémoire de **plusieurs modèles d'IA simultanément** sur la grappe **Locale** (Thunderbolt / RDMA), la grappe **Internet WAN** (Tailscale / WireGuard / libp2p QUIC) ou en mode **Hybride (Local + Internet)** — avec protection VRAM `iogpu.wired_limit_mb`, exécution SSE en temps réel et intégration directe dans **Science et Roofline**.
+
+### 4 stratégies d'orchestration
+1. **Pool multi-modèles parallèle :** Maintient plusieurs modèles spécialisés en VRAM (locale et WAN) pour des requêtes simultanées sans rechargement.
+2. **Mixture-of-Agents (MoA) :** Envoie la même invite en parallèle à plusieurs modèles spécialistes et synthétise une réponse consolidée via un modèle `Aggregator`.
+3. **Speculative Decoding (Draft + Target) :** Associe un modèle `Draft` local rapide à un grand modèle `Target` sur la grappe pour accélérer le décodage ($1{,}6\times$–$2{,}3\times$).
+4. **Pipeline séquentiel de modèles :** Chaîne les modèles par étapes (*Planificateur → Codeur → Réviseur*) entre nœuds locaux et pairs WAN.
+
+### Consommation simultanée Multi-EDI & Harnesses (`:8000/v1`)
+Plusieurs EDI et harnais d'agents (**Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, **Google Antigravity**) peuvent puiser simultanément dans la grappe unifiée (`exportMultiIdeMmmGatewayConfig()`) avec calcul en direct du débit par client (`tok/s`).
+
+### Cas d'usage concrets
+- **Développement Multi-EDI & Multi-Agents :** Utiliser Cursor, OpenCode et Hermes Agent en parallèle sur une même grappe sans recharger les modèles.
+- **Turbo Speculative Decoding sur Mac hétérogènes :** Un Mac mini 16 Go génère les brouillons pendant qu'un Mac Studio ou le réseau WAN vérifie les jetons sur un modèle 70B+.
+- **Revue de code & synthèse MoA :** Combiner un modèle code, un modèle raisonnement et un agrégateur pour éliminer les angles morts.
+- **Répartition hybride Local + WAN :** Garder l'autocomplétion à faible latence sur Thunderbolt et déporter les étapes lourdes (405B) sur les pairs WAN.
+- **Pipelines automatisés multi-étapes :** Enchaîner *Architecture → Implémentation → Audit de sécurité* sur des créneaux dédiés.
+- **Évaluation scientifique directe :** Chaque exécution MMM alimente **Science et Roofline** (`recordScienceHistoryFromMMM`) en débit combiné, facteur d'accélération et efficacité VRAM.
+
+---
+
 ## 🎙️ Audio-Party de grappe et collaboration WAN en direct
 
 ![Audio-Party de grappe et collaboration WAN en direct](docs/images/ssccc_audio_party_collab.jpg)
