@@ -1,13 +1,13 @@
 {
-  "version": "1.6.29",
+  "version": "1.6.30",
   "build": 160,
-  "tag": "v1.6.29",
+  "tag": "v1.6.30",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• fix(setup): enforce live real-time hardware & daemon data when simulation mode is disabled (0acd537)\n• chore(release): auto-bump v1.6.28 (build 160) [skip ci] (9d6d6dd)\n• feat(phase-12): add auto-setup & readiness verification tab, overview status & app-wide hover shorttips (69d0482)\n• chore(release): auto-bump v1.6.27 (build 160) [skip ci] (69f4fcc)\n• feat(sota-2026): implement phase 11 upgrades (points 1-5), tests & 8-language READMEs (c102b38)",
+  "notes": "• docs(readme): update top two hero screenshots across all 8 READMEs (a9f9f19)\n• chore(release): auto-bump v1.6.29 (build 160) [skip ci] (a481178)\n• fix(setup): enforce live real-time hardware & daemon data when simulation mode is disabled (0acd537)\n• chore(release): auto-bump v1.6.28 (build 160) [skip ci] (9d6d6dd)\n• feat(phase-12): add auto-setup & readiness verification tab, overview status & app-wide hover shorttips (69d0482)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "0acd537",
-  "updated_at": "2026-11-15T02:56:43Z"
+  "commit_sha": "a9f9f19",
+  "updated_at": "2026-11-15T03:02:59Z"
 }
