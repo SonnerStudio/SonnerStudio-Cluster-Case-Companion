@@ -1,13 +1,13 @@
 {
-  "version": "1.6.23",
+  "version": "1.6.24",
   "build": 160,
-  "tag": "v1.6.23",
+  "tag": "v1.6.24",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• feat(mmm): add 1-click MMM Auto-Setup, post-config live editor, WAN/MMM README graphics across all 8 languages (4abe5a8)\n• chore(release): auto-bump v1.6.22 (build 160) [skip ci] (300067b)\n• Merge remote-tracking branch 'origin/main' (ff4cf31)\n• docs(readme): add dedicated Multi-Model-Mode (MMM) section, use cases & architecture graphic across all 8 languages (0a00df0)\n• chore(release): auto-bump v1.6.21 (build 160) [skip ci] (72c14e4)",
+  "notes": "• Merge remote-tracking branch 'origin/main' (beecc4a)\n• feat(help): add interactive in-place chapter detail view with explanatory graphics and deep-dive guides (0751ef0)\n• chore(release): auto-bump v1.6.23 (build 160) [skip ci] (4514922)\n• feat(mmm): add 1-click MMM Auto-Setup, post-config live editor, WAN/MMM README graphics across all 8 languages (4abe5a8)\n• chore(release): auto-bump v1.6.22 (build 160) [skip ci] (300067b)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "4abe5a8",
-  "updated_at": "2026-11-15T00:51:53Z"
+  "commit_sha": "beecc4a",
+  "updated_at": "2026-11-15T00:54:22Z"
 }
