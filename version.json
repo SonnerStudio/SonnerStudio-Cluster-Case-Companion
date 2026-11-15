@@ -1,13 +1,13 @@
 {
-  "version": "1.6.32",
+  "version": "1.6.33",
   "build": 160,
-  "tag": "v1.6.32",
+  "tag": "v1.6.33",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• fix(models): fix false OOM guard when no model is loaded, improve Ollama CLI/API discovery & 1-click pull, sync serviceAvailability, fix KV-Cache picker label (cd45879)\n• chore(release): auto-bump v1.6.31 (build 160) [skip ci] (05e2f4f)\n• Merge remote-tracking branch 'origin/main' (3bc6f32)\n• docs(readme): update all 8 READMEs to 11-tab state, add M5 Max/Ultra & M6 chip specs, and localize graphics (c05cdf3)\n• chore(release): auto-bump v1.6.30 (build 160) [skip ci] (0d0f822)",
+  "notes": "• Merge remote-tracking branch 'origin/main' (90ddd21)\n• fix(updater): ensure high-contrast update buttons in sheet and reliable detached app relaunch after update (b07d3d9)\n• chore(release): auto-bump v1.6.32 (build 160) [skip ci] (0b542b1)\n• fix(models): fix false OOM guard when no model is loaded, improve Ollama CLI/API discovery & 1-click pull, sync serviceAvailability, fix KV-Cache picker label (cd45879)\n• chore(release): auto-bump v1.6.31 (build 160) [skip ci] (05e2f4f)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "cd45879",
-  "updated_at": "2026-11-15T03:35:07Z"
+  "commit_sha": "90ddd21",
+  "updated_at": "2026-11-15T03:37:55Z"
 }
