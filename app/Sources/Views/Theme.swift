@@ -31,26 +31,88 @@ enum SolarisTheme {
 
 struct SolarisCard<Content: View>: View {
     let accent: Color?
+    let isHovered: Bool
+    let isHighlighted: Bool
     @ViewBuilder let content: () -> Content
 
-    init(accent: Color? = nil, @ViewBuilder content: @escaping () -> Content) {
+    init(
+        accent: Color? = nil,
+        isHovered: Bool = false,
+        isHighlighted: Bool = false,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
         self.accent = accent
+        self.isHovered = isHovered
+        self.isHighlighted = isHighlighted
         self.content = content
     }
 
     var body: some View {
+        let glowColor = accent ?? SolarisTheme.amber
+        let glowActive = isHighlighted || isHovered
         VStack(alignment: .leading, spacing: 14) {
             content()
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(SolarisTheme.cardBg.opacity(0.84))
+                .fill(isHovered ? SolarisTheme.cardElevated.opacity(0.88) : SolarisTheme.cardBg.opacity(0.84))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(accent?.opacity(0.38) ?? SolarisTheme.borderSubtle, lineWidth: 1.2)
+                        .stroke(
+                            isHighlighted
+                                ? glowColor.opacity(0.82)
+                                : (isHovered ? glowColor.opacity(0.68) : (accent?.opacity(0.38) ?? SolarisTheme.borderSubtle)),
+                            lineWidth: glowActive ? 1.6 : 1.2
+                        )
                 )
         )
+        .shadow(
+            color: glowActive ? glowColor.opacity(isHighlighted ? 0.32 : 0.24) : Color.clear,
+            radius: isHighlighted ? 16 : (isHovered ? 12 : 0),
+            x: 0,
+            y: 0
+        )
+        .animation(.easeInOut(duration: 0.16), value: isHovered)
+        .animation(.easeInOut(duration: 0.16), value: isHighlighted)
+    }
+}
+
+struct SolarisGlowModifier: ViewModifier {
+    let accent: Color
+    let isActive: Bool
+    let isHovered: Bool
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        let activeOrHovered = isActive || isHovered
+        content
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(
+                        isActive ? accent.opacity(0.88) : (isHovered ? accent.opacity(0.65) : Color.clear),
+                        lineWidth: isActive ? 1.6 : (isHovered ? 1.2 : 0)
+                    )
+            )
+            .shadow(
+                color: activeOrHovered ? accent.opacity(isActive ? 0.36 : 0.25) : Color.clear,
+                radius: isActive ? 14 : (isHovered ? 10 : 0),
+                x: 0,
+                y: 0
+            )
+            .animation(.easeInOut(duration: 0.15), value: isHovered)
+            .animation(.easeInOut(duration: 0.15), value: isActive)
+    }
+}
+
+extension View {
+    func solarisHighlightGlow(
+        accent: Color = SolarisTheme.amber,
+        isActive: Bool = false,
+        isHovered: Bool = false,
+        cornerRadius: CGFloat = 12
+    ) -> some View {
+        modifier(SolarisGlowModifier(accent: accent, isActive: isActive, isHovered: isHovered, cornerRadius: cornerRadius))
     }
 }
 

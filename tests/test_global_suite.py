@@ -399,6 +399,22 @@ class GlobalProjectTests(unittest.TestCase):
         for ch_id in ["universal-m", "overview-hazard", "memory-safety", "network-tb", "sharding-loading", "setup-hybrid", "audio-party", "science-history", "runtimes", "agents-api", "updater-ci"]:
             self.assertIn(f'case "{ch_id}":', deep_dive)
 
+    def test_21_glow_highlight_system(self):
+        """Verify SolarisGlowModifier and hover/active glow highlights across Sidebar, Help & Manual, Overview & MMM."""
+        theme = (APP_SOURCES / "Views" / "Theme.swift").read_text(encoding="utf-8")
+        app = (APP_SOURCES / "SSCCCApp.swift").read_text(encoding="utf-8")
+        help_view = (APP_SOURCES / "Views" / "HelpDocsView.swift").read_text(encoding="utf-8")
+        overview = (APP_SOURCES / "Views" / "ClusterOverviewView.swift").read_text(encoding="utf-8")
+        mmm_view = (APP_SOURCES / "Views" / "MultiModelModeView.swift").read_text(encoding="utf-8")
+
+        self.assertIn("struct SolarisGlowModifier", theme)
+        self.assertIn("func solarisHighlightGlow(", theme)
+        self.assertIn("solarisHighlightGlow(accent:", app)
+        self.assertIn("hoveredSidebarTab", app)
+        self.assertIn("hoveredHelpSectionId", help_view)
+        self.assertIn("solarisHighlightGlow(accent: meta.accent", overview)
+        self.assertIn("solarisHighlightGlow(", mmm_view)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

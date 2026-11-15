@@ -75,11 +75,13 @@ struct HelpDocsView: View {
             }
 
             ForEach(filteredSections) { section in
-                SolarisCard(accent: section.accent) {
+                let isHovered = vm.hoveredHelpSectionId == section.id
+                SolarisCard(accent: section.accent, isHovered: isHovered) {
                     HStack(spacing: 10) {
                         Image(systemName: section.icon)
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(section.accent)
+                            .shadow(color: isHovered ? section.accent.opacity(0.65) : .clear, radius: 6)
                         Text(section.title)
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
@@ -90,10 +92,10 @@ struct HelpDocsView: View {
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 10, weight: .bold))
                         }
-                        .foregroundColor(section.accent)
+                        .foregroundColor(isHovered ? .black : section.accent)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Capsule().fill(section.accent.opacity(0.14)))
+                        .background(Capsule().fill(isHovered ? section.accent : section.accent.opacity(0.14)))
                     }
 
                     Text(section.summary)
@@ -124,6 +126,9 @@ struct HelpDocsView: View {
                     }
                 }
                 .contentShape(Rectangle())
+                .onHover { hovering in
+                    vm.hoveredHelpSectionId = hovering ? section.id : (vm.hoveredHelpSectionId == section.id ? nil : vm.hoveredHelpSectionId)
+                }
                 .onTapGesture {
                     vm.selectedHelpSectionId = section.id
                 }

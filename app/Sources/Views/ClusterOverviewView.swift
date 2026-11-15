@@ -31,6 +31,8 @@ struct ClusterOverviewView: View {
             HStack(spacing: 14) {
                 ForEach(ClusterOverviewScope.allCases) { scope in
                     let isSelected = vm.overviewScope == scope
+                    let scopeGlowKey = "overview_\(scope.rawValue)"
+                    let isHovered = vm.hoveredGlowId == scopeGlowKey
                     let meta = scopeMetadata(for: scope)
 
                     Button {
@@ -77,12 +79,12 @@ struct ClusterOverviewView: View {
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .fill(isSelected ? meta.accent.opacity(0.14) : SolarisTheme.cardElevated.opacity(0.72))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .stroke(isSelected ? meta.accent : SolarisTheme.borderSubtle, lineWidth: isSelected ? 1.8 : 1.0)
-                                )
                         )
+                        .solarisHighlightGlow(accent: meta.accent, isActive: isSelected, isHovered: isHovered, cornerRadius: 14)
                         .contentShape(Rectangle())
+                        .onHover { hovering in
+                            vm.hoveredGlowId = hovering ? scopeGlowKey : (vm.hoveredGlowId == scopeGlowKey ? nil : vm.hoveredGlowId)
+                        }
                     }
                     .buttonStyle(.plain)
                 }

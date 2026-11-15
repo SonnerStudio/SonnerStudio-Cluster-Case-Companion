@@ -396,6 +396,16 @@ struct MultiModelModeView: View {
                     .padding(10)
                     .background(SolarisTheme.cardElevated)
                     .cornerRadius(10)
+                    .solarisHighlightGlow(
+                        accent: slot.isEnabled ? SolarisTheme.mint : SolarisTheme.amber,
+                        isActive: isExpanded,
+                        isHovered: vm.hoveredGlowId == "mmm_slot_\(slot.id.uuidString)",
+                        cornerRadius: 10
+                    )
+                    .onHover { hovering in
+                        let key = "mmm_slot_\(slot.id.uuidString)"
+                        vm.hoveredGlowId = hovering ? key : (vm.hoveredGlowId == key ? nil : vm.hoveredGlowId)
+                    }
                 }
             }
 
