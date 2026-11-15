@@ -4021,8 +4021,11 @@ final class ClusterViewModel: ObservableObject {
                     if !self.updateProgressLog.hasSuffix("\n") {
                         self.updateProgressLog += "\n"
                     }
-                    self.updateProgressLog += "Build complete."
+                    self.updateProgressLog += "Build complete. Restarting SS-CCC…"
                     self.updateStatus = .updatedNeedsRestart
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        self.relaunchApp()
+                    }
                 } else {
                     if self.updateProgressLog.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("swift build …") {
                         self.updateProgressLog += "\n" + buildOut.output
@@ -4039,21 +4042,23 @@ final class ClusterViewModel: ObservableObject {
             let script = repoRoot.appendingPathComponent("scripts/run_ssccc.sh").path
             if FileManager.default.isExecutableFile(atPath: script) {
                 let oldPID = ProcessInfo.processInfo.processIdentifier
+                let escapedScript = script.replacingOccurrences(of: "\"", with: "\\\"")
+                let detachedCmd = "/usr/bin/nohup /bin/bash -lc 'while kill -0 \(oldPID) 2>/dev/null; do sleep 0.1; done; \"\(escapedScript)\" >/tmp/ssccc_relaunch.log 2>&1' </dev/null >/dev/null 2>&1 &"
                 let proc = Process()
                 proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
-                proc.arguments = [
-                    "-c",
-                    "while kill -0 \(oldPID) 2>/dev/null; do sleep 0.1; done; exec \"\(script)\""
-                ]
+                proc.arguments = ["-c", detachedCmd]
                 proc.currentDirectoryURL = repoRoot
                 proc.standardInput = FileHandle.nullDevice
                 proc.standardOutput = FileHandle.nullDevice
                 proc.standardError = FileHandle.nullDevice
                 try? proc.run()
+                proc.waitUntilExit()
 
-                NSApplication.shared.terminate(nil)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    exit(0)
+                    NSApplication.shared.terminate(nil)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        exit(0)
+                    }
                 }
                 return
             }

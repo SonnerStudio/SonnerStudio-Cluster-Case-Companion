@@ -501,34 +501,60 @@ private struct UpdatePromptSheet: View {
                         vm.relaunchApp()
                     } label: {
                         Label(vm.t("upd_relaunch_btn"), systemImage: "arrow.clockwise.circle.fill")
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(SolarisTheme.emerald))
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(SolarisTheme.emerald)
-                    .foregroundColor(.black)
+                    .buttonStyle(.plain)
                 } else if vm.updateStatus == .updateAvailable {
                     if vm.localGitRepoRoot != nil {
                         Button {
                             vm.applyGitHubUpdateAndRebuild()
                         } label: {
                             Label(vm.t("upd_install_git_btn"), systemImage: "arrow.down.circle.fill")
+                                .font(SolarisTheme.bodyBold)
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(SolarisTheme.amber))
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(SolarisTheme.amber)
-                        .foregroundColor(.black)
+                        .buttonStyle(.plain)
                     }
 
                     Button {
                         vm.openUpdateOnGitHub()
                     } label: {
                         Label(vm.t("upd_open_github_btn"), systemImage: "safari")
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(SolarisTheme.cardElevated)
+                                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.white.opacity(0.25), lineWidth: 1))
+                            )
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.plain)
 
                     if !(info?.mandatory ?? false) {
-                        Button(vm.t("upd_skip_btn")) {
+                        Button {
                             vm.skipCurrentUpdate()
+                        } label: {
+                            Text(vm.t("upd_skip_btn"))
+                                .font(SolarisTheme.bodyBold)
+                                .foregroundColor(SolarisTheme.textSecondary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .fill(SolarisTheme.cardElevated)
+                                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.white.opacity(0.20), lineWidth: 1))
+                                )
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.plain)
                     }
                 } else if vm.updateStatus == .updating {
                     ProgressView()
@@ -550,41 +576,80 @@ private struct UpdatePromptSheet: View {
                             vm.applyGitHubUpdateAndRebuild()
                         } label: {
                             Label(vm.t("upd_install_git_btn"), systemImage: "arrow.clockwise")
+                                .font(SolarisTheme.bodyBold)
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(SolarisTheme.amber))
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(SolarisTheme.amber)
-                        .foregroundColor(.black)
+                        .buttonStyle(.plain)
                     }
                     Button {
                         vm.openUpdateOnGitHub()
                     } label: {
                         Label(vm.t("upd_open_github_btn"), systemImage: "safari")
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(SolarisTheme.cardElevated)
+                                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.white.opacity(0.25), lineWidth: 1))
+                            )
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.plain)
                 } else {
                     Button {
                         Task { await vm.checkForGitHubUpdates(userInitiated: true) }
                     } label: {
                         Label(vm.t("upd_recheck_btn"), systemImage: "arrow.triangle.2.circlepath")
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(SolarisTheme.cardElevated)
+                                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.white.opacity(0.25), lineWidth: 1))
+                            )
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.plain)
 
                     Button {
                         vm.openUpdateOnGitHub()
                     } label: {
                         Label(vm.t("upd_open_github_btn"), systemImage: "safari")
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(SolarisTheme.cardElevated)
+                                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.white.opacity(0.25), lineWidth: 1))
+                            )
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.plain)
                 }
 
                 Spacer()
 
-                Button(hasUpdate ? vm.t("upd_later_btn") : vm.t("upd_close_btn")) {
+                Button {
                     vm.showUpdatePromptSheet = false
+                } label: {
+                    Text(hasUpdate ? vm.t("upd_later_btn") : vm.t("upd_close_btn"))
+                        .font(SolarisTheme.bodyBold)
+                        .foregroundColor(hasUpdate ? SolarisTheme.textPrimary : .black)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(hasUpdate ? SolarisTheme.cardElevated : SolarisTheme.emerald)
+                                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(hasUpdate ? Color.white.opacity(0.25) : Color.clear, lineWidth: 1))
+                        )
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(hasUpdate ? SolarisTheme.cardElevated : SolarisTheme.emerald)
-                .foregroundColor(hasUpdate ? SolarisTheme.textPrimary : .black)
+                .buttonStyle(.plain)
             }
 
             HazardStripesBar(height: 5, stripeWidth: 10, cornerRadius: 3, opacity: 0.78)
