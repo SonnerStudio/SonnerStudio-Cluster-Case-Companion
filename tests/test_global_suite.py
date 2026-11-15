@@ -387,6 +387,18 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("Multi-Model-Mode (MMM)", impl_plan)
         self.assertIn("Multi-Model-Mode (MMM)", roadmap)
 
+    def test_20_help_manual_interactive_detail_view(self):
+        """Verify clicking any card in Help & Manual opens an in-place detailed view with explanatory graphics."""
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        help_view = (APP_SOURCES / "Views" / "HelpDocsView.swift").read_text(encoding="utf-8")
+        deep_dive = (APP_SOURCES / "Views" / "HelpDocDeepDiveContent.swift").read_text(encoding="utf-8")
+
+        self.assertIn("selectedHelpSectionId", vm)
+        for sym in ["selectedHelpSectionId", "detailView(", "overviewView", "HelpDocDeepDiveCatalog", "HelpDocImageLoader", "onTapGesture"]:
+            self.assertIn(sym, help_view)
+        for ch_id in ["universal-m", "overview-hazard", "memory-safety", "network-tb", "sharding-loading", "setup-hybrid", "audio-party", "science-history", "runtimes", "agents-api", "updater-ci"]:
+            self.assertIn(f'case "{ch_id}":', deep_dive)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

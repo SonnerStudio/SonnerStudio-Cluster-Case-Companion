@@ -51,6 +51,7 @@ final class ClusterViewModel: ObservableObject {
     @Published var newRamGB: Double = 36.0
     @Published var newCustomName: String = ""
     @Published var helpSearchText: String = ""
+    @Published var selectedHelpSectionId: String? = nil
     @Published var isRefreshingModels: Bool = false
     @Published var modelDiscoveryNote: String = ""
     @Published var runtimeReadiness: [RuntimeService: RuntimeReadiness] = [:]

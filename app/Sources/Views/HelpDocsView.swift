@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct HelpDocSection: Identifiable {
     let id: String
@@ -31,74 +32,299 @@ struct HelpDocsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                SolarisCard(accent: SolarisTheme.amber) {
-                    HStack(alignment: .center, spacing: 14) {
-                        Image(systemName: "book.pages.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(SolarisTheme.amber)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(vm.t("help_title"))
-                                .font(SolarisTheme.sectionTitle)
-                                .foregroundColor(SolarisTheme.textPrimary)
-                            Text(vm.t("help_sub"))
-                                .font(SolarisTheme.bodyLarge)
-                                .foregroundColor(SolarisTheme.textSecondary)
-                        }
-                        Spacer()
-                        Text("\(sections.count)")
-                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                            .foregroundColor(SolarisTheme.amber)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Capsule().fill(SolarisTheme.amber.opacity(0.18)))
-                    }
-
-                    TextField(vm.t("help_search_ph"), text: $vm.helpSearchText)
-                        .textFieldStyle(.roundedBorder)
-                        .padding(.top, 4)
+                if let selectedId = vm.selectedHelpSectionId,
+                   let selectedIndex = sections.firstIndex(where: { $0.id == selectedId }) {
+                    detailView(for: sections[selectedIndex], index: selectedIndex)
+                } else {
+                    overviewView
                 }
+            }
+            .padding(24)
+        }
+    }
 
-                ForEach(filteredSections) { section in
-                    SolarisCard(accent: section.accent) {
-                        HStack(spacing: 10) {
-                            Image(systemName: section.icon)
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(section.accent)
-                            Text(section.title)
-                                .font(SolarisTheme.cardTitle)
-                                .foregroundColor(SolarisTheme.textPrimary)
-                        }
+    // MARK: - Overview List (Clickable Chapter Cards)
 
-                        Text(section.summary)
+    private var overviewView: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            SolarisCard(accent: SolarisTheme.amber) {
+                HStack(alignment: .center, spacing: 14) {
+                    Image(systemName: "book.pages.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(SolarisTheme.amber)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(vm.t("help_title"))
+                            .font(SolarisTheme.sectionTitle)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Text(vm.t("help_sub"))
                             .font(SolarisTheme.bodyLarge)
                             .foregroundColor(SolarisTheme.textSecondary)
+                    }
+                    Spacer()
+                    Text("\(sections.count)")
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundColor(SolarisTheme.amber)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(SolarisTheme.amber.opacity(0.18)))
+                }
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            ForEach(section.bullets, id: \.self) { bullet in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Text("•")
-                                        .font(SolarisTheme.bodyBold)
-                                        .foregroundColor(section.accent)
-                                    Text(bullet)
-                                        .font(SolarisTheme.bodyLarge)
-                                        .foregroundColor(SolarisTheme.textPrimary)
-                                }
+                TextField(vm.t("help_search_ph"), text: $vm.helpSearchText)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.top, 4)
+            }
+
+            ForEach(filteredSections) { section in
+                SolarisCard(accent: section.accent) {
+                    HStack(spacing: 10) {
+                        Image(systemName: section.icon)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(section.accent)
+                        Text(section.title)
+                            .font(SolarisTheme.cardTitle)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Spacer()
+                        HStack(spacing: 5) {
+                            Text(vm.language == .de ? "Details & Grafiken" : "Details & Visuals")
+                                .font(.system(size: 11, weight: .semibold))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10, weight: .bold))
+                        }
+                        .foregroundColor(section.accent)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(section.accent.opacity(0.14)))
+                    }
+
+                    Text(section.summary)
+                        .font(SolarisTheme.bodyLarge)
+                        .foregroundColor(SolarisTheme.textSecondary)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(section.bullets, id: \.self) { bullet in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text("•")
+                                    .font(SolarisTheme.bodyBold)
+                                    .foregroundColor(section.accent)
+                                Text(bullet)
+                                    .font(SolarisTheme.bodyLarge)
+                                    .foregroundColor(SolarisTheme.textPrimary)
                             }
                         }
+                    }
 
-                        if let code = section.codeSample {
-                            Text(code)
-                                .font(SolarisTheme.monoCode)
-                                .foregroundColor(SolarisTheme.mint)
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.38)))
-                                .textSelection(.enabled)
+                    if let code = section.codeSample {
+                        Text(code)
+                            .font(SolarisTheme.monoCode)
+                            .foregroundColor(SolarisTheme.mint)
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.38)))
+                            .textSelection(.enabled)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    vm.selectedHelpSectionId = section.id
+                }
+            }
+        }
+    }
+
+    // MARK: - Detailed In-Place Chapter View
+
+    private func detailView(for section: HelpDocSection, index: Int) -> some View {
+        let deep = HelpDocDeepDiveCatalog.deepDive(for: section.id, section: section, lang: vm.language)
+        let isGerman = (vm.language == .de)
+
+        return VStack(alignment: .leading, spacing: 18) {
+            // Top Navigation Bar
+            HStack(spacing: 12) {
+                Button {
+                    vm.selectedHelpSectionId = nil
+                } label: {
+                    Label(
+                        isGerman ? "Zurück zur Handbuch-Übersicht" : "Back to Manual Overview",
+                        systemImage: "chevron.left"
+                    )
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(SolarisTheme.amber)
+                .foregroundColor(.black)
+
+                Spacer()
+
+                Text("\(isGerman ? "Kapitel" : "Chapter") \(index + 1) / \(sections.count)")
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(SolarisTheme.textSecondary)
+
+                Button {
+                    if index > 0 {
+                        vm.selectedHelpSectionId = sections[index - 1].id
+                    }
+                } label: {
+                    Image(systemName: "arrow.left")
+                }
+                .buttonStyle(.bordered)
+                .disabled(index == 0)
+
+                Button {
+                    if index + 1 < sections.count {
+                        vm.selectedHelpSectionId = sections[index + 1].id
+                    }
+                } label: {
+                    Image(systemName: "arrow.right")
+                }
+                .buttonStyle(.bordered)
+                .disabled(index + 1 >= sections.count)
+            }
+
+            // Hero Card + Key Metrics
+            SolarisCard(accent: section.accent) {
+                HazardStripesBar(height: 5, stripeWidth: 10, cornerRadius: 3, opacity: 0.8)
+
+                HStack(alignment: .top, spacing: 14) {
+                    Image(systemName: section.icon)
+                        .font(.system(size: 32, weight: .semibold))
+                        .foregroundColor(section.accent)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(section.title)
+                            .font(SolarisTheme.sectionTitle)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Text(deep.subtitle)
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(section.accent)
+                    }
+                }
+
+                Text(section.summary)
+                    .font(SolarisTheme.bodyLarge)
+                    .foregroundColor(SolarisTheme.textSecondary)
+
+                HStack(spacing: 12) {
+                    ForEach(deep.keyMetrics, id: \.label) { metric in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(metric.label)
+                                .font(Font.caption)
+                                .foregroundColor(SolarisTheme.textSecondary)
+                            Text(metric.value)
+                                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                                .foregroundColor(SolarisTheme.textPrimary)
+                        }
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(SolarisTheme.cardElevated)
+                        .cornerRadius(8)
+                    }
+                }
+            }
+
+            // Explanatory Images & Graphics
+            if !deep.visuals.isEmpty {
+                SolarisCard(accent: SolarisTheme.mint) {
+                    Text(isGerman ? "Erklärende Architektur-Grafiken & Ansichten" : "Explanatory Architecture Graphics & Diagrams")
+                        .font(SolarisTheme.cardTitle)
+                        .foregroundColor(SolarisTheme.textPrimary)
+
+                    ForEach(deep.visuals, id: \.imageFile) { visual in
+                        VStack(alignment: .leading, spacing: 8) {
+                            if let nsImg = HelpDocImageLoader.loadImage(named: visual.imageFile) {
+                                Image(nsImage: nsImg)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxWidth: .infinity, maxHeight: 380)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(section.accent.opacity(0.4), lineWidth: 1)
+                                    )
+                            }
+                            Text(visual.caption)
+                                .font(Font.caption)
+                                .foregroundColor(SolarisTheme.textSecondary)
                         }
                     }
                 }
             }
-            .padding(24)
+
+            // Detailed Technical Explanation & Step-by-Step Guide
+            SolarisCard {
+                Text(isGerman ? "Ausführliche Erklärung & Funktionsweise" : "In-Depth Technical Explanation")
+                    .font(SolarisTheme.cardTitle)
+                    .foregroundColor(SolarisTheme.textPrimary)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(deep.detailedParagraphs, id: \.self) { para in
+                        Text(para)
+                            .font(SolarisTheme.bodyLarge)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                Divider().opacity(0.25)
+
+                Text(isGerman ? "Schritt-für-Schritt-Einrichtung" : "Step-by-Step Setup")
+                    .font(SolarisTheme.cardTitle)
+                    .foregroundColor(SolarisTheme.amberGlow)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(deep.stepByStep, id: \.self) { step in
+                        Text(step)
+                            .font(SolarisTheme.bodyLarge)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                            .padding(10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(SolarisTheme.cardElevated)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+
+            // Key Specifications, Best Practices & Copyable Commands
+            SolarisCard(accent: SolarisTheme.emerald) {
+                Text(isGerman ? "Kernpunkte & Empfehlungen (Best Practices)" : "Key Points & Best Practices")
+                    .font(SolarisTheme.cardTitle)
+                    .foregroundColor(SolarisTheme.textPrimary)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(section.bullets + deep.bestPractices, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text("✓")
+                                .font(SolarisTheme.bodyBold)
+                                .foregroundColor(SolarisTheme.emerald)
+                            Text(item)
+                                .font(SolarisTheme.bodyLarge)
+                                .foregroundColor(SolarisTheme.textPrimary)
+                        }
+                    }
+                }
+
+                if let code = section.codeSample {
+                    Divider().opacity(0.25)
+                    HStack {
+                        Text(isGerman ? "Direkte Terminal- & API-Referenz" : "Direct Terminal & API Reference")
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.mint)
+                        Spacer()
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(code, forType: .string)
+                        } label: {
+                            Label(isGerman ? "Kopieren" : "Copy", systemImage: "doc.on.doc")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+
+                    Text(code)
+                        .font(SolarisTheme.monoCode)
+                        .foregroundColor(SolarisTheme.mint)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.42)))
+                        .textSelection(.enabled)
+                }
+            }
         }
     }
 }
