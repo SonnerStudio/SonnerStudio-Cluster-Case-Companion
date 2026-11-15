@@ -23,6 +23,9 @@ struct ClusterOverviewView: View {
             }
             .padding(24)
         }
+        .onAppear {
+            vm.verifyClusterReadiness()
+        }
     }
 
     // MARK: - 3 Große Reiter / Buttons + Gelb-Schwarze Industrie-Warnstreifen

@@ -508,6 +508,7 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("SolarisShorttipBanner(text: vm.activeShorttipText)", app)
         self.assertIn("readinessStatusOverviewCard", overview)
         self.assertIn("verifyClusterReadiness()", setup_view)
+        self.assertIn("nodes.filter { !$0.isSimulated }", vm)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,16 @@ import AppKit
 final class ClusterViewModel: ObservableObject {
     @Published var selectedTab: NavigationTab = .overview
     @Published var language: AppLanguage = .en
-    @Published var simulateMacStudio: Bool = true
+    @Published var simulateMacStudio: Bool = true {
+        didSet {
+            if !simulateMacStudio {
+                refreshLocalHardwareProbe()
+                Task { await checkDaemonHealth() }
+            }
+            discoverClusterSetupTargets()
+            verifyClusterReadiness()
+        }
+    }
     @Published var transportMode: TransportMode = .autoHybrid
     @Published var daemonConnected: Bool = false
     @Published var fastSynchEnabled: Bool = true
@@ -4034,7 +4043,7 @@ final class ClusterViewModel: ObservableObject {
 
     /// Point 1: Generates `mlx.distributed_config` compatible hostfile JSON for JACCL / Ring
     func generateMlxDistributedHostfileJSON() -> String {
-        let activeNodes = nodes.isEmpty ? [] : nodes
+        let activeNodes = simulateMacStudio ? nodes : nodes.filter { !$0.isSimulated }
         let hostEntries = activeNodes.enumerated().map { idx, node in
             let rdmaDevice = "rdma_en\(idx + 2)"
             return """
@@ -4198,8 +4207,14 @@ final class ClusterViewModel: ObservableObject {
         var targets: [NodeProvisioningTarget] = []
 
         if clusterSetupVariant == .local || clusterSetupVariant == .hybrid {
-            for node in nodes {
-                let isLocalhost = node.lanIP == "127.0.0.1" || node.id == nodes.first?.id
+            let activeLocalNodes = simulateMacStudio ? nodes : nodes.filter { !$0.isSimulated }
+            let sshDir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh").path
+            let hasLocalSshKey = FileManager.default.fileExists(atPath: "\(sshDir)/id_ed25519.pub")
+                || FileManager.default.fileExists(atPath: "\(sshDir)/id_rsa.pub")
+
+            for node in activeLocalNodes {
+                let isLocalhost = (node.id == "local-host") || (node.lanIP == "127.0.0.1")
+                let sshReady = isLocalhost ? (hasLocalSshKey || hasCompletedClusterSetup || !simulateMacStudio) : hasCompletedClusterSetup
                 targets.append(
                     NodeProvisioningTarget(
                         id: "local-\(node.id)",
@@ -4208,7 +4223,7 @@ final class ClusterViewModel: ObservableObject {
                         transport: node.rdmaEnabled ? "TB5 RDMA (JACCL)" : "Thunderbolt / LAN",
                         chipLabel: node.chip,
                         usableVramGB: node.usableVramGB,
-                        sshTrusted: isLocalhost || hasCompletedClusterSetup,
+                        sshTrusted: sshReady,
                         wiredLimitConfigured: node.wiredLimitMB > 0,
                         rdmaOrWanReady: node.rdmaEnabled || !node.tbIP.isEmpty || isLocalhost,
                         isSelected: true
@@ -4218,8 +4233,9 @@ final class ClusterViewModel: ObservableObject {
         }
 
         if clusterSetupVariant == .internet || clusterSetupVariant == .hybrid {
-            let peers = clusterSetupVariant == .hybrid ? wanRemotePeers : wanPeers
-            for peer in peers {
+            let rawPeers = clusterSetupVariant == .hybrid ? wanRemotePeers : wanPeers
+            let activePeers = simulateMacStudio ? rawPeers : rawPeers.filter { wanConnected || $0.isLocalHost }
+            for peer in activePeers {
                 targets.append(
                     NodeProvisioningTarget(
                         id: "wan-\(peer.id)",
@@ -4228,8 +4244,8 @@ final class ClusterViewModel: ObservableObject {
                         transport: wanTransportProtocol.rawValue,
                         chipLabel: peer.chip,
                         usableVramGB: peer.usableVramGB,
-                        sshTrusted: hasCompletedClusterSetup,
-                        wiredLimitConfigured: true,
+                        sshTrusted: peer.isLocalHost || hasCompletedClusterSetup,
+                        wiredLimitConfigured: peer.isLocalHost ? (localWiredLimitMB > 0) : true,
                         rdmaOrWanReady: peer.isOnline,
                         isSelected: peer.isOnline
                     )
@@ -4246,7 +4262,8 @@ final class ClusterViewModel: ObservableObject {
                 let anyMissing = targets.contains { !$0.sshTrusted || !$0.wiredLimitConfigured || !$0.rdmaOrWanReady }
                 clusterReadinessState = anyMissing ? .incomplete : .notReady
             }
-            setupStatusMessage = "\(targets.count) Mac-Knoten für '\(clusterSetupVariant.rawValue)' erkannt."
+            let modeTag = simulateMacStudio ? "Simulation" : "Echtzeitdaten"
+            setupStatusMessage = "\(targets.count) Mac-Knoten (\(modeTag)) für '\(clusterSetupVariant.rawValue)' erkannt."
         }
     }
 
@@ -4284,9 +4301,7 @@ final class ClusterViewModel: ObservableObject {
 
     func verifyClusterReadiness() {
         isVerifyingReadiness = true
-        if discoveredProvisionTargets.isEmpty {
-            discoverClusterSetupTargets()
-        }
+        discoverClusterSetupTargets()
 
         let selectedTargets = discoveredProvisionTargets.filter(\.isSelected)
         var checks: [ClusterReadinessCheckItem] = []

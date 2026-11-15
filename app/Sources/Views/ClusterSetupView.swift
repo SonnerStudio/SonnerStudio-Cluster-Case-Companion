@@ -33,12 +33,12 @@ struct ClusterSetupView: View {
             .padding(24)
         }
         .onAppear {
-            if vm.discoveredProvisionTargets.isEmpty {
-                vm.discoverClusterSetupTargets()
-            }
-            if vm.clusterReadinessChecks.isEmpty {
-                vm.verifyClusterReadiness()
-            }
+            vm.discoverClusterSetupTargets()
+            vm.verifyClusterReadiness()
+        }
+        .onChange(of: vm.simulateMacStudio) { _, _ in
+            vm.discoverClusterSetupTargets()
+            vm.verifyClusterReadiness()
         }
     }
 
