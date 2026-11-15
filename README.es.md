@@ -38,11 +38,11 @@ El **Asistente de conjunto SonnerStudio (SS-CCC)** une la memoria unificada de c
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="SS-CCC Red Internet mundial y Chat" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_internet_wan_mesh_es.jpg" alt="SS-CCC Red Internet mundial y Chat" width="100%"/><br/>
       <sub><b>Red Internet y chat de participantes</b><br/>Tailscale · WireGuard · libp2p QUIC · DERP · <code>/status</code> · <code>/layers</code> · <code>/ping</code></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="SS-CCC Ciencia y Roofline" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_science_roofline_hero_es.jpg" alt="SS-CCC Ciencia y Roofline" width="100%"/><br/>
       <sub><b>Análisis Roofline y balance energético</b><br/>Curva log-log · Burbuja GPipe · <code>J/token</code> · <code>p50/p95/p99</code> · CSV/JSON/BibTeX</sub>
     </td>
   </tr>
@@ -67,7 +67,7 @@ flowchart LR
 
 ## 🌐 Monitor de Ancho de Banda y Rendimiento WAN (Clúster Internet)
 
-![Monitor de Ancho de Banda y Rendimiento WAN SS-CCC](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+![Monitor de Ancho de Banda y Rendimiento WAN SS-CCC](docs/images/i18n/ssccc_wan_bandwidth_monitor_es.jpg)
 
 En **Clúster Internet y Chat**, SS-CCC supervisa en tiempo real el rendimiento WAN (`netstat`, `ping`, `networkQuality`) — midiendo **bajada/subida (Mbps)**, **latencia RTT WAN (ms)**, **jitter**, **pérdida de paquetes** y **eficiencia de sincronización de tokens** — correlacionando el ancho de banda directamente con los `tok/s` distribuidos.
 
@@ -89,7 +89,7 @@ En **Clúster Internet y Chat**, SS-CCC supervisa en tiempo real el rendimiento 
 
 ### 🖥️ Las 11 áreas del programa de un vistazo
 
-![Ecosistema local de agentes de IA e IDEs en 1 clic](docs/images/ssccc_agents_ide_ecosystem.jpg)
+![Ecosistema local de agentes de IA e IDEs en 1 clic](docs/images/i18n/ssccc_agents_ide_ecosystem_es.jpg)
 
 | Área | Contenido y función |
 | :--- | :--- |
@@ -212,7 +212,7 @@ SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, 
 
 ### 2. Thunderbolt 5 RDMA (`JACCL`), protección de memoria y reparto ponderado
 
-![Thunderbolt 5 RDMA JACCL y protección de memoria](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+![Thunderbolt 5 RDMA JACCL y protección de memoria](docs/images/i18n/ssccc_tb5_rdma_jaccl_es.jpg)
 
 - **RDMA en macOS sobre Thunderbolt 5:** Con `rdma_ctl enable` (macOS 26.2+) y el motor `JACCL` (`mlx.distributed`), la latencia entre nodos baja de `~300 µs` (TCP/IP) a **`~3 µs`** con **`3,5–3,8 GB/s`** de caudal sostenido.
 - **Nunca asignar el 100 % de la RAM:** `iogpu.wired_limit_mb` protege la estabilidad de macOS y WindowServer.
@@ -223,7 +223,7 @@ SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, 
 
 ## 🔄 Actualizaciones controladas desde GitHub y control automático de versiones
 
-![Actualizaciones desde GitHub y control automático de versiones](docs/images/ssccc_github_auto_updater.jpg)
+![Actualizaciones desde GitHub y control automático de versiones](docs/images/i18n/ssccc_github_auto_updater_es.jpg)
 
 1. **Comprobación multifuente en GitHub:** Al iniciar (tras `1,2 s`) y cada **30 minutos** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` consulta `main/version.json`, `releases/latest` y `commits/main` (SHA corto).
 2. **Aviso en la aplicación (`UpdatePromptSheet`, `⌘U`):** Si detecta una versión, compilación o SHA más reciente, ofrece para instalaciones desde código `git pull --ff-only origin main` + `swift build` + reinicio en un clic (`scripts/run_ssccc.sh`), o descarga directa desde GitHub Releases.
@@ -235,7 +235,7 @@ SS-CCC admite **cualquier Mac con procesador Apple Silicon** (**M1, M2, M3, M4, 
 
 ## 🧠 Modo Multimodelo (MMM) — Orquestación entre clústeres y consumo Multi-IDE
 
-![Arquitectura del Modo Multimodelo (MMM) SS-CCC y consumo Multi-IDE](docs/images/ssccc_multi_model_mode.jpg)
+![Arquitectura del Modo Multimodelo (MMM) SS-CCC y consumo Multi-IDE](docs/images/i18n/ssccc_multi_model_mode_es.jpg)
 
 El **Modo Multimodelo (MMM)** (10.ª pestaña del menú lateral) unifica la potencia de cómputo y memoria de **varios modelos de IA simultáneamente** en el clúster **Local** (Thunderbolt / RDMA), el clúster **Internet WAN** (Tailscale / WireGuard / libp2p QUIC) o un entorno **Híbrido (Local + Internet)** — con protección VRAM `iogpu.wired_limit_mb`, ejecución SSE en tiempo real e integración directa en **Ciencia y Roofline**.
 
@@ -247,7 +247,7 @@ El **Modo Multimodelo (MMM)** (10.ª pestaña del menú lateral) unifica la pote
 
 ### ⚙️ Configuración Automática en 1 Clic y Editor en Vivo Posterior
 
-![Configuración Automática y Editor en Vivo del Modo Multimodelo SS-CCC](docs/images/ssccc_mmm_autosetup_editor.jpg)
+![Configuración Automática y Editor en Vivo del Modo Multimodelo SS-CCC](docs/images/i18n/ssccc_mmm_autosetup_editor_es.jpg)
 
 Configurar múltiples modelos en el clúster es automático y totalmente editable en cualquier momento posterior:
 - **Perfiles Auto-Setup en 1 Clic**: Elige entre **Coding & IDE Swarm**, **Consenso y Auditoría**, **Turbo (Draft + Target)** o **Pipeline por Etapas**. MMM detecta automáticamente nodos activos, VRAM disponible (`iogpu.wired_limit_mb`) y modelos en ejecución.
@@ -269,7 +269,7 @@ Varios IDE y harnesses de agentes (**Cursor**, **VS Code**, **Xcode**, **OpenCod
 
 ## 🎙️ Audio-Party de agrupación y colaboración WAN en directo
 
-![Audio-Party de agrupación y colaboración WAN en directo](docs/images/ssccc_audio_party_collab.jpg)
+![Audio-Party de agrupación y colaboración WAN en directo](docs/images/i18n/ssccc_audio_party_collab_es.jpg)
 
 - **Voz en tiempo real (`AVAudioEngine`, 16 kHz PCM16):** Conectada a `/ws/wan-audio` junto al chat (`/ws/wan/{room_id}`), con modos **Pulsar para hablar / Micrófono abierto**, **Silenciar / Ensordecer**, medidor de nivel y roles (`Pasarela rango 0`, `Nodo WAN`).
 
@@ -277,7 +277,7 @@ Varios IDE y harnesses de agentes (**Cursor**, **VS Code**, **Xcode**, **OpenCod
 
 ## 🏆 Desafío de récord mundial: superordenador híbrido local + Internet
 
-![Desafío de récord mundial SS-CCC superordenador híbrido](docs/images/ssccc_world_record_challenge.jpg)
+![Desafío de récord mundial SS-CCC superordenador híbrido](docs/images/i18n/ssccc_world_record_challenge_es.jpg)
 
 **¿Puede una coalición distribuida de equipos Mac con Apple Silicon competir con un centro de datos?**  
 Invitamos a universidades, grupos de investigación y entusiastas de Apple Silicon a organizar un **intento oficial de récord con SS-CCC**: unid simultáneamente el mayor número posible de **agrupaciones locales Thunderbolt 3/4/5/RDMA** y **Mac conectados por Internet** mediante el **puente híbrido («Acoplar local + Internet»)**, la **Audio-Party** y el **laboratorio científico de 5 pestañas**.
@@ -290,11 +290,11 @@ Invitamos a universidades, grupos de investigación y entusiastas de Apple Silic
    - Con $\Phi_{\text{burbuja}} = \frac{N - 1}{M + N - 1}$ y el lote crítico $B^* = \lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \rceil$, el uso de micro-lotes $M \to B^*$ junto con compresión **FP8 / INT4 / Top-K** (*Petals / SWARM*) mantiene el tráfico por debajo del $1\%$ del enlace ascendente.
 3. **Protocolo reproducible ($T = 0,0$):** Activa el puente híbrido, únete a la **Audio-Party** (`Opus 16 kbps`, $<0,02\%$ del enlace), ejecuta `N = 20` ensayos (`T = 0,0`) en modo **Internet-WAN** y exporta el **manifiesto JSON**, **CSV** y la **tabla LaTeX (`booktabs`)** con `IC₉₅`, `Goodput%`, `J/token`, `EDP` y `gCO₂eq/1M tokens`.
 
-![Laboratorio científico de 6 pestañas e historial](docs/images/ssccc_history_telemetry_lab.jpg)
+![Laboratorio científico de 6 pestañas e historial](docs/images/i18n/ssccc_history_telemetry_lab_es.jpg)
 
 ### 🥇 Categorías de récord y casos de uso
 
-![Casos de uso y públicos de SS-CCC](docs/images/ssccc_use_cases_showcase.jpg)
+![Casos de uso y públicos de SS-CCC](docs/images/i18n/ssccc_use_cases_showcase_es.jpg)
 - **Categorías:** mayor memoria unificada total (`TB`), mayor número de Mac acoplados simultáneamente ($N \ge 32\text{–}256+$), mayor caudal útil transcontinental y menor consumo (`J/token`).
 - **Casos de uso:** investigación en sistemas de IA (curvas Roofline, *DiLoCo* frente a DDP, artículos LaTeX/BibTeX), laboratorios universitarios que unen portátiles y Mac mini, estudios de programación para **OpenCode / Cursor / Xcode** sin coste en la nube, entornos médicos o legales bajo túnel **WireGuard**, maratones globales coordinados por **Audio-Party** y auditorías **Green-AI**.
 

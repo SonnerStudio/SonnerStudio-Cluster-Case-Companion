@@ -36,11 +36,11 @@
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="全球互联网 Mac 集群与实时聊天" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_internet_wan_mesh_zh.jpg" alt="全球互联网 Mac 集群与实时聊天" width="100%"/><br/>
       <sub><b>全球互联网 Mac 集群 (WAN)、混合耦合与参与者聊天</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="科学 Roofline 与 Splitwise 遥测" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_science_roofline_hero_zh.jpg" alt="科学 Roofline 与 Splitwise 遥测" width="100%"/><br/>
       <sub><b>Roofline 分析 (Williams)、Splitwise 阶段解耦、能耗 (J/tok) 与 p50/p95/p99</b></sub>
     </td>
   </tr>
@@ -64,7 +64,7 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 
 ## 🌐 互联网集群 WAN 带宽与数据吞吐量监控
 
-![SS-CCC 互联网集群 WAN 带宽与数据吞吐量监控](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+![SS-CCC 互联网集群 WAN 带宽与数据吞吐量监控](docs/images/i18n/ssccc_wan_bandwidth_monitor_zh.jpg)
 
 在**互联网集群与实时聊天**面板中，SS-CCC 通过 `netstat`、`ping` 与 `networkQuality` 实时监控真实 WAN 链路性能（**下行/上行 Mbps**、**WAN RTT 延迟 ms**、**抖动**、**丢包率**与**Token 同步效率**），并将其直接关联到跨节点分布式推理速度（`tok/s`）。
 
@@ -72,7 +72,7 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 
 ## ✨ 核心功能
 
-![本地 AI 智能体与 IDE 生态](docs/images/ssccc_agents_ide_ecosystem.jpg)
+![本地 AI 智能体与 IDE 生态](docs/images/i18n/ssccc_agents_ide_ecosystem_zh.jpg)
 
 - **全系列 Apple Silicon 支持 (M1–M12+):** 涵盖 Mac mini、MacBook Air/Pro、iMac、Mac Studio 与 Mac Pro。
 - **加权流水线分片 (`MemoryWeightedPlanner`):** 内存带宽最高的 Mac 自动担任 **Rank 0（协调器）** 并持有 Embeddings + LM-Head；各工作节点按可用内存比例分担层数。
@@ -201,7 +201,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📚 文档中心与 Thunderbolt 5 RDMA (`JACCL`)
 
-![Thunderbolt 5 RDMA JACCL 与内存安全](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+![Thunderbolt 5 RDMA JACCL 与内存安全](docs/images/i18n/ssccc_tb5_rdma_jaccl_zh.jpg)
 
 完整 **12 章交互式图文用户手册**（支持 8 种语言与点击展开图解）已内置于应用的 **帮助与手册** 标签页中。
 
@@ -209,7 +209,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🔄 GitHub 托管更新与自动版本控制
 
-![GitHub 自动更新与版本控制](docs/images/ssccc_github_auto_updater.jpg)
+![GitHub 自动更新与版本控制](docs/images/i18n/ssccc_github_auto_updater_zh.jpg)
 
 - **每 30 分钟自动检测：** 比对 `version.json`、GitHub Releases 与 `main` 分支提交 SHA。
 - **一键更新：** 应用内直接执行 `git pull` + `swift build` + 一键重启。
@@ -221,7 +221,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🧠 Multi-Model-Mode (MMM) — 多模型编排、算力聚合与多 IDE 共享调用
 
-![SS-CCC Multi-Model-Mode (MMM) 架构与多 IDE 共享调用](docs/images/ssccc_multi_model_mode.jpg)
+![SS-CCC Multi-Model-Mode (MMM) 架构与多 IDE 共享调用](docs/images/i18n/ssccc_multi_model_mode_zh.jpg)
 
 **Multi-Model-Mode (MMM)**（位于左侧边栏**第 6 个菜单项**）将**本地 Thunderbolt/RDMA 集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**的计算能力与统一内存汇聚为一个统一的编排层。无需在每个节点上仅运行单一巨型模型，多个专业模型和副本可以**并行、级联或共识**运行，并通过共享端点 `:8000/v1` 同时服务于**多个 IDE 和 Agent Harness**。
 
@@ -244,7 +244,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ### ⚙️ 一键自动配置与后期实时编辑器
 
-![SS-CCC Multi-Model-Mode 一键自动配置与后期实时编辑器](docs/images/ssccc_mmm_autosetup_editor.jpg)
+![SS-CCC Multi-Model-Mode 一键自动配置与后期实时编辑器](docs/images/i18n/ssccc_mmm_autosetup_editor_zh.jpg)
 
 在集群中部署多模型变得极简高效，且部署后随时可自由调整：
 - **一键自动配置预设**：提供 **Coding & IDE 蜂群**、**共识与审计**、**Turbo（Draft + Target）** 与 **分阶段流水线** 四种预设，自动扫描可用节点、安全显存池（`iogpu.wired_limit_mb`）与已加载模型并智能分配。
@@ -276,7 +276,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🎙️ 集群 Audio-Party 语音派对与实时 WAN 协作
 
-![集群 Audio-Party 与实时聊天](docs/images/ssccc_audio_party_collab.jpg)
+![集群 Audio-Party 与实时聊天](docs/images/i18n/ssccc_audio_party_collab_zh.jpg)
 
 内置基于 `AVAudioEngine 16 kHz PCM16 · /ws/wan-audio` 的主机风格语音派对。
 
@@ -284,7 +284,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📊 科学实验室 (6 个标签页) 与历史记录
 
-![科学实验室与历史记录](docs/images/ssccc_history_telemetry_lab.jpg)
+![科学实验室与历史记录](docs/images/i18n/ssccc_history_telemetry_lab_zh.jpg)
 
 支持按单指标或全局自动/手动录制，并导出 `CSV / JSON / LaTeX / BibTeX`。
 
@@ -292,7 +292,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🏆 世界纪录挑战：本地 + 全球混合超级集群
 
-![SS-CCC 世界纪录挑战](docs/images/ssccc_world_record_challenge.jpg)
+![SS-CCC 世界纪录挑战](docs/images/i18n/ssccc_world_record_challenge_zh.jpg)
 
 **由分散在全球各地的 Apple Silicon Mac 组成的去中心化联盟，能否媲美数据中心超级计算机？**  
 我们诚挚邀请全球高校、AI 研究实验室、开发者社区与 Apple Silicon 爱好者共同组织官方 **SS-CCC 混合超级集群世界纪录挑战** —— 利用 SS-CCC 的 **混合桥接（本地 + 互联网耦合）**、**Cluster Audio-Party** 与 **6 标签页科学实验室**，同时联合尽可能多的 **本地 Thunderbolt 3/4/5/RDMA 集群** 与 **互联网 WAN Mac**。
@@ -312,7 +312,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
    3. **执行测试：** 在 **科学与 Roofline** 中切换至 **Internet-WAN**，运行 `N = 20` 次试验（丢弃 `1` 次预热，`T = 0.0`），验证目标 SLO（`TTFT ≤ 2500 ms`，`TPOT ≤ 100 ms/tok`）。
    4. **归档验证：** 导出并公开包含 `hardware_fingerprint`、`TTFT/TPOT (p50/p95/p99 ± CI₉₅)`、`CV%`、`Goodput%`、`J/tok`、`EDP` 与 `gCO₂eq/1M tok` 的 **JSON 可复现清单**、**CSV 日志** 与 **LaTeX (`booktabs`) 表格**。
 
-![科学实验室与历史记录](docs/images/ssccc_history_telemetry_lab.jpg)
+![科学实验室与历史记录](docs/images/i18n/ssccc_history_telemetry_lab_zh.jpg)
 
 ### 🥇 官方纪录类别
 - **最大统一内存池：** 本地与 WAN 耦合后可支配的最大总可用 VRAM (`GB` / `TB`)。
@@ -324,7 +324,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🎯 应用场景与目标用户
 
-![SS-CCC 应用场景展示](docs/images/ssccc_use_cases_showcase.jpg)
+![SS-CCC 应用场景展示](docs/images/i18n/ssccc_use_cases_showcase_zh.jpg)
 
 | 用户群体 | SS-CCC 实际应用场景 |
 | :--- | :--- |

@@ -36,11 +36,11 @@
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="Глобальный Интернет-кластер Mac и живой чат" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_internet_wan_mesh_ru.jpg" alt="Глобальный Интернет-кластер Mac и живой чат" width="100%"/><br/>
       <sub><b>Глобальный Интернет-кластер Mac (WAN), гибридная связка и чат участников</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="Научный Roofline и телеметрия Splitwise" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_science_roofline_hero_ru.jpg" alt="Научный Roofline и телеметрия Splitwise" width="100%"/><br/>
       <sub><b>Анализ Roofline (Williams), фазы Splitwise, энергия (Дж/ток) и p50/p95/p99</b></sub>
     </td>
   </tr>
@@ -64,7 +64,7 @@ SS-CCC связывает локальные кластеры Thunderbolt с р�
 
 ## 🌐 Монитор пропускной способности и трафика WAN (Интернет-кластер)
 
-![Монитор пропускной способности и трафика WAN SS-CCC](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+![Монитор пропускной способности и трафика WAN SS-CCC](docs/images/i18n/ssccc_wan_bandwidth_monitor_ru.jpg)
 
 В разделе **Интернет-кластер и чат** SS-CCC непрерывно отслеживает реальную производительность WAN (`netstat`, `ping`, `networkQuality`) — **входящую/исходящую скорость (Мбит/с)**, **задержку WAN RTT (мс)**, **джиттер**, **потерю пакетов** и **эффективность синхронизации токенов** — напрямую связывая пропускную способность сети с распределёнными `tok/s`.
 
@@ -72,7 +72,7 @@ SS-CCC связывает локальные кластеры Thunderbolt с р�
 
 ## ✨ Ключевые возможности
 
-![Локальные ИИ-агенты и экосистема IDE](docs/images/ssccc_agents_ide_ecosystem.jpg)
+![Локальные ИИ-агенты и экосистема IDE](docs/images/i18n/ssccc_agents_ide_ecosystem_ru.jpg)
 
 - **Универсальная поддержка Apple Silicon (M1–M12+):** все линейки Mac mini, MacBook Air/Pro, iMac, Mac Studio и Mac Pro.
 - **Взвешенный планировщик слоёв (`MemoryWeightedPlanner`):** Ранг 0 (Координатор) получает максимальную ПСП и всегда хранит Embeddings + LM-Head; каждый узел загружает долю слоёв пропорционально доступной памяти.
@@ -201,7 +201,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📚 Документация и Thunderbolt 5 RDMA (`JACCL`)
 
-![Thunderbolt 5 RDMA JACCL и защита памяти](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+![Thunderbolt 5 RDMA JACCL и защита памяти](docs/images/i18n/ssccc_tb5_rdma_jaccl_ru.jpg)
 
 Полная **интерактивная 12-главная документация** с детальными графиками по клику и подсветкой встроена прямо во вкладку **Справка и руководство** внутри приложения (на 8 языках).
 
@@ -209,7 +209,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🔄 Обновления через GitHub и автоматический контроль версий
 
-![Обновления через GitHub и автоматический контроль версий](docs/images/ssccc_github_auto_updater.jpg)
+![Обновления через GitHub и автоматический контроль версий](docs/images/i18n/ssccc_github_auto_updater_ru.jpg)
 
 - **Монитор каждые 30 минут:** сверяет `version.json`, GitHub Releases и SHA коммитов `main`.
 - **Обновление в 1 клик:** `git pull` + `swift build` + перезапуск приложения прямо из интерфейса.
@@ -221,7 +221,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🧠 Multi-Model-Mode (MMM) — Оркестрация нескольких моделей, объединение мощности и общий доступ для IDE
 
-![Архитектура SS-CCC Multi-Model-Mode (MMM) и общий доступ для IDE](docs/images/ssccc_multi_model_mode.jpg)
+![Архитектура SS-CCC Multi-Model-Mode (MMM) и общий доступ для IDE](docs/images/i18n/ssccc_multi_model_mode_ru.jpg)
 
 **Multi-Model-Mode (MMM)** — доступный как **10-й пункт левого бокового меню** — объединяет вычислительную мощность и унифицированную память **локальных кластеров Thunderbolt/RDMA**, **интернет-кластеров WAN** или **гибридных кластеров (Локальный + Интернет)** в единый слой оркестрации. Вместо запуска одной монолитной модели на узел несколько специализированных моделей и реплик работают **параллельно, каскадно или в режиме консенсуса**, обеспечивая одновременную работу **множества IDE и Agent Harnesses** через общую точку входа `:8000/v1`.
 
@@ -244,7 +244,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ### ⚙️ Автоматическая настройка в 1 клик и последующий Live-редактор
 
-![Автонастройка SS-CCC Multi-Model-Mode и последующий Live-редактор](docs/images/ssccc_mmm_autosetup_editor.jpg)
+![Автонастройка SS-CCC Multi-Model-Mode и последующий Live-редактор](docs/images/i18n/ssccc_mmm_autosetup_editor_ru.jpg)
 
 Настройка нескольких моделей в кластере максимально упрощена и полностью редактируется в любой момент после запуска:
 - **Профили автонастройки в 1 клик**: Выберите **Coding & IDE Swarm**, **Consensus & Audit**, **Turbo (Draft + Target)** или **Stage Pipeline** — MMM автоматически определит доступные узлы, объём VRAM (`iogpu.wired_limit_mb`) и запущенные модели.
@@ -276,7 +276,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🎙️ Кластерная Audio-Party и совместная работа в WAN
 
-![Кластерная Audio-Party и живой чат](docs/images/ssccc_audio_party_collab.jpg)
+![Кластерная Audio-Party и живой чат](docs/images/i18n/ssccc_audio_party_collab_ru.jpg)
 
 Встроенный голосовой чат (`AVAudioEngine 16 кГц PCM16 · /ws/wan-audio`) с режимами Push-to-Talk и Open-Mic.
 
@@ -284,7 +284,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📊 Научная лаборатория (6 вкладок) и запись истории
 
-![Научная лаборатория и запись истории](docs/images/ssccc_history_telemetry_lab.jpg)
+![Научная лаборатория и запись истории](docs/images/i18n/ssccc_history_telemetry_lab_ru.jpg)
 
 Запись телеметрии по отдельным позициям или глобально с экспортом в `CSV`, `JSON`, `LaTeX` и `BibTeX`.
 
@@ -292,7 +292,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🏆 Вызов на мировой рекорд: локальный + глобальный гибридный суперкластер
 
-![Вызов на мировой рекорд SS-CCC](docs/images/ssccc_world_record_challenge.jpg)
+![Вызов на мировой рекорд SS-CCC](docs/images/i18n/ssccc_world_record_challenge_ru.jpg)
 
 **Сможет ли децентрализованная коалиция Apple Silicon Mac составить конкуренцию суперкомпьютеру в дата-центре?**  
 Мы приглашаем университеты, исследовательские лаборатории ИИ, сообщества разработчиков и энтузиастов Apple Silicon по всему миру организовать официальную **попытку гибридного рекорда SS-CCC** — объединив как можно больше **локальных кластеров Thunderbolt 3/4/5/RDMA** и **удалённых WAN Mac через Интернет** с помощью **гибридного моста (`Couple Local + Internet`)**, **Cluster Audio-Party** и **6-вкладочной научной лаборатории**.
@@ -312,7 +312,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
    3. **Проведите серию замеров:** переключите **Науку и Roofline** на **Internet-WAN**, выберите `N = 20` прогонов (`1` прогрев отброшен, `T = 0,0`) и проверьте SLO (`TTFT ≤ 2500 мс`, `TPOT ≤ 100 мс/ток`).
    4. **Опубликуйте отчёт:** экспортируйте **JSON-манифест воспроизводимости**, **CSV-журнал** и **таблицу LaTeX (`booktabs`)** с `hardware_fingerprint`, `TTFT/TPOT (p50/p95/p99 ± CI₉₅)`, `CV%`, `Goodput%`, `Дж/ток`, `EDP` и `гCO₂экв/1M ток`.
 
-![Научная лаборатория и запись истории](docs/images/ssccc_history_telemetry_lab.jpg)
+![Научная лаборатория и запись истории](docs/images/i18n/ssccc_history_telemetry_lab_ru.jpg)
 
 ### 🥇 Официальные категории рекордов
 - **Крупнейший пул объединённой памяти:** максимальный суммарный доступный VRAM (`ГБ` / `ТБ`) среди связанных локальных и WAN Mac.
@@ -324,7 +324,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🎯 Сценарии использования и целевая аудитория
 
-![Сценарии использования SS-CCC](docs/images/ssccc_use_cases_showcase.jpg)
+![Сценарии использования SS-CCC](docs/images/i18n/ssccc_use_cases_showcase_ru.jpg)
 
 | Группа пользователей | Практический сценарий с SS-CCC |
 | :--- | :--- |

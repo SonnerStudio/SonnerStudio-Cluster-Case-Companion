@@ -36,11 +36,11 @@
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="世界規模インターネット Mac クラスター" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_internet_wan_mesh_ja.jpg" alt="世界規模インターネット Mac クラスター" width="100%"/><br/>
       <sub><b>世界規模インターネット Mac クラスター (WAN)、ハイブリッド連携 & 参加者チャット</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="科学 Roofline & Splitwise テレメトリ" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_science_roofline_hero_ja.jpg" alt="科学 Roofline & Splitwise テレメトリ" width="100%"/><br/>
       <sub><b>Roofline 分析 (Williams)、Splitwise フェーズ分離、エネルギー効率 (J/tok) & p50/p95/p99</b></sub>
     </td>
   </tr>
@@ -64,7 +64,7 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 
 ## 🌐 インターネットクラスター WAN 帯域幅・スループット監視
 
-![SS-CCC インターネットクラスター WAN 帯域幅・スループット監視](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+![SS-CCC インターネットクラスター WAN 帯域幅・スループット監視](docs/images/i18n/ssccc_wan_bandwidth_monitor_ja.jpg)
 
 **インターネットクラスター＆チャット**では、`netstat`・`ping`・`networkQuality` を用いて実際の WAN 回線品質（**下り/上り Mbps**、**WAN RTT 遅延 ms**、**ジッター**、**パケット損失**、**トークン同期効率**）をリアルタイム監視し、分散推論スループット（`tok/s`）との相関を可視化します。
 
@@ -72,7 +72,7 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 
 ## ✨ 主な機能
 
-![ローカル AI エージェントと IDE エコシステム](docs/images/ssccc_agents_ide_ecosystem.jpg)
+![ローカル AI エージェントと IDE エコシステム](docs/images/i18n/ssccc_agents_ide_ecosystem_ja.jpg)
 
 - **全 Apple Silicon 対応 (M1–M12+):** Mac mini, MacBook Air/Pro, iMac, Mac Studio, Mac Pro。
 - **重み付きレイヤー分割 (`MemoryWeightedPlanner`):** 最大メモリ帯域の Mac が自動的に **ランク 0 (コーディネーター)** となり Embeddings + LM-Head を保持。各ワーカーは利用可能メモリに比例した層のみを担当します。
@@ -201,7 +201,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📚 ドキュメント & Thunderbolt 5 RDMA (`JACCL`)
 
-![Thunderbolt 5 RDMA JACCL とメモリ保護](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+![Thunderbolt 5 RDMA JACCL とメモリ保護](docs/images/i18n/ssccc_tb5_rdma_jaccl_ja.jpg)
 
 アプリ内の **ヘルプとマニュアル** タブに、クリック展開式の図解付き **全12章インタラクティブガイド**（8言語対応）を内蔵しています。
 
@@ -209,7 +209,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🔄 GitHub 連携アップデート & 自動バージョン管理
 
-![GitHub 連携アップデートと自動バージョン管理](docs/images/ssccc_github_auto_updater.jpg)
+![GitHub 連携アップデートと自動バージョン管理](docs/images/i18n/ssccc_github_auto_updater_ja.jpg)
 
 - **30 分ごとの自動監視:** `version.json`、GitHub Releases、`commits/main` SHA を確認。
 - **ワンクリック更新:** アプリ内から `git pull` + `swift build` + 再起動を実行。
@@ -221,7 +221,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🧠 Multi-Model-Mode (MMM) — マルチモデル統合・性能集約・複数IDE共有利用
 
-![SS-CCC Multi-Model-Mode (MMM) アーキテクチャ & 複数IDE共有利用](docs/images/ssccc_multi_model_mode.jpg)
+![SS-CCC Multi-Model-Mode (MMM) アーキテクチャ & 複数IDE共有利用](docs/images/i18n/ssccc_multi_model_mode_ja.jpg)
 
 **Multi-Model-Mode (MMM)**（左サイドバーの**第6メニュー項目**）は、**ローカル Thunderbolt/RDMA クラスター**、**インターネット WAN クラスター**、または **ハイブリッドクラスター（ローカル＋インターネット）** の計算能力と統合メモリを 1 つのオーケストレーション基盤へと集約します。ノードごとに単一モデルを動かすのではなく、複数の専門モデルとレプリカを**並列・カスケード・合議（コンセンサス）**で同時稼働させ、共有エンドポイント `:8000/v1` を通じて**複数の IDE や Agent Harness** から同時に利用できます。
 
@@ -244,7 +244,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ### ⚙️ 1クリック自動セットアップ & 事後ライブ設定エディター
 
-![SS-CCC Multi-Model-Mode 自動セットアップ & 事後設定エディター](docs/images/ssccc_mmm_autosetup_editor.jpg)
+![SS-CCC Multi-Model-Mode 自動セットアップ & 事後設定エディター](docs/images/i18n/ssccc_mmm_autosetup_editor_ja.jpg)
 
 クラスター全体への複数モデル配備を自動化し、後からいつでも柔軟に調整できます：
 - **1クリック Auto-Setup プロファイル**: **Coding & IDE Swarm**、**Consensus & Audit**、**Turbo (Draft + Target)**、**Stage Pipeline** から選択すると、利用可能なノード・VRAM 上限（`iogpu.wired_limit_mb`）・ライブ検出モデルを自動解析して最適配置します。
@@ -276,7 +276,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🎙️ クラスター Audio-Party & リアルタイム WAN 協業
 
-![クラスター Audio-Party とライブチャット](docs/images/ssccc_audio_party_collab.jpg)
+![クラスター Audio-Party とライブチャット](docs/images/i18n/ssccc_audio_party_collab_ja.jpg)
 
 `AVAudioEngine 16 kHz PCM16 · /ws/wan-audio` によるコンソール風音声パーティーを内蔵。
 
@@ -284,7 +284,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 📊 科学ラボ (6 タブ) & 履歴記録
 
-![科学ラボと履歴記録](docs/images/ssccc_history_telemetry_lab.jpg)
+![科学ラボと履歴記録](docs/images/i18n/ssccc_history_telemetry_lab_ja.jpg)
 
 個別指標または全体の履歴を記録し、`CSV / JSON / LaTeX / BibTeX` で出力可能。
 
@@ -292,7 +292,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🏆 世界記録チャレンジ：ローカル + 世界規模ハイブリッドスーパーコンピューター
 
-![SS-CCC 世界記録チャレンジ](docs/images/ssccc_world_record_challenge.jpg)
+![SS-CCC 世界記録チャレンジ](docs/images/i18n/ssccc_world_record_challenge_ja.jpg)
 
 **分散型 Apple Silicon Mac 連合はデータセンターのスーパーコンピューターに匹敵できるか？**  
 世界中の大学、AI 研究室、開発者コミュニティ、Apple Silicon 愛好家の皆様に、公式 **SS-CCC ハイブリッド世界記録チャレンジ** への参加を呼びかけます。**ハイブリッドブリッジ（ローカル＋インターネット結合）**、**Cluster Audio-Party**、**6 タブ科学ラボ** を活用し、可能な限り多くの **ローカル Thunderbolt 3/4/5/RDMA クラスター** と **インターネット上の WAN Mac** を同時に結合しましょう。
@@ -312,7 +312,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
    3. **計測実行：** **科学と Roofline** を **Internet-WAN** に切り替え、`N = 20` 試行（ウォームアップ `1` 回除外、`T = 0.0`）を実行し SLO（`TTFT ≤ 2500 ms`、`TPOT ≤ 100 ms/tok`）を検証。
    4. **検証データ公開：** `hardware_fingerprint`、`TTFT/TPOT (p50/p95/p99 ± CI₉₅)`、`CV%`、`Goodput%`、`J/tok`、`EDP`、`gCO₂eq/1M tok` を含む **JSON 再現性マニフェスト**・**CSV**・**LaTeX (`booktabs`)** を公開。
 
-![科学ラボと履歴記録](docs/images/ssccc_history_telemetry_lab.jpg)
+![科学ラボと履歴記録](docs/images/i18n/ssccc_history_telemetry_lab_ja.jpg)
 
 ### 🥇 公式記録カテゴリー
 - **最大統合メモリプール：** ローカル＋WAN 結合で確保された最大合計利用可能 VRAM (`GB` / `TB`)。
@@ -324,7 +324,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ## 🎯 主なユースケースと対象ユーザー
 
-![SS-CCC ユースケース一覧](docs/images/ssccc_use_cases_showcase.jpg)
+![SS-CCC ユースケース一覧](docs/images/i18n/ssccc_use_cases_showcase_ja.jpg)
 
 | ユーザー層 | SS-CCC による具体的ユースケース |
 | :--- | :--- |

@@ -38,11 +38,11 @@ Der **SonnerStudio Verbund-Begleiter (SS-CCC)** koppelt den gemeinsamen Arbeitss
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="SS-CCC Weltweiter Internet-Mac-Verbund & Teilnehmer-Chat" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_internet_wan_mesh_de.jpg" alt="SS-CCC Weltweiter Internet-Mac-Verbund & Teilnehmer-Chat" width="100%"/><br/>
       <sub><b>Internet-Verbund & Teilnehmer-Chat</b><br/>Tailscale · WireGuard · libp2p QUIC · DERP · <code>/status</code> · <code>/layers</code> · <code>/ping</code></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="SS-CCC Forschung, Grenzkurve & Energiebilanz" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_science_roofline_hero_de.jpg" alt="SS-CCC Forschung, Grenzkurve & Energiebilanz" width="100%"/><br/>
       <sub><b>Forschung, Grenzkurve & Energiebilanz</b><br/>Log-Log-Grenzkurve · GPipe-Blase · <code>J/Token</code> · <code>p50/p95/p99</code> · CSV/JSON/BibTeX</sub>
     </td>
   </tr>
@@ -67,7 +67,7 @@ flowchart LR
 
 ## 🌐 Internet-Cluster: Bandbreiten- & Datendurchsatz-Monitor
 
-![SS-CCC Internet-Cluster Bandbreiten- & Datendurchsatz-Monitor](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+![SS-CCC Internet-Cluster Bandbreiten- & Datendurchsatz-Monitor](docs/images/i18n/ssccc_wan_bandwidth_monitor_de.jpg)
 
 Im Bereich **Internet-Verbund & Chat** überwacht SS-CCC kontinuierlich die reale WAN-Verbindungsleistung (`netstat`, `ping`, `networkQuality`) — inklusive **Downlink / Uplink (Mbps)**, **WAN-RTT-Latenz (ms)**, **Jitter**, **Paketverlust** sowie **Token-Sync-Effizienz** — und korreliert den Datendurchsatz direkt mit den verteilten `tok/s` über alle Partner-Knoten hinweg.
 
@@ -87,7 +87,7 @@ Im Bereich **Internet-Verbund & Chat** überwacht SS-CCC kontinuierlich die real
 
 ### 🖥️ Alle 11 Programmbereiche im Überblick
 
-![SS-CCC 1-Klick-Ökosystem für lokale KI-Agenten und Entwicklungsumgebungen](docs/images/ssccc_agents_ide_ecosystem.jpg)
+![SS-CCC 1-Klick-Ökosystem für lokale KI-Agenten und Entwicklungsumgebungen](docs/images/i18n/ssccc_agents_ide_ecosystem_de.jpg)
 
 | Menüpunkt | Aufgabe & Inhalt |
 | :--- | :--- |
@@ -219,7 +219,7 @@ SS-CCC unterstützt **jeden Mac mit Apple-Silicon-Chip** (**M1–M6** sowie zuku
 
 ### 2. Thunderbolt-5-RDMA (`JACCL`) & Speicherschutz
 
-![Thunderbolt 5 RDMA JACCL & Speicherschutz](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+![Thunderbolt 5 RDMA JACCL & Speicherschutz](docs/images/i18n/ssccc_tb5_rdma_jaccl_de.jpg)
 
 - **macOS RDMA über Thunderbolt 5:** Mit `rdma_ctl enable` (ab macOS 26.2) und Apples `JACCL`-Backend (`mlx.distributed`) sinkt die Knoten-zu-Knoten-Latenz von `~300 µs` (TCP/IP) auf **`~3 µs`** bei **`3,5–3,8 GB/s`** dauerhaftem Tensor-Durchsatz über Punkt-zu-Punkt-Kabel.
 - **Niemals 100 % des RAM freigeben:** SS-CCC schützt den Betriebssystem-Anteil über `iogpu.wired_limit_mb`, damit macOS und WindowServer jederzeit flüssig bleiben.
@@ -230,7 +230,7 @@ SS-CCC unterstützt **jeden Mac mit Apple-Silicon-Chip** (**M1–M6** sowie zuku
 
 ## 🔄 GitHub-gesteuerte Updatefunktion & automatische Versionskontrolle
 
-![GitHub-gesteuerte Updatefunktion & automatische Versionskontrolle](docs/images/ssccc_github_auto_updater.jpg)
+![GitHub-gesteuerte Updatefunktion & automatische Versionskontrolle](docs/images/i18n/ssccc_github_auto_updater_de.jpg)
 
 SS-CCC verfügt über eine integrierte, **über GitHub gesteuerte Update- und Versionskontroll-Pipeline**, damit jede Installation automatisch auf dem neuesten Stand bleibt:
 
@@ -252,7 +252,7 @@ SS-CCC verfügt über eine integrierte, **über GitHub gesteuerte Update- und Ve
 
 ## 🧠 Multi-Model-Mode (MMM) — Verbund-Orchestrierung & Multi-IDE-Leistungsentnahme
 
-![SS-CCC Multi-Model-Mode (MMM) Architektur & Multi-IDE-Leistungsentnahme](docs/images/ssccc_multi_model_mode.jpg)
+![SS-CCC Multi-Model-Mode (MMM) Architektur & Multi-IDE-Leistungsentnahme](docs/images/i18n/ssccc_multi_model_mode_de.jpg)
 
 Der **Multi-Model-Mode (MMM)** (10. Seitenmenüpunkt) führt die Rechen- und Speicherleistung **mehrerer KI-Modelle gleichzeitig** im **Lokalen Cluster** (Thunderbolt / RDMA), im **Internet-Cluster** (Tailscale / WireGuard / libp2p QUIC) oder im gekoppelten **Hybrid-Verbund (Lokal + Internet)** zusammen — inklusive `iogpu.wired_limit_mb`-VRAM-Schutz, Echtzeit-SSE-Ausführung und direkter Übernahme in **Forschung & Leistung**.
 
@@ -264,7 +264,7 @@ Der **Multi-Model-Mode (MMM)** (10. Seitenmenüpunkt) führt die Rechen- und Spe
 
 ### ⚙️ Automatische 1-Klick-Einrichtung & Nachträglicher Live-Editor
 
-![SS-CCC Multi-Model-Mode Auto-Setup & Nachträglicher Konfigurations-Editor](docs/images/ssccc_mmm_autosetup_editor.jpg)
+![SS-CCC Multi-Model-Mode Auto-Setup & Nachträglicher Konfigurations-Editor](docs/images/i18n/ssccc_mmm_autosetup_editor_de.jpg)
 
 Die Einrichtung mehrerer Modelle im Cluster gelingt mühelos und bleibt jederzeit nachträglich veränderbar:
 - **1-Klick-Auto-Setup-Profile**: Wähle zwischen **Coding & IDE-Schwarm**, **Konsens & Audit**, **Turbo (Draft + Target)** oder **Stufen-Pipeline**. MMM erkennt automatisch verfügbare Zielknoten, freien VRAM (`iogpu.wired_limit_mb`) sowie live geladene Modelle und platziert passende Slots sicher im Pool.
@@ -286,7 +286,7 @@ Mehrere IDEs und Agent-Harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCode
 
 ## 🎙️ Verbund-Audio-Party & Echtzeit-Zusammenarbeit
 
-![Verbund-Audio-Party & Echtzeit-Zusammenarbeit](docs/images/ssccc_audio_party_collab.jpg)
+![Verbund-Audio-Party & Echtzeit-Zusammenarbeit](docs/images/i18n/ssccc_audio_party_collab_de.jpg)
 
 - **Sprachchat im Konsolen-Stil:** Direkt neben dem Text-Chat nutzt die **Audio-Party** Apples `AVAudioEngine` (`16 kHz PCM16`) über den eigenen WebSocket-Endpunkt `/ws/wan-audio`.
 - **Steuerung für verteilte Teams:** Umschaltbar zwischen **Push-to-Talk** und **Open-Mic** mit Rauschunterdrückung, **Stumm / Taub**-Schaltern, Live-Pegelanzeige und Knoten-Rollen (`Rang-0-Gateway`, `WAN-Worker`).
@@ -296,7 +296,7 @@ Mehrere IDEs und Agent-Harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCode
 
 ## 🏆 Aufruf zum Weltrekord-Versuch: Lokaler + Weltweiter Hybrid-Hochleistungsverbund
 
-![SS-CCC Weltrekord-Versuch Hybrid-Hochleistungsverbund](docs/images/ssccc_world_record_challenge.jpg)
+![SS-CCC Weltrekord-Versuch Hybrid-Hochleistungsverbund](docs/images/i18n/ssccc_world_record_challenge_de.jpg)
 
 **Kann ein weltweiter Verbund aus vernetzten Apple-Silicon-Macs es mit einem Rechenzentrum aufnehmen?**  
 Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Silicon-Begeisterte weltweit dazu auf, gemeinsam einen offiziellen **SS-CCC Hybrid-Rekordversuch** zu organisieren: Schaltet so viele **örtliche Thunderbolt-3/4/5/RDMA-Verbünde** wie möglich über die **Hybrid-Brücke („Lokal + Internet koppeln“)** gleichzeitig mit **weltweiten Internet-Macs** zu einem riesigen Hochleistungsverbund zusammen — koordiniert über **Cluster Audio-Party** und vermessen im **5-Reiter-Forschungslabor**.
@@ -316,7 +316,7 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
    3. **Messreihe fahren:** Im Bereich **Forschung & Grenzkurve** auf **Internet-WAN** umschalten, `N = 20` Messläufe (`1` Aufwärmlauf verworfen, `T = 0,0`) starten und SLO-Ziele (`TTFT ≤ 2500 ms`, `TPOT ≤ 100 ms/tok`) prüfen.
    4. **Nachweis sichern:** **JSON-Manifest**, **CSV-Messreihe** und **LaTeX-Tabelle (`booktabs`)** samt `hardware_fingerprint`, `TTFT/TPOT (p50/p95/p99 ± CI₉₅)`, `CV%`, `Goodput%`, `J/Token`, `EDP` und `gCO₂eq/1M Token` veröffentlichen.
 
-![6-Reiter-Forschungslabor & Verlaufsaufzeichnung](docs/images/ssccc_history_telemetry_lab.jpg)
+![6-Reiter-Forschungslabor & Verlaufsaufzeichnung](docs/images/i18n/ssccc_history_telemetry_lab_de.jpg)
 
 ### 🥇 Offizielle Rekord-Kategorien
 - **Größter gemeinsamer Arbeitsspeicher:** Höchster nutzbarer Gesamtspeicher (`GB` / `TB`) über gekoppelte Lokal- und WAN-Macs.
@@ -328,7 +328,7 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 
 ## 🎯 Anwendungsfälle & Zielgruppen
 
-![SS-CCC Anwendungsfälle & Zielgruppen](docs/images/ssccc_use_cases_showcase.jpg)
+![SS-CCC Anwendungsfälle & Zielgruppen](docs/images/i18n/ssccc_use_cases_showcase_de.jpg)
 
 | Anwendergruppe | Konkreter Einsatz mit SS-CCC |
 | :--- | :--- |

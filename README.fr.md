@@ -38,11 +38,11 @@ Le **Compagnon de grappe SonnerStudio (SS-CCC)** réunit la mémoire unifiée de
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_internet_wan_mesh.jpg" alt="SS-CCC Grappe Internet mondiale & Discussion" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_internet_wan_mesh_fr.jpg" alt="SS-CCC Grappe Internet mondiale & Discussion" width="100%"/><br/>
       <sub><b>Grappe Internet & Discussion des participants</b><br/>Tailscale · WireGuard · libp2p QUIC · DERP · <code>/status</code> · <code>/layers</code> · <code>/ping</code></sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/images/ssccc_science_roofline_hero.jpg" alt="SS-CCC Science & Roofline" width="100%"/><br/>
+      <img src="docs/images/i18n/ssccc_science_roofline_hero_fr.jpg" alt="SS-CCC Science & Roofline" width="100%"/><br/>
       <sub><b>Analyse Roofline & Bilan énergétique</b><br/>Courbe log-log · Bulle GPipe · <code>J/jeton</code> · <code>p50/p95/p99</code> · CSV/JSON/BibTeX</sub>
     </td>
   </tr>
@@ -67,7 +67,7 @@ flowchart LR
 
 ## 🌐 Moniteur de bande passante et de débit WAN (Grappe Internet)
 
-![Moniteur de bande passante et de débit WAN SS-CCC](docs/images/ssccc_wan_bandwidth_monitor.jpg)
+![Moniteur de bande passante et de débit WAN SS-CCC](docs/images/i18n/ssccc_wan_bandwidth_monitor_fr.jpg)
 
 Dans **Grappe Internet & Discussion**, SS-CCC mesure en continu les performances réseau réelles (`netstat`, `ping`, `networkQuality`) — **débit descendant/montant (Mbps)**, **latence RTT WAN (ms)**, **gigue**, **perte de paquets** et **efficacité de synchronisation des tokens** — en reliant directement le débit WAN aux `tok/s` distribués.
 
@@ -89,7 +89,7 @@ Dans **Grappe Internet & Discussion**, SS-CCC mesure en continu les performances
 
 ### 🖥️ Les 11 domaines du programme en un coup d'œil
 
-![Écosystème local d'agents IA et d'EDI en 1 clic](docs/images/ssccc_agents_ide_ecosystem.jpg)
+![Écosystème local d'agents IA et d'EDI en 1 clic](docs/images/i18n/ssccc_agents_ide_ecosystem_fr.jpg)
 
 | Domaine | Contenu et fonction |
 | :--- | :--- |
@@ -212,7 +212,7 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 ### 2. Thunderbolt 5 RDMA (`JACCL`), protection mémoire et répartition pondérée
 
-![Thunderbolt 5 RDMA JACCL et protection mémoire](docs/images/ssccc_tb5_rdma_jaccl.jpg)
+![Thunderbolt 5 RDMA JACCL et protection mémoire](docs/images/i18n/ssccc_tb5_rdma_jaccl_fr.jpg)
 
 - **RDMA macOS sur Thunderbolt 5 :** Avec `rdma_ctl enable` (macOS 26.2+) et le moteur `JACCL` (`mlx.distributed`), la latence inter-nœuds chute de `~300 µs` (TCP/IP) à **`~3 µs`** avec **`3,5–3,8 Go/s`** de débit tenseur soutenu.
 - **Ne jamais allouer 100 % de la RAM :** `iogpu.wired_limit_mb` préserve la fluidité de macOS et de WindowServer.
@@ -223,7 +223,7 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 ## 🔄 Mises à jour pilotées par GitHub et contrôle automatique de version
 
-![Mises à jour pilotées par GitHub et contrôle automatique de version](docs/images/ssccc_github_auto_updater.jpg)
+![Mises à jour pilotées par GitHub et contrôle automatique de version](docs/images/i18n/ssccc_github_auto_updater_fr.jpg)
 
 1. **Résolution GitHub multi-sources :** Au lancement (après `1,2 s`) puis toutes les **30 minutes** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` interroge `main/version.json`, `releases/latest` et `commits/main` (SHA court).
 2. **Invite de mise à jour (`UpdatePromptSheet`, `⌘U`) :** Lorsqu'une version, un numéro de compilation ou un SHA `main` plus récent est détecté, l'application propose pour les dépôts locaux `git pull --ff-only origin main` + `swift build` + relance en un clic (`scripts/run_ssccc.sh`), ou ouvre le téléchargement GitHub pour les paquets autonomes.
@@ -235,7 +235,7 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 ## 🧠 Mode Multi-Modèles (MMM) — Orchestration inter-grappes & consommation Multi-EDI
 
-![Architecture du Mode Multi-Modèles (MMM) SS-CCC et consommation Multi-EDI](docs/images/ssccc_multi_model_mode.jpg)
+![Architecture du Mode Multi-Modèles (MMM) SS-CCC et consommation Multi-EDI](docs/images/i18n/ssccc_multi_model_mode_fr.jpg)
 
 Le **Mode Multi-Modèles (MMM)** (10ᵉ onglet du menu latéral) unifie la puissance de calcul et la mémoire de **plusieurs modèles d'IA simultanément** sur la grappe **Locale** (Thunderbolt / RDMA), la grappe **Internet WAN** (Tailscale / WireGuard / libp2p QUIC) ou en mode **Hybride (Local + Internet)** — avec protection VRAM `iogpu.wired_limit_mb`, exécution SSE en temps réel et intégration directe dans **Science et Roofline**.
 
@@ -247,7 +247,7 @@ Le **Mode Multi-Modèles (MMM)** (10ᵉ onglet du menu latéral) unifie la puiss
 
 ### ⚙️ Configuration Automatique en 1 Clic & Éditeur Post-Configuration
 
-![Configuration Automatique et Éditeur Live du Mode Multi-Modèles SS-CCC](docs/images/ssccc_mmm_autosetup_editor.jpg)
+![Configuration Automatique et Éditeur Live du Mode Multi-Modèles SS-CCC](docs/images/i18n/ssccc_mmm_autosetup_editor_fr.jpg)
 
 Le déploiement de plusieurs modèles sur la grappe est automatisé et reste entièrement modifiable à tout moment :
 - **Profils Auto-Setup en 1 Clic** : Choisissez **Coding & IDE Swarm**, **Consensus & Audit**, **Turbo (Draft + Target)** ou **Pipeline par Étapes**. MMM détecte automatiquement les nœuds cibles, la VRAM utilisable (`iogpu.wired_limit_mb`) et les modèles actifs.
@@ -269,7 +269,7 @@ Plusieurs EDI et harnais d'agents (**Cursor**, **VS Code**, **Xcode**, **OpenCod
 
 ## 🎙️ Audio-Party de grappe et collaboration WAN en direct
 
-![Audio-Party de grappe et collaboration WAN en direct](docs/images/ssccc_audio_party_collab.jpg)
+![Audio-Party de grappe et collaboration WAN en direct](docs/images/i18n/ssccc_audio_party_collab_fr.jpg)
 
 - **Audio temps réel (`AVAudioEngine`, 16 kHz PCM16) :** Relié au point `/ws/wan-audio` juste à côté du chat (`/ws/wan/{room_id}`), avec modes **Appuyer-pour-parler / Micro ouvert**, **Muet / Sourd**, vumètre et rôles de nœuds (`Passerelle rang 0`, `Nœud WAN`).
 
@@ -277,7 +277,7 @@ Plusieurs EDI et harnais d'agents (**Cursor**, **VS Code**, **Xcode**, **OpenCod
 
 ## 🏆 Appel au record mondial : supercalculateur hybride local + Internet
 
-![Défi record mondial SS-CCC supercalculateur hybride](docs/images/ssccc_world_record_challenge.jpg)
+![Défi record mondial SS-CCC supercalculateur hybride](docs/images/i18n/ssccc_world_record_challenge_fr.jpg)
 
 **Une coalition mondiale de Mac Apple Silicon peut-elle rivaliser avec un centre de calcul ?**  
 Nous invitons les universités, laboratoires, studios et passionnés d'Apple Silicon à organiser un **record officiel SS-CCC** : reliez simultanément le plus grand nombre possible de **grappes locales Thunderbolt 3/4/5/RDMA** et de **Mac distants sur Internet** grâce au **pont hybride (« Coupler local + Internet »)**, à l'**Audio-Party** et au **laboratoire scientifique à 5 onglets**.
@@ -290,11 +290,11 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
    - Selon le modèle GPipe $\Phi_{\text{bulle}} = \frac{N - 1}{M + N - 1}$ et le seuil critique $B^* = \lceil \frac{T_{\text{RTT,WAN}} + T_{\text{tx}}}{T_{\text{comp}}(B=1)} \rceil$, le micro-lotissement $M \to B^*$ associé à la compression **FP8 / INT4 / Top-K** (*Petals / SWARM*) maintient la charge vocale et tensorielle sous $1\%$ du débit montant.
 3. **Protocole reproductible ($T = 0,0$) :** Activez le pont hybride, rejoignez l'**Audio-Party** (`Opus 16 kbps`, $<0,02\%$ du lien), lancez `N = 20` essais (`T = 0,0`) dans le laboratoire **Internet-WAN** et exportez le **manifeste JSON**, le **CSV** et le **tableau LaTeX (`booktabs`)** avec `CI₉₅`, `Goodput%`, `J/jeton`, `EDP` et `gCO₂eq/1M jetons`.
 
-![Laboratoire scientifique 6 onglets et historique](docs/images/ssccc_history_telemetry_lab.jpg)
+![Laboratoire scientifique 6 onglets et historique](docs/images/i18n/ssccc_history_telemetry_lab_fr.jpg)
 
 ### 🥇 Catégories de record & cas d'usage
 
-![Cas d'usage et publics cibles de SS-CCC](docs/images/ssccc_use_cases_showcase.jpg)
+![Cas d'usage et publics cibles de SS-CCC](docs/images/i18n/ssccc_use_cases_showcase_fr.jpg)
 - **Catégories :** plus grande mémoire unifiée cumulée (`To`), plus grand nombre de Mac couplés ($N \ge 32\text{–}256+$), meilleur débit utile transcontinental et meilleure efficacité énergétique (`J/jeton`).
 - **Cas d'usage :** recherche en systèmes d'IA (courbes Roofline, *DiLoCo* vs DDP, articles LaTeX/BibTeX), travaux pratiques universitaires sur parc mixte MacBook/Mac mini, studios logiciels alimentant **OpenCode / Cursor / Xcode** sans frais infonuagiques, secteurs juridiques/médicaux sous tunnel chiffré **WireGuard**, hackathons mondiaux en **Audio-Party** et audits **Green-AI**.
 
