@@ -918,6 +918,8 @@ final class ClusterViewModel: ObservableObject {
         let ggufDirs = [
             home.appendingPathComponent("Models"),
             home.appendingPathComponent(".cache/llama.cpp"),
+            home.appendingPathComponent(".lmstudio/models"),
+            home.appendingPathComponent(".cache/lm-studio/models"),
             home.appendingPathComponent("Downloads")
         ]
         for dir in ggufDirs {
@@ -1050,35 +1052,47 @@ final class ClusterViewModel: ObservableObject {
         }
 
         // 2. Ollama API (:11434/api/tags) with exact byte sizes & quantization_level
-        if let url = URL(string: "http://127.0.0.1:11434/api/tags") {
-            var req = URLRequest(url: url)
-            req.timeoutInterval = 1.5
-            if let (data, resp) = try? await URLSession.shared.data(for: req),
-               let http = resp as? HTTPURLResponse, http.statusCode == 200,
-               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let models = json["models"] as? [[String: Any]] {
-                for m in models {
-                    if let name = m["name"] as? String, !seenIds.contains(name) {
-                        seenIds.insert(name)
-                        let sizeBytes = (m["size"] as? NSNumber)?.doubleValue ?? 0
-                        let sizeGB = sizeBytes > 0 ? (sizeBytes / 1_073_741_824.0 * 10.0).rounded() / 10.0 : nil
-                        let details = m["details"] as? [String: Any]
-                        let qLevel = details?["quantization_level"] as? String
-                        let paramSize = details?["parameter_size"] as? String ?? ""
-                        let specs = Self.inferModelSpecs(from: "\(name) \(paramSize)", knownSizeGB: sizeGB, knownQuant: qLevel)
-                        live.append(ModelPreset(
-                            id: name,
-                            displayName: name,
-                            quantization: "Ollama · \(specs.quant)",
-                            totalLayers: specs.layers,
-                            estimatedGB: specs.gb,
-                            kvReserveGB: 4.0,
-                            notes: "Live erkannt über Ollama (:11434)",
-                            sourceLabel: "Ollama Live",
-                            isLiveDiscovered: true
-                        ))
+        var ollamaFoundCount = 0
+        for tagEndpoint in ["http://127.0.0.1:11434/api/tags", "http://localhost:11434/api/tags"] where ollamaFoundCount == 0 {
+            if let url = URL(string: tagEndpoint) {
+                var req = URLRequest(url: url)
+                req.timeoutInterval = 1.5
+                if let (data, resp) = try? await URLSession.shared.data(for: req),
+                   let http = resp as? HTTPURLResponse, http.statusCode == 200,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let models = json["models"] as? [[String: Any]] {
+                    for m in models {
+                        if let name = m["name"] as? String, !seenIds.contains(name) {
+                            seenIds.insert(name)
+                            ollamaFoundCount += 1
+                            let sizeBytes = (m["size"] as? NSNumber)?.doubleValue ?? 0
+                            let sizeGB = sizeBytes > 0 ? (sizeBytes / 1_073_741_824.0 * 10.0).rounded() / 10.0 : nil
+                            let details = m["details"] as? [String: Any]
+                            let qLevel = details?["quantization_level"] as? String
+                            let paramSize = details?["parameter_size"] as? String ?? ""
+                            let specs = Self.inferModelSpecs(from: "\(name) \(paramSize)", knownSizeGB: sizeGB, knownQuant: qLevel)
+                            live.append(ModelPreset(
+                                id: name,
+                                displayName: name,
+                                quantization: "Ollama · \(specs.quant)",
+                                totalLayers: specs.layers,
+                                estimatedGB: specs.gb,
+                                kvReserveGB: 4.0,
+                                notes: "Live erkannt über Ollama (:11434)",
+                                sourceLabel: "Ollama Live",
+                                isLiveDiscovered: true
+                            ))
+                        }
                     }
                 }
+            }
+        }
+        // Fallback: CLI `ollama list` (captures custom OLLAMA_MODELS paths / launchctl env)
+        if ollamaFoundCount == 0 {
+            let cliModels = Self.probeOllamaCliModels(excludingIds: seenIds)
+            for item in cliModels {
+                seenIds.insert(item.id)
+                live.append(item)
             }
         }
 
@@ -1153,6 +1167,7 @@ final class ClusterViewModel: ObservableObject {
         if let v = llamaRunning { llamaUp = v } else { llamaUp = await isPortReachable(port: 8080, path: "/v1/models") }
 
         let paths = Self.probeRuntimeBinaries()
+        let recommendedOllamaPull = totalUsableVramGB <= 14.0 ? "ollama pull qwen2.5:7b" : "ollama pull qwen2.5:14b"
         runtimeReadiness = [
             .omlx: RuntimeReadiness(
                 service: .omlx,
@@ -1168,7 +1183,7 @@ final class ClusterViewModel: ObservableObject {
                 running: ollamaUp,
                 binaryPath: paths.ollama,
                 installCommand: "brew install ollama && ollama serve",
-                pullModelCommand: "ollama pull qwen2.5:14b"
+                pullModelCommand: recommendedOllamaPull
             ),
             .llamaCpp: RuntimeReadiness(
                 service: .llamaCpp,
@@ -1179,6 +1194,89 @@ final class ClusterViewModel: ObservableObject {
                 pullModelCommand: "llama-server -hf bartowski/Qwen2.5-14B-Instruct-GGUF:Q4_K_M --port 8080"
             )
         ]
+        serviceAvailability = [
+            .omlx: !paths.omlx.isEmpty || omlxUp,
+            .ollama: !paths.ollama.isEmpty || ollamaUp,
+            .llamaCpp: !paths.llama.isEmpty || llamaUp
+        ]
+    }
+
+    private static func probeOllamaCliModels(excludingIds: Set<String>) -> [ModelPreset] {
+        let fm = FileManager.default
+        let candidates = [
+            "/opt/homebrew/bin/ollama",
+            "/usr/local/bin/ollama",
+            "/Applications/Ollama.app/Contents/Resources/ollama"
+        ]
+        guard let bin = candidates.first(where: { fm.isExecutableFile(atPath: $0) }) else {
+            return []
+        }
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: bin)
+        proc.arguments = ["list"]
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = Pipe()
+        do {
+            try proc.run()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            proc.waitUntilExit()
+            guard proc.terminationStatus == 0,
+                  let text = String(data: data, encoding: .utf8) else { return [] }
+            var result: [ModelPreset] = []
+            for line in text.split(separator: "\n").dropFirst() {
+                let cols = line.split(whereSeparator: { $0 == " " || $0 == "\t" })
+                guard let nameSub = cols.first else { continue }
+                let name = String(nameSub)
+                if name.isEmpty || excludingIds.contains(name) { continue }
+                let specs = inferModelSpecs(from: name)
+                result.append(ModelPreset(
+                    id: name,
+                    displayName: name,
+                    quantization: "Ollama · \(specs.quant)",
+                    totalLayers: specs.layers,
+                    estimatedGB: specs.gb,
+                    kvReserveGB: 4.0,
+                    notes: "Live erkannt über Ollama CLI",
+                    sourceLabel: "Ollama Live",
+                    isLiveDiscovered: true
+                ))
+            }
+            return result
+        } catch {
+            return []
+        }
+    }
+
+    func pullRecommendedOllamaModel() async {
+        let modelTag = totalUsableVramGB <= 14.0 ? "qwen2.5:7b" : "qwen2.5:14b"
+        let fm = FileManager.default
+        let candidates = [
+            "/opt/homebrew/bin/ollama",
+            "/usr/local/bin/ollama",
+            "/Applications/Ollama.app/Contents/Resources/ollama"
+        ]
+        guard let bin = candidates.first(where: { fm.isExecutableFile(atPath: $0) }) else {
+            bridgeStatusMessage = "Ollama-Binary nicht gefunden."
+            return
+        }
+        bridgeStatusMessage = "Lade \(modelTag) über Ollama…"
+        let status = await Task.detached { () -> Int32 in
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: bin)
+            proc.arguments = ["pull", modelTag]
+            proc.standardOutput = Pipe()
+            proc.standardError = Pipe()
+            try? proc.run()
+            proc.waitUntilExit()
+            return proc.terminationStatus
+        }.value
+        if status == 0 {
+            bridgeStatusMessage = "\(modelTag) erfolgreich in Ollama geladen."
+            await refreshLiveModels()
+        } else {
+            bridgeStatusMessage = "Ollama-Pull fehlgeschlagen (Status \(status))."
+        }
     }
 
     private static func probeRuntimeBinaries() -> (omlx: String, ollama: String, llama: String) {
@@ -1192,12 +1290,14 @@ final class ClusterViewModel: ObservableObject {
             "/opt/homebrew/bin/omlx",
             "/usr/local/bin/omlx",
             "\(home)/.local/bin/omlx",
+            "/Applications/oMLX.app",
             "/opt/homebrew/bin/mlx_lm.server",
             "\(home)/.local/bin/mlx_lm.server"
         ])
         let ollama = firstExisting([
             "/opt/homebrew/bin/ollama",
             "/usr/local/bin/ollama",
+            "/Applications/Ollama.app/Contents/Resources/ollama",
             "/Applications/Ollama.app"
         ])
         let llama = firstExisting([
@@ -1217,6 +1317,8 @@ final class ClusterViewModel: ObservableObject {
         let ggufDirs = [
             home.appendingPathComponent("Models"),
             home.appendingPathComponent(".cache/llama.cpp"),
+            home.appendingPathComponent(".lmstudio/models"),
+            home.appendingPathComponent(".cache/lm-studio/models"),
             home.appendingPathComponent("Downloads")
         ]
         for dir in ggufDirs {

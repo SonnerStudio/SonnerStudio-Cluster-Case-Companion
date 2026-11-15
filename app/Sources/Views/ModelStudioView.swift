@@ -61,7 +61,9 @@ struct ModelStudioView: View {
                                 let status = vm.runtimeReadiness[svc]
                                 let isRunning = status?.running ?? false
                                 let isInstalled = status?.installed ?? false
-                                let badgeText = isRunning ? "Bereit (Läuft)" : (isInstalled ? "Installiert (Gestoppt)" : "Nicht gefunden")
+                                let badgeText = isRunning
+                                    ? (svc == .ollama ? "Bereit (Läuft · 0 Modelle)" : "Bereit (Läuft)")
+                                    : (isInstalled ? "Installiert (Gestoppt)" : "Nicht gefunden")
                                 let badgeColor = isRunning ? SolarisTheme.emerald : (isInstalled ? SolarisTheme.amberGlow : SolarisTheme.coral)
 
                                 VStack(alignment: .leading, spacing: 8) {
@@ -82,7 +84,7 @@ struct ModelStudioView: View {
                                             .font(.system(size: 11, design: .monospaced))
                                             .foregroundColor(SolarisTheme.textSecondary)
                                     }
-                                    let cmd = isInstalled ? (status?.pullModelCommand ?? "") : (status?.installCommand ?? "")
+                                    let cmd = (isInstalled || isRunning) ? (status?.pullModelCommand ?? "") : (status?.installCommand ?? "")
                                     if !cmd.isEmpty {
                                         HStack {
                                             Text(cmd)
@@ -90,6 +92,14 @@ struct ModelStudioView: View {
                                                 .foregroundColor(SolarisTheme.mint)
                                                 .textSelection(.enabled)
                                             Spacer()
+                                            if svc == .ollama && (isInstalled || isRunning) {
+                                                Button("Modell laden") {
+                                                    Task { await vm.pullRecommendedOllamaModel() }
+                                                }
+                                                .buttonStyle(.borderedProminent)
+                                                .tint(SolarisTheme.amber)
+                                                .foregroundColor(.black)
+                                            }
                                             Button("Kopieren") {
                                                 NSPasteboard.general.clearContents()
                                                 NSPasteboard.general.setString(cmd, forType: .string)
@@ -166,26 +176,43 @@ struct ModelStudioView: View {
                 }
 
                 // Sharding Plan Vorschau
-                SolarisCard(accent: split.fits ? SolarisTheme.emerald : SolarisTheme.coral) {
+                let hasModel = !vm.modelPresets.isEmpty
+                let planAccent: Color = hasModel ? (split.fits ? SolarisTheme.emerald : SolarisTheme.coral) : SolarisTheme.amber
+                SolarisCard(accent: planAccent) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(vm.t("ms_plan_title"))
                                 .font(SolarisTheme.sectionTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
-                            Text("Bedarf inkl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB KV-Cache: \(String(format: "%.1f", split.totalRequiredGB)) GB von \(Int(split.totalUsableGB)) GB verfügbar")
-                                .font(SolarisTheme.bodyLarge)
-                                .foregroundColor(SolarisTheme.textSecondary)
+                            if hasModel {
+                                Text("Bedarf inkl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB KV-Cache: \(String(format: "%.1f", split.totalRequiredGB)) GB von \(Int(split.totalUsableGB)) GB verfügbar")
+                                    .font(SolarisTheme.bodyLarge)
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            } else {
+                                Text(String(format: vm.t("ms_pool_ready_hint"), Int(split.totalUsableGB)))
+                                    .font(SolarisTheme.bodyLarge)
+                                    .foregroundColor(SolarisTheme.textSecondary)
+                            }
                         }
                         Spacer()
-                        Label(
-                            split.fits ? vm.t("ms_fits") : vm.t("ms_oom"),
-                            systemImage: split.fits ? "checkmark.shield.fill" : "exclamationmark.triangle.fill"
-                        )
-                        .font(SolarisTheme.bodyBold)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill((split.fits ? SolarisTheme.emerald : SolarisTheme.coral).opacity(0.20)))
-                        .foregroundColor(split.fits ? SolarisTheme.emerald : SolarisTheme.coral)
+                        if hasModel {
+                            Label(
+                                split.fits ? vm.t("ms_fits") : vm.t("ms_oom"),
+                                systemImage: split.fits ? "checkmark.shield.fill" : "exclamationmark.triangle.fill"
+                            )
+                            .font(SolarisTheme.bodyBold)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill((split.fits ? SolarisTheme.emerald : SolarisTheme.coral).opacity(0.20)))
+                            .foregroundColor(split.fits ? SolarisTheme.emerald : SolarisTheme.coral)
+                        } else {
+                            Label(vm.t("ms_no_model_loaded"), systemImage: "tray.fill")
+                                .font(SolarisTheme.bodyBold)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(Capsule().fill(SolarisTheme.amber.opacity(0.20)))
+                                .foregroundColor(SolarisTheme.amberGlow)
+                        }
                     }
 
                     // Visueller Layer-Split Balken für alle aktiven M-Series Nodes
@@ -193,12 +220,16 @@ struct ModelStudioView: View {
                         let palette: [Color] = [SolarisTheme.amber, SolarisTheme.mint, SolarisTheme.emerald, Color.cyan, Color.purple]
                         HStack(spacing: 4) {
                             ForEach(Array(split.nodeAllocations.enumerated()), id: \.element.id) { idx, alloc in
-                                if alloc.layers > 0 {
+                                if alloc.layers > 0 || !hasModel {
+                                    let sharePct = hasModel ? alloc.percent : (split.totalUsableGB > 0 ? (alloc.usableGB / split.totalUsableGB) * 100.0 : 100.0)
+                                    let barText = hasModel
+                                        ? "\(alloc.nodeName): \(alloc.layers)L (\(String(format: "%.0f", alloc.percent))%)"
+                                        : "\(alloc.nodeName): \(Int(alloc.usableGB)) GB (\(String(format: "%.0f", sharePct))%)"
                                     RoundedRectangle(cornerRadius: 8)
-                                        .fill(palette[idx % palette.count])
-                                        .frame(width: max(50, geo.size.width * (alloc.percent / 100.0) - 4))
+                                        .fill(palette[idx % palette.count].opacity(hasModel ? 1.0 : 0.7))
+                                        .frame(width: max(50, geo.size.width * (sharePct / 100.0) - 4))
                                         .overlay(
-                                            Text("\(alloc.nodeName): \(alloc.layers)L (\(String(format: "%.0f", alloc.percent))%)")
+                                            Text(barText)
                                                 .font(SolarisTheme.bodyBold)
                                                 .foregroundColor(.black)
                                                 .lineLimit(1)
@@ -240,6 +271,7 @@ struct ModelStudioView: View {
                                 Text(p.rawValue).tag(p)
                             }
                         }
+                        .labelsHidden()
                         .pickerStyle(.segmented)
                         .frame(width: 420)
                     }
