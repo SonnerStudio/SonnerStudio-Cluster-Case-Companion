@@ -415,6 +415,30 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("solarisHighlightGlow(accent: meta.accent", overview)
         self.assertIn("solarisHighlightGlow(", mmm_view)
 
+    def test_22_full_eight_language_overview_and_node_localization(self):
+        """Verify all Cluster Overview, AI/OS split, Guard Zone & Node Card strings are localized in all 8 languages."""
+        loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
+        overview = (APP_SOURCES / "Views" / "ClusterOverviewView.swift").read_text(encoding="utf-8")
+        for key in [
+            "ov_cluster_active",
+            "ov_standalone_mode",
+            "ov_ai_os_split",
+            "ov_guard_zone",
+            "ov_local_internal",
+            "ov_one_node",
+            "node_chip",
+            "node_memory",
+            "node_bandwidth",
+            "node_cpu_cores",
+            "node_os_short",
+            "node_simulated_badge",
+        ]:
+            for lang in [".de", ".en", ".fr", ".es", ".pt", ".ru", ".ja", ".zh"]:
+                self.assertIn(f'case ("{key}", {lang}):', loc)
+        self.assertIn('vm.t("ov_ai_os_split")', overview)
+        self.assertIn('vm.t("ov_guard_zone")', overview)
+        self.assertNotIn("GB für KI", overview)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -56,7 +56,7 @@ for lang in AppLanguage.allCases {
     check(!ms.contains("36 GB + 16 GB"), "ms_sub for \(lang) must be neutral, got: \(ms)")
     let ov = L10n.tabSubtitle(.overview, lang)
     check(!ov.contains("52 GB") && !ov.contains("52 Go"), "overview subtitle for \(lang) must be neutral, got: \(ov)")
-    for sciKey in ["sci_scope_label", "sci_tab_roofline", "sci_tab_wan", "sci_tab_memory", "sci_tab_energy", "sci_tab_trials", "sci_tab_history", "upd_check_btn", "upd_prompt_title"] {
+    for sciKey in ["sci_scope_label", "sci_tab_roofline", "sci_tab_wan", "sci_tab_memory", "sci_tab_energy", "sci_tab_trials", "sci_tab_history", "upd_check_btn", "upd_prompt_title", "ov_cluster_active", "ov_standalone_mode", "ov_ai_os_split", "ov_guard_zone", "ov_local_internal", "ov_one_node", "node_chip", "node_memory", "node_bandwidth", "node_cpu_cores", "node_os_short", "node_simulated_badge"] {
         let val = L10n.text(sciKey, lang)
         check(val != sciKey && !val.isEmpty, "Missing \(sciKey) for \(lang)")
     }

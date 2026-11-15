@@ -169,7 +169,10 @@ struct ClusterOverviewView: View {
                     }
                     Spacer()
                     Label(
-                        vm.nodes.count > 1 ? "\(Int(vm.totalPhysicalRamGB)) GB Verbund aktiv" : "\(Int(vm.totalPhysicalRamGB)) GB Einzelbetrieb",
+                        String(
+                            format: vm.t(vm.nodes.count > 1 ? "ov_cluster_active" : "ov_standalone_mode"),
+                            Int(vm.totalPhysicalRamGB)
+                        ),
                         systemImage: vm.nodes.count > 1 ? "link.circle.fill" : "circle.dashed"
                     )
                     .font(SolarisTheme.bodyBold)
@@ -181,7 +184,7 @@ struct ClusterOverviewView: View {
 
                 HStack(spacing: 20) {
                     ForEach(Array(vm.nodes.enumerated()), id: \.element.id) { index, node in
-                        NodeCardView(node: node)
+                        NodeCardView(node: node, lang: vm.language)
 
                         if index < vm.nodes.count - 1 {
                             LinkBridgeConnector(
@@ -206,7 +209,13 @@ struct ClusterOverviewView: View {
                     .font(SolarisTheme.cardTitle)
                     .foregroundColor(SolarisTheme.textPrimary)
                 Spacer()
-                Text("\(Int(vm.totalUsableVramGB)) GB für KI · \(Int(vm.totalPhysicalRamGB - vm.totalUsableVramGB)) GB macOS-Reserve")
+                Text(
+                    String(
+                        format: vm.t("ov_ai_os_split"),
+                        Int(vm.totalUsableVramGB),
+                        Int(vm.totalPhysicalRamGB - vm.totalUsableVramGB)
+                    )
+                )
                     .font(SolarisTheme.bodyBold)
                     .foregroundColor(SolarisTheme.textSecondary)
             }
@@ -231,7 +240,7 @@ struct ClusterOverviewView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.white.opacity(0.15))
                         .overlay(
-                            Text("OS")
+                            Text(vm.t("node_os_short"))
                                 .font(SolarisTheme.bodyBold)
                                 .foregroundColor(SolarisTheme.textSecondary)
                         )
@@ -241,7 +250,7 @@ struct ClusterOverviewView: View {
 
             IndustrialHazardBanner(
                 icon: "shield.lefthalf.filled",
-                title: "Speicherschutz-Zone (iogpu.wired_limit_mb)",
+                title: vm.t("ov_guard_zone"),
                 subtitle: vm.t("pool_bar_note"),
                 accent: SolarisTheme.amber
             )
@@ -451,7 +460,7 @@ struct ClusterOverviewView: View {
 
                 HStack(spacing: 16) {
                     ForEach(Array(vm.nodes.enumerated()), id: \.element.id) { index, node in
-                        NodeCardView(node: node)
+                        NodeCardView(node: node, lang: vm.language)
                         if index < vm.nodes.count - 1 {
                             LinkBridgeConnector(
                                 leftGen: node.thunderboltGen,
@@ -579,6 +588,7 @@ private struct MetricTile: View {
 
 private struct NodeCardView: View {
     let node: ClusterNodeModel
+    var lang: AppLanguage = .de
 
     var accent: Color {
         node.totalRamGB >= 32 ? SolarisTheme.amber : SolarisTheme.mint
@@ -600,7 +610,7 @@ private struct NodeCardView: View {
                 }
                 Spacer()
                 if node.isSimulated {
-                    Text("SIMULIERT")
+                    Text(L10n.text("node_simulated_badge", lang))
                         .font(.system(size: 12, weight: .bold))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -613,15 +623,15 @@ private struct NodeCardView: View {
 
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
                 GridRow {
-                    Text("Chip:").foregroundColor(SolarisTheme.textSecondary)
-                    Text(node.chip).foregroundColor(SolarisTheme.textPrimary)
+                    Text(L10n.text("node_chip", lang)).foregroundColor(SolarisTheme.textSecondary)
+                    Text("\(node.chip) · \(node.cpuCores) \(L10n.text("node_cpu_cores", lang))").foregroundColor(SolarisTheme.textPrimary)
                 }
                 GridRow {
-                    Text("Speicher:").foregroundColor(SolarisTheme.textSecondary)
+                    Text(L10n.text("node_memory", lang)).foregroundColor(SolarisTheme.textSecondary)
                     Text("\(Int(node.totalRamGB)) GB RAM (\(Int(node.usableVramGB)) GB MLX)").foregroundColor(SolarisTheme.textPrimary)
                 }
                 GridRow {
-                    Text("Bandbreite:").foregroundColor(SolarisTheme.textSecondary)
+                    Text(L10n.text("node_bandwidth", lang)).foregroundColor(SolarisTheme.textSecondary)
                     Text("\(Int(node.bandwidthGBs)) GB/s · TB\(node.thunderboltGen)").foregroundColor(SolarisTheme.textPrimary)
                 }
                 GridRow {

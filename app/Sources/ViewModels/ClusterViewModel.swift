@@ -459,10 +459,10 @@ final class ClusterViewModel: ObservableObject {
 
         let localNode = ClusterNodeModel(
             id: "local-host",
-            name: Host.current().localizedName ?? "Lokaler Apple Silicon Mac",
+            name: Host.current().localizedName ?? "Apple Silicon Mac",
             role: (simulateMacStudio || !customNodes.isEmpty) ? "Worker" : "Standalone (Rank 0)",
             modelIdentifier: localModelIdentifier,
-            chip: "\(localChipName) · \(localCPUCores) CPU-Kerne",
+            chip: localChipName,
             cpuCores: localCPUCores,
             cpuTopology: localCPUTopology,
             gpuCores: localGPUCores,
@@ -575,7 +575,7 @@ final class ClusterViewModel: ObservableObject {
     var effectiveLinkStats: (rangeLabel: String, nominalGbps: Double, badge: String) {
         let active = nodes
         guard active.count > 1 else {
-            return ("Lokal (Intern)", 0.0, "1 Node")
+            return (t("ov_local_internal"), 0.0, "1 Node")
         }
         let minTb = active.map(\.thunderboltGen).min() ?? 4
         let maxTb = active.map(\.thunderboltGen).max() ?? 4
@@ -583,7 +583,7 @@ final class ClusterViewModel: ObservableObject {
     }
 
     var activeLinkHeadline: String {
-        guard nodes.count > 1 else { return "Lokal (1 Node)" }
+        guard nodes.count > 1 else { return t("ov_one_node") }
         let stats = effectiveLinkStats
         switch transportMode {
         case .autoHybrid:
