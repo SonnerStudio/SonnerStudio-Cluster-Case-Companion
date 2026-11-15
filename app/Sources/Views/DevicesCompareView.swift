@@ -32,6 +32,7 @@ struct DevicesCompareView: View {
                         .buttonStyle(.plain)
                     }
                 }
+                .solarisShorttip(vm.shorttip(.devices), id: "view_devices_header", vm: vm)
 
                 // Beliebigen Apple Mac mit M-Prozessor (M1–M6) zum Verbund hinzufügen
                 SolarisCard(accent: SolarisTheme.emerald) {

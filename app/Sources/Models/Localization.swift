@@ -131,6 +131,15 @@ enum L10n {
         case (.multiModelMode, .ru): return "Мульти-модельный режим"
         case (.multiModelMode, .ja): return "マルチモデルモード"
         case (.multiModelMode, .zh): return "多模型协同模式"
+
+        case (.setup, .de): return "Setup & Einrichten"
+        case (.setup, .en): return "Setup & Provision"
+        case (.setup, .fr): return "Configuration & Setup"
+        case (.setup, .es): return "Configuración y Setup"
+        case (.setup, .pt): return "Configuração e Setup"
+        case (.setup, .ru): return "Настройка и запуск"
+        case (.setup, .ja): return "セットアップと準備"
+        case (.setup, .zh): return "安装与自动配置"
         }
     }
 
@@ -225,6 +234,15 @@ enum L10n {
         case (.multiModelMode, .ru): return "Ансамбль, MoA и Speculative"
         case (.multiModelMode, .ja): return "アンサンブル・MoA・投機実行"
         case (.multiModelMode, .zh): return "集成、MoA 与投机解码"
+
+        case (.setup, .de): return "Auto-Setup & Bereitschaft"
+        case (.setup, .en): return "Auto-Setup & Readiness"
+        case (.setup, .fr): return "Auto-Setup & Disponibilité"
+        case (.setup, .es): return "Auto-Setup y Estado"
+        case (.setup, .pt): return "Auto-Setup e Prontidão"
+        case (.setup, .ru): return "Автонастройка и готовность"
+        case (.setup, .ja): return "自動構成と稼働状態"
+        case (.setup, .zh): return "自动配置与就绪状态"
         }
     }
 
@@ -1296,7 +1314,187 @@ enum L10n {
         case ("node_simulated_badge", .ja): return "シミュレーション"
         case ("node_simulated_badge", .zh): return "模拟"
 
+        // Phase 12: Readiness States (4-state lifecycle) in 8 languages
+        case ("readiness_ready", .de): return "Bereit (Betriebsbereit)"
+        case ("readiness_ready", .en): return "Ready (Operational)"
+        case ("readiness_ready", .fr): return "Prêt (Opérationnel)"
+        case ("readiness_ready", .es): return "Listo (Operativo)"
+        case ("readiness_ready", .pt): return "Pronto (Operacional)"
+        case ("readiness_ready", .ru): return "Готов к работе"
+        case ("readiness_ready", .ja): return "稼働可能 (Ready)"
+        case ("readiness_ready", .zh): return "就绪（可运行）"
+
+        case ("readiness_not_ready", .de): return "Nicht bereit"
+        case ("readiness_not_ready", .en): return "Not Ready"
+        case ("readiness_not_ready", .fr): return "Non prêt"
+        case ("readiness_not_ready", .es): return "No listo"
+        case ("readiness_not_ready", .pt): return "Não pronto"
+        case ("readiness_not_ready", .ru): return "Не готов"
+        case ("readiness_not_ready", .ja): return "未準備 (Not Ready)"
+        case ("readiness_not_ready", .zh): return "未就绪"
+
+        case ("readiness_incomplete", .de): return "Unvollständig eingerichtet"
+        case ("readiness_incomplete", .en): return "Partially Configured"
+        case ("readiness_incomplete", .fr): return "Configuration incomplète"
+        case ("readiness_incomplete", .es): return "Configuración incompleta"
+        case ("readiness_incomplete", .pt): return "Configuração incompleta"
+        case ("readiness_incomplete", .ru): return "Настроен не полностью"
+        case ("readiness_incomplete", .ja): return "設定未完了"
+        case ("readiness_incomplete", .zh): return "配置不完整"
+
+        case ("readiness_unconfigured", .de): return "Uneingerichtet"
+        case ("readiness_unconfigured", .en): return "Unconfigured"
+        case ("readiness_unconfigured", .fr): return "Non configuré"
+        case ("readiness_unconfigured", .es): return "Sin configurar"
+        case ("readiness_unconfigured", .pt): return "Não configurado"
+        case ("readiness_unconfigured", .ru): return "Не настроен"
+        case ("readiness_unconfigured", .ja): return "未設定"
+        case ("readiness_unconfigured", .zh): return "未配置"
+
+        // Phase 12: Setup View & Shorttips in 8 languages
+        case ("setup_title", .de): return "Automatisches Verbund-Setup & Betriebsbereitschaft"
+        case ("setup_title", .en): return "Automatic Cluster Setup & Readiness Check"
+        case ("setup_title", .fr): return "Configuration automatique & Vérification"
+        case ("setup_title", .es): return "Configuración automática y verificación"
+        case ("setup_title", .pt): return "Configuração automática e verificação"
+        case ("setup_title", .ru): return "Автонастройка кластера и проверка готовности"
+        case ("setup_title", .ja): return "自動クラスターセットアップと稼働確認"
+        case ("setup_title", .zh): return "自动集群配置与就绪检查"
+
+        case ("setup_sub", .de): return "Erkennt lokale Thunderbolt-/LAN-Macs, Internet-Peers und Hybrid-Verbünde automatisch, richtet alle Knoten ein und prüft die Betriebsbereitschaft."
+        case ("setup_sub", .en): return "Auto-discovers local Thunderbolt/LAN Macs, Internet peers, and hybrid clusters, provisions all nodes, and verifies operational readiness."
+        case ("setup_sub", .fr): return "Détecte automatiquement les Mac locaux, pairs Internet et grappes hybrides, provisionne les nœuds et vérifie la disponibilité."
+        case ("setup_sub", .es): return "Detecta automáticamente Macs locales, pares Internet y clústeres híbridos, aprovisiona los nodos y verifica su disponibilidad."
+        case ("setup_sub", .pt): return "Deteta automaticamente Macs locais, pares Internet e clusters híbridos, aprovisiona os nós e verifica a prontidão."
+        case ("setup_sub", .ru): return "Автоматически находит локальные Mac, WAN-узлы и гибридные кластеры, настраивает все узлы и проверяет готовность."
+        case ("setup_sub", .ja): return "ローカルMac・WANピア・ハイブリッド構成を自動検出し、全ノードを構成して稼働可能状態を検証します。"
+        case ("setup_sub", .zh): return "自动发现本地 Mac、互联网节点与混合集群，完成多机配置并验证运行就绪状态。"
+
+        case ("tip_tab_overview", .de): return "Zeigt Speicherpool, aktive Knoten, AI/OS-Schutzgrenze und 3-Reiter-Topologie (Lokal / Internet / Hybrid)."
+        case ("tip_tab_overview", .en): return "Shows unified memory pool, active nodes, AI/OS guard limit, and 3-tab topology (Local / Internet / Hybrid)."
+        case ("tip_tab_overview", .fr): return "Affiche le pool mémoire, les nœuds actifs, la réserve OS et la topologie à 3 onglets."
+        case ("tip_tab_overview", .es): return "Muestra el pool de memoria, nodos activos, reserva del sistema y topología en 3 pestañas."
+        case ("tip_tab_overview", .pt): return "Mostra o pool de memória, nós ativos, reserva do sistema e topologia em 3 separadores."
+        case ("tip_tab_overview", .ru): return "Показывает пул памяти, активные узлы, резерв ОС и 3-вкладочную топологию."
+        case ("tip_tab_overview", .ja): return "統合メモリプール、稼働ノード、OS保護枠、3タブ構成のトポロジを表示します。"
+        case ("tip_tab_overview", .zh): return "显示统一内存池、活跃节点、系统保留内存及三标签拓扑。"
+
+        case ("tip_tab_devices", .de): return "Vergleicht alle erkannten Apple-Silicon-Macs (M1–M12+), Bandbreite, FP16-TFLOPS und Thermal-Status."
+        case ("tip_tab_devices", .en): return "Compares all detected Apple Silicon Macs (M1–M12+), memory bandwidth, FP16 TFLOPS, and thermal state."
+        case ("tip_tab_devices", .fr): return "Compare tous les Mac Apple Silicon (M1–M12+), bande passante, TFLOPS FP16 et état thermique."
+        case ("tip_tab_devices", .es): return "Compara todos los Mac Apple Silicon (M1–M12+), ancho de banda, FP16 TFLOPS y estado térmico."
+        case ("tip_tab_devices", .pt): return "Compara todos os Mac Apple Silicon (M1–M12+), largura de banda, FP16 TFLOPS e estado térmico."
+        case ("tip_tab_devices", .ru): return "Сравнивает все Mac Apple Silicon (M1–M12+), пропускную способность, FP16 TFLOPS и нагрев."
+        case ("tip_tab_devices", .ja): return "検出されたM1–M12+ Macの帯域幅・FP16 TFLOPS・熱状態を比較します。"
+        case ("tip_tab_devices", .zh): return "对比所有 M1–M12+ Mac 的带宽、FP16 算力与热状态。"
+
+        case ("tip_tab_models", .de): return "Lädt MLX/oMLX/Ollama/llama.cpp-Modelle, prüft Layer-Splits und steuert ANE-Prefill + 3-Tier KV-Cache."
+        case ("tip_tab_models", .en): return "Loads MLX/oMLX/Ollama/llama.cpp models, checks layer splits, and configures ANE prefill + 3-tier KV cache."
+        case ("tip_tab_models", .fr): return "Charge les modèles MLX/oMLX/Ollama/llama.cpp, vérifie le découpage et gère ANE-Prefill + cache KV."
+        case ("tip_tab_models", .es): return "Carga modelos MLX/oMLX/Ollama/llama.cpp, verifica reparto de capas y configura ANE-Prefill + caché KV."
+        case ("tip_tab_models", .pt): return "Carrega modelos MLX/oMLX/Ollama/llama.cpp, verifica divisão de camadas e gere ANE-Prefill + cache KV."
+        case ("tip_tab_models", .ru): return "Загружает модели MLX/oMLX/Ollama/llama.cpp, проверяет шардинг и настраивает ANE-Prefill + KV-кэш."
+        case ("tip_tab_models", .ja): return "MLX/oMLX/Ollama/llama.cppモデルのロード、層分割、ANE-Prefillと3層KVキャッシュを管理します。"
+        case ("tip_tab_models", .zh): return "加载 MLX/oMLX/Ollama/llama.cpp 模型，配置分层拆分与 ANE-Prefill/3层 KV 缓存。"
+
+        case ("tip_tab_network", .de): return "Konfiguriert TB3/4/5, Full-Mesh JACCL RDMA, bridge0-Schutz und mlx.distributed_config Hostfiles."
+        case ("tip_tab_network", .en): return "Configures TB3/4/5, Full-Mesh JACCL RDMA, bridge0 protection, and mlx.distributed_config hostfiles."
+        case ("tip_tab_network", .fr): return "Configure TB3/4/5, JACCL RDMA Full-Mesh, protection bridge0 et hostfiles mlx.distributed_config."
+        case ("tip_tab_network", .es): return "Configura TB3/4/5, JACCL RDMA Full-Mesh, protección bridge0 y archivos mlx.distributed_config."
+        case ("tip_tab_network", .pt): return "Configura TB3/4/5, JACCL RDMA Full-Mesh, proteção bridge0 e hostfiles mlx.distributed_config."
+        case ("tip_tab_network", .ru): return "Настраивает TB3/4/5, Full-Mesh JACCL RDMA, защиту bridge0 и mlx.distributed_config."
+        case ("tip_tab_network", .ja): return "TB3/4/5、JACCL Full-Mesh RDMA、bridge0保護、mlx.distributed_configを設定します。"
+        case ("tip_tab_network", .zh): return "配置 TB3/4/5、Full-Mesh JACCL RDMA、bridge0 防护及 mlx.distributed_config。"
+
+        case ("tip_tab_internet", .de): return "Verbindet weltweite WAN-Peers per QUIC/Iroh 0-RTT oder Tailscale mit Live-Bandbreite, Chat & Audio-Party."
+        case ("tip_tab_internet", .en): return "Connects global WAN peers via QUIC/Iroh 0-RTT or Tailscale with live bandwidth telemetry, chat & Audio-Party."
+        case ("tip_tab_internet", .fr): return "Relie des pairs WAN via QUIC/Iroh 0-RTT ou Tailscale avec télémétrie, chat et Audio-Party."
+        case ("tip_tab_internet", .es): return "Conecta pares WAN vía QUIC/Iroh 0-RTT o Tailscale con telemetría, chat y Audio-Party."
+        case ("tip_tab_internet", .pt): return "Liga pares WAN via QUIC/Iroh 0-RTT ou Tailscale com telemetria, chat e Audio-Party."
+        case ("tip_tab_internet", .ru): return "Подключает глобальные WAN-узлы через QUIC/Iroh 0-RTT или Tailscale с чатом и Audio-Party."
+        case ("tip_tab_internet", .ja): return "QUIC/Iroh 0-RTTやTailscaleでWANピアを接続し、帯域計測・チャット・Audio-Partyを利用します。"
+        case ("tip_tab_internet", .zh): return "通过 QUIC/Iroh 0-RTT 或 Tailscale 连接全球 WAN 节点，支持实时测速、聊天与语音派对。"
+
+        case ("tip_tab_mmm", .de): return "Orchestriert mehrere Modelle gleichzeitig (MoA, EAGLE-3 Speculative, Pipeline) mit Thermal-/Carbon-Scheduling."
+        case ("tip_tab_mmm", .en): return "Orchestrates multiple models simultaneously (MoA, EAGLE-3 Speculative, Pipeline) with thermal/carbon scheduling."
+        case ("tip_tab_mmm", .fr): return "Orchestre plusieurs modèles (MoA, EAGLE-3, Pipeline) avec ordonnancement thermique et carbone."
+        case ("tip_tab_mmm", .es): return "Orquesta múltiples modelos (MoA, EAGLE-3, Pipeline) con planificación térmica y de carbono."
+        case ("tip_tab_mmm", .pt): return "Orquestra vários modelos (MoA, EAGLE-3, Pipeline) com agendamento térmico e de carbono."
+        case ("tip_tab_mmm", .ru): return "Оркестрирует несколько моделей (MoA, EAGLE-3, Pipeline) с тепловым и углеродным планированием."
+        case ("tip_tab_mmm", .ja): return "複数モデル（MoA・EAGLE-3・パイプライン）を熱・カーボン考慮で同時オーケストレーションします。"
+        case ("tip_tab_mmm", .zh): return "协同调度多个模型（MoA、EAGLE-3、流水线），支持热感知与碳感知调度。"
+
+        case ("tip_tab_agents", .de): return "Erzeugt 1-Klick-Configs für Cursor, VS Code, Xcode, OpenCode sowie MCP Registry & A2A Agent Card."
+        case ("tip_tab_agents", .en): return "Generates 1-click configs for Cursor, VS Code, Xcode, OpenCode plus MCP Registry & A2A Agent Card."
+        case ("tip_tab_agents", .fr): return "Génère les configs Cursor, VS Code, Xcode, OpenCode, le registre MCP et l'A2A Agent Card."
+        case ("tip_tab_agents", .es): return "Genera configuraciones para Cursor, VS Code, Xcode, OpenCode, registro MCP y tarjeta A2A."
+        case ("tip_tab_agents", .pt): return "Gera configurações para Cursor, VS Code, Xcode, OpenCode, registo MCP e cartão A2A."
+        case ("tip_tab_agents", .ru): return "Создаёт конфиги для Cursor, VS Code, Xcode, OpenCode, MCP Registry и A2A Agent Card."
+        case ("tip_tab_agents", .ja): return "Cursor・VS Code・Xcode・OpenCode設定、MCPレジストリ、A2A Agent Cardを生成します。"
+        case ("tip_tab_agents", .zh): return "一键生成 Cursor/VS Code/Xcode/OpenCode 配置以及 MCP 注册表与 A2A 智能体名片。"
+
+        case ("tip_tab_science", .de): return "6-Reiter-Forschungslabor: Roofline, GPipe/WAN, KV-CacheGen, Energie/CO₂, LaTeX-Export & Verlauf."
+        case ("tip_tab_science", .en): return "6-tab Research Lab: Roofline, GPipe/WAN, KV-CacheGen, Energy/CO₂, LaTeX export & History."
+        case ("tip_tab_science", .fr): return "Labo 6 onglets : Roofline, GPipe/WAN, KV-CacheGen, Énergie/CO₂, export LaTeX & Historique."
+        case ("tip_tab_science", .es): return "Laboratorio de 6 pestañas: Roofline, GPipe/WAN, KV-CacheGen, Energía/CO₂, LaTeX e Historial."
+        case ("tip_tab_science", .pt): return "Laboratório de 6 separadores: Roofline, GPipe/WAN, KV-CacheGen, Energia/CO₂, LaTeX e Histórico."
+        case ("tip_tab_science", .ru): return "6-вкладочная лаборатория: Roofline, GPipe/WAN, KV-CacheGen, Энергия/CO₂, LaTeX и история."
+        case ("tip_tab_science", .ja): return "6タブ科学ラボ：Roofline・GPipe/WAN・KV-CacheGen・電力/CO₂・LaTeX出力・履歴記録。"
+        case ("tip_tab_science", .zh): return "六标签科研实验室：Roofline、GPipe/WAN、KV-CacheGen、能耗/碳排、LaTeX 导出与历史记录。"
+
+        case ("tip_tab_console", .de): return "Testet Live-Prompts gegen /v1/chat/completions, /v1/responses + MCP und A2A-Endpunkte."
+        case ("tip_tab_console", .en): return "Tests live prompts against /v1/chat/completions, /v1/responses + MCP, and A2A endpoints."
+        case ("tip_tab_console", .fr): return "Teste des requêtes sur /v1/chat/completions, /v1/responses + MCP et A2A."
+        case ("tip_tab_console", .es): return "Prueba prompts en vivo contra /v1/chat/completions, /v1/responses + MCP y A2A."
+        case ("tip_tab_console", .pt): return "Testa prompts ao vivo em /v1/chat/completions, /v1/responses + MCP e A2A."
+        case ("tip_tab_console", .ru): return "Тестирует запросы к /v1/chat/completions, /v1/responses + MCP и A2A."
+        case ("tip_tab_console", .ja): return "/v1/chat/completions、/v1/responses + MCP、A2Aエンドポイントへライブテストを実行します。"
+        case ("tip_tab_console", .zh): return "向 /v1/chat/completions、/v1/responses + MCP 及 A2A 端点发送实时测试。"
+
+        case ("tip_tab_setup", .de): return "Erkennt Macs im Verbund automatisch, richtet Lokal/WAN/Hybrid ein und meldet die Betriebsbereitschaft."
+        case ("tip_tab_setup", .en): return "Auto-discovers cluster Macs, provisions Local/WAN/Hybrid setups, and verifies readiness."
+        case ("tip_tab_setup", .fr): return "Détecte les Mac, configure Local/WAN/Hybride automatiquement et vérifie l'état prêt."
+        case ("tip_tab_setup", .es): return "Detecta Macs automáticamente, configura Local/WAN/Híbrido y verifica disponibilidad."
+        case ("tip_tab_setup", .pt): return "Deteta Macs automaticamente, configura Local/WAN/Híbrido e verifica prontidão."
+        case ("tip_tab_setup", .ru): return "Автоматически находит Mac, настраивает Local/WAN/Hybrid и проверяет готовность."
+        case ("tip_tab_setup", .ja): return "Macを自動検出し、ローカル/WAN/ハイブリッドを自動構成して稼働準備を判定します。"
+        case ("tip_tab_setup", .zh): return "自动发现集群 Mac，一键配置本地/WAN/混合模式并检测运行就绪状态。"
+
+        case ("tip_tab_help", .de): return "12 interaktive Handbuch-Kapitel mit Detail-Ansichten, Architekturgrafiken & Suchfunktion."
+        case ("tip_tab_help", .en): return "12 interactive manual chapters with deep-dive views, architecture graphics & search."
+        case ("tip_tab_help", .fr): return "12 chapitres interactifs avec vues détaillées, schémas et recherche."
+        case ("tip_tab_help", .es): return "12 capítulos interactivos con vistas detalladas, gráficos y búsqueda."
+        case ("tip_tab_help", .pt): return "12 capítulos interativos com vistas detalhadas, gráficos e pesquisa."
+        case ("tip_tab_help", .ru): return "12 интерактивных глав руководства с подробными схемами и поиском."
+        case ("tip_tab_help", .ja): return "詳細ビュー・アーキテクチャ図・検索付きの12章対話型マニュアル。"
+        case ("tip_tab_help", .zh): return "12 个交互式手册章节，含深度视图、架构图解与全文搜索。"
+
         default: return key
+        }
+    }
+
+    static func tabShorttip(_ tab: NavigationTab, _ lang: AppLanguage) -> String {
+        switch tab {
+        case .overview: return text("tip_tab_overview", lang)
+        case .devices: return text("tip_tab_devices", lang)
+        case .models: return text("tip_tab_models", lang)
+        case .network: return text("tip_tab_network", lang)
+        case .internetCluster: return text("tip_tab_internet", lang)
+        case .multiModelMode: return text("tip_tab_mmm", lang)
+        case .agents: return text("tip_tab_agents", lang)
+        case .science: return text("tip_tab_science", lang)
+        case .console: return text("tip_tab_console", lang)
+        case .setup: return text("tip_tab_setup", lang)
+        case .help: return text("tip_tab_help", lang)
+        }
+    }
+
+    static func readinessLabel(_ state: ClusterReadinessState, _ lang: AppLanguage) -> String {
+        switch state {
+        case .ready: return text("readiness_ready", lang)
+        case .notReady: return text("readiness_not_ready", lang)
+        case .incomplete: return text("readiness_incomplete", lang)
+        case .unconfigured: return text("readiness_unconfigured", lang)
         }
     }
 }

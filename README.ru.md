@@ -312,6 +312,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit и адаптивный роутер):** Слияние признаков **EAGLE-3**, порог уверенности **Tree-MoA Early-Exit** (`50–95 %`) и **Adaptive Confidence Escalation (Ares)** в Multi-Model-Mode.
 - **Современные стандарты агентов и шлюзов:** Генерация и экспорт **OpenAI `/v1/responses` + MCP**, **MCP Server Registry JSON** и **A2A Agent Card** (`/.well-known/agent.json`).
 - **Тепло- и углеродно-ориентированное планирование:** Автоматическое понижение приоритета перегретых узлов (`.serious`/`.critical`) и учёт энергоэффективности.
+- **Фаза 12 — Автонастройка кластера (`Настройка и запуск`), проверка готовности и Shorttips:** 11-й раздел для автообнаружения и настройки Local/WAN/Hybrid, отображения статуса **Готов / Не готов / Не полностью / Не настроен** (включая Обзор) и всплывающих подсказок *Shorttips* на 8 языках.
 
 ---
 

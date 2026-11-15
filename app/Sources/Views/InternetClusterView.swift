@@ -33,6 +33,7 @@ struct InternetClusterView: View {
                     }
 
                     HazardStripesBar(height: 5, stripeWidth: 10, cornerRadius: 3, opacity: 0.88)
+                        .solarisShorttip(vm.shorttip(.internetCluster), id: "view_internet_header", vm: vm)
 
                     // Room Code, Relay URL & Scale Mode
                     HStack(spacing: 14) {

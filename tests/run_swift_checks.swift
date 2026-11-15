@@ -93,4 +93,19 @@ check(SpeculativeEngineMode.eagle3Fusion.speedupBonusMultiplier > SpeculativeEng
 check(AgentGatewayProtocol.allCases.count == 3, "3 AgentGatewayProtocol standards supported")
 check(ThermalCarbonSchedulingPolicy.allCases.count == 3, "3 ThermalCarbonSchedulingPolicy options supported")
 
-print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, MMM Auto-Setup, 2026 SOTA Points 1-5, 8-language localization) passed!")
+// 10. Phase 12: Cluster Auto-Setup, 4-State Readiness & 8-Language Shorttips
+check(NavigationTab.allCases.contains(.setup), "NavigationTab includes .setup")
+check(ClusterSetupVariant.allCases.count == 3, "3 ClusterSetupVariant options supported (local, internet, hybrid)")
+check(ClusterReadinessState.allCases.count == 4 && ClusterReadinessState.ready.isOperational && !ClusterReadinessState.notReady.isOperational, "4-state Readiness lifecycle valid")
+for lang in AppLanguage.allCases {
+    for state in ClusterReadinessState.allCases {
+        let lbl = L10n.readinessLabel(state, lang)
+        check(!lbl.isEmpty && !lbl.hasPrefix("readiness_"), "Missing readiness label \(state) for \(lang)")
+    }
+    for tab in NavigationTab.allCases {
+        let tip = L10n.tabShorttip(tab, lang)
+        check(!tip.isEmpty && !tip.hasPrefix("tip_tab_"), "Missing shorttip \(tab) for \(lang)")
+    }
+}
+
+print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, MMM Auto-Setup, 2026 SOTA Points 1-5, Setup/Readiness & 8-language Shorttips) passed!")

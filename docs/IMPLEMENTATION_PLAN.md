@@ -244,3 +244,41 @@ Dieser Implementierungsplan fasst die fünf auf aktuellen Forschungsergebnissen 
   * `@Published var mmmThermalCarbonAwareScheduling: Bool = true`
   * `thermalAndCarbonAdjustedTargets(from:)` bewertet `ThermalState` und Effizienz pro Node und priorisiert kühle/effiziente Knoten in MMM & Routing.
 * **Views:** `MultiModelModeView.swift` (Thermal-/Carbon-Aware Scheduler Toggle & Policy-Auswahl).
+
+---
+
+## 9. Phase 12 — Automatisches Verbund-Setup (`Setup / Einrichten`), Betriebsbereitschafts-Prüfung & Programmweite Hover-Shorttips
+
+Auf Basis aktueller Forschungsergebnisse zu Zero-Config-Cluster-Orchestrierung (`Bonjour/mDNS`, `mlx.distributed_config`, `JACCL/RDMA`, `Tailscale/Iroh QUIC P2P`), verteilten Readiness-State-Machines (wie in *Ray*, *Exo* und *Petals*) sowie macOS SwiftUI Pointer-/Accessibility-Best-Practices wird SS-CCC um eine **11. Seitenmenü-Kategorie `Setup / Einrichten`** sowie ein **programmweites Shorttip-/Tooltip-System** erweitert.
+
+### 9.1 Recherche-Grundlagen & Architektur-Entscheidungen
+1. **Zero-Config-Erkennung & Provisionierung auf allen Macs:**
+   * **Lokaler Verbund (TB3/4/5, RDMA/JACCL & 10GbE):** Automatische Erkennung aller über Bonjour/mDNS (`_ssccc._tcp` / `.local`) und Thunderbolt/LAN erreichbaren Macs (`system_profiler`, `ifconfig`, `rdma_ctl status`, `ibv_devices`), Erkennung der `bridge0`-Konfliktfreiheit, Abgleich von `iogpu.wired_limit_mb`, passwortlosem SSH-Trust (`ssh-copy-id`) sowie automatischer Erzeugung von `mlx.distributed_config` (`cluster.json`).
+   * **Internet-Verbund (WAN P2P):** Automatische Erkennung von `Tailscale` / `WireGuard` / `QUIC Iroh P2P` (`0-RTT Multiplex`, NAT Hole-Punching mit DERP-Fallback) und Gossip/Raum-Synchronisation.
+   * **Kombinationsverbund (Hybrid: Lokal + Internet):** Zwei-Ebenen-Setup, das lokale TB/RDMA-Inseln mit WAN-Peers über den jeweiligen Rank-0-Leitrechner koppelt.
+2. **4-stufige Betriebsbereitschafts-State-Machine (`ClusterReadinessState`):**
+   * Inspiriert durch relationale Readiness-Probes in *Exo / Ray / Petals* trennt SS-CCC strikt zwischen Liveness (lokaler Prozess) und verteilter Readiness (Cluster-Verbund):
+     1. **`unconfigured` (*Uneingerichtet*):** Keine Verbund-Topologie oder Provisionierung gespeichert.
+     2. **`incomplete` (*Unvollständig eingerichtet*):** Einzelne Voraussetzungen fehlen (z. B. `iogpu.wired_limit_mb` nicht gesetzt, SSH-Trust fehlt auf Teilknoten, `bridge0` aktiv oder WAN-Tunnel getrennt).
+     3. **`notReady` (*Nicht bereit*):** Einrichtung vorhanden, aber aktive Prüf-Probe fehlgeschlagen (Knoten nicht erreichbar, RDMA/TCP-Handshake oder API-Loop `/v1/models` antwortet nicht, thermische Drosselung `.critical`).
+     4. **`ready` (*Bereit — Betriebsbereit*):** Alle Knoten, Links, Speicherschutz-Grenzen, Transport-Protokolle und Endpunkte sind verifiziert und sofort einsatzfähig.
+3. **Mehrstufige Prüf-Funktion (`verifyClusterReadiness()`):**
+   * Führt deterministische Einzel-Checks (`ClusterReadinessCheckItem`) für die gewählte Variante (`Lokal`, `Internet-WAN`, `Hybrid`) aus:
+     * *Discovery & Host-Erreichbarkeit* (Bonjour/mDNS, `.local`-Auflösung, Peer-Ping/RTT)
+     * *Interconnect & Transport* (TB3/4/5 Link, `bridge0`-Check, `rdma_ctl` bzw. QUIC/Iroh/Tailscale Tunnel)
+     * *Speicherschutz & Hardware* (`iogpu.wired_limit_mb`-Guard pro Mac, freier RAM, Thermal-State)
+     * *Runtime & Gateway-Loop* (SSH/mlx.launch-Konsistenz, `:8000/v1` bzw. `:11434` Health-Antwort)
+   * Zeigt das Gesamturteil (**Bereit** vs. **Nicht bereit** / **Unvollständig** / **Uneingerichtet**) inklusive Schritt-für-Schritt-Behebung direkt im Setup-Bereich und als Live-Status-Badge in der Seitenleiste/Kopfzeile an.
+
+### 9.2 Programmweite Shorttips / Tooltips (Mouse-Hover in allen Bereichen)
+* **SwiftUI-Architektur ohne `@State`-Makros (CLT-kompatibel):**
+  * Zentrales Lokalisierungs-Wörterbuch in `Localization.swift` (alle 8 Sprachen: `DE/EN/FR/ES/PT/RU/JA/ZH`) für jeden Bereich, jeden Tab, jede Karte und alle zentralen Steuer-Elemente.
+  * Einheitlicher ViewModifier (`solarisShorttip(_ text: String, id: String)`) in `Theme.swift`, gesteuert über `@Published var activeShorttipText: String?` / `hoveredShorttipId: String?` in `ClusterViewModel` (kein `@State`, vollständige Accessibility-Spiegelung via `.help(text)` und `.accessibilityHint(text)` sowie Respekt vor `accessibilityReduceMotion`).
+  * **Sichtbarkeit in allen Bereichen:** Sowohl native macOS Hover-Tooltips (`.help(...)`) als auch eine schwebende, hochkontrastige Solaris-Shorttip-Leiste / Hover-Blase, die beim Überfahren eines Bereichs mit dem Mauszeiger sofort eine verständliche Kurz-Erklärung einblendet.
+
+### 9.3 Geplante Dateien & Tests
+* **`ClusterModels.swift`:** `NavigationTab.setup`, `ClusterSetupVariant` (`local`, `internet`, `hybrid`), `ClusterReadinessState` (`unconfigured`, `incomplete`, `notReady`, `ready`), `ClusterReadinessCheckItem`, `NodeProvisioningTarget`.
+* **`Localization.swift`:** Vollständige 8-Sprachen-Übersetzung für den Setup-Tab, alle 4 Readiness-Zustände und alle programmweiten Shorttip-Keys.
+* **`ClusterViewModel.swift`:** Automatische Verbund-Erkennung (`discoverClusterSetupTargets()`), Multi-Mac-Provisionierung (`runAutomaticClusterSetup()`), Prüf-Engine (`verifyClusterReadiness()`) und `@Published` Hover-Shorttip-State.
+* **`ClusterSetupView.swift` & `Theme.swift`:** Neue 11. Sidebar-Kategorie `Setup / Einrichten` mit Varianten-Wahl, Auto-Provisioning, Live-Prüfprotokoll und Bereitschafts-Anzeige; `solarisShorttip` auf allen 11 Views und Sidebar-Einträgen.
+* **`scripts/run_ssccc.sh` & `tests/test_global_suite.py`:** Aufnahme von `ClusterSetupView.swift` und neue automatisierte Tests für Auto-Setup, 4-Stufen-Readiness-Prüfung und 8-Sprachen-Shorttips.

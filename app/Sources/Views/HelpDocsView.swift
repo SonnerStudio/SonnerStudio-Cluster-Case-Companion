@@ -41,6 +41,7 @@ struct HelpDocsView: View {
             }
             .padding(24)
         }
+        .solarisShorttip(vm.shorttip(.help), id: "view_help_root", vm: vm)
     }
 
     // MARK: - Overview List (Clickable Chapter Cards)

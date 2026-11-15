@@ -17,6 +17,7 @@ struct MultiModelModeView: View {
             }
             .padding(24)
         }
+        .solarisShorttip(vm.shorttip(.multiModelMode), id: "view_mmm_root", vm: vm)
         .onAppear {
             if vm.mmmSlots.isEmpty {
                 if !vm.loadMultiModelConfiguration() {

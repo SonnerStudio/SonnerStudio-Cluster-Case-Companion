@@ -133,3 +133,12 @@ Die Analyse des `exo-explore/exo`-Repositories liefert entscheidende Best Practi
   * **MMM Next-Gen:** EAGLE-3 Speculative Fusion, Tree-MoA Early-Exit mit Konfidenz-Schwellenwert & Adaptive Confidence Escalation Routing.
   * **Moderne Gateway-Standards:** OpenAI `/v1/responses` + MCP Registry + A2A Agent Card (`/.well-known/agent.json`).
   * **Thermal- & Carbon-Aware Scheduling:** Automatische Drosselung bzw. Umverteilung bei `.serious`/`.critical` Thermal-State und Energieeffizienz-Gewichtung.
+
+---
+
+### Phase 12: Automatisches Verbund-Setup (`Setup / Einrichten`), Betriebsbereitschafts-Prüfung & Programmweite Shorttips
+* **Ziel:** 11. Seitenmenü-Kategorie zum automatischen Erkennen, Einrichten und Verifizieren lokaler, Internet-WAN- und hybrider Mac-Verbünde inkl. programmweiter Maus-Hover-Shorttips.
+* **Meilensteine:**
+  * **Auto-Discovery & Multi-Mac-Einrichtung:** Automatische Erkennung aller beteiligten Macs (Bonjour/mDNS, Thunderbolt/RDMA, Tailscale/QUIC Iroh) und geführte Einrichtung für Lokal-, Internet- und Hybrid-Verbünde.
+  * **Betriebsbereitschafts-Prüfung (`ClusterReadinessState`):** Mehrstufige Verifikation mit klarer Zustandsmeldung (*Uneingerichtet*, *Unvollständig eingerichtet*, *Nicht bereit*, *Bereit*).
+  * **Programmweite Shorttips / Tooltips (8 Sprachen):** Einheitliche Hover-Kurzerklärungen (`solarisShorttip` + `.help()`) über alle Seitenmenü-Kategorien, Karten und Steuer-Elemente hinweg.

@@ -301,6 +301,7 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 - **MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit & Routeur Adaptatif) :** Fusion **EAGLE-3**, seuil de confiance **Tree-MoA Early-Exit** (`50–95 %`) et **Adaptive Confidence Escalation (Ares)** directement dans le Mode Multi-Modèles.
 - **Standards Modernes d'Agents & Passerelles :** Aperçu et export **OpenAI `/v1/responses` + MCP**, **MCP Server Registry JSON** et **A2A Agent Card** (`/.well-known/agent.json`).
 - **Ordonnancement Thermique & Éco-Responsable :** Dépriorise automatiquement les nœuds en état thermique `.serious`/`.critical` et privilégie l'efficacité énergétique.
+- **Phase 12 — Auto-Setup de Grappe (`Configuration & Setup`), Vérification de Disponibilité & Shorttips :** 11ᵉ catégorie latérale pour détecter et configurer automatiquement Local/WAN/Hybride, afficher **Prêt / Non prêt / Incomplet / Non configuré** (aussi dans la Vue d'ensemble) et proposer des *Shorttips* au survol dans les 8 langues.
 
 ---
 

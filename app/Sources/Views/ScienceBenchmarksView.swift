@@ -35,6 +35,7 @@ struct ScienceBenchmarksView: View {
             }
             .padding(24)
         }
+        .solarisShorttip(vm.shorttip(.science), id: "view_science_root", vm: vm)
     }
 
     // MARK: - Header, Scope Selector & Sub-Tab Bar

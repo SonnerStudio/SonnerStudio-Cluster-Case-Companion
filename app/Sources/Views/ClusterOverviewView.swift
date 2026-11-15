@@ -9,6 +9,9 @@ struct ClusterOverviewView: View {
                 // Große 3-Reiter-Auswahl mit industrieller gelb-schwarzer Warnbereichsmarkierung
                 scopeSelectorCard
 
+                // Betriebsbereitschafts-Zustand direkt in der Verbund-Übersicht
+                readinessStatusOverviewCard
+
                 switch vm.overviewScope {
                 case .local:
                     localClusterContent
@@ -99,6 +102,72 @@ struct ClusterOverviewView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(SolarisTheme.amber.opacity(0.42), lineWidth: 1.2)
         )
+    }
+
+    private var readinessStatusOverviewCard: some View {
+        let stateColor: Color = {
+            switch vm.clusterReadinessState {
+            case .ready: return SolarisTheme.emerald
+            case .incomplete: return SolarisTheme.amber
+            case .notReady: return SolarisTheme.coral
+            case .unconfigured: return SolarisTheme.textSecondary
+            }
+        }()
+        let stateIcon: String = {
+            switch vm.clusterReadinessState {
+            case .ready: return "checkmark.seal.fill"
+            case .incomplete: return "exclamationmark.triangle.fill"
+            case .notReady: return "xmark.octagon.fill"
+            case .unconfigured: return "questionmark.diamond.fill"
+            }
+        }()
+
+        return SolarisCard(accent: stateColor) {
+            HStack(spacing: 12) {
+                Image(systemName: stateIcon)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(stateColor)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 8) {
+                        Text(vm.t("setup_title"))
+                            .font(SolarisTheme.bodyBold)
+                            .foregroundColor(SolarisTheme.textPrimary)
+                        Text(vm.currentReadinessLabel.uppercased())
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(stateColor)
+                            .cornerRadius(5)
+                    }
+                    Text("\(vm.clusterSetupVariant.rawValue) · Letzte Prüfung: \(vm.lastReadinessCheckedAt)")
+                        .font(.caption)
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+
+                Spacer()
+
+                Button {
+                    vm.verifyClusterReadiness()
+                } label: {
+                    Label("Prüfen", systemImage: "checklist.checked")
+                }
+                .buttonStyle(.bordered)
+                .solarisShorttip("Prüft Discovery, SSH, Thunderbolt/WAN-Links, VRAM-Schutz und API-Gateway.", id: "ov_verify_btn", vm: vm)
+
+                Button {
+                    vm.selectedTab = .setup
+                } label: {
+                    Label("Setup öffnen", systemImage: "wand.and.stars")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(stateColor)
+                .foregroundColor(.black)
+                .solarisShorttip(vm.shorttip(.setup), id: "ov_open_setup_btn", vm: vm)
+            }
+        }
+        .solarisShorttip("Aktueller Betriebszustand des Verbunds (Bereit / Nicht bereit / Unvollständig / Uneingerichtet).", id: "ov_readiness_card", vm: vm)
     }
 
     private func scopeMetadata(for scope: ClusterOverviewScope) -> (title: String, subtitle: String, badge: String, accent: Color) {

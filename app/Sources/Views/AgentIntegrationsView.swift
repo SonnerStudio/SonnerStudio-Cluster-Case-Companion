@@ -275,6 +275,7 @@ struct AgentIntegrationsView: View {
                         .buttonStyle(.bordered)
                     }
                 }
+                .solarisShorttip(vm.shorttip(.agents), id: "view_agents_gateway", vm: vm)
             }
             .padding(24)
         }

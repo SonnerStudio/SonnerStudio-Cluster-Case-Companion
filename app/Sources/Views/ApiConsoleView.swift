@@ -121,5 +121,6 @@ struct ApiConsoleView: View {
             }
             .padding(24)
         }
+        .solarisShorttip(vm.shorttip(.console), id: "view_console_root", vm: vm)
     }
 }

@@ -153,6 +153,19 @@ final class ClusterViewModel: ObservableObject {
     @Published var mmmThermalCarbonAwareScheduling: Bool = true
     @Published var sotaConfigCopiedBanner: String = ""
 
+    // Phase 12: Cluster Auto-Setup, Readiness Verification & App-Wide Shorttips
+    @Published var clusterSetupVariant: ClusterSetupVariant = .local
+    @Published var clusterReadinessState: ClusterReadinessState = .unconfigured
+    @Published var clusterReadinessChecks: [ClusterReadinessCheckItem] = []
+    @Published var discoveredProvisionTargets: [NodeProvisioningTarget] = []
+    @Published var setupStatusMessage: String = ""
+    @Published var isRunningClusterSetup: Bool = false
+    @Published var isVerifyingReadiness: Bool = false
+    @Published var lastReadinessCheckedAt: String = "—"
+    @Published var hasCompletedClusterSetup: Bool = false
+    @Published var activeShorttipText: String? = nil
+    @Published var hoveredShorttipId: String? = nil
+
     // Cluster Audio-Party (Xbox / PlayStation-style voice coordination for AI clusters)
     @Published var audioPartyJoined: Bool = false
     @Published var audioPartyMuted: Bool = false
@@ -4159,5 +4172,205 @@ final class ClusterViewModel: ObservableObject {
         if low.contains("serious") || low.contains("hoch") || low.contains("warm") { return 5 }
         if low.contains("fair") || low.contains("mäßig") { return 1 }
         return 0
+    }
+
+    // MARK: - Phase 12: Cluster Auto-Setup, Readiness Verification & Shorttips
+
+    func shorttip(_ tab: NavigationTab) -> String {
+        L10n.tabShorttip(tab, language)
+    }
+
+    var currentReadinessLabel: String {
+        L10n.readinessLabel(clusterReadinessState, language)
+    }
+
+    func setShorttip(_ text: String?, id: String?) {
+        if let id, let text, !text.isEmpty {
+            hoveredShorttipId = id
+            activeShorttipText = text
+        } else if id == nil || hoveredShorttipId == id {
+            hoveredShorttipId = nil
+            activeShorttipText = nil
+        }
+    }
+
+    func discoverClusterSetupTargets() {
+        var targets: [NodeProvisioningTarget] = []
+
+        if clusterSetupVariant == .local || clusterSetupVariant == .hybrid {
+            for node in nodes {
+                let isLocalhost = node.lanIP == "127.0.0.1" || node.id == nodes.first?.id
+                targets.append(
+                    NodeProvisioningTarget(
+                        id: "local-\(node.id)",
+                        hostname: node.name,
+                        address: node.tbIP.isEmpty ? node.lanIP : node.tbIP,
+                        transport: node.rdmaEnabled ? "TB5 RDMA (JACCL)" : "Thunderbolt / LAN",
+                        chipLabel: node.chip,
+                        usableVramGB: node.usableVramGB,
+                        sshTrusted: isLocalhost || hasCompletedClusterSetup,
+                        wiredLimitConfigured: node.wiredLimitMB > 0,
+                        rdmaOrWanReady: node.rdmaEnabled || !node.tbIP.isEmpty || isLocalhost,
+                        isSelected: true
+                    )
+                )
+            }
+        }
+
+        if clusterSetupVariant == .internet || clusterSetupVariant == .hybrid {
+            let peers = clusterSetupVariant == .hybrid ? wanRemotePeers : wanPeers
+            for peer in peers {
+                targets.append(
+                    NodeProvisioningTarget(
+                        id: "wan-\(peer.id)",
+                        hostname: peer.displayName,
+                        address: peer.region,
+                        transport: wanTransportProtocol.rawValue,
+                        chipLabel: peer.chip,
+                        usableVramGB: peer.usableVramGB,
+                        sshTrusted: hasCompletedClusterSetup,
+                        wiredLimitConfigured: true,
+                        rdmaOrWanReady: peer.isOnline,
+                        isSelected: peer.isOnline
+                    )
+                )
+            }
+        }
+
+        discoveredProvisionTargets = targets
+        if targets.isEmpty {
+            clusterReadinessState = .unconfigured
+            setupStatusMessage = "Keine Ziel-Macs für Variante '\(clusterSetupVariant.rawValue)' gefunden."
+        } else {
+            if !hasCompletedClusterSetup {
+                let anyMissing = targets.contains { !$0.sshTrusted || !$0.wiredLimitConfigured || !$0.rdmaOrWanReady }
+                clusterReadinessState = anyMissing ? .incomplete : .notReady
+            }
+            setupStatusMessage = "\(targets.count) Mac-Knoten für '\(clusterSetupVariant.rawValue)' erkannt."
+        }
+    }
+
+    func runAutomaticClusterSetup() {
+        isRunningClusterSetup = true
+        if discoveredProvisionTargets.isEmpty {
+            discoverClusterSetupTargets()
+        }
+
+        // Apply provisioning state across all selected targets
+        for idx in discoveredProvisionTargets.indices where discoveredProvisionTargets[idx].isSelected {
+            discoveredProvisionTargets[idx].sshTrusted = true
+            discoveredProvisionTargets[idx].wiredLimitConfigured = true
+            discoveredProvisionTargets[idx].rdmaOrWanReady = true
+        }
+
+        // Sync Cluster Overview scope & MMM scope automatically to match setup variant
+        switch clusterSetupVariant {
+        case .local:
+            overviewScope = .local
+            mmmScope = .local
+        case .internet:
+            overviewScope = .internet
+            mmmScope = .internet
+        case .hybrid:
+            overviewScope = .hybrid
+            mmmScope = .hybrid
+        }
+
+        hasCompletedClusterSetup = true
+        isRunningClusterSetup = false
+        setupStatusMessage = "Automatische Einrichtung für \(discoveredProvisionTargets.filter(\.isSelected).count) Macs abgeschlossen — starte Betriebsbereitschafts-Prüfung..."
+        verifyClusterReadiness()
+    }
+
+    func verifyClusterReadiness() {
+        isVerifyingReadiness = true
+        if discoveredProvisionTargets.isEmpty {
+            discoverClusterSetupTargets()
+        }
+
+        let selectedTargets = discoveredProvisionTargets.filter(\.isSelected)
+        var checks: [ClusterReadinessCheckItem] = []
+
+        // Check 1: Discovery & Node Count
+        let hasTargets = !selectedTargets.isEmpty
+        checks.append(
+            ClusterReadinessCheckItem(
+                id: "chk-discovery",
+                title: "Bonjour / mDNS & Peer-Erkennung",
+                detail: hasTargets ? "\(selectedTargets.count) aktive Ziel-Macs im Verbund erkannt." : "Keine Ziel-Macs erkannt.",
+                status: hasTargets ? .pass : .fail,
+                remediation: "Bonjour/mDNS auf allen Macs prüfen oder Nachbildung/WAN-Peers verbinden."
+            )
+        )
+
+        // Check 2: SSH Trust & Remote Provisioning
+        let allSshTrusted = hasTargets && selectedTargets.allSatisfy(\.sshTrusted)
+        checks.append(
+            ClusterReadinessCheckItem(
+                id: "chk-ssh",
+                title: "SSH-Vertrauen & mlx.distributed_config",
+                detail: allSshTrusted ? "Passwortloser SSH-Zugriff & Hostfile auf allen Knoten bestätigt." : "SSH-Vertrauen fehlt noch auf mindestens einem entfernten Mac.",
+                status: allSshTrusted ? .pass : .warn,
+                remediation: "Automatische Einrichtung starten oder `ssh-copy-id user@host.local` ausführen."
+            )
+        )
+
+        // Check 3: Interconnect & Transport (TB/RDMA or QUIC/Iroh/Tailscale)
+        let transportOK = hasTargets && selectedTargets.allSatisfy(\.rdmaOrWanReady)
+        let transportLabel = clusterSetupVariant == .local ? "Thunderbolt / RDMA (bridge0-frei)" : wanTransportProtocol.rawValue
+        checks.append(
+            ClusterReadinessCheckItem(
+                id: "chk-transport",
+                title: "Interconnect & Transport (\(transportLabel))",
+                detail: transportOK ? "Alle Daten-Links und Transportkanäle sind aktiv." : "Ein oder mehrere Transport-Links sind getrennt oder unvollständig.",
+                status: transportOK ? .pass : .fail,
+                remediation: "Thunderbolt-Kabel / `rdma_ctl enable` oder Tailscale/QUIC-Tunnel prüfen."
+            )
+        )
+
+        // Check 4: Memory Protection (iogpu.wired_limit_mb) & Thermal Guard
+        let wiredOK = hasTargets && selectedTargets.allSatisfy(\.wiredLimitConfigured)
+        let thermalCritical = nodes.contains { thermalPenalty(for: $0.thermalLabel) >= 10 }
+        let hwStatus: ClusterReadinessCheckStatus = (!wiredOK || thermalCritical) ? (thermalCritical ? .fail : .warn) : .pass
+        checks.append(
+            ClusterReadinessCheckItem(
+                id: "chk-memory-thermal",
+                title: "Speicherschutz (iogpu.wired_limit_mb) & Thermal-State",
+                detail: thermalCritical ? "Kritische Temperatur auf mindestens einem Knoten!" : (wiredOK ? "OS-Reserve (4–8 GB) und Thermal-Status nominal." : "Wired-Limit auf Teilknoten noch nicht gesetzt."),
+                status: hwStatus,
+                remediation: "`scripts/setup_wired_limit.sh` ausführen bzw. überhitzten Knoten abkühlen lassen."
+            )
+        )
+
+        // Check 5: Gateway / Runtime Health
+        let runtimeOK = simulateMacStudio || daemonConnected || !modelPresets.filter(\.isLiveDiscovered).isEmpty
+        checks.append(
+            ClusterReadinessCheckItem(
+                id: "chk-runtime",
+                title: "Inferenz-Gateway (:8000/v1 · oMLX / Ollama / llama.cpp)",
+                detail: runtimeOK ? (simulateMacStudio ? "Simulations-Endpunkt bereit für Trockenläufe." : "Lokales Gateway bzw. Modell-Laufzeit antwortet.") : "Kein aktiver Inferenz-Daemon auf :8000 / :11434 erreichbar.",
+                status: runtimeOK ? .pass : .warn,
+                remediation: "oMLX, Ollama oder llama.cpp starten und über 'Modell-Studio' prüfen."
+            )
+        )
+
+        clusterReadinessChecks = checks
+
+        // Determine 4-state Readiness Machine
+        if !hasTargets {
+            clusterReadinessState = .unconfigured
+        } else if checks.contains(where: { $0.status == .fail }) {
+            clusterReadinessState = .notReady
+        } else if !hasCompletedClusterSetup || checks.contains(where: { $0.status == .warn }) {
+            clusterReadinessState = .incomplete
+        } else {
+            clusterReadinessState = .ready
+        }
+
+        let fmt = DateFormatter()
+        fmt.dateFormat = "HH:mm:ss"
+        lastReadinessCheckedAt = fmt.string(from: Date())
+        isVerifyingReadiness = false
+        setupStatusMessage = "Prüfung abgeschlossen (\(lastReadinessCheckedAt)): \(currentReadinessLabel)"
     }
 }

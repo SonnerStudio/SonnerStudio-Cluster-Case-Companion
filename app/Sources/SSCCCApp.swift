@@ -128,6 +128,7 @@ struct MainStudioWindow: View {
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))
+                .solarisShorttip("Sprache der gesamten Benutzeroberfläche inkl. Handbuch & Shorttips (8 Sprachen).", id: "sidebar_lang_picker", vm: vm)
 
                 // Simulations-Schalter (bis Mac Studio per UPS eintrifft)
                 Button {
@@ -267,12 +268,17 @@ struct MainStudioWindow: View {
                         ScienceBenchmarksView(vm: vm)
                     case .console:
                         ApiConsoleView(vm: vm)
+                    case .setup:
+                        ClusterSetupView(vm: vm)
                     case .help:
                         HelpDocsView(vm: vm)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(SolarisBackgroundLayer(resourceName: "solaris_bg", envKey: "SSCCC_BG_PATH", imageOpacity: 0.78))
+                .overlay(alignment: .bottom) {
+                    SolarisShorttipBanner(text: vm.activeShorttipText)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -326,7 +332,14 @@ struct MainStudioWindow: View {
         .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .onHover { isOver in
             vm.hoveredSidebarTab = isOver ? tab : (vm.hoveredSidebarTab == tab ? nil : vm.hoveredSidebarTab)
+            if isOver {
+                vm.setShorttip(vm.shorttip(tab), id: "sidebar_\(tab.rawValue)")
+            } else {
+                vm.setShorttip(nil, id: "sidebar_\(tab.rawValue)")
+            }
         }
+        .help(vm.shorttip(tab))
+        .accessibilityHint(vm.shorttip(tab))
         .onTapGesture {
             vm.selectedTab = tab
         }

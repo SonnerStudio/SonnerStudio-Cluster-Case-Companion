@@ -26,6 +26,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
     case agents = "Agenten & IDEs"
     case science = "Forschung & Roofline"
     case console = "API & Konsole"
+    case setup = "Setup & Einrichten"
     case help = "Hilfe & Handbuch"
 
     var id: String { rawValue }
@@ -41,6 +42,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .agents: return "sparkles.rectangle.stack.fill"
         case .science: return "chart.xyaxis.line"
         case .console: return "terminal.fill"
+        case .setup: return "wand.and.stars"
         case .help: return "questionmark.circle.fill"
         }
     }
@@ -56,6 +58,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .agents: return "Lokale Agenten, IDEs & SDKs"
         case .science: return "arXiv, Splitwise & Tuning"
         case .console: return "OpenAI / Ollama / oMLX API"
+        case .setup: return "Auto-Setup & Bereitschaft"
         case .help: return "Handbuch & Einrichtung"
         }
     }
@@ -1082,4 +1085,62 @@ enum ThermalCarbonSchedulingPolicy: String, CaseIterable, Identifiable, Codable 
     case ecoCarbonAware = "Eco Carbon-Aware (Min Watt/Token)"
 
     var id: String { rawValue }
+}
+
+// MARK: - Phase 12: Cluster Auto-Setup & Readiness Verification Models
+
+enum ClusterSetupVariant: String, CaseIterable, Identifiable, Codable {
+    case local = "Lokaler Verbund (TB / RDMA / LAN)"
+    case internet = "Internet-Verbund (QUIC Iroh / Tailscale)"
+    case hybrid = "Kombinationsverbund (Lokal + Internet)"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .local: return "macstudio.fill"
+        case .internet: return "globe.americas.fill"
+        case .hybrid: return "point.3.connected.trianglepath.dotted"
+        }
+    }
+}
+
+enum ClusterReadinessState: String, CaseIterable, Identifiable, Codable {
+    case unconfigured = "unconfigured"
+    case incomplete = "incomplete"
+    case notReady = "notReady"
+    case ready = "ready"
+
+    var id: String { rawValue }
+
+    var isOperational: Bool {
+        self == .ready
+    }
+}
+
+enum ClusterReadinessCheckStatus: String, Codable {
+    case pass
+    case warn
+    case fail
+}
+
+struct ClusterReadinessCheckItem: Identifiable, Hashable, Codable {
+    let id: String
+    let title: String
+    let detail: String
+    let status: ClusterReadinessCheckStatus
+    let remediation: String
+}
+
+struct NodeProvisioningTarget: Identifiable, Hashable, Codable {
+    let id: String
+    let hostname: String
+    let address: String
+    let transport: String
+    let chipLabel: String
+    let usableVramGB: Double
+    var sshTrusted: Bool
+    var wiredLimitConfigured: Bool
+    var rdmaOrWanReady: Bool
+    var isSelected: Bool
 }

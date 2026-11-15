@@ -114,6 +114,64 @@ extension View {
     ) -> some View {
         modifier(SolarisGlowModifier(accent: accent, isActive: isActive, isHovered: isHovered, cornerRadius: cornerRadius))
     }
+
+    /// Programmweiter Shorttip/Tooltip beim Überfahren mit dem Mauszeiger (macOS .help + Solaris Hover-Leiste)
+    func solarisShorttip(_ text: String, id: String, vm: ClusterViewModel) -> some View {
+        modifier(SolarisShorttipModifier(text: text, id: id, vm: vm))
+    }
+}
+
+struct SolarisShorttipModifier: ViewModifier {
+    let text: String
+    let id: String
+    @ObservedObject var vm: ClusterViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .help(text)
+            .accessibilityHint(text)
+            .onHover { hovering in
+                if hovering {
+                    vm.setShorttip(text, id: id)
+                } else {
+                    vm.setShorttip(nil, id: id)
+                }
+            }
+    }
+}
+
+/// Schwebender Solaris-Shorttip-Balken am unteren Rand, sobald der Mauszeiger über einem Bereich ruht
+struct SolarisShorttipBanner: View {
+    let text: String?
+
+    var body: some View {
+        if let text, !text.isEmpty {
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(SolarisTheme.amberGlow)
+                Text(text)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(SolarisTheme.textPrimary)
+                    .lineLimit(2)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(SolarisTheme.canvasBg.opacity(0.95))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(SolarisTheme.amber.opacity(0.65), lineWidth: 1)
+                    )
+            )
+            .shadow(color: SolarisTheme.amber.opacity(0.25), radius: 10, x: 0, y: 4)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .padding(.bottom, 12)
+            .padding(.horizontal, 20)
+        }
+    }
 }
 
 /// Industrielle schräg gestrichelte gelb-schwarze Warnbereichsmarkierung (45°-Hazard-Stripes)

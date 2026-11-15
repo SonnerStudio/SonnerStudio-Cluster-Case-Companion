@@ -322,6 +322,7 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 - **MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit & Roteador Adaptativo):** Fusão **EAGLE-3**, limiar de confiança **Tree-MoA Early-Exit** (`50–95 %`) e **Adaptive Confidence Escalation (Ares)** integrados no Modo Multimodelo.
 - **Padrões Modernos de Agentes e Gateway:** Pré-visualização e exportação de **OpenAI `/v1/responses` + MCP**, **MCP Server Registry JSON** e **A2A Agent Card** (`/.well-known/agent.json`).
 - **Agendamento Térmico e Consciente de Carbono:** Desprioriza automaticamente nós em estado térmico `.serious`/`.critical` e prioriza eficiência energética.
+- **Fase 12 — Auto-Setup de Cluster (`Configuração e Setup`), Prontidão & Shorttips:** 11.ª categoria lateral para detetar e configurar automaticamente Local/WAN/Híbrido, reportar **Pronto / Não pronto / Incompleto / Não configurado** (também na Visão Geral) e exibir *Shorttips* ao passar o rato nos 8 idiomas.
 
 ---
 

@@ -312,6 +312,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **下一代 MMM（EAGLE-3、Tree-MoA Early-Exit 与自适应置信度路由）：** 在多模型模式中集成 **EAGLE-3** 多层特征融合、**Tree-MoA Early-Exit** 置信度阈值（`50–95%`）与 **Adaptive Confidence Escalation (Ares)**。
 - **现代智能体与网关标准：** 实时预览并导出 **OpenAI `/v1/responses` + MCP**、**MCP Server Registry JSON** 以及 **A2A Agent Card**（`/.well-known/agent.json`）。
 - **热感知与碳感知调度：** 自动降级 `.serious`/`.critical` 热状态节点并优先调度高能效节点。
+- **第 12 阶段 — 集群自动配置（`安装与自动配置`）、就绪检查与全局 Shorttips：** 新增第 11 个侧边栏分类，自动发现并配置本地/WAN/混合集群，在概览与设置页报告 **就绪 / 未就绪 / 配置不完整 / 未配置**，并支持全界面 8 语言悬停 Shorttips。
 
 ---
 

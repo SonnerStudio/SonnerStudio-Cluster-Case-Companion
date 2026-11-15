@@ -482,6 +482,33 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("generateA2AAgentCardJSON()", agent_view)
         self.assertIn("selectedGatewayProtocol", api_view)
 
+    def test_24_phase12_setup_readiness_and_shorttips(self):
+        """Verify Phase 12: 11th sidebar tab Setup & Readiness (also in Overview) and app-wide hover Shorttips."""
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        theme = (APP_SOURCES / "Views" / "Theme.swift").read_text(encoding="utf-8")
+        setup_view = (APP_SOURCES / "Views" / "ClusterSetupView.swift").read_text(encoding="utf-8")
+        overview = (APP_SOURCES / "Views" / "ClusterOverviewView.swift").read_text(encoding="utf-8")
+        app = (APP_SOURCES / "SSCCCApp.swift").read_text(encoding="utf-8")
+
+        for sym in ["case setup =", "enum ClusterSetupVariant", "enum ClusterReadinessState", "struct ClusterReadinessCheckItem", "struct NodeProvisioningTarget"]:
+            self.assertIn(sym, models)
+
+        for key in ["readiness_ready", "readiness_not_ready", "readiness_incomplete", "readiness_unconfigured", "setup_title", "tip_tab_setup"]:
+            for lang in [".de", ".en", ".fr", ".es", ".pt", ".ru", ".ja", ".zh"]:
+                self.assertIn(f'case ("{key}", {lang}):', loc)
+
+        for vm_sym in ["discoverClusterSetupTargets()", "runAutomaticClusterSetup()", "verifyClusterReadiness()", "setShorttip("]:
+            self.assertIn(vm_sym, vm)
+
+        self.assertIn("struct SolarisShorttipModifier", theme)
+        self.assertIn("struct SolarisShorttipBanner", theme)
+        self.assertIn("ClusterSetupView(vm: vm)", app)
+        self.assertIn("SolarisShorttipBanner(text: vm.activeShorttipText)", app)
+        self.assertIn("readinessStatusOverviewCard", overview)
+        self.assertIn("verifyClusterReadiness()", setup_view)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

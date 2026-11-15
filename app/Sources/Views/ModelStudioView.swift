@@ -408,5 +408,6 @@ struct ModelStudioView: View {
             }
             .padding(24)
         }
+        .solarisShorttip(vm.shorttip(.models), id: "view_models_root", vm: vm)
     }
 }

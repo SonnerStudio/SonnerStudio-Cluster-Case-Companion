@@ -197,5 +197,6 @@ struct NetworkRdmaView: View {
             }
             .padding(24)
         }
+        .solarisShorttip(vm.shorttip(.network), id: "view_network_root", vm: vm)
     }
 }

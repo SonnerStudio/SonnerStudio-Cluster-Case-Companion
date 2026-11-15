@@ -367,12 +367,17 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 - **Modern Agent & Gateway Standards:** Preview and export **OpenAI `/v1/responses`** payloads with native MCP tool declarations, **MCP Server Registry JSON**, and **A2A Agent Cards** (`/.well-known/agent.json`) in **Agents & IDEs** and **API Console**.
 - **Thermal- & Carbon-Aware Workload Placement:** Automatically deprioritize `.serious`/`.critical` thermal nodes and weight energy efficiency (`Eco Carbon-Aware` / `Thermal-Balanced`) during MMM scheduling.
 
+### 🛠️ Phase 12: Cluster Auto-Setup (`Setup & Provision`), Readiness Check & App-Wide Shorttips
+- **11th Sidebar Category (`ClusterSetupView`):** Auto-discovers local Thunderbolt/LAN Macs (Bonjour/mDNS), Internet peers (`QUIC Iroh` / `Tailscale`), or Hybrid clusters, provisions SSH trust, `iogpu.wired_limit_mb` & `mlx.distributed_config`, and runs multi-step verification.
+- **4-State Readiness Lifecycle (also visible in Cluster Overview):** Reports **Ready (Operational)**, **Not Ready**, **Partially Configured**, or **Unconfigured** across all 8 languages with remediation hints.
+- **App-Wide Hover Shorttips:** Moving the mouse cursor over any sidebar item, card, or view displays localized shorttips via macOS `.help(...)` and the floating **Solaris Shorttip Banner**.
+
 ---
 
 ## 🚧 Development Status & Contributing
 
 > [!IMPORTANT]
-> **SS-CCC v1.6+ is actively runnable and tested (`23/23` automated checks passing), while real-world multi-node endurance benchmarks continue.**
+> **SS-CCC v1.6+ is actively runnable and tested (`24/24` automated checks passing), while real-world multi-node endurance benchmarks continue.**
 > **Currently implemented & verified:** English default startup with 8-language UI (`EN/DE/FR/ES/PT/RU/JA/ZH`), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** across 6 operational views, open-ended M1–M12+ hardware probing, live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, 9-chapter Help Center, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
 
 We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:

@@ -367,12 +367,17 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 - **Moderne Agenten- & Gateway-Standards:** Live-Vorschau und Export für **OpenAI `/v1/responses`** mit nativer MCP-Tool-Deklaration, **MCP-Server-Registry JSON** und **A2A Agent Card** (`/.well-known/agent.json`) in **Agenten & IDEs** sowie **API & Konsole**.
 - **Thermal- & Carbon-Aware Workload Placement:** Stuft Knoten mit `.serious`/`.critical` Thermal-State automatisch herunter und gewichtet Energieeffizienz (`Eco Carbon-Aware` / `Thermal-Balanced`) bei der MMM-Planung.
 
+### 🛠️ Phase 12: Automatisches Verbund-Setup, Betriebsbereitschafts-Prüfung & Programmweite Shorttips
+- **11. Seitenmenü-Kategorie (`Setup & Einrichten`):** Erkennt lokale Thunderbolt-/LAN-Macs (Bonjour/mDNS), Internet-Peers (`QUIC Iroh` / `Tailscale`) oder Hybrid-Verbünde automatisch, richtet SSH-Trust, `iogpu.wired_limit_mb` und `mlx.distributed_config` ein.
+- **4-stufige Betriebsbereitschafts-Anzeige (auch in der Verbund-Übersicht):** Meldet **Bereit (Betriebsbereit)**, **Nicht bereit**, **Unvollständig eingerichtet** oder **Uneingerichtet** in allen 8 Sprachen inkl. konkreter Behebungshinweise.
+- **Programmweite Hover-Shorttips:** Beim Überfahren von Seitenmenü-Einträgen, Karten und Bereichen mit dem Mauszeiger erscheinen Kurzerklärungen sowohl als macOS-Tooltip (`.help`) als auch im schwebenden **Solaris-Shorttip-Balken**.
+
 ---
 
 ## 🚧 Entwicklungsstand & Mitmachen
 
 > [!IMPORTANT]
-> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `23/23` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
+> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `24/24` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
 > **Bereits umgesetzt und geprüft:** Englische Startsprache mit 8-Sprachen-Umschaltung (`EN/DE/FR/ES/PT/RU/JA/ZH`), **3-Reiter-Cluster-Übersicht** (**Lokaler Cluster**, **Internet-Cluster** mit regionalen & lokalen Teilverbünden sowie **Lokal + Internet**-Hybridansicht), **gelb-schwarze Industrie-Warnstreifen (`HazardStripesBar` / `IndustrialHazardBanner`)** in 6 Kernansichten, zukunftssichere M1–M12+-Hardware-Auslesung, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, 9-Kapitel-Handbuch sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
 
 Wir laden Entwickler, Forschende und Apple-Silicon-Begeisterte herzlich dazu ein, **mitzuentwickeln und SS-CCC weiterzubringen**:

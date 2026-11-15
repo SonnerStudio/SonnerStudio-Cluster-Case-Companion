@@ -312,6 +312,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **次世代 MMM（EAGLE-3・Tree-MoA Early-Exit・適応型信頼度ルーター）:** Multi-Model-Mode に **EAGLE-3** 特徴融合、**Tree-MoA Early-Exit** 信頼度しきい値（`50–95%`）、**Adaptive Confidence Escalation (Ares)** を統合。
 - **最新エージェント & ゲートウェイ標準:** **OpenAI `/v1/responses` + MCP**、**MCP Server Registry JSON**、および **A2A Agent Card**（`/.well-known/agent.json`）をライブ生成・エクスポート。
 - **熱・カーボン考慮型スケジューリング:** `.serious`/`.critical` の熱状態にあるノードを自動抑制し、エネルギー効率を優先配置。
+- **Phase 12 — 自動クラスターセットアップ（`セットアップと準備`）・稼働判定・全画面 Shorttips:** ローカル/WAN/ハイブリッド構成を自動検出・構成し、**稼働可能 / 未準備 / 設定未完了 / 未設定** を概要画面にも表示。全8言語のホバー Shorttips に対応。
 
 ---
 
