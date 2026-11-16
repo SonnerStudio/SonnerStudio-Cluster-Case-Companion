@@ -1,13 +1,13 @@
 {
-  "version": "1.6.37",
+  "version": "1.6.38",
   "build": 160,
-  "tag": "v1.6.37",
+  "tag": "v1.6.38",
   "title": "SS-CCC v1.6.0 — Science History, Audio-Party & Hybrid Cluster Coupling",
-  "notes": "• Merge remote-tracking branch 'origin/main' (7ce582b)\n• docs(i18n): add 3rd high-end Spanish graphic (ssccc_tb5_rdma_jaccl_es) (b9fc57c)\n• chore(release): auto-bump v1.6.36 (build 160) [skip ci] (9256b8b)\n• docs(i18n): complete de (12/12), fr (12/12) and first 2 es high-end graphics (09f69ca)\n• chore(release): auto-bump v1.6.35 (build 160) [skip ci] (47347f8)",
+  "notes": "• docs(readme): update all 8 READMEs and docs to 25/25 tests and full 8-language/GPU+ANE status (3f72304)\n• feat(i18n,hw): complete 8-language localization across all 11 views and show local Mac GPU/ANE cores (30ff55f)\n• chore(release): auto-bump v1.6.37 (build 160) [skip ci] (c2448cb)\n• Merge remote-tracking branch 'origin/main' (7ce582b)\n• docs(i18n): add 3rd high-end Spanish graphic (ssccc_tb5_rdma_jaccl_es) (b9fc57c)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "7ce582b",
-  "updated_at": "2026-11-15T16:40:45Z"
+  "commit_sha": "3f72304",
+  "updated_at": "2026-11-16T13:31:42Z"
 }
