@@ -99,6 +99,7 @@ def main() -> int:
     parser.add_argument("--part", choices=["none", "patch", "minor", "major"], default="none")
     parser.add_argument("--sync-git", action="store_true", help="Sync build count, commit SHA & recent notes from git")
     parser.add_argument("--mandatory", action="store_true", help="Mark this release as mandatory update")
+    parser.add_argument("--title", default="", help="Optional release title to store in version.json")
     parser.add_argument("--check", action="store_true", help="Only verify version.json and ClusterModels.swift match")
     args = parser.parse_args()
 
@@ -120,12 +121,16 @@ def main() -> int:
             commit_sha = git_sha
         if recent_log:
             data["notes"] = recent_log
-    elif args.part != "none":
+    if args.part != "none":
         new_build += 1
 
     data["version"] = new_version
     data["build"] = new_build
     data["tag"] = f"v{new_version}"
+    if args.title.strip():
+        data["title"] = args.title.strip()
+    elif args.part != "none":
+        data["title"] = f"SS-CCC v{new_version} — Full 8-Language Localization, Local GPU/ANE Core Readout & 25/25 Tests"
     data["commit_sha"] = commit_sha
     data["updated_at"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     if args.mandatory:

@@ -4566,12 +4566,19 @@ final class ClusterViewModel: ObservableObject {
 
     var localGitRepoRoot: URL? {
         let fm = FileManager.default
-        let candidates = [
+        var candidates = [
             URL(fileURLWithPath: fm.currentDirectoryPath),
             Bundle.main.bundleURL.deletingLastPathComponent(),
             Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent(),
             Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         ]
+        if let bgPath = ProcessInfo.processInfo.environment["SSCCC_BG_PATH"], !bgPath.isEmpty {
+            let repoFromBg = URL(fileURLWithPath: bgPath)
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+            candidates.append(repoFromBg)
+        }
         for base in candidates {
             var dir = base
             for _ in 0..<5 {
