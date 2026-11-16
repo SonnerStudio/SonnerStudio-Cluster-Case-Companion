@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Visitantes&color=f59e0b&labelColor=0f172a" alt="Visitantes"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Visitantes&color=f59e0b&labelColor=0f172a" alt="Visitantes"/></a><br/>
+📖 **[Wiki do projeto](wiki/Home.md)** · 🌐 **[Wiki GitHub](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[Contribuir](CONTRIBUTING.md)** · 🛡️ **[Segurança](SECURITY.md)** · 📰 **[Imprensa & LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *Gestor nativo macOS de conjuntos Apple Silicon e oficina de inferência distribuída MLX*
 
@@ -345,7 +346,7 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 │   ├── SSCCCApp.swift              # Janela principal, aviso de atualização e UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # Inferência M1–M12+, modelos WAN/Ciência/Histórico e versões
-│   │   └── Localization.swift      # Dicionário completo em 17 idiomas (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
+│   │   └── Localization.swift      # Dicionário completo em 17 idiomas (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Sondagem de hardware, modelos, Audio-Party WAN e atualizador GitHub
 │   └── Views/                      # 12 vistas SwiftUI modulares + Theme.swift (11 separadores laterais, Setup, ajuda interativa, faixas e brilho)
@@ -357,6 +358,11 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 │   └── setup_wired_limit.sh        # Aplica limites seguros de iogpu.wired_limit_mb
 ├── tests/                          # Conjunto de verificação global de 25 testes (Swift + Python)
 ├── .github/workflows/              # Controlo automático de versões CI e etiquetagem
+├── app/Resources/                # Ícone Dock Solaris (ssccc_app_icon.png / AppIcon.icns) e texturas
+├── wiki/                         # Wiki do projeto e barra lateral (_Sidebar.md)
+├── CONTRIBUTING.md               # Guia de contribuição (menu direito GitHub)
+├── SECURITY.md                   # Política de segurança e memória
+├── CODE_OF_CONDUCT.md            # Código de conduta
 └── version.json                    # Manifesto de controlo de atualizações alojado no GitHub
 ```
 
@@ -365,15 +371,14 @@ Convidamos universidades, equipas de investigação e entusiastas de Apple Silic
 - **Mudança discreta para a barra superior do macOS:** Clique no botão amarelo minimizar, use **`⌘⇧M`** ou clique em **Barra de menus** — a janela principal oculta-se e o SS-CCC continua ativo em segundo plano (modo `.accessory`) junto ao **Ollama**.
 - **Indicadores em tempo real:** Mostra de imediato **Prontidão**, **RAM total/utilizável (GB)**, **Nós ativos**, **Modelo e camadas**, **Motor** e **Slots MMM**.
 - **Cópia de endpoints em 1 clique e IDEs ligados:** Copie **`http://127.0.0.1:8000/v1`** ou **`http://127.0.0.1:11434`** para Cursor, OpenCode, Hermes Agent, Antigravity, VS Code e Xcode.
-- **Restauro instantâneo:** Reabra a janela completa em qualquer momento a partir da barra de menus (`⌘⇧M`).
-
+- **Restauro instantâneo e ícone Dock Solaris:** Reabra a janela completa (`⌘⇧M`) com ícone macOS moderno `1024×1024` (`ssccc_app_icon.png` / `AppIcon.icns`).
 ---
 
 ## 🚧 Estado de desenvolvimento e colaboração
 
 > [!IMPORTANT]
 > **O SS-CCC (v1.6+) é totalmente executável e validado por `25/25` testes automatizados; os ensaios de resistência multinó continuam.**
-> **Já implementado e verificado:** idioma inicial em inglês com **tradução completa nos 17 idiomas (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) em todas as 11 vistas, submenus, botões, tabelas e cartões detalhados (`L10n.tr`)**, **leitura e exibição dos núcleos CPU, GPU e Neural Engine (ANE)** nos cartões dos Mac locais, **barra lateral de 11 separadores** incl. **Configurar e Provisionar**, **visão geral em 3 separadores**, **faixas industriais de aviso amarelo-preto** e **realce luminoso Solaris**, deteção aberta M1–M12+ (incl. M5 Max/Ultra e M6), telemetria real em direto (sem dados fictícios ao desativar a simulação), descoberta em tempo real de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratório científico de 6 separadores, ponte híbrida Local ↔ Internet-WAN, Audio-Party com `AVAudioEngine`, **manual interativo de 12 capítulos**, **Shorttips em 17 idiomas** e atualização automática controlada via GitHub + CI.
+> **Já implementado e verificado:** idioma inicial em inglês com **tradução completa nos 17 idiomas (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) em todas as 11 vistas, submenus, botões, tabelas e cartões detalhados (`L10n.tr`)**, **leitura e exibição dos núcleos CPU, GPU e Neural Engine (ANE)** nos cartões dos Mac locais, **barra lateral de 11 separadores** incl. **Configurar e Provisionar**, **visão geral em 3 separadores**, **faixas industriais de aviso amarelo-preto** e **realce luminoso Solaris**, deteção aberta M1–M12+ (incl. M5 Max/Ultra e M6), telemetria real em direto (sem dados fictícios ao desativar a simulação), descoberta em tempo real de modelos (oMLX / Ollama / llama.cpp / GGUF), laboratório científico de 6 separadores, ponte híbrida Local ↔ Internet-WAN, Audio-Party com `AVAudioEngine`, **manual interativo de 12 capítulos**, **Shorttips em 17 idiomas** e atualização automática controlada via GitHub + CI.
 
 Convidamos programadores, investigadores e entusiastas de Apple Silicon a **participar no desenvolvimento e a fazer evoluir o SS-CCC**:
 - **Testar no seu equipamento:** Experimente o SS-CCC nos seus Mac M1–M12+ e partilhe medições de débito, memória e RDMA/JACCL.

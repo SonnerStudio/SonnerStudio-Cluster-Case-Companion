@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=L%C3%A1togat%C3%B3k&color=f59e0b&labelColor=0f172a" alt="Látogatók"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=L%C3%A1togat%C3%B3k&color=f59e0b&labelColor=0f172a" alt="Látogatók"/></a><br/>
+📖 **[Projekt Wiki](wiki/Home.md)** · 🌐 **[GitHub Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[Közreműködés](CONTRIBUTING.md)** · 🛡️ **[Biztonság](SECURITY.md)** · 📰 **[Hírek és LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *Natív macOS Apple Silicon klaszterkezelő és elosztott MLX-következtető stúdió*
 
@@ -353,6 +354,7 @@ Egyetemeket, kutatólaborokat és fejlesztői közösségeket hívunk hivatalos 
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Hardverfelderítés, modellkeresés, WAN/Audio-Party és GitHub frissítő
 │   └── Views/                      # 12 moduláris SwiftUI nézet + Theme.swift (11 fül, vészcsíkok és Shorttips)
+├── app/Resources/                # Solaris Dock Icon (ssccc_app_icon.png / AppIcon.icns) & Assets
 ├── core/                           # Python FastAPI átjáró, WebSocket WAN/Audio relék és MLX felosztás
 ├── scripts/
 │   ├── run_ssccc.sh                # Lefordítja és elindítja a macOS alkalmazást
@@ -360,6 +362,10 @@ Egyetemeket, kutatólaborokat és fejlesztői közösségeket hívunk hivatalos 
 │   ├── setup_tb_network.sh         # Beállítja a 10.99.1.x Thunderbolt hidat
 │   └── setup_wired_limit.sh        # Alkalmazza a biztonságos iogpu.wired_limit_mb korlátokat
 ├── tests/                          # 25 részből álló globális ellenőrző tesztcsomag (Swift + Python)
+├── wiki/                           # Wiki (Home.md, _Sidebar.md, Architecture, MMM, MenuBar, Science, 17 Languages)
+├── CONTRIBUTING.md                 # GitHub right-sidebar guide
+├── SECURITY.md                     # Security & memory guard policy
+├── CODE_OF_CONDUCT.md              # Community standards
 ├── .github/workflows/              # Automatizált CI verziókövetés és címkézés
 └── version.json                    # GitHubon tárolt frissítésvezérlő jegyzék
 ```
@@ -389,6 +395,7 @@ Egyetemeket, kutatólaborokat és fejlesztői közösségeket hívunk hivatalos 
 - **Beszédes élő mutatók a menüsorban:** Az ikon és a felugró panel azonnal mutatja a **Készenléti állapotot**, a **Teljes és használható RAM-ot (GB)**, az **Aktív csomópontokat**, a **Betöltött modellt és rétegeket**, a **Futtatókörnyezetet** és az **MMM slotokat**.
 - **1-kattintásos végpontok és IDE lista:** Másolja a **`http://127.0.0.1:8000/v1`** (OpenAI/MMM) vagy **`http://127.0.0.1:11434`** (Ollama) címet közvetlenül a menüsorból a Cursor, OpenCode, Hermes, Antigravity, VS Code és Xcode részére.
 - **Azonnali visszaállítás:** A teljes stúdióablak bármikor visszahívható a menüsorból (`⌘⇧M`), vagy ki-/bekapcsolható az automatikus lekicsinyítés.
+- **Modern Solaris Dock-ikon:** Egyedi `1024×1024` macOS alkalmazásikon (`ssccc_app_icon.png` és `AppIcon.icns`) az alsó Dockhoz (`applicationIconImage`).
 
 ---
 

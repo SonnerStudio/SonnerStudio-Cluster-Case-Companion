@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Visitors&color=f59e0b&labelColor=0f172a" alt="Visitors"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Visitors&color=f59e0b&labelColor=0f172a" alt="Visitors"/></a><br/>
+📖 **[Project Wiki](wiki/Home.md)** · 🌐 **[GitHub Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[Contributing](CONTRIBUTING.md)** · 🛡️ **[Security](SECURITY.md)** · 📰 **[News & LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *Native macOS Apple Silicon cluster manager & distributed MLX inference studio*
 
@@ -352,7 +353,7 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 │   ├── SSCCCApp.swift              # Main window, header update pill & UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # M1–M12+ chip inference, WAN/Science/History & Release models
-│   │   └── Localization.swift      # Complete 17-language UI & Help dictionary (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
+│   │   └── Localization.swift      # Complete 17-language UI & Help dictionary (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Hardware probes, model discovery, WAN/Audio-Party & GitHub updater
 │   └── Views/                      # 12 modular SwiftUI views + Theme.swift (11 sidebar tabs, Setup & Provision, interactive Help deep-dives, hazard stripes & glow highlights)
@@ -364,6 +365,11 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 │   └── setup_wired_limit.sh        # Applies safe iogpu.wired_limit_mb limits
 ├── tests/                          # 25-test global verification suite (Swift + Python)
 ├── .github/workflows/              # Automated CI version control & tagging
+├── app/Resources/                # Custom Solaris Dock icon (ssccc_app_icon.png / AppIcon.icns) & textures
+├── wiki/                         # Complete Project Wiki & GitHub Wiki navigation (_Sidebar.md)
+├── CONTRIBUTING.md               # Community & GitHub right-sidebar guide
+├── SECURITY.md                   # Security, wired memory & RDMA safety policy
+├── CODE_OF_CONDUCT.md            # Collaboration standards
 └── version.json                    # GitHub-hosted update control manifest
 ```
 
@@ -392,14 +398,14 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 - **Rich Live Menu Bar Telemetry:** The Menu Bar status item & popover immediately display **Cluster Readiness**, **Pooled & Usable RAM (GB)**, **Active Nodes**, **Loaded Model & Layer Split**, **Runtime**, and **Active MMM Slots**.
 - **1-Click API Endpoint Copy & Connected IDEs:** Copy **`http://127.0.0.1:8000/v1`** (OpenAI/MMM) or **`http://127.0.0.1:11434`** (Ollama) in one click and check active Agent/IDE consumers (Cursor, OpenCode, Hermes Agent, Antigravity, VS Code, Xcode).
 - **Instant Window Restore:** Reopen the full Studio window anytime from the Menu Bar (`⌘⇧M`) or toggle **Auto-Minimize on Window Minimize** directly in the popover.
-
+- **Modern Solaris macOS Dock Icon:** Features a custom `1024×1024` squircle icon (`app/Resources/ssccc_app_icon.png` & `AppIcon.icns`) applied automatically at launch and preserved when restoring from the Menu Bar (`SSCCCAppIconProvider`).
 ---
 
 ## 🚧 Development Status & Contributing
 
 > [!IMPORTANT]
 > **SS-CCC v1.6+ is actively runnable and tested (`25/25` automated checks passing), while real-world multi-node endurance benchmarks continue.**
-> **Currently implemented & verified:** English default startup with **complete 17-language localization (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) across all 11 views, submenus, buttons, tables & deep-dive cards (`L10n.tr`, full `"Layers"`/`"Schichten"` labels)**, **local Mac CPU + GPU + Neural Engine (ANE) core readout on node cards** (`IOAccelerator` / `system_profiler`), **11-tab sidebar** incl. **Setup & Provision** (auto-discovery + 4-state Readiness Check), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** & **Solaris glow highlights**, open-ended M1–M12+ hardware probing (incl. M5 Max/Ultra & M6), live real-time telemetry (no mock data when Simulation Mode is off), live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, **12-chapter interactive Click-to-Detail Help Center**, **app-wide 17-language Hover Shorttips**, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
+> **Currently implemented & verified:** English default startup with **complete 17-language localization (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) across all 11 views, submenus, buttons, tables & deep-dive cards (`L10n.tr`, full `"Layers"`/`"Schichten"` labels)**, **local Mac CPU + GPU + Neural Engine (ANE) core readout on node cards** (`IOAccelerator` / `system_profiler`), **11-tab sidebar** incl. **Setup & Provision** (auto-discovery + 4-state Readiness Check), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** & **Solaris glow highlights**, open-ended M1–M12+ hardware probing (incl. M5 Max/Ultra & M6), live real-time telemetry (no mock data when Simulation Mode is off), live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, **12-chapter interactive Click-to-Detail Help Center**, **app-wide 17-language Hover Shorttips**, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
 
 We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:
 - **Test on your hardware:** Try SS-CCC with your M1–M12+ Macs and share throughput, memory, and RDMA/JACCL stability findings.

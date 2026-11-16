@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=N%C3%A1v%C5%A1t%C4%9Bvn%C3%ADci&color=f59e0b&labelColor=0f172a" alt="Návštěvníci"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=N%C3%A1v%C5%A1t%C4%9Bvn%C3%ADci&color=f59e0b&labelColor=0f172a" alt="Návštěvníci"/></a><br/>
+📖 **[Wiki projektu](wiki/Home.md)** · 🌐 **[GitHub Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[Zapojit se](CONTRIBUTING.md)** · 🛡️ **[Bezpečnost](SECURITY.md)** · 📰 **[Novinky a LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *Nativní správce clusterů Apple Silicon pro macOS a studio distribuované inference MLX*
 
@@ -353,6 +354,7 @@ Zveme univerzity, AI laboratoře a vývojáře po celém světě k oficiálnímu
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Sondy hardwaru, zjišťování modelů, WAN/Audio-Party a GitHub updater
 │   └── Views/                      # 12 modulárních pohledů SwiftUI + Theme.swift (11 karet, výstražné pruhy a Shorttips)
+├── app/Resources/                # Solaris Dock Icon (ssccc_app_icon.png / AppIcon.icns) & Assets
 ├── core/                           # Brána Python FastAPI, relé WebSocket WAN/Audio a dělení MLX
 ├── scripts/
 │   ├── run_ssccc.sh                # Zkompiluje a spustí aplikaci pro macOS
@@ -360,6 +362,10 @@ Zveme univerzity, AI laboratoře a vývojáře po celém světě k oficiálnímu
 │   ├── setup_tb_network.sh         # Konfiguruje Thunderbolt most 10.99.1.x
 │   └── setup_wired_limit.sh        # Nastavuje bezpečné limity iogpu.wired_limit_mb
 ├── tests/                          # Sada 25 globálních ověřovacích testů (Swift + Python)
+├── wiki/                           # Wiki (Home.md, _Sidebar.md, Architecture, MMM, MenuBar, Science, 17 Languages)
+├── CONTRIBUTING.md                 # GitHub right-sidebar guide
+├── SECURITY.md                     # Security & memory guard policy
+├── CODE_OF_CONDUCT.md              # Community standards
 ├── .github/workflows/              # Automatické CI řízení verzí a značkování
 └── version.json                    # Manifest kontroly aktualizací hostovaný na GitHubu
 ```
@@ -389,6 +395,7 @@ Zveme univerzity, AI laboratoře a vývojáře po celém světě k oficiálnímu
 - **Přehledné živé indikátory v liště:** Ikona a okno ihned ukazují **Stav připravenosti**, **Celkovou a využitelnou RAM (GB)**, **Aktivní uzly**, **Načtený model a vrstvy**, **Runtime** a **Aktivní MMM sloty**.
 - **Kopírování endpointů 1 kliknutím a přehled IDE:** Zkopírujte **`http://127.0.0.1:8000/v1`** (OpenAI/MMM) nebo **`http://127.0.0.1:11434`** (Ollama) přímo z lišty pro Cursor, OpenCode, Hermes, Antigravity, VS Code a Xcode.
 - **Okamžité obnovení okna:** Plné okno Studia lze kdykoli vrátit z lišty nabídek (`⌘⇧M`) nebo zapnout automatickou minimalizaci.
+- **Moderní ikona Solaris v Docku:** Vlastní ikona `1024×1024` (`ssccc_app_icon.png` a `AppIcon.icns`) pro spodní lištu Docku (`applicationIconImage`).
 
 ---
 

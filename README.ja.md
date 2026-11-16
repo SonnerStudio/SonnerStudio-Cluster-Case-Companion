@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=%E8%A8%AA%E5%95%8F%E8%80%85&color=f59e0b&labelColor=0f172a" alt="訪問者"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=%E8%A8%AA%E5%95%8F%E8%80%85&color=f59e0b&labelColor=0f172a" alt="訪問者"/></a><br/>
+📖 **[プロジェクト Wiki](wiki/Home.md)** · 🌐 **[GitHub Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[コントリビュート](CONTRIBUTING.md)** · 🛡️ **[セキュリティ](SECURITY.md)** · 📰 **[ニュース & LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *macOS ネイティブ Apple Silicon クラスターマネージャー & 分散 MLX 推論スタジオ*
 
@@ -83,7 +84,7 @@ SS-CCC は **Tailscale / WireGuard、ZeroTier、libp2p QUIC、DERP リレー** �
 - **メモリ保護 (`iogpu.wired_limit_mb`):** ノードごとに 4–8 GB を macOS 用に予約し OOM を防止。
 - **ランタイム:** `MLX` (`mlx.distributed` / `JACCL`)、`oMLX` (ポート `8000`、SSD ページング KV キャッシュ)、`Ollama` (`11434`)、`llama.cpp` (`8080`)。
 - **ワンクリック連携:** OpenCode, Hermes Agent, Google Antigravity, Cursor, VS Code, Xcode。
-- **17 言語対応 UI:** English, Deutsch, Français, Español, Português, Русский, 日本語, 中文, Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ், Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ்。
+- **17 言語対応 UI:** English, Deutsch, Français, Español, Português, Русский, 日本語, 中文, Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ், Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ், Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ்。
 
 ---
 
@@ -361,7 +362,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   ├── SSCCCApp.swift              # メインウィンドウ、ヘッダー更新ピル & UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # M1–M12+ チップ推定、WAN/科学/履歴 & リリースモデル
-│   │   └── Localization.swift      # 17 言語完全対応 UI & ヘルプ辞書 (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
+│   │   └── Localization.swift      # 17 言語完全対応 UI & ヘルプ辞書 (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # ハードウェア探索、モデル検出、WAN/Audio-Party & GitHub 更新
 │   └── Views/                      # 12 個の SwiftUI ビュー + Theme.swift（11 サイドバータブ、Setup、図解ヘルプ、警告ストライプ & グロー強調）
@@ -373,6 +374,11 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   └── setup_wired_limit.sh        # 安全な iogpu.wired_limit_mb 上限を適用
 ├── tests/                          # 25 項目の総合テストスイート (Swift + Python)
 ├── .github/workflows/              # 自動 CI バージョン管理とタグ付け
+├── app/Resources/                # Solaris Dock アイコン (ssccc_app_icon.png / AppIcon.icns) & 背景テクスチャ
+├── wiki/                         # プロジェクト Wiki & サイドバー (_Sidebar.md)
+├── CONTRIBUTING.md               # コントリビューションガイド
+├── SECURITY.md                   # セキュリティとメモリ保護ポリシー
+├── CODE_OF_CONDUCT.md            # 行動規範
 └── version.json                    # GitHub ホスト型アップデート制御マニフェスト
 ```
 
@@ -381,15 +387,14 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **macOS 上部メニューバーへシームレスに移動：** ウィンドウの黄色い最小化ボタン、`⌘⇧M`、またはヘッダーの **メニューバーへ** をクリックするとメインウィンドウを隠し、**Ollama** などの横に `.accessory` バックグラウンドサービスとして常駐します。
 - **ライブステータス表示：** ポップオーバーで **稼働準備状況**、**統合/利用可能 RAM (GB)**、**稼働ノード数**、**ロード済みモデルと層分割**、**ランタイム**、**MMM スロット**を即座に確認できます。
 - **1クリック API コピー & 接続済み IDE：** **`http://127.0.0.1:8000/v1`** と **`http://127.0.0.1:11434`** を即コピーして Cursor / OpenCode / Hermes / Antigravity / VS Code / Xcode へ供給。
-- **即時ウィンドウ復元：** メニューバー（`⌘⇧M`）または Dock からいつでも Studio 画面を再表示できます。
-
+- **即時ウィンドウ復元 & モダン Solaris Dock アイコン：** `⌘⇧M` や Dock から即復元でき、下部 Dock 用にカスタム `1024×1024` アイコン（`ssccc_app_icon.png` / `AppIcon.icns`）を自動適用します。
 ---
 
 ## 🚧 開発状況とコントリビューションのお誘い
 
 > [!IMPORTANT]
 > **SS-CCC (v1.6+) は完全に動作可能で `25/25` の自動テストを通過しており、異種マルチノード環境での連続耐久ベンチマークを継続中です。**
-> **実装・検証済み機能：** 英語デフォルト起動＋全 17 言語 (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) にわたる **全 11 画面・サブメニュー・ボタン・表・詳細ガイドの完全ローカライズ (`L10n.tr`)**、ローカル Mac の **CPU・GPU・Neural Engine (ANE) コア数** のノードカード表示、**11 タブ構成サイドバー**（**セットアップと準備** 含む）、**3 タブ構成のクラスター概要**、**黄黒の産業用警告ストライプ** & **Solaris グロー強調**、将来対応 M1–M12+ ハードウェア検出（M5 Max/Ultra & M6 対応）、ライブ実測テレメトリ（モック無し）、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、**12 章インタラクティブヘルプ**、**全画面 17 言語 Shorttips**、および CI 連動 GitHub 自動アップデート。
+> **実装・検証済み機能：** 英語デフォルト起動＋全 17 言語 (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) にわたる **全 11 画面・サブメニュー・ボタン・表・詳細ガイドの完全ローカライズ (`L10n.tr`)**、ローカル Mac の **CPU・GPU・Neural Engine (ANE) コア数** のノードカード表示、**11 タブ構成サイドバー**（**セットアップと準備** 含む）、**3 タブ構成のクラスター概要**、**黄黒の産業用警告ストライプ** & **Solaris グロー強調**、将来対応 M1–M12+ ハードウェア検出（M5 Max/Ultra & M6 対応）、ライブ実測テレメトリ（モック無し）、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、**12 章インタラクティブヘルプ**、**全画面 17 言語 Shorttips**、および CI 連動 GitHub 自動アップデート。
 
 開発者、研究者、Apple Silicon 愛好家の皆様からの **貢献・参加を心より歓迎します**：
 - **実機でのテスト：** お持ちの M1–M12+ Mac で SS-CCC を試し、スループット・メモリ・RDMA/JACCL の安定性レポートを共有してください。

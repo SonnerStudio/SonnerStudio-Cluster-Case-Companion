@@ -1,46 +1,40 @@
-# Press Release: SonnerStudio Cluster-Case-Companion (SS-CCC) Expands into a Global Apple Silicon Cluster with a 5-Tab Research Lab
+# Press Release: SonnerStudio Cluster-Case-Companion (SS-CCC) v1.6.44 — 17 Languages, Multi-Model Mode, 6-Tab Research Lab & Menu Bar Background Service
 
-**November 14, 2026 — SonnerStudio** announces a major development milestone for **SonnerStudio Cluster-Case-Companion (SS-CCC)**. Built natively in SwiftUI for macOS, the open-source companion now extends beyond local Thunderbolt 3/4/5 interconnects to support **global Internet WAN Mac clusters with built-in participant chat** alongside a **5-tab scientific research laboratory** tailored for systems researchers and AI engineers.
+**November 16, 2026 — SonnerStudio** announces **v1.6.44** of **SonnerStudio Cluster-Case-Companion (SS-CCC)**. Built natively in SwiftUI for macOS, the open-source platform unites any **Apple Silicon Macs (M1–M12+)** over **Thunderbolt 3/4/5**, **RDMA (`JACCL`)**, and **global Internet WAN bridges** into a unified memory and inference pool for **MLX**, **oMLX**, **Ollama**, and **llama.cpp**.
 
 ![SonnerStudio Cluster-Case-Companion Ecosystem](images/ssccc_ecosystem_banner.jpg)
 
 ---
 
-### Key Development Highlights
+### Key Development Highlights & Current Status
 
-1. **Universal Apple Silicon Clustering Across M1–M9+ Generations**
-   SS-CCC removes fixed hardware pairings and supports any **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio, or Mac Pro** spanning **M1 through M6** as well as open-ended future **M7, M8, and M9+** processors. The node with the highest Unified Memory bandwidth automatically serves as **Rank 0 (Coordinator)**, protected by `iogpu.wired_limit_mb` macOS memory guards.
+1. **Universal Apple Silicon Support (M1–M12+) & Full Sensor Telemetry**
+   SS-CCC supports every **Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio, and Mac Pro** from **M1–M6** through open-ended **M7–M12+**, reading live **CPU P/E cores, GPU cores, Neural Engine (ANE) cores**, NVMe SSD capacity, thermal state, and power draw under `iogpu.wired_limit_mb` memory protection.
 
-2. **Global Internet WAN Cluster, Hybrid Local-to-WAN Bridge & Real-Time Chat (`/ws/wan/{room_id}`)**
-   Through the new **Internet Cluster & Chat** sidebar module, Apple Silicon Macs worldwide can form encrypted distributed clusters over **Tailscale / WireGuard**, **libp2p / DERP P2P relays**, or manual endpoints — scaling from small private teams to **32–256+ Mac research swarms**. With the new **Hybrid Bridge ("Couple Local + Internet")**, users can also link their entire local Thunderbolt/RDMA cluster as a high-speed Tier-0 island via their Rank 0 Gateway directly into the global WAN cluster, complete with unified layer sharding, one-click Science Lab analysis, and real-time WebSocket room chat.
+2. **Global Internet WAN Mesh, Audio-Party & Multi-Model Mode (MMM)**
+   Local TB/RDMA islands can be bridged with worldwide WAN peers via **Tailscale / WireGuard**, **QUIC / Iroh P2P (0-RTT)**, and **libp2p / DERP** alongside WebSocket chat (`/ws/wan/{room_id}`) and **`AVAudioEngine` Cluster Audio-Party**. **Multi-Model Mode (MMM)** orchestrates multiple concurrent models (*Parallel Pool*, *MoA*, *EAGLE-3 / Speculative Decoding*, *Tree-MoA*, *Ares*) on `:8000/v1` for **Cursor**, **VS Code**, **Xcode**, **OpenCode**, **Hermes Agent**, and **Google Antigravity**.
 
    ![Global Internet WAN Cluster and Participant Chat](images/ssccc_internet_wan_mesh.jpg)
 
-3. **5-Tab Scientific Research Lab for Local & Internet-WAN Clusters**
-   The **Science & Roofline** module has been massively expanded into a 5-tab workbench with an instant scope switcher (**Local TB/RDMA**, **Internet WAN**, and **Side-by-Side Comparison**):
-   - **Roofline & Bottleneck:** Interactive log-log Roofline plot $P(I) = \min(\beta \cdot I, \pi_{\text{eff}})$ featuring an effective WAN/interconnect ceiling, automatic bottleneck classification, and critical batch size $B^*$ computation.
-   - **WAN Topology & Scaling:** Stacked per-step latency decomposition, *Petals / SWARM* activation compression (`FP16`, `FP8/INT8`, `INT4`, `Top-K`), straggler and tail-jitter simulation, multi-regime scaling curves ($N = 1 \dots 128$ nodes), and **DiLoCo vs. naive DDP** communication analysis for WAN fine-tuning.
-   - **Memory & KV Analysis:** Exact Transformer memory equation tracking weights, activations, `iogpu.wired_limit_mb` headroom, and maximum context length $S_{\max}$ across `FP16 / 8-bit / 4-bit` KV quantization.
-   - **Energy, CO₂ & Cost:** *TokenPowerBench* evaluation (`J/token`, Energy-Delay Product `EDP`), regional carbon intensity profiles (`gCO₂eq/kWh`), electricity cost per 1M tokens, and datacenter Cloud API TCO comparison.
-   - **Trials, Stats & Export:** Reproducible `T = 0.0` trials ($N \in \{5, 10, 20\}$) reporting `p50/p95/p99`, **95% Confidence Intervals (`CI₉₅`)**, `CV%`, **Goodput (`SLO pass %`)**, per-trial telemetry tables, and one-click **CSV**, **JSON Manifest**, **LaTeX (`booktabs`)**, and **8-paper BibTeX** export.
+3. **6-Tab Scientific Research Lab & Per-Position History Recording**
+   **Science & Roofline** features 6 specialized analysis tabs (**Local TB/RDMA**, **Internet WAN**, and **Comparison**): **Roofline & Bottleneck**, **WAN Topology & Scaling (`N = 1..128`, *Petals/SWARM*, *DiLoCo*)**, **Memory & KV Analysis (`ANE-Split`, `3-Tier CacheGen`)**, **Energy, CO₂ & Cost (`J/token`, `EDP`)**, **Trials & Export (`CI₉₅`, `CV%`, `Goodput%`, `CSV / JSON / LaTeX / BibTeX`)**, and **History Recording**.
 
    ![Scientific Roofline and Energy Analytics](images/ssccc_science_roofline_hero.jpg)
 
-4. **Live Model Discovery, Full Hardware Telemetry & Global Test Suite**
-   Model Studio discovers real models directly from **oMLX**, **Ollama**, **llama.cpp**, local `.gguf` files, and `~/.cache/huggingface/hub`, replacing empty mock profiles with live runtime readiness checks. Hardware telemetry reads CPU P/E cores, GPU cores, Neural Engine cores, NVMe SSD capacity, thermal state, and power draw. A comprehensive `tests/` suite verifies the full Swift build, open-ended `M1–M9+` scaling, and 5-language localization (**English, German, French, Spanish, Portuguese**).
+4. **Minimize-to-Menu-Bar Service (`⌘⇧M`), Modern Solaris Dock Icon, Auto-Setup & 17 Languages**
+   - **Menu Bar Service & Dock Icon:** Minimizing moves SS-CCC into the top macOS menu bar next to **Ollama** (`.accessory` service mode) with live readiness, RAM pool, active nodes, loaded model/layers, MMM slot indicators, and 1-click `:8000/v1` & `:11434` endpoint copying, paired with a custom **Solaris macOS Dock icon**.
+   - **Auto-Setup & 4-State Readiness:** **Setup & Provision** discovers Macs automatically and validates **Ready / Not Ready / Partially Configured / Unconfigured**.
+   - **17 Languages & 25/25 Global Tests:** Complete localization across all 11 views, 12 Help chapters, hover shorttips, and 17 README files in **English, German, French, Spanish, Portuguese, Russian, Japanese, Chinese, Dutch, Afrikaans, Polish, Czech, Slovak, Hungarian, Korean, Hindi, and Tamil**.
 
 ---
 
-### Repository & Availability
-
-The complete source code, 5-language documentation, scientific research lab, and test suite are available on GitHub:
+### Availability, Wiki & Source Code
 
 - **GitHub Repository:** https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion
+- **Project Wiki:** https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki
 - **Quick Start on Apple Silicon (macOS 14.0+):**
   ```bash
   git clone https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git
   cd SonnerStudio-Cluster-Case-Companion
   chmod +x scripts/run_ssccc.sh && ./scripts/run_ssccc.sh
   ```
-
-*(Note: The repository ships the Swift source code; `./scripts/run_ssccc.sh` compiles the native macOS application locally on your Mac.)*

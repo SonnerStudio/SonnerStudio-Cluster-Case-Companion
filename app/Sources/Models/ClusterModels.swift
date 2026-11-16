@@ -1318,9 +1318,9 @@ enum AppReleaseMetadata {
     static let commitsMainAPIURL = "https://api.github.com/repos/SonnerStudio/SonnerStudio-Cluster-Case-Companion/commits/main"
     static let releasesPageURL = "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases"
 
-    static let fallbackVersion = "1.6.43"
-    static let fallbackBuild = 165
-    static let embeddedCommitSHA = "8b1333b"
+    static let fallbackVersion = "1.6.44"
+    static let fallbackBuild = 166
+    static let embeddedCommitSHA = "61221a7"
 
     static var currentVersion: String {
         if let bundleVer = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,

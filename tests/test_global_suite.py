@@ -585,13 +585,25 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("SSCCC_ICON_PATH", run_sh)
         self.assertIn("applicationIconImage", app)
 
-        # All 17 README files exist with Visitor Counter and cross-links to all 17 READMEs
+        # GitHub Right-Sidebar Docs, Wiki & LinkedIn News Posts
+        self.assertTrue((ROOT / "wiki" / "Home.md").exists(), "Missing wiki/Home.md")
+        self.assertTrue((ROOT / "wiki" / "_Sidebar.md").exists(), "Missing wiki/_Sidebar.md")
+        self.assertTrue((ROOT / "CONTRIBUTING.md").exists(), "Missing CONTRIBUTING.md")
+        self.assertTrue((ROOT / "SECURITY.md").exists(), "Missing SECURITY.md")
+        self.assertTrue((ROOT / "CODE_OF_CONDUCT.md").exists(), "Missing CODE_OF_CONDUCT.md")
+        for li in ["LINKEDIN_POST.de.md", "LINKEDIN_POST.nl.md"]:
+            lipath = ROOT / "docs" / li
+            self.assertTrue(lipath.exists(), f"Missing {li}")
+            self.assertLessEqual(len(lipath.read_text(encoding="utf-8")), 3000, f"{li} exceeds 3000 chars")
+
+        # All 17 README files exist with Visitor Counter, Wiki link, and cross-links to all 17 READMEs
         readme_files = ["README.md"] + [f"README.{code}.md" for code in ["de", "fr", "es", "pt", "ru", "ja", "zh", "nl", "af", "pl", "cs", "sk", "hu", "ko", "hi", "ta"]]
         for rname in readme_files:
             rpath = ROOT / rname
             self.assertTrue(rpath.exists(), f"Missing localized README: {rname}")
             rtxt = rpath.read_text(encoding="utf-8")
             self.assertIn("hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg", rtxt, f"Missing visitor counter in {rname}")
+            self.assertIn("wiki/Home.md", rtxt, f"Missing wiki link in {rname}")
             for target in readme_files:
                 self.assertIn(f"({target})", rtxt, f"{rname} missing switcher link to {target}")
 

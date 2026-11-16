@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Odwiedzaj%C4%85cy&color=f59e0b&labelColor=0f172a" alt="Odwiedzający"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Odwiedzaj%C4%85cy&color=f59e0b&labelColor=0f172a" alt="Odwiedzający"/></a><br/>
+📖 **[Wiki projektu](wiki/Home.md)** · 🌐 **[GitHub Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[Współtworzenie](CONTRIBUTING.md)** · 🛡️ **[Bezpieczeństwo](SECURITY.md)** · 📰 **[Aktualności i LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *Natywny menedżer klastrów Apple Silicon dla macOS i studio rozproszonej inferencji MLX*
 
@@ -353,6 +354,7 @@ Zapraszamy uczelnie, laboratoria AI i społeczności programistów do podjęcia 
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Sondowanie sprzętu, wykrywanie modeli, WAN/Audio-Party i updater GitHub
 │   └── Views/                      # 12 modułowych widoków SwiftUI + Theme.swift (11 zakładek, pasy ostrzegawcze i Shorttips)
+├── app/Resources/                # Solaris Dock Icon (ssccc_app_icon.png / AppIcon.icns) & Assets
 ├── core/                           # Bramka Python FastAPI, przekaźniki WebSocket WAN/Audio i podział MLX
 ├── scripts/
 │   ├── run_ssccc.sh                # Kompiluje i uruchamia aplikację macOS
@@ -360,6 +362,10 @@ Zapraszamy uczelnie, laboratoria AI i społeczności programistów do podjęcia 
 │   ├── setup_tb_network.sh         # Konfiguruje most Thunderbolt 10.99.1.x
 │   └── setup_wired_limit.sh        # Ustawia bezpieczne limity iogpu.wired_limit_mb
 ├── tests/                          # Zestaw 25 globalnych testów weryfikacyjnych (Swift + Python)
+├── wiki/                           # Wiki (Home.md, _Sidebar.md, Architecture, MMM, MenuBar, Science, 17 Languages)
+├── CONTRIBUTING.md                 # GitHub right-sidebar guide
+├── SECURITY.md                     # Security & memory guard policy
+├── CODE_OF_CONDUCT.md              # Community standards
 ├── .github/workflows/              # Automatyczna kontrola wersji CI i tagowanie
 └── version.json                    # Manifest kontroli aktualizacji na GitHub
 ```
@@ -389,6 +395,7 @@ Zapraszamy uczelnie, laboratoria AI i społeczności programistów do podjęcia 
 - **Czytelne wskaźniki na żywo w menu:** Ikona i okno wysuwane pokazują **Stan gotowości**, **Łączny i dostępny RAM (GB)**, **Aktywne węzły**, **Załadowany model i warstwy**, **Środowisko uruchomieniowe** i **Aktywne sloty MMM**.
 - **Kopiowanie punktów końcowych 1 kliknięciem i lista IDE:** Skopiuj **`http://127.0.0.1:8000/v1`** (OpenAI/MMM) lub **`http://127.0.0.1:11434`** (Ollama) bezpośrednio dla Cursor, OpenCode, Hermes, Antigravity, VS Code i Xcode.
 - **Natychmiastowe przywracanie okna:** W każdej chwili otwórz ponownie pełne okno Studio z poziomu paska menu (`⌘⇧M`) lub włącz/wyłącz automatyczną minimalizację.
+- **Nowoczesna ikona w Docku Solaris:** Dedykowana ikona `1024×1024` (`ssccc_app_icon.png` i `AppIcon.icns`) w dolnym pasku Dock (`applicationIconImage`, zachowywana przy powrocie z paska menu).
 
 ---
 

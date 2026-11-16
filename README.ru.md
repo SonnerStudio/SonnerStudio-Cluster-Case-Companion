@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=%D0%9F%D0%BE%D1%81%D0%B5%D1%82%D0%B8%D1%82%D0%B5%D0%BB%D0%B8&color=f59e0b&labelColor=0f172a" alt="Посетители"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=%D0%9F%D0%BE%D1%81%D0%B5%D1%82%D0%B8%D1%82%D0%B5%D0%BB%D0%B8&color=f59e0b&labelColor=0f172a" alt="Посетители"/></a><br/>
+📖 **[Вики проекта](wiki/Home.md)** · 🌐 **[GitHub Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[Участие](CONTRIBUTING.md)** · 🛡️ **[Безопасность](SECURITY.md)** · 📰 **[Новости и LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *Нативный менеджер кластеров Apple Silicon для macOS и студия распределённого MLX-инференса*
 
@@ -83,7 +84,7 @@ SS-CCC связывает локальные кластеры Thunderbolt с р�
 - **Защита памяти (`iogpu.wired_limit_mb`):** резерв 4–8 ГБ для macOS и WindowServer предотвращает OOM-сбои.
 - **Среды выполнения:** `MLX` (`mlx.distributed` / `JACCL`), `oMLX` (порт `8000` с SSD Paged KV-Cache), `Ollama` (`11434`), `llama.cpp` (`8080`).
 - **Интеграция в 1 клик:** OpenCode, Hermes Agent, Google Antigravity, Cursor, VS Code, Xcode.
-- **Мультиязычный интерфейс (17 языков):** English, Deutsch, Français, Español, Português, Русский, 日本語, 中文, Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ், Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ்.
+- **Мультиязычный интерфейс (17 языков):** English, Deutsch, Français, Español, Português, Русский, 日本語, 中文, Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ், Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ், Nederlands, Afrikaans, Polski, Čeština, Slovenčina, Magyar, 한국어, हिन्दी, தமிழ்.
 
 ---
 
@@ -361,7 +362,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   ├── SSCCCApp.swift              # Главное окно, индикатор обновлений в шапке и UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # Профили M1–M12+, модели WAN/Науки/Истории и релизов
-│   │   └── Localization.swift      # Полный словарь UI и справки на 17 языках (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
+│   │   └── Localization.swift      # Полный словарь UI и справки на 17 языках (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Опрос железа, поиск моделей, WAN/Audio-Party и GitHub-апдейтер
 │   └── Views/                      # 12 модульных SwiftUI-экранов + Theme.swift (11 вкладок, Setup, интерактивная справка, полосы и подсветка)
@@ -373,6 +374,11 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   └── setup_wired_limit.sh        # Устанавливает безопасные лимиты iogpu.wired_limit_mb
 ├── tests/                          # Набор из 25 глобальных автотестов (Swift + Python)
 ├── .github/workflows/              # Автоматический контроль версий CI и тегирование
+├── app/Resources/                # Иконка Dock Solaris (ssccc_app_icon.png / AppIcon.icns) и текстуры
+├── wiki/                         # Вики проекта и боковое меню (_Sidebar.md)
+├── CONTRIBUTING.md               # Руководство участника (правое меню GitHub)
+├── SECURITY.md                   # Политика безопасности и защиты памяти
+├── CODE_OF_CONDUCT.md            # Кодекс поведения
 └── version.json                    # Манифест управления обновлениями на GitHub
 ```
 
@@ -381,15 +387,14 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **Плавный переход в строку меню macOS:** Нажмите жёлтую кнопку сворачивания, **`⌘⇧M`** или кнопку **В строку меню** в шапке — главное окно скроется, а SS-CCC продолжит незаметную работу (режим `.accessory`) рядом с **Ollama**.
 - **Информативные живые индикаторы:** Всплывающее меню сразу показывает **Готовность**, **Объединённую и доступную ОЗУ (ГБ)**, **Активные узлы**, **Загруженную модель и слои**, **Среду** и **Слоты MMM**.
 - **Копирование URL в 1 клик и подключённые IDE:** Скопируйте **`http://127.0.0.1:8000/v1`** или **`http://127.0.0.1:11434`** для Cursor, OpenCode, Hermes Agent, Antigravity, VS Code и Xcode.
-- **Мгновенный возврат окна:** Верните полноразмерное окно Студии в любой момент через строку меню (`⌘⇧M`).
-
+- **Мгновенный возврат окна и современная иконка Dock:** Верните полноразмерное окно Студии (`⌘⇧M`); приложение использует собственную иконку `1024×1024` Solaris (`ssccc_app_icon.png` / `AppIcon.icns`).
 ---
 
 ## 🚧 Статус разработки и приглашение к участию
 
 > [!IMPORTANT]
 > **SS-CCC (v1.6+) полностью работоспособен и подтверждён `25/25` автотестами, при этом продолжаются длительные испытания на многоузловых стендах.**
-> **Уже реализовано и проверено:** английский язык по умолчанию с переключением между 8 языками (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) и полным переводом всех 11 экранов, подменю, кнопок, таблиц и глубоких разделов справки (`L10n.tr`), отображение **ядер CPU, GPU и Neural Engine (ANE)** на карточках локальных Mac, **11-вкладочная боковая панель** вкл. **Настройку и провижининг**, **3-вкладочный обзор кластера**, **жёлто-чёрные промышленные полосы предупреждения** и **подсветка Solaris**, перспективное определение M1–M12+ (вкл. M5 Max/Ultra и M6), живая телеметрия в реальном времени (без мок-данных), живой поиск моделей (oMLX / Ollama / llama.cpp / GGUF), 6-вкладочная научная лаборатория, гибридная связка Локально ↔ Интернет-WAN, `AVAudioEngine` Audio-Party, **интерактивный 12-главный справочник**, **подсказки Shorttips на 17 языках** и автообновление через GitHub + CI.
+> **Уже реализовано и проверено:** английский язык по умолчанию с переключением между 8 языками (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) и полным переводом всех 11 экранов, подменю, кнопок, таблиц и глубоких разделов справки (`L10n.tr`), отображение **ядер CPU, GPU и Neural Engine (ANE)** на карточках локальных Mac, **11-вкладочная боковая панель** вкл. **Настройку и провижининг**, **3-вкладочный обзор кластера**, **жёлто-чёрные промышленные полосы предупреждения** и **подсветка Solaris**, перспективное определение M1–M12+ (вкл. M5 Max/Ultra и M6), живая телеметрия в реальном времени (без мок-данных), живой поиск моделей (oMLX / Ollama / llama.cpp / GGUF), 6-вкладочная научная лаборатория, гибридная связка Локально ↔ Интернет-WAN, `AVAudioEngine` Audio-Party, **интерактивный 12-главный справочник**, **подсказки Shorttips на 17 языках** и автообновление через GitHub + CI.
 
 Мы сердечно приглашаем разработчиков, исследователей и энтузиастов Apple Silicon **присоединиться к развитию SS-CCC**:
 - **Протестируйте на своём железе:** запустите SS-CCC на ваших Mac M1–M12+ и поделитесь замерами пропускной способности, памяти и стабильности RDMA/JACCL.

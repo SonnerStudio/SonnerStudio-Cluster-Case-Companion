@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=%EB%B0%A9%EB%AC%B8%EC%9E%90&color=f59e0b&labelColor=0f172a" alt="방문자"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=%EB%B0%A9%EB%AC%B8%EC%9E%90&color=f59e0b&labelColor=0f172a" alt="방문자"/></a><br/>
+📖 **[프로젝트 Wiki](wiki/Home.md)** · 🌐 **[GitHub Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[기여 안내](CONTRIBUTING.md)** · 🛡️ **[보안 정책](SECURITY.md)** · 📰 **[소식 및 LinkedIn](docs/PRESS_RELEASE.en.md)**
 
 *네이티브 macOS Apple Silicon 클러스터 관리자 및 분산 MLX 추론 스튜디오*
 
@@ -353,6 +354,7 @@ SS-CCC에는 **GitHub 기반 통합 업데이트 파이프라인**이 내장되�
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # 하드웨어 프로브, 모델 탐색, WAN/Audio-Party 및 GitHub 업데이터
 │   └── Views/                      # 12개 모듈형 SwiftUI 뷰 + Theme.swift (11개 탭, 산업용 경고 줄무늬 및 Shorttips)
+├── app/Resources/                # Solaris Dock Icon (ssccc_app_icon.png / AppIcon.icns) & Assets
 ├── core/                           # Python FastAPI 게이트웨이, WebSocket WAN/Audio 릴레이 및 MLX 샤딩
 ├── scripts/
 │   ├── run_ssccc.sh                # macOS 앱 컴파일 및 실행
@@ -360,6 +362,10 @@ SS-CCC에는 **GitHub 기반 통합 업데이트 파이프라인**이 내장되�
 │   ├── setup_tb_network.sh         # 10.99.1.x Thunderbolt 브리지 구성
 │   └── setup_wired_limit.sh        # 안전한 iogpu.wired_limit_mb 제한 적용
 ├── tests/                          # 25개 전역 검증 테스트 스위트 (Swift + Python)
+├── wiki/                           # Wiki (Home.md, _Sidebar.md, Architecture, MMM, MenuBar, Science, 17 Languages)
+├── CONTRIBUTING.md                 # GitHub right-sidebar guide
+├── SECURITY.md                     # Security & memory guard policy
+├── CODE_OF_CONDUCT.md              # Community standards
 ├── .github/workflows/              # 자동화된 CI 버전 제어 및 태깅
 └── version.json                    # GitHub 호스팅 업데이트 제어 매니페스트
 ```
@@ -389,6 +395,7 @@ SS-CCC에는 **GitHub 기반 통합 업데이트 파이프라인**이 내장되�
 - **풍부한 메뉴 막대 실시간 표시기:** 아이콘과 팝오버에서 **준비 상태**, **통합/가용 RAM(GB)**, **활성 노드 수**, **로드된 모델 및 레이어**, **런타임**, **활성 MMM 슬롯**을 즉시 확인할 수 있습니다.
 - **1클릭 엔드포인트 복사 및 연결된 IDE 목록:** **`http://127.0.0.1:8000/v1`** (OpenAI/MMM) 또는 **`http://127.0.0.1:11434`** (Ollama) 주소를 팝오버에서 원클릭으로 복사해 Cursor, OpenCode, Hermes, Antigravity, VS Code, Xcode에 바로 공급합니다.
 - **즉시 창 복원 및 자동 최소화:** 메뉴 막대(`⌘⇧M`)나 Dock에서 언제든 스튜디오 창을 다시 열 수 있으며 자동 최소화 옵션을 켜고 끌 수 있습니다.
+- **최신 Solaris Dock 아이콘:** 하단 Dock 막대를 위한 맞춤형 `1024×1024` macOS 앱 아이콘(`ssccc_app_icon.png` 및 `AppIcon.icns`)을 시작 및 복원 시 자동 적용합니다.
 
 ---
 

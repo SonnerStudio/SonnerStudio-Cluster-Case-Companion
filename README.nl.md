@@ -6,7 +6,8 @@
 <img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
 <img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
 <img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
-<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Bezoekers&color=f59e0b&labelColor=0f172a" alt="Bezoekers"/></a>
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Bezoekers&color=f59e0b&labelColor=0f172a" alt="Bezoekers"/></a><br/>
+📖 **[Project-Wiki](wiki/Home.md)** · 🌐 **[GitHub-Wiki](https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/wiki)** · 🤝 **[Bijdragen](CONTRIBUTING.md)** · 🛡️ **[Beveiliging](SECURITY.md)** · 📰 **[Nieuws & LinkedIn](docs/LINKEDIN_POST.nl.md)**
 
 *Eigenstandige macOS-clusterbeheerder voor Apple Silicon & gedistribueerde MLX-inferentiestudio*
 
@@ -353,6 +354,7 @@ We nodigen universiteiten, AI-labs, ontwikkelaars en Mac-liefhebbers uit voor ee
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Hardware-scans, modeldetectie, WAN/Audio-Party & GitHub-updater
 │   └── Views/                      # 12 modulaire SwiftUI-weergaven + Theme.swift (11 tabbladen, warnstrepen & Shorttips)
+├── app/Resources/                # Solaris Dock Icon (ssccc_app_icon.png / AppIcon.icns) & Assets
 ├── core/                           # Python FastAPI-gateway, WebSocket WAN/Audio-relais & MLX-sharding
 ├── scripts/
 │   ├── run_ssccc.sh                # Compileert & start de macOS-applicatie
@@ -360,6 +362,10 @@ We nodigen universiteiten, AI-labs, ontwikkelaars en Mac-liefhebbers uit voor ee
 │   ├── setup_tb_network.sh         # Configureert 10.99.1.x Thunderbolt-bridge
 │   └── setup_wired_limit.sh        # Past veilige iogpu.wired_limit_mb-limieten toe
 ├── tests/                          # 25-delige globale testreeks (Swift + Python)
+├── wiki/                           # Wiki (Home.md, _Sidebar.md, Architecture, MMM, MenuBar, Science, 17 Languages)
+├── CONTRIBUTING.md                 # GitHub right-sidebar guide
+├── SECURITY.md                     # Security & memory guard policy
+├── CODE_OF_CONDUCT.md              # Community standards
 ├── .github/workflows/              # Geautomatiseerd CI-versiebeheer & tagging
 └── version.json                    # GitHub-gestuurd updatemanifest
 ```
@@ -389,6 +395,7 @@ We nodigen universiteiten, AI-labs, ontwikkelaars en Mac-liefhebbers uit voor ee
 - **Informatieve live-indicatoren in de menubalk:** Het menubalkicoon + popover toont direct **Gereedheidsstatus**, **Totaal / bruikbaar poolgeheugen (GB)**, **Actieve knooppunten**, **Geladen model & lagen**, **Laufzeit** en **Actieve MMM-slots**.
 - **1-klik eindpunten & gekoppelde IDE's/agenten:** Kopieer **`http://127.0.0.1:8000/v1`** (OpenAI/MMM) of **`http://127.0.0.1:11434`** (Ollama) rechtstreeks vanuit het popovermenu en controleer welke agenten (Cursor, OpenCode, Hermes, Antigravity, VS Code, Xcode) aangesloten zijn.
 - **Venster direct terughalen & automatische modus:** Herstel het volledige Studio-venster op elk moment vanuit de menubalk (`⌘⇧M`) of schakel de automatische minimaliseeroptie direct in het popovermenu.
+- **Modern Solaris Dock-symbool:** Op maat gemaakt `1024×1024` macOS-pictogram (`ssccc_app_icon.png` & `AppIcon.icns`) in de onderste Dock-balk (`applicationIconImage`, blijft behouden bij herstel vanuit de menubalk).
 
 ---
 
