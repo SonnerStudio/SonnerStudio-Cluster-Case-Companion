@@ -201,6 +201,7 @@ final class ClusterViewModel: ObservableObject {
     @Published var showUpdatePromptSheet: Bool = false
     @Published var skippedUpdateVersion: String = UserDefaults.standard.string(forKey: "ssccc_skipped_version") ?? ""
     @Published var updateProgressLog: String = ""
+    private var isRelaunching: Bool = false
     @Published var autoUpdateCheckEnabled: Bool = UserDefaults.standard.object(forKey: "ssccc_auto_update_check") as? Bool ?? true {
         didSet {
             UserDefaults.standard.set(autoUpdateCheckEnabled, forKey: "ssccc_auto_update_check")
@@ -4592,6 +4593,28 @@ final class ClusterViewModel: ObservableObject {
         return nil
     }
 
+    nonisolated private static func syncBuiltBinaryToTmp(repoRoot: URL) -> Bool {
+        let spmBin = repoRoot.appendingPathComponent("app/.build/debug/SSCCCApp").path
+        let outBin = "/tmp/SSCCCApp"
+        let tmpBin = "/tmp/SSCCCApp.new"
+        let fm = FileManager.default
+        guard fm.isExecutableFile(atPath: spmBin) else { return fm.isExecutableFile(atPath: outBin) }
+        do {
+            if fm.fileExists(atPath: tmpBin) {
+                try fm.removeItem(atPath: tmpBin)
+            }
+            try fm.copyItem(atPath: spmBin, toPath: tmpBin)
+            try fm.setAttributes([.posixPermissions: NSNumber(value: Int16(0o755))], ofItemAtPath: tmpBin)
+            if fm.fileExists(atPath: outBin) {
+                try fm.removeItem(atPath: outBin)
+            }
+            try fm.moveItem(atPath: tmpBin, toPath: outBin)
+            return true
+        } catch {
+            return fm.isExecutableFile(atPath: outBin)
+        }
+    }
+
     func applyGitHubUpdateAndRebuild() {
         guard let repoRoot = localGitRepoRoot else {
             openUpdateOnGitHub()
@@ -4613,20 +4636,29 @@ final class ClusterViewModel: ObservableObject {
                 }
             }
 
+            var syncSummary = Self.sanitizeGitNoise(pullOut.output)
             if pullOut.exitCode != 0 {
-                await MainActor.run {
-                    let cleanErr = Self.sanitizeGitNoise(pullOut.output)
-                    if !cleanErr.isEmpty {
-                        self.updateProgressLog = cleanErr
+                // Fallback when local auto-bump metadata diverged from origin/main
+                let fetchOut = Self.runCommandInDir(repoRoot, "/usr/bin/git", ["fetch", "origin", "main"])
+                let resetOut = fetchOut.exitCode == 0
+                    ? Self.runCommandInDir(repoRoot, "/usr/bin/git", ["reset", "--hard", "origin/main"])
+                    : fetchOut
+                if resetOut.exitCode != 0 {
+                    await MainActor.run {
+                        let cleanErr = Self.sanitizeGitNoise(resetOut.output.isEmpty ? pullOut.output : resetOut.output)
+                        if !cleanErr.isEmpty {
+                            self.updateProgressLog = cleanErr
+                        }
+                        self.updateStatus = .failed("git pull failed (Exit \(pullOut.exitCode))")
                     }
-                    self.updateStatus = .failed("git pull failed (Exit \(pullOut.exitCode))")
+                    return
                 }
-                return
+                syncSummary = Self.sanitizeGitNoise(resetOut.output)
             }
 
+            let pullSummary = syncSummary
             await MainActor.run {
-                let cleanPull = Self.sanitizeGitNoise(pullOut.output)
-                self.updateProgressLog = (cleanPull.isEmpty ? "Already up to date." : cleanPull) + "\n\nswift build …\n"
+                self.updateProgressLog = (pullSummary.isEmpty ? "Already up to date." : pullSummary) + "\n\nswift build …\n"
             }
 
             let appDir = repoRoot.appendingPathComponent("app")
@@ -4641,17 +4673,18 @@ final class ClusterViewModel: ObservableObject {
                 }
             }
 
+            if buildOut.exitCode == 0 {
+                _ = Self.syncBuiltBinaryToTmp(repoRoot: repoRoot)
+            }
+
             await MainActor.run {
                 if buildOut.exitCode == 0 {
                     self.refreshLocalCommitSHA()
                     if !self.updateProgressLog.hasSuffix("\n") {
                         self.updateProgressLog += "\n"
                     }
-                    self.updateProgressLog += "Build complete. Restarting SS-CCC…"
+                    self.updateProgressLog += "Build complete. Click Restart to launch the updated SS-CCC."
                     self.updateStatus = .updatedNeedsRestart
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                        self.relaunchApp()
-                    }
                 } else {
                     if self.updateProgressLog.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("swift build …") {
                         self.updateProgressLog += "\n" + buildOut.output
@@ -4662,33 +4695,69 @@ final class ClusterViewModel: ObservableObject {
         }
     }
 
-    func relaunchApp() {
-        showUpdatePromptSheet = false
-        if let repoRoot = localGitRepoRoot {
-            let script = repoRoot.appendingPathComponent("scripts/run_ssccc.sh").path
-            if FileManager.default.isExecutableFile(atPath: script) {
-                let oldPID = ProcessInfo.processInfo.processIdentifier
-                let escapedScript = script.replacingOccurrences(of: "\"", with: "\\\"")
-                let detachedCmd = "/usr/bin/nohup /bin/bash -lc 'while kill -0 \(oldPID) 2>/dev/null; do sleep 0.1; done; \"\(escapedScript)\" >/tmp/ssccc_relaunch.log 2>&1' </dev/null >/dev/null 2>&1 &"
-                let proc = Process()
-                proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
-                proc.arguments = ["-c", detachedCmd]
-                proc.currentDirectoryURL = repoRoot
-                proc.standardInput = FileHandle.nullDevice
-                proc.standardOutput = FileHandle.nullDevice
-                proc.standardError = FileHandle.nullDevice
-                try? proc.run()
-                proc.waitUntilExit()
+    private func spawnDetachedRelaunch(targetPath: String, workingDirectory: URL?, skipBuild: Bool) {
+        let oldPID = ProcessInfo.processInfo.processIdentifier
+        let cmd = "/usr/bin/nohup /bin/bash -lc 'while kill -0 \"$1\" 2>/dev/null; do sleep 0.1; done; SSCCC_SKIP_BUILD=\"$2\" exec \"$3\"' _ \"$SSCCC_RELAUNCH_PID\" \"$SSCCC_RELAUNCH_SKIP\" \"$SSCCC_RELAUNCH_TARGET\" </dev/null >/tmp/ssccc_relaunch.log 2>&1 &"
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        proc.arguments = ["-c", cmd]
+        if let workingDirectory {
+            proc.currentDirectoryURL = workingDirectory
+        }
+        var env = ProcessInfo.processInfo.environment
+        env["SSCCC_RELAUNCH_PID"] = "\(oldPID)"
+        env["SSCCC_RELAUNCH_SKIP"] = skipBuild ? "1" : "0"
+        env["SSCCC_RELAUNCH_TARGET"] = targetPath
+        proc.environment = env
+        proc.standardInput = FileHandle.nullDevice
+        proc.standardOutput = FileHandle.nullDevice
+        proc.standardError = FileHandle.nullDevice
+        try? proc.run()
+        proc.waitUntilExit()
 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    NSApplication.shared.terminate(nil)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        exit(0)
-                    }
-                }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            NSApplication.shared.terminate(nil)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                exit(0)
+            }
+        }
+    }
+
+    func relaunchApp() {
+        guard !isRelaunching else { return }
+        isRelaunching = true
+        showUpdatePromptSheet = false
+
+        let fm = FileManager.default
+        let fallbackExec = CommandLine.arguments.first ?? "/tmp/SSCCCApp"
+
+        if let repoRoot = localGitRepoRoot {
+            let spmBin = repoRoot.appendingPathComponent("app/.build/debug/SSCCCApp").path
+            let tmpBin = "/tmp/SSCCCApp"
+            let spmDate = (try? fm.attributesOfItem(atPath: spmBin)[.modificationDate] as? Date) ?? .distantPast
+            let tmpDate = (try? fm.attributesOfItem(atPath: tmpBin)[.modificationDate] as? Date) ?? .distantPast
+            if fm.isExecutableFile(atPath: spmBin) && (!fm.isExecutableFile(atPath: tmpBin) || spmDate > tmpDate) {
+                _ = Self.syncBuiltBinaryToTmp(repoRoot: repoRoot)
+            }
+
+            let script = repoRoot.appendingPathComponent("scripts/run_ssccc.sh").path
+            if fm.isExecutableFile(atPath: script) {
+                spawnDetachedRelaunch(
+                    targetPath: script,
+                    workingDirectory: repoRoot,
+                    skipBuild: fm.isExecutableFile(atPath: tmpBin)
+                )
                 return
             }
         }
+
+        let targetBin = fm.isExecutableFile(atPath: "/tmp/SSCCCApp") ? "/tmp/SSCCCApp" : fallbackExec
+        if fm.isExecutableFile(atPath: targetBin) {
+            spawnDetachedRelaunch(targetPath: targetBin, workingDirectory: localGitRepoRoot, skipBuild: true)
+            return
+        }
+
+        isRelaunching = false
         openUpdateOnGitHub()
     }
 

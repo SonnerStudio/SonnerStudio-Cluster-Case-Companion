@@ -1,13 +1,13 @@
 {
-  "version": "1.6.39",
-  "build": 161,
-  "tag": "v1.6.39",
-  "title": "SS-CCC — Vollständige 8-Sprachen-Lokalisierung, GPU/ANE-Kern-Anzeige & 25/25 Tests",
-  "notes": "• chore(release): auto-bump v1.6.38 (build 160) [skip ci] (8c830ae)\n• docs(readme): update all 8 READMEs and docs to 25/25 tests and full 8-language/GPU+ANE status (3f72304)\n• feat(i18n,hw): complete 8-language localization across all 11 views and show local Mac GPU/ANE cores (30ff55f)\n• chore(release): auto-bump v1.6.37 (build 160) [skip ci] (c2448cb)\n• Merge remote-tracking branch 'origin/main' (7ce582b)",
+  "version": "1.6.40",
+  "build": 162,
+  "tag": "v1.6.40",
+  "title": "SS-CCC v1.6.40 — Instant App Restart Fix, 2x4 README Language Bar & Full 8-Language Localization",
+  "notes": "• chore(release): publish v1.6.39 (build 161) update for 8-language localization and GPU/ANE readout (f8716c4)\n• chore(release): auto-bump v1.6.38 (build 160) [skip ci] (8c830ae)\n• docs(readme): update all 8 READMEs and docs to 25/25 tests and full 8-language/GPU+ANE status (3f72304)\n• feat(i18n,hw): complete 8-language localization across all 11 views and show local Mac GPU/ANE cores (30ff55f)\n• chore(release): auto-bump v1.6.37 (build 160) [skip ci] (c2448cb)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "8c830ae",
-  "updated_at": "2026-11-16T13:36:16Z"
+  "commit_sha": "f8716c4",
+  "updated_at": "2026-11-16T13:51:28Z"
 }
