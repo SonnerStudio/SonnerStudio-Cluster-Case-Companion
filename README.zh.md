@@ -367,7 +367,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   ├── bump_version.py             # 将 version.json 与 ClusterModels.swift 同步至 Git
 │   ├── setup_tb_network.sh         # 配置 10.99.1.x Thunderbolt 桥接网络
 │   └── setup_wired_limit.sh        # 应用安全的 iogpu.wired_limit_mb 内存上限
-├── tests/                          # 24 项全局自动化测试套件 (Swift + Python)
+├── tests/                          # 25 项全局自动化测试套件 (Swift + Python)
 ├── .github/workflows/              # 自动 CI 版本控制与打标
 └── version.json                    # 托管于 GitHub 的更新控制清单
 ```
@@ -377,8 +377,8 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 ## 🚧 开发状态与诚邀参与
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `24/24` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
-> **已实现并验证：** 英文默认启动与 8 语言即时切换 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**11 项侧边栏模块**（含 **安装与自动配置**）、**3 标签页集群概览**、**黄黑斜纹工业警示条**与 **Solaris 发光高亮**、开放式 M1–M12+ 硬件探测（含 M5 Max/Ultra 与 M6）、真实实时遥测数据（关闭模拟即无虚假数据）、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、**12 章交互式图文帮助中心**、**全界面 8 语言悬停 Shorttips** 以及由 GitHub + CI 驱动的自动更新机制。
+> **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `25/25` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
+> **已实现并验证：** 英文默认启动与全 **8 种语言** (`EN/DE/FR/ES/PT/RU/JA/ZH`) 覆盖 **全部 11 个界面、子菜单、按钮、表格与深度帮助卡片的完整本地化 (`L10n.tr`)**、本地 Mac 节点卡片的 **CPU、GPU 与神经网络引擎 (ANE) 核心数**显示、**11 项侧边栏模块**（含 **安装与自动配置**）、**3 标签页集群概览**、**黄黑斜纹工业警示条**与 **Solaris 发光高亮**、开放式 M1–M12+ 硬件探测（含 M5 Max/Ultra 与 M6）、真实实时遥测数据（关闭模拟即无虚假数据）、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、**12 章交互式图文帮助中心**、**全界面 8 语言悬停 Shorttips** 以及由 GitHub + CI 驱动的自动更新机制。
 
 我们热忱邀请开发者、研究人员与 Apple Silicon 爱好者 **共同参与并推动 SS-CCC 不断完善**：
 - **在您的硬件上实测：** 在 M1–M12+ Mac 上运行 SS-CCC，并分享吞吐量、显存占用及 RDMA/JACCL 稳定性数据。

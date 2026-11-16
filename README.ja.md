@@ -367,7 +367,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   ├── bump_version.py             # version.json & ClusterModels.swift を Git と同期
 │   ├── setup_tb_network.sh         # 10.99.1.x Thunderbolt ブリッジを設定
 │   └── setup_wired_limit.sh        # 安全な iogpu.wired_limit_mb 上限を適用
-├── tests/                          # 24 項目の総合テストスイート (Swift + Python)
+├── tests/                          # 25 項目の総合テストスイート (Swift + Python)
 ├── .github/workflows/              # 自動 CI バージョン管理とタグ付け
 └── version.json                    # GitHub ホスト型アップデート制御マニフェスト
 ```
@@ -377,8 +377,8 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 ## 🚧 開発状況とコントリビューションのお誘い
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) は完全に動作可能で `24/24` の自動テストを通過しており、異種マルチノード環境での連続耐久ベンチマークを継続中です。**
-> **実装・検証済み機能：** 英語デフォルト起動＋8 言語切替 (`EN/DE/FR/ES/PT/RU/JA/ZH`)、**11 タブ構成サイドバー**（**セットアップと準備** 含む）、**3 タブ構成のクラスター概要**、**黄黒の産業用警告ストライプ** & **Solaris グロー強調**、将来対応 M1–M12+ ハードウェア検出（M5 Max/Ultra & M6 対応）、ライブ実測テレメトリ（モック無し）、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、**12 章インタラクティブヘルプ**、**全画面 8 言語 Shorttips**、および CI 連動 GitHub 自動アップデート。
+> **SS-CCC (v1.6+) は完全に動作可能で `25/25` の自動テストを通過しており、異種マルチノード環境での連続耐久ベンチマークを継続中です。**
+> **実装・検証済み機能：** 英語デフォルト起動＋全 8 言語 (`EN/DE/FR/ES/PT/RU/JA/ZH`) にわたる **全 11 画面・サブメニュー・ボタン・表・詳細ガイドの完全ローカライズ (`L10n.tr`)**、ローカル Mac の **CPU・GPU・Neural Engine (ANE) コア数** のノードカード表示、**11 タブ構成サイドバー**（**セットアップと準備** 含む）、**3 タブ構成のクラスター概要**、**黄黒の産業用警告ストライプ** & **Solaris グロー強調**、将来対応 M1–M12+ ハードウェア検出（M5 Max/Ultra & M6 対応）、ライブ実測テレメトリ（モック無し）、リアルタイムモデル検出 (oMLX / Ollama / llama.cpp / GGUF)、6 タブ科学ラボ、ローカル ↔ インターネット WAN ハイブリッド結合、`AVAudioEngine` Audio-Party、**12 章インタラクティブヘルプ**、**全画面 8 言語 Shorttips**、および CI 連動 GitHub 自動アップデート。
 
 開発者、研究者、Apple Silicon 愛好家の皆様からの **貢献・参加を心より歓迎します**：
 - **実機でのテスト：** お持ちの M1–M12+ Mac で SS-CCC を試し、スループット・メモリ・RDMA/JACCL の安定性レポートを共有してください。

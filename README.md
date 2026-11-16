@@ -244,7 +244,7 @@ SS-CCC includes an integrated, **GitHub-driven update and version-control pipeli
    - **Source Installations:** Runs `git pull --ff-only origin main` + `swift build` directly inside the app and offers a 1-click **Relaunch App Now** button (`scripts/run_ssccc.sh`).
    - **Packaged `.app` Bundles:** Opens the GitHub Release asset download in Safari.
 3. **Automated CI Version Bumping (`.github/workflows/auto-version-control.yml`):**
-   - Every push to `main` triggers GitHub Actions to run `scripts/bump_version.py --part patch --sync-git`, synchronize `version.json` with `AppReleaseMetadata` in `ClusterModels.swift`, execute the full 14-test suite, commit `[skip ci] chore(release): auto-bump ...`, and update the Git tag `vX.Y.Z`.
+   - Every push to `main` triggers GitHub Actions to run `scripts/bump_version.py --part patch --sync-git`, synchronize `version.json` with `AppReleaseMetadata` in `ClusterModels.swift`, execute the full 25-test suite, commit `[skip ci] chore(release): auto-bump ...`, and update the Git tag `vX.Y.Z`.
 
 ---
 
@@ -299,7 +299,7 @@ Multiple IDEs and coding harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCo
 ![SS-CCC Global + Local Hybrid Supercluster Record Challenge](docs/images/ssccc_world_record_challenge.jpg)
 
 **Can a decentralized, cross-continental coalition of Apple Silicon Macs rival a datacenter supercomputer?**  
-We invite universities, AI research labs, developer communities, and Apple Silicon enthusiasts worldwide to organize an official **SS-CCC Hybrid Supercluster Record Attempt** — uniting as many **local Thunderbolt 3/4/5/RDMA clusters** and **Internet-connected WAN Macs** simultaneously as possible using SS-CCC's **Hybrid Bridge (`Couple Local + Internet`)**, **Cluster Audio-Party**, and **5-Tab Research Lab**.
+We invite universities, AI research labs, developer communities, and Apple Silicon enthusiasts worldwide to organize an official **SS-CCC Hybrid Supercluster Record Attempt** — uniting as many **local Thunderbolt 3/4/5/RDMA clusters** and **Internet-connected WAN Macs** simultaneously as possible using SS-CCC's **Hybrid Bridge (`Couple Local + Internet`)**, **Cluster Audio-Party**, and **6-Tab Research Lab**.
 
 ### 🔬 Scientific Rationale & Mathematical Scaling Model
 
@@ -358,7 +358,7 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 │   ├── bump_version.py             # Synchronizes version.json & ClusterModels.swift with Git
 │   ├── setup_tb_network.sh         # Configures 10.99.1.x Thunderbolt bridge
 │   └── setup_wired_limit.sh        # Applies safe iogpu.wired_limit_mb limits
-├── tests/                          # 24-test global verification suite (Swift + Python)
+├── tests/                          # 25-test global verification suite (Swift + Python)
 ├── .github/workflows/              # Automated CI version control & tagging
 └── version.json                    # GitHub-hosted update control manifest
 ```
@@ -387,8 +387,8 @@ We invite universities, AI research labs, developer communities, and Apple Silic
 ## 🚧 Development Status & Contributing
 
 > [!IMPORTANT]
-> **SS-CCC v1.6+ is actively runnable and tested (`24/24` automated checks passing), while real-world multi-node endurance benchmarks continue.**
-> **Currently implemented & verified:** English default startup with 8-language UI (`EN/DE/FR/ES/PT/RU/JA/ZH`), **11-tab sidebar** incl. **Setup & Provision** (auto-discovery + 4-state Readiness Check), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** & **Solaris glow highlights**, open-ended M1–M12+ hardware probing (incl. M5 Max/Ultra & M6), live real-time telemetry (no mock data when Simulation Mode is off), live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, **12-chapter interactive Click-to-Detail Help Center**, **app-wide 8-language Hover Shorttips**, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
+> **SS-CCC v1.6+ is actively runnable and tested (`25/25` automated checks passing), while real-world multi-node endurance benchmarks continue.**
+> **Currently implemented & verified:** English default startup with **complete 8-language localization (`EN/DE/FR/ES/PT/RU/JA/ZH`) across all 11 views, submenus, buttons, tables & deep-dive cards (`L10n.tr`, full `"Layers"`/`"Schichten"` labels)**, **local Mac CPU + GPU + Neural Engine (ANE) core readout on node cards** (`IOAccelerator` / `system_profiler`), **11-tab sidebar** incl. **Setup & Provision** (auto-discovery + 4-state Readiness Check), **3-tab Cluster Overview** (**Local Cluster**, **Internet Cluster** with regional & local subclusters, and **Local + Internet** hybrid view), **yellow-black industrial hazard-stripe banners (`HazardStripesBar` / `IndustrialHazardBanner`)** & **Solaris glow highlights**, open-ended M1–M12+ hardware probing (incl. M5 Max/Ultra & M6), live real-time telemetry (no mock data when Simulation Mode is off), live model discovery (oMLX / Ollama / llama.cpp / GGUF), 6-tab Science Lab with per-position & global History Recording, Hybrid Local ↔ Internet-WAN coupling, `AVAudioEngine` Cluster Audio-Party, **12-chapter interactive Click-to-Detail Help Center**, **app-wide 8-language Hover Shorttips**, and GitHub-controlled auto-updating with CI version control. Multi-node endurance runs across heterogeneous TB4/TB5/RDMA (`JACCL`) topologies are continuously being benchmarked and refined.
 
 We warmly invite developers, researchers, and Apple Silicon enthusiasts to **contribute and help shape SS-CCC**:
 - **Test on your hardware:** Try SS-CCC with your M1–M12+ Macs and share throughput, memory, and RDMA/JACCL stability findings.

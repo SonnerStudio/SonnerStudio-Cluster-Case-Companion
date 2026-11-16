@@ -93,7 +93,7 @@ Im Bereich **Internet-Verbund & Chat** überwacht SS-CCC kontinuierlich die real
 | :--- | :--- |
 | **1. Verbund-Übersicht** | Gesamtspeicher-Balken, aktive M1–M12+-Topologie, paarweise Thunderbolt-/RDMA-Übertragungsraten und **4-stufige Betriebsbereitschafts-Karte** |
 | **2. Geräte & Vergleich** | Beliebige M1–M12+-Macs hinzufügen/entfernen, CPU/GPU/ANE/SSD/Thermik/Strom in Echtzeit auslesen und vergleichen |
-| **3. Modell-Werkstatt** | Echte Modelle aus oMLX / Ollama / llama.cpp einlesen, Dienstbereitschaft prüfen, anteilige Schichtenverteilung, ANE-Split & 3-Tier KV-Speicher/CacheGen regeln |
+| **3. Modell Werkstatt** | Echte Modelle aus oMLX / Ollama / llama.cpp einlesen, Dienstbereitschaft prüfen, anteilige Schichtenverteilung, ANE-Split & 3-Tier KV-Speicher/CacheGen regeln |
 | **4. Netzwerk & Direktspeicher** | Mischbetrieb / TB / LAN / RDMA umschalten, `FAST_SYNCH=1` setzen, Pipeline Ring vs. JACCL Full-Mesh TP wählen und TB3/TB4/TB5-Klassen einsehen |
 | **5. Weltweiter Verbund, Audio-Party & Gespräch** | Lokale TB/RDMA-Macs per Hybrid-Brücke mit weltweiten WAN-Macs (QUIC/Iroh 0-RTT, Tailscale/WireGuard, libp2p/DERP) koppeln, **Internetbandbreite & WAN-Datendurchsatz** (`netstat`, ICMP-Ping/Jitter, `networkQuality -c`) live überwachen und per Audio-Party & Gespräch (`/ws/wan-audio`, `/ws/wan`) abstimmen |
 | **6. Multi-Model-Mode (MMM)** | Mehrere Modelle im **Lokalen Cluster**, **Internet-Cluster** oder **Hybrid (Lokal + Internet)** als *Parallel-Pool*, *Mixture-of-Agents*, *EAGLE-3 / Speculative Decoding*, *Tree-MoA Early-Exit* oder *Ares Adaptive Router* zusammenführen — inkl. VRAM-/Thermal-/Carbon-Schutz & gleichzeitiger Leistungsentnahme durch mehrere IDEs (`:8000/v1`) |
@@ -244,7 +244,7 @@ SS-CCC verfügt über eine integrierte, **über GitHub gesteuerte Update- und Ve
    - **Quelltext-Installationen:** Führt `git pull --ff-only origin main` + `swift build` direkt aus der App aus und startet SS-CCC per Klick auf **App jetzt neu starten** (`scripts/run_ssccc.sh`) neu.
    - **Eigenständige `.app`-Pakete:** Öffnet direkt das aktuelle GitHub Release im Browser.
 3. **Automatische CI-Versionskontrolle (`.github/workflows/auto-version-control.yml`):**
-   - Jeder Push auf `main` startet auf GitHub automatisch `scripts/bump_version.py --part patch --sync-git`, synchronisiert `version.json` mit `AppReleaseMetadata` in `ClusterModels.swift`, führt alle 14 Tests aus, committet `[skip ci] chore(release): auto-bump ...` und setzt das passende Git-Tag `vX.Y.Z`.
+   - Jeder Push auf `main` startet auf GitHub automatisch `scripts/bump_version.py --part patch --sync-git`, synchronisiert `version.json` mit `AppReleaseMetadata` in `ClusterModels.swift`, führt alle 25 Tests aus, committet `[skip ci] chore(release): auto-bump ...` und setzt das passende Git-Tag `vX.Y.Z`.
 
 ---
 
@@ -299,7 +299,7 @@ Mehrere IDEs und Agent-Harnesses (**Cursor**, **VS Code**, **Xcode**, **OpenCode
 ![SS-CCC Weltrekord-Versuch Hybrid-Hochleistungsverbund](docs/images/i18n/ssccc_world_record_challenge_de.jpg)
 
 **Kann ein weltweiter Verbund aus vernetzten Apple-Silicon-Macs es mit einem Rechenzentrum aufnehmen?**  
-Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Silicon-Begeisterte weltweit dazu auf, gemeinsam einen offiziellen **SS-CCC Hybrid-Rekordversuch** zu organisieren: Schaltet so viele **örtliche Thunderbolt-3/4/5/RDMA-Verbünde** wie möglich über die **Hybrid-Brücke („Lokal + Internet koppeln“)** gleichzeitig mit **weltweiten Internet-Macs** zu einem riesigen Hochleistungsverbund zusammen — koordiniert über **Cluster Audio-Party** und vermessen im **5-Reiter-Forschungslabor**.
+Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Silicon-Begeisterte weltweit dazu auf, gemeinsam einen offiziellen **SS-CCC Hybrid-Rekordversuch** zu organisieren: Schaltet so viele **örtliche Thunderbolt-3/4/5/RDMA-Verbünde** wie möglich über die **Hybrid-Brücke („Lokal + Internet koppeln“)** gleichzeitig mit **weltweiten Internet-Macs** zu einem riesigen Hochleistungsverbund zusammen — koordiniert über **Cluster Audio-Party** und vermessen im **6-Reiter-Forschungslabor**.
 
 ### 🔬 Wissenschaftliche Grundlage & Skalierungs-Modell
 
@@ -358,7 +358,7 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 │   ├── bump_version.py             # Synchronisiert version.json & ClusterModels.swift mit Git
 │   ├── setup_tb_network.sh         # Richtet das 10.99.1.x-Thunderbolt-Netz ein
 │   └── setup_wired_limit.sh        # Setzt sichere iogpu.wired_limit_mb-Grenzen
-├── tests/                          # 24-teilige globale Prüfsammlung (Swift + Python)
+├── tests/                          # 25-teilige globale Prüfsammlung (Swift + Python)
 ├── .github/workflows/              # Automatische CI-Versionskontrolle & Tagging
 └── version.json                    # Über GitHub gesteuerte Update-Steuerdatei
 ```
@@ -387,8 +387,8 @@ Wir rufen Hochschulen, Forschungsgruppen, Entwickler-Gemeinschaften und Apple-Si
 ## 🚧 Entwicklungsstand & Mitmachen
 
 > [!IMPORTANT]
-> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `24/24` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
-> **Bereits umgesetzt und geprüft:** Englische Startsprache mit 8-Sprachen-Umschaltung (`EN/DE/FR/ES/PT/RU/JA/ZH`), **11-Reiter-Seitenmenü** inkl. **Setup & Einrichten** (Auto-Erkennung + 4-stufige Betriebsbereitschaft), **3-Reiter-Cluster-Übersicht** (**Lokaler Cluster**, **Internet-Cluster** mit regionalen & lokalen Teilverbünden sowie **Lokal + Internet**-Hybridansicht), **gelb-schwarze Industrie-Warnstreifen (`HazardStripesBar` / `IndustrialHazardBanner`)** & **Solaris-Glow-Highlights**, zukunftssichere M1–M12+-Hardware-Auslesung (inkl. M5 Max/Ultra & M6), echte Echtzeitdaten bei deaktiviertem Simulationsmodus, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, **12-Kapitel-Handbuch mit interaktiven Detailgrafiken**, **programmweite 8-Sprachen-Hover-Shorttips** sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
+> **SS-CCC (ab v1.6) ist vollständig startfähig und durch `25/25` automatisierte Tests abgesichert; Langzeiterprobungen auf vielfältigen Mehrrechner-Verbünden laufen fort.**
+> **Bereits umgesetzt und geprüft:** Englische Startsprache mit **vollständiger 8-Sprachen-Lokalisierung (`EN/DE/FR/ES/PT/RU/JA/ZH`) über alle 11 Ansichten, Untermenüs, Buttons, Tabellen & Detail-Hilfen (`L10n.tr`, `"Modell Werkstatt"`, ausgeschriebene `"Schichten"`/`"Layers"`)**, **lokale Mac CPU-, GPU- & Neural-Engine-(ANE-)Kern-Auslesung auf Knotenkarten** (`IOAccelerator` / `system_profiler`), **11-Reiter-Seitenmenü** inkl. **Setup & Einrichten** (Auto-Erkennung + 4-stufige Betriebsbereitschaft), **3-Reiter-Cluster-Übersicht** (**Lokaler Cluster**, **Internet-Cluster** mit regionalen & lokalen Teilverbünden sowie **Lokal + Internet**-Hybridansicht), **gelb-schwarze Industrie-Warnstreifen (`HazardStripesBar` / `IndustrialHazardBanner`)** & **Solaris-Glow-Highlights**, zukunftssichere M1–M12+-Hardware-Auslesung (inkl. M5 Max/Ultra & M6), echte Echtzeitdaten bei deaktiviertem Simulationsmodus, Live-Modell-Erkennung (oMLX / Ollama / llama.cpp / GGUF), 6-Reiter-Forschungslabor mit Einzel-Positions- & Global-Verlaufsaufzeichnung, Hybrid-Kopplung Lokal ↔ Internet-WAN, `AVAudioEngine`-Audio-Party, **12-Kapitel-Handbuch mit interaktiven Detailgrafiken**, **programmweite 8-Sprachen-Hover-Shorttips** sowie GitHub-gesteuerte Updatefunktion mit automatischer CI-Versionskontrolle. Weitere reale Langzeitmessungen über gemischte TB4/TB5/RDMA-(JACCL)-Verbünde werden laufend ergänzt.
 
 Wir laden Entwickler, Forschende und Apple-Silicon-Begeisterte herzlich dazu ein, **mitzuentwickeln und SS-CCC weiterzubringen**:
 - **Auf eigener Hardware erproben:** Teste SS-CCC mit deinen M1–M12+-Macs und teile Messwerte zu Durchsatz, Speicherverbrauch und RDMA/JACCL-Stabilität.

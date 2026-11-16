@@ -142,3 +142,12 @@ Die Analyse des `exo-explore/exo`-Repositories liefert entscheidende Best Practi
   * **Auto-Discovery & Multi-Mac-Einrichtung:** Automatische Erkennung aller beteiligten Macs (Bonjour/mDNS, Thunderbolt/RDMA, Tailscale/QUIC Iroh) und geführte Einrichtung für Lokal-, Internet- und Hybrid-Verbünde.
   * **Betriebsbereitschafts-Prüfung (`ClusterReadinessState`):** Mehrstufige Verifikation mit klarer Zustandsmeldung (*Uneingerichtet*, *Unvollständig eingerichtet*, *Nicht bereit*, *Bereit*).
   * **Programmweite Shorttips / Tooltips (8 Sprachen):** Einheitliche Hover-Kurzerklärungen (`solarisShorttip` + `.help()`) über alle Seitenmenü-Kategorien, Karten und Steuer-Elemente hinweg.
+
+---
+
+### Phase 13: Vollständige 8-Sprachen-Lokalisierung, GPU-/ANE-Kern-Anzeige & 25/25 Test-Suite
+* **Ziel:** Lückenlose 8-Sprachen-Übersetzung aller 11 Menüs, Untermenüs, Tabellen, Buttons und Detail-Hilfen auf Basis der deutschen Vorlage sowie vollständige Auslesung/Anzeige lokaler Mac-CPU/GPU/ANE-Kerne.
+* **Meilensteine:**
+  * **8-Sprachen-Parität (`L10n.tr`):** Entfernung aller verbliebenen `isGerman`-Zweige und festen deutschen Strings; `"Modell Werkstatt"` im deutschen Seitenmenü und ausgeschriebene Layer-Angaben (`ms_layers_unit`).
+  * **GPU- & Neural-Engine-(ANE-)Auslesung:** Robuste Erkennung der lokalen GPU- und ANE-Kerne auf Apple-Silicon-Macs und Darstellung auf allen Knotenkarten.
+  * **25/25 Globale Test-Suite:** Absicherung über `test_25_eight_language_views_and_gpu_ane_display` in `tests/test_global_suite.py` und Abschnitt 11 in `tests/run_swift_checks.swift`.

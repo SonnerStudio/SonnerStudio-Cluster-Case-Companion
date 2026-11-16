@@ -282,3 +282,17 @@ Auf Basis aktueller Forschungsergebnisse zu Zero-Config-Cluster-Orchestrierung (
 * **`ClusterViewModel.swift`:** Automatische Verbund-Erkennung (`discoverClusterSetupTargets()`), Multi-Mac-Provisionierung (`runAutomaticClusterSetup()`), Prüf-Engine (`verifyClusterReadiness()`) und `@Published` Hover-Shorttip-State.
 * **`ClusterSetupView.swift` & `Theme.swift`:** Neue 11. Sidebar-Kategorie `Setup / Einrichten` mit Varianten-Wahl, Auto-Provisioning, Live-Prüfprotokoll und Bereitschafts-Anzeige; `solarisShorttip` auf allen 11 Views und Sidebar-Einträgen.
 * **`scripts/run_ssccc.sh` & `tests/test_global_suite.py`:** Aufnahme von `ClusterSetupView.swift` und neue automatisierte Tests für Auto-Setup, 4-Stufen-Readiness-Prüfung und 8-Sprachen-Shorttips.
+
+---
+
+## 10. Phase 13 — Vollständige 8-Sprachen-Übersetzung, Mac-GPU-/ANE-Auslesung & 25/25-Testabdeckung
+
+### 10.1 Vollständige 8-Sprachen-Abdeckung (Deutsch als Übersetzungsvorlage)
+* **`Localization.swift` & `ClusterModels.swift`:** Einführung von `L10n.tr(_ lang:de:en:fr:es:pt:ru:ja:zh:)`, Korrektur des deutschen Seitenmenü-Namens auf **Modell Werkstatt**, ausgeschriebene Schichteneinheit (`ms_layers_unit`: `Schichten` / `Layers` statt `24L`) sowie 8-sprachige Lokalisierung aller Transport-, Katalog-, Readiness- und KV-Cache-Methoden (`localizedTitle`, `localizedDescription`, `localizedMaxContextEstimate`, `localizedSourceLabel`, `localizedNotes`).
+* **Alle 11 Views + `HelpDocDeepDiveContent.swift` + `ClusterViewModel.swift`:** Entfernung verbliebener deutscher UI-Literale und alter zweisprachiger `isGerman`-Verzweigungen; alle Übersichten, Buttons (`Prüfen`, `Setup öffnen`), Tabellen (`Thunderbolt-Klassen & Übertragungsraten`), Untermenüs (inkl. `Disaggregiertes Prefill/Decode (ANE-Split) & 3-Tier KV-Cache`) und dynamische Statusmeldungen übersetzen in alle 8 App-Sprachen.
+
+### 10.2 Lokale Mac-GPU- & Neural-Engine-(ANE-)Kern-Auslesung
+* **`ClusterViewModel.swift` & `ClusterOverviewView.swift`:** Erweiterte Hardware-Probe über `IOAccelerator` (`gpu-core-count`) und `system_profiler SPDisplaysDataType` sowie Anzeige von **CPU-, GPU- und ANE-Kernen** direkt in den Knotenkarten.
+
+### 10.3 Verifikation (`tests/test_global_suite.py`)
+* Erweiterung um `test_25_eight_language_views_and_gpu_ane_display` sowie Abschnitt 11 in `tests/run_swift_checks.swift` — **alle `25/25` automatisierten Tests bestanden**.

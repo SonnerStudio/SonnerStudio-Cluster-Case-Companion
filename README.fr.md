@@ -227,7 +227,7 @@ SS-CCC prend en charge **chaque Mac équipé d'une puce Apple Silicon** (**M1, M
 
 1. **Résolution GitHub multi-sources :** Au lancement (après `1,2 s`) puis toutes les **30 minutes** (`startAutomaticUpdateMonitor()`), `ClusterViewModel` interroge `main/version.json`, `releases/latest` et `commits/main` (SHA court).
 2. **Invite de mise à jour (`UpdatePromptSheet`, `⌘U`) :** Lorsqu'une version, un numéro de compilation ou un SHA `main` plus récent est détecté, l'application propose pour les dépôts locaux `git pull --ff-only origin main` + `swift build` + relance en un clic (`scripts/run_ssccc.sh`), ou ouvre le téléchargement GitHub pour les paquets autonomes.
-3. **Automatisation CI (`.github/workflows/auto-version-control.yml`) :** Chaque *push* sur `main` exécute `scripts/bump_version.py --part patch --sync-git`, synchronise `version.json` et `ClusterModels.swift`, lance les 14 tests et crée le tag `vX.Y.Z`.
+3. **Automatisation CI (`.github/workflows/auto-version-control.yml`) :** Chaque *push* sur `main` exécute `scripts/bump_version.py --part patch --sync-git`, synchronise `version.json` et `ClusterModels.swift`, lance les 25 tests et crée le tag `vX.Y.Z`.
 
 ---
 
@@ -280,7 +280,7 @@ Plusieurs EDI et harnais d'agents (**Cursor**, **VS Code**, **Xcode**, **OpenCod
 ![Défi record mondial SS-CCC supercalculateur hybride](docs/images/i18n/ssccc_world_record_challenge_fr.jpg)
 
 **Une coalition mondiale de Mac Apple Silicon peut-elle rivaliser avec un centre de calcul ?**  
-Nous invitons les universités, laboratoires, studios et passionnés d'Apple Silicon à organiser un **record officiel SS-CCC** : reliez simultanément le plus grand nombre possible de **grappes locales Thunderbolt 3/4/5/RDMA** et de **Mac distants sur Internet** grâce au **pont hybride (« Coupler local + Internet »)**, à l'**Audio-Party** et au **laboratoire scientifique à 5 onglets**.
+Nous invitons les universités, laboratoires, studios et passionnés d'Apple Silicon à organiser un **record officiel SS-CCC** : reliez simultanément le plus grand nombre possible de **grappes locales Thunderbolt 3/4/5/RDMA** et de **Mac distants sur Internet** grâce au **pont hybride (« Coupler local + Internet »)**, à l'**Audio-Party** et au **laboratoire scientifique à 6 onglets**.
 
 ### 🔬 Protocole scientifique & modélisation
 
@@ -330,7 +330,7 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 │   ├── bump_version.py             # Synchronise version.json & ClusterModels.swift avec Git
 │   ├── setup_tb_network.sh         # Configure le pont Thunderbolt 10.99.1.x
 │   └── setup_wired_limit.sh        # Applique des limites sûres iogpu.wired_limit_mb
-├── tests/                          # Suite de vérification globale en 24 tests (Swift + Python)
+├── tests/                          # Suite de vérification globale en 25 tests (Swift + Python)
 ├── .github/workflows/              # Contrôle automatique de version CI & étiquetage
 └── version.json                    # Manifeste de contrôle des mises à jour hébergé sur GitHub
 ```
@@ -340,8 +340,8 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 ## 🚧 État d'avancement et contribution
 
 > [!IMPORTANT]
-> **SS-CCC (v1.6+) est pleinement exécutable et validé par `24/24` tests automatisés, tandis que les essais d'endurance multi-nœuds se poursuivent.**
-> **Déjà opérationnel et vérifié :** langue de démarrage en anglais avec 8 langues (`EN/DE/FR/ES/PT/RU/JA/ZH`), **barre latérale à 11 onglets** incl. **Configurer & Provisionner**, **vue d'ensemble en 3 onglets**, **bandes de signalisation industrielles jaune-noir** & **surbrillance Solaris**, détection évolutive M1–M12+ (incl. M5 Max/Ultra & M6), télémétrie en temps réel (aucune donnée fictive hors simulation), découverte de modèles en direct (oMLX / Ollama / llama.cpp / GGUF), laboratoire scientifique à 6 onglets, pont hybride Local ↔ Internet-WAN, Audio-Party `AVAudioEngine`, **manuel interactif à 12 chapitres**, **Shorttips en 8 langues** et mise à jour automatique pilotée par GitHub + CI.
+> **SS-CCC (v1.6+) est pleinement exécutable et validé par `25/25` tests automatisés, tandis que les essais d'endurance multi-nœuds se poursuivent.**
+> **Déjà opérationnel et vérifié :** langue de démarrage en anglais avec **traduction complète en 8 langues (`EN/DE/FR/ES/PT/RU/JA/ZH`) de l'ensemble des 11 vues, sous-menus, boutons, tableaux et fiches détaillées (`L10n.tr`)**, **lecture et affichage des cœurs CPU, GPU et Neural Engine (ANE)** sur les cartes des Mac locaux, **barre latérale à 11 onglets** incl. **Configurer & Provisionner**, **vue d'ensemble en 3 onglets**, **bandes de signalisation industrielles jaune-noir** & **surbrillance Solaris**, détection évolutive M1–M12+ (incl. M5 Max/Ultra & M6), télémétrie en temps réel (aucune donnée fictive hors simulation), découverte de modèles en direct (oMLX / Ollama / llama.cpp / GGUF), laboratoire scientifique à 6 onglets, pont hybride Local ↔ Internet-WAN, Audio-Party `AVAudioEngine`, **manuel interactif à 12 chapitres**, **Shorttips en 8 langues** et mise à jour automatique pilotée par GitHub + CI.
 
 Nous encourageons vivement les développeurs, chercheurs et passionnés d'Apple Silicon à **participer au développement et à faire évoluer SS-CCC** :
 - **Tester sur votre matériel :** Essayez SS-CCC sur vos Mac M1–M12+ et partagez vos mesures de débit, mémoire et RDMA/JACCL.
