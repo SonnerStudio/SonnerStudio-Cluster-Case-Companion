@@ -4697,7 +4697,7 @@ final class ClusterViewModel: ObservableObject {
 
     private func spawnDetachedRelaunch(targetPath: String, workingDirectory: URL?, skipBuild: Bool) {
         let oldPID = ProcessInfo.processInfo.processIdentifier
-        let cmd = "/usr/bin/nohup /bin/bash -lc 'while kill -0 \"$1\" 2>/dev/null; do sleep 0.1; done; SSCCC_SKIP_BUILD=\"$2\" exec \"$3\"' _ \"$SSCCC_RELAUNCH_PID\" \"$SSCCC_RELAUNCH_SKIP\" \"$SSCCC_RELAUNCH_TARGET\" </dev/null >/tmp/ssccc_relaunch.log 2>&1 &"
+        let cmd = "/bin/bash -c '(trap \"\" HUP INT TERM; while kill -0 \"$1\" 2>/dev/null; do sleep 0.1; done; export SSCCC_SKIP_BUILD=\"$2\"; exec \"$3\") </dev/null >/tmp/ssccc_relaunch.log 2>&1 &' _ \"$SSCCC_RELAUNCH_PID\" \"$SSCCC_RELAUNCH_SKIP\" \"$SSCCC_RELAUNCH_TARGET\""
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/bin/zsh")
         proc.arguments = ["-c", cmd]
