@@ -5,9 +5,124 @@ extension Notification.Name {
     static let sscccRestoreFromMenuBar = Notification.Name("sscccRestoreFromMenuBar")
 }
 
+enum SSCCCAppIconProvider {
+    static func applyDockIcon() {
+        let icon = loadDiskIcon() ?? renderFallbackIcon()
+        NSApplication.shared.applicationIconImage = icon
+        NSApplication.shared.dockTile.display()
+    }
+
+    private static func loadDiskIcon() -> NSImage? {
+        var candidates: [String] = []
+        if let envPath = ProcessInfo.processInfo.environment["SSCCC_ICON_PATH"], !envPath.isEmpty {
+            candidates.append(envPath)
+        }
+        let cwd = FileManager.default.currentDirectoryPath
+        candidates.append("\(cwd)/app/Resources/ssccc_app_icon.png")
+        candidates.append("\(cwd)/Resources/ssccc_app_icon.png")
+        if let bundlePath = Bundle.main.path(forResource: "ssccc_app_icon", ofType: "png") {
+            candidates.append(bundlePath)
+        }
+        if let bgPath = ProcessInfo.processInfo.environment["SSCCC_BG_PATH"], !bgPath.isEmpty {
+            let dir = (bgPath as NSString).deletingLastPathComponent
+            candidates.append("\(dir)/ssccc_app_icon.png")
+        }
+        for path in candidates where FileManager.default.fileExists(atPath: path) {
+            if let img = NSImage(contentsOfFile: path) {
+                return img
+            }
+        }
+        return nil
+    }
+
+    private static func renderFallbackIcon() -> NSImage {
+        let size: CGFloat = 512
+        return NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
+            let inset: CGFloat = 50
+            let cardRect = NSRect(x: inset, y: inset, width: size - 2 * inset, height: size - 2 * inset)
+            let squircle = NSBezierPath(roundedRect: cardRect, xRadius: 92, yRadius: 92)
+
+            NSGraphicsContext.saveGraphicsState()
+            squircle.addClip()
+            if let grad = NSGradient(colors: [
+                NSColor(calibratedRed: 0.035, green: 0.055, blue: 0.105, alpha: 1.0),
+                NSColor(calibratedRed: 0.115, green: 0.150, blue: 0.235, alpha: 1.0),
+            ]) {
+                grad.draw(in: cardRect, angle: -55)
+            }
+
+            let center = NSPoint(x: size * 0.5, y: size * 0.545)
+            let gold = NSColor(calibratedRed: 1.0, green: 0.83, blue: 0.0, alpha: 1.0)
+            let cyan = NSColor(calibratedRed: 0.22, green: 0.82, blue: 0.98, alpha: 1.0)
+            let nodes = [
+                NSPoint(x: center.x - 108, y: center.y + 85),
+                NSPoint(x: center.x + 108, y: center.y + 85),
+                NSPoint(x: center.x - 108, y: center.y - 78),
+                NSPoint(x: center.x + 108, y: center.y - 78),
+            ]
+            cyan.setStroke()
+            let ring = NSBezierPath()
+            ring.lineWidth = 3.5
+            ring.move(to: nodes[0]); ring.line(to: nodes[1]); ring.line(to: nodes[3]); ring.line(to: nodes[2]); ring.close()
+            ring.stroke()
+
+            gold.setStroke()
+            for pt in nodes {
+                let spoke = NSBezierPath()
+                spoke.lineWidth = 4
+                spoke.move(to: pt)
+                spoke.line(to: center)
+                spoke.stroke()
+            }
+
+            for (idx, pt) in nodes.enumerated() {
+                let chip = NSBezierPath(roundedRect: NSRect(x: pt.x - 28, y: pt.y - 28, width: 56, height: 56), xRadius: 12, yRadius: 12)
+                NSColor(calibratedRed: 0.08, green: 0.11, blue: 0.18, alpha: 1.0).setFill()
+                chip.fill()
+                (idx == 0 ? gold : cyan).setStroke()
+                chip.lineWidth = 2.5
+                chip.stroke()
+            }
+
+            let core = NSBezierPath(roundedRect: NSRect(x: center.x - 72, y: center.y - 72, width: 144, height: 144), xRadius: 28, yRadius: 28)
+            NSColor(calibratedRed: 0.07, green: 0.10, blue: 0.16, alpha: 1.0).setFill()
+            core.fill()
+            gold.setStroke()
+            core.lineWidth = 3.5
+            core.stroke()
+
+            let sun = NSBezierPath(ovalIn: NSRect(x: center.x - 26, y: center.y - 26, width: 52, height: 52))
+            gold.setFill()
+            sun.fill()
+
+            let badge = NSBezierPath(roundedRect: NSRect(x: size * 0.5 - 82, y: inset + 26, width: 164, height: 39), xRadius: 12, yRadius: 12)
+            NSColor(calibratedRed: 0.04, green: 0.06, blue: 0.11, alpha: 0.92).setFill()
+            badge.fill()
+            gold.setStroke()
+            badge.lineWidth = 2
+            badge.stroke()
+            let txt = "SS-CCC" as NSString
+            let attr: [NSAttributedString.Key: Any] = [
+                .font: NSFont.monospacedSystemFont(ofSize: 22, weight: .black),
+                .foregroundColor: gold,
+            ]
+            let sz = txt.size(withAttributes: attr)
+            txt.draw(at: NSPoint(x: size * 0.5 - sz.width / 2, y: inset + 26 + 19.5 - sz.height / 2), withAttributes: attr)
+            NSGraphicsContext.restoreGraphicsState()
+
+            let border = NSBezierPath(roundedRect: cardRect.insetBy(dx: 2, dy: 2), xRadius: 90, yRadius: 90)
+            border.lineWidth = 3.5
+            gold.withAlphaComponent(0.9).setStroke()
+            border.stroke()
+            return true
+        }
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.regular)
+        SSCCCAppIconProvider.applyDockIcon()
         NSApplication.shared.activate(ignoringOtherApps: true)
         NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
     }
@@ -16,6 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !flag {
             NotificationCenter.default.post(name: .sscccRestoreFromMenuBar, object: nil)
         }
+        SSCCCAppIconProvider.applyDockIcon()
         return true
     }
 }

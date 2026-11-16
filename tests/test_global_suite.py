@@ -578,6 +578,13 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("func minimizeWindowToMenuBar()", vm)
         self.assertIn("func restoreWindowFromMenuBar()", vm)
 
+        # Modern Solaris Dock Application Icon
+        self.assertTrue((ROOT / "app" / "Resources" / "ssccc_app_icon.png").exists(), "Missing ssccc_app_icon.png")
+        self.assertTrue((ROOT / "app" / "Resources" / "AppIcon.icns").exists(), "Missing AppIcon.icns")
+        run_sh = (ROOT / "scripts" / "run_ssccc.sh").read_text(encoding="utf-8")
+        self.assertIn("SSCCC_ICON_PATH", run_sh)
+        self.assertIn("applicationIconImage", app)
+
         # All 17 README files exist with Visitor Counter and cross-links to all 17 READMEs
         readme_files = ["README.md"] + [f"README.{code}.md" for code in ["de", "fr", "es", "pt", "ru", "ja", "zh", "nl", "af", "pl", "cs", "sk", "hu", "ko", "hi", "ta"]]
         for rname in readme_files:

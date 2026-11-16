@@ -1,13 +1,13 @@
 {
-  "version": "1.6.42",
-  "build": 164,
-  "tag": "v1.6.42",
-  "title": "SS-CCC v1.6.42 — 17-Language UI, Help Manual, Menu Bar Service Mode & README Visitor Counter",
-  "notes": "• chore(release): publish v1.6.41 (build 163) fixing manual-only restart and duplicate update prompt (b2ef2cc)\n• fix(updater): avoid nice(5) priority penalty on app relaunch [skip ci] (955ea09)\n• chore(release): publish v1.6.40 (build 162) with instant restart fix and 2x4 README language rows (c528d3b)\n• chore(release): publish v1.6.39 (build 161) update for 8-language localization and GPU/ANE readout (f8716c4)\n• chore(release): auto-bump v1.6.38 (build 160) [skip ci] (8c830ae)",
+  "version": "1.6.43",
+  "build": 165,
+  "tag": "v1.6.43",
+  "title": "SS-CCC v1.6.43 — Modern Solaris macOS Dock Application Icon",
+  "notes": "• feat(i18n,menubar,docs): add 9 languages (17 total), Minimize-to-Menu-Bar service mode, 4-row README switcher & Visitor Counter (v1.6.42) [skip ci] (8b1333b)\n• chore(release): publish v1.6.41 (build 163) fixing manual-only restart and duplicate update prompt (b2ef2cc)\n• fix(updater): avoid nice(5) priority penalty on app relaunch [skip ci] (955ea09)\n• chore(release): publish v1.6.40 (build 162) with instant restart fix and 2x4 README language rows (c528d3b)\n• chore(release): publish v1.6.39 (build 161) update for 8-language localization and GPU/ANE readout (f8716c4)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "b2ef2cc",
-  "updated_at": "2026-11-16T15:56:54Z"
+  "commit_sha": "8b1333b",
+  "updated_at": "2026-11-16T16:10:53Z"
 }

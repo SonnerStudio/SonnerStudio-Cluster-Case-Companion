@@ -79,4 +79,5 @@ pkill -f "^${OUT_BIN}$" 2>/dev/null || true
 sleep 0.2
 export SSCCC_BG_PATH="${ROOT_DIR}/app/Resources/solaris_bg.png"
 export SSCCC_SIDEBAR_BG_PATH="${ROOT_DIR}/app/Resources/solaris_sidebar_bg.png"
+export SSCCC_ICON_PATH="${ROOT_DIR}/app/Resources/ssccc_app_icon.png"
 exec "${OUT_BIN}"

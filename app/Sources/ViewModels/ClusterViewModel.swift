@@ -244,6 +244,7 @@ final class ClusterViewModel: ObservableObject {
     func restoreWindowFromMenuBar() {
         isMinimizedToMenuBar = false
         NSApplication.shared.setActivationPolicy(.regular)
+        SSCCCAppIconProvider.applyDockIcon()
         let targetWindow = NSApplication.shared.windows.first(where: {
             $0.title.contains("SS-CCC") || $0.title.contains("SonnerStudio")
         }) ?? NSApplication.shared.windows.first(where: {
