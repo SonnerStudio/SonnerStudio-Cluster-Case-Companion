@@ -22,7 +22,15 @@ struct ModelStudioView: View {
                         Button {
                             Task { await vm.refreshLiveModels() }
                         } label: {
-                            Label(vm.isRefreshingModels ? "..." : "Modelle neu einlesen", systemImage: "arrow.clockwise")
+                            Label(vm.isRefreshingModels ? "..." : L10n.tr(vm.language,
+                                de: "Modelle neu einlesen",
+                                en: "Reload Models",
+                                fr: "Recharger les modèles",
+                                es: "Recargar modelos",
+                                pt: "Recarregar modelos",
+                                ru: "Обновить модели",
+                                ja: "モデルを再読込",
+                                zh: "重新加载模型"), systemImage: "arrow.clockwise")
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(SolarisTheme.amber)
@@ -61,9 +69,7 @@ struct ModelStudioView: View {
                                 let status = vm.runtimeReadiness[svc]
                                 let isRunning = status?.running ?? false
                                 let isInstalled = status?.installed ?? false
-                                let badgeText = isRunning
-                                    ? (svc == .ollama ? "Bereit (Läuft · 0 Modelle)" : "Bereit (Läuft)")
-                                    : (isInstalled ? "Installiert (Gestoppt)" : "Nicht gefunden")
+                                let badgeText = runtimeBadgeText(for: svc, isRunning: isRunning, isInstalled: isInstalled)
                                 let badgeColor = isRunning ? SolarisTheme.emerald : (isInstalled ? SolarisTheme.amberGlow : SolarisTheme.coral)
 
                                 VStack(alignment: .leading, spacing: 8) {
@@ -80,7 +86,15 @@ struct ModelStudioView: View {
                                             .foregroundColor(badgeColor)
                                     }
                                     if let path = status?.binaryPath, !path.isEmpty {
-                                        Text("Pfad: \(path)")
+                                        Text(L10n.tr(vm.language,
+                                            de: "Pfad: \(path)",
+                                            en: "Path: \(path)",
+                                            fr: "Chemin : \(path)",
+                                            es: "Ruta: \(path)",
+                                            pt: "Caminho: \(path)",
+                                            ru: "Путь: \(path)",
+                                            ja: "パス: \(path)",
+                                            zh: "路径：\(path)"))
                                             .font(.system(size: 11, design: .monospaced))
                                             .foregroundColor(SolarisTheme.textSecondary)
                                     }
@@ -93,17 +107,41 @@ struct ModelStudioView: View {
                                                 .textSelection(.enabled)
                                             Spacer()
                                             if svc == .ollama && (isInstalled || isRunning) {
-                                                Button("Modell laden") {
+                                                Button(L10n.tr(vm.language,
+                                                    de: "Modell laden",
+                                                    en: "Pull Model",
+                                                    fr: "Télécharger le modèle",
+                                                    es: "Descargar modelo",
+                                                    pt: "Baixar modelo",
+                                                    ru: "Загрузить модель",
+                                                    ja: "モデルを取得",
+                                                    zh: "拉取模型")) {
                                                     Task { await vm.pullRecommendedOllamaModel() }
                                                 }
                                                 .buttonStyle(.borderedProminent)
                                                 .tint(SolarisTheme.amber)
                                                 .foregroundColor(.black)
                                             }
-                                            Button("Kopieren") {
+                                            Button(L10n.tr(vm.language,
+                                                de: "Kopieren",
+                                                en: "Copy",
+                                                fr: "Copier",
+                                                es: "Copiar",
+                                                pt: "Copiar",
+                                                ru: "Копировать",
+                                                ja: "コピー",
+                                                zh: "复制")) {
                                                 NSPasteboard.general.clearContents()
                                                 NSPasteboard.general.setString(cmd, forType: .string)
-                                                vm.bridgeStatusMessage = "Befehl kopiert: \(cmd)"
+                                                vm.bridgeStatusMessage = L10n.tr(vm.language,
+                                                    de: "Befehl kopiert: \(cmd)",
+                                                    en: "Command copied: \(cmd)",
+                                                    fr: "Commande copiée : \(cmd)",
+                                                    es: "Comando copiado: \(cmd)",
+                                                    pt: "Comando copiado: \(cmd)",
+                                                    ru: "Команда скопирована: \(cmd)",
+                                                    ja: "コマンドをコピーしました: \(cmd)",
+                                                    zh: "已复制命令：\(cmd)")
                                             }
                                             .buttonStyle(.bordered)
                                         }
@@ -139,14 +177,14 @@ struct ModelStudioView: View {
                                                 Text(preset.displayName)
                                                     .font(SolarisTheme.cardTitle)
                                                     .foregroundColor(SolarisTheme.textPrimary)
-                                                Text(preset.sourceLabel)
+                                                Text(preset.localizedSourceLabel(vm.language))
                                                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                                                     .padding(.horizontal, 8)
                                                     .padding(.vertical, 3)
                                                     .background(Capsule().fill((preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amber).opacity(0.22)))
                                                     .foregroundColor(preset.isLiveDiscovered ? SolarisTheme.emerald : SolarisTheme.amberGlow)
                                             }
-                                            Text("\(preset.quantization) · \(preset.totalLayers) Layer · ~\(String(format: "%.1f", preset.estimatedGB)) GB · \(preset.notes)")
+                                            Text("\(preset.quantization) · \(preset.totalLayers) \(L10n.text("ms_layers_unit", vm.language)) · ~\(String(format: "%.1f", preset.estimatedGB)) GB · \(preset.localizedNotes(vm.language))")
                                                 .font(SolarisTheme.bodyLarge)
                                                 .foregroundColor(SolarisTheme.textSecondary)
                                         }
@@ -185,7 +223,15 @@ struct ModelStudioView: View {
                                 .font(SolarisTheme.sectionTitle)
                                 .foregroundColor(SolarisTheme.textPrimary)
                             if hasModel {
-                                Text("Bedarf inkl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB KV-Cache: \(String(format: "%.1f", split.totalRequiredGB)) GB von \(Int(split.totalUsableGB)) GB verfügbar")
+                                Text(L10n.tr(vm.language,
+                                    de: "Bedarf inkl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB KV-Cache: \(String(format: "%.1f", split.totalRequiredGB)) GB von \(Int(split.totalUsableGB)) GB verfügbar",
+                                    en: "Required incl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB KV Cache: \(String(format: "%.1f", split.totalRequiredGB)) GB of \(Int(split.totalUsableGB)) GB available",
+                                    fr: "Requis (cache KV \(String(format: "%.1f", vm.kvCacheReserveGB)) Go incl.) : \(String(format: "%.1f", split.totalRequiredGB)) Go sur \(Int(split.totalUsableGB)) Go disponibles",
+                                    es: "Requerido (incl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB caché KV): \(String(format: "%.1f", split.totalRequiredGB)) GB de \(Int(split.totalUsableGB)) GB disponibles",
+                                    pt: "Necessário (incl. \(String(format: "%.1f", vm.kvCacheReserveGB)) GB cache KV): \(String(format: "%.1f", split.totalRequiredGB)) GB de \(Int(split.totalUsableGB)) GB disponíveis",
+                                    ru: "Требуется (вкл. \(String(format: "%.1f", vm.kvCacheReserveGB)) ГБ KV-кэш): \(String(format: "%.1f", split.totalRequiredGB)) ГБ из \(Int(split.totalUsableGB)) ГБ доступно",
+                                    ja: "必要容量（KVキャッシュ \(String(format: "%.1f", vm.kvCacheReserveGB)) GB 含む）: \(String(format: "%.1f", split.totalRequiredGB)) GB / \(Int(split.totalUsableGB)) GB 利用可能",
+                                    zh: "所需容量（含 \(String(format: "%.1f", vm.kvCacheReserveGB)) GB KV 缓存）：\(String(format: "%.1f", split.totalRequiredGB)) GB / 可用 \(Int(split.totalUsableGB)) GB"))
                                     .font(SolarisTheme.bodyLarge)
                                     .foregroundColor(SolarisTheme.textSecondary)
                             } else {
@@ -222,8 +268,9 @@ struct ModelStudioView: View {
                             ForEach(Array(split.nodeAllocations.enumerated()), id: \.element.id) { idx, alloc in
                                 if alloc.layers > 0 || !hasModel {
                                     let sharePct = hasModel ? alloc.percent : (split.totalUsableGB > 0 ? (alloc.usableGB / split.totalUsableGB) * 100.0 : 100.0)
+                                    let layerUnit = L10n.text("ms_layers_unit", vm.language)
                                     let barText = hasModel
-                                        ? "\(alloc.nodeName): \(alloc.layers)L (\(String(format: "%.0f", alloc.percent))%)"
+                                        ? "\(alloc.nodeName): \(alloc.layers) \(layerUnit) (\(String(format: "%.0f", alloc.percent))%)"
                                         : "\(alloc.nodeName): \(Int(alloc.usableGB)) GB (\(String(format: "%.0f", sharePct))%)"
                                     RoundedRectangle(cornerRadius: 8)
                                         .fill(palette[idx % palette.count].opacity(hasModel ? 1.0 : 0.7))
@@ -261,14 +308,30 @@ struct ModelStudioView: View {
                             Text(vm.t("ms_kv_quant"))
                                 .font(SolarisTheme.bodyBold)
                                 .foregroundColor(SolarisTheme.textPrimary)
-                            Text("Empfohlenes Kontext-Fenster: \(vm.kvPrecision.maxContextEstimate) · --prefill-step-size \(vm.prefillStepSize)")
+                            Text(L10n.tr(vm.language,
+                                de: "Empfohlenes Kontext-Fenster: \(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)",
+                                en: "Recommended Context Window: \(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)",
+                                fr: "Fenêtre de contexte recommandée : \(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)",
+                                es: "Ventana de contexto recomendada: \(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)",
+                                pt: "Janela de contexto recomendada: \(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)",
+                                ru: "Рекомендуемое окно контекста: \(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)",
+                                ja: "推奨コンテキスト長: \(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)",
+                                zh: "推荐上下文窗口：\(vm.kvPrecision.localizedMaxContextEstimate(vm.language)) · --prefill-step-size \(vm.prefillStepSize)"))
                                 .font(SolarisTheme.bodyLarge)
                                 .foregroundColor(SolarisTheme.textSecondary)
                         }
                         Spacer()
-                        Picker("KV-Cache", selection: $vm.kvPrecision) {
+                        Picker(L10n.tr(vm.language,
+                            de: "KV-Cache",
+                            en: "KV Cache",
+                            fr: "Cache KV",
+                            es: "Caché KV",
+                            pt: "Cache KV",
+                            ru: "KV-кэш",
+                            ja: "KVキャッシュ",
+                            zh: "KV 缓存"), selection: $vm.kvPrecision) {
                             ForEach(KVCachePrecision.allCases) { p in
-                                Text(p.rawValue).tag(p)
+                                Text(p.localizedTitle(vm.language)).tag(p)
                             }
                         }
                         .labelsHidden()
@@ -298,7 +361,7 @@ struct ModelStudioView: View {
                             let installed = vm.serviceAvailability[svc] ?? false
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack {
-                                    Text(svc.rawValue)
+                                    Text(svc.localizedTitle(vm.language))
                                         .font(SolarisTheme.cardTitle)
                                         .foregroundColor(SolarisTheme.textPrimary)
                                     Spacer()
@@ -309,7 +372,7 @@ struct ModelStudioView: View {
                                         .background(Capsule().fill((installed ? SolarisTheme.emerald : SolarisTheme.amber).opacity(0.22)))
                                         .foregroundColor(installed ? SolarisTheme.emerald : SolarisTheme.amberGlow)
                                 }
-                                Text(svc.description)
+                                Text(svc.localizedDescription(vm.language))
                                     .font(.system(size: 13.5))
                                     .foregroundColor(SolarisTheme.textSecondary)
                             }
@@ -334,7 +397,15 @@ struct ModelStudioView: View {
                         Button {
                             vm.loadModelInSelectedService()
                         } label: {
-                            Label("Modell in \(vm.selectedService.rawValue) laden", systemImage: "play.circle.fill")
+                            Label(L10n.tr(vm.language,
+                                de: "Modell in \(vm.selectedService.localizedTitle(vm.language)) laden",
+                                en: "Load model in \(vm.selectedService.localizedTitle(vm.language))",
+                                fr: "Charger le modèle dans \(vm.selectedService.localizedTitle(vm.language))",
+                                es: "Cargar modelo en \(vm.selectedService.localizedTitle(vm.language))",
+                                pt: "Carregar modelo em \(vm.selectedService.localizedTitle(vm.language))",
+                                ru: "Загрузить модель в \(vm.selectedService.localizedTitle(vm.language))",
+                                ja: "\(vm.selectedService.localizedTitle(vm.language)) にモデルを読込",
+                                zh: "加载模型到 \(vm.selectedService.localizedTitle(vm.language))"), systemImage: "play.circle.fill")
                                 .font(SolarisTheme.bodyBold)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
@@ -392,7 +463,15 @@ struct ModelStudioView: View {
                     let kvMetrics = vm.cacheGenCompressionMetrics()
 
                     HStack {
-                        Label("Disaggregiertes Prefill/Decode (ANE-Split) & 3-Tier KV-Cache", systemImage: "cpu.fill")
+                        Label(L10n.tr(vm.language,
+                            de: "Disaggregiertes Prefill/Decode (ANE-Split) & 3-Tier KV-Cache",
+                            en: "Disaggregated Prefill/Decode (ANE-Split) & 3-Tier KV Cache",
+                            fr: "Prefill/Decode désagrégé (ANE-Split) & cache KV à 3 niveaux",
+                            es: "Prefill/Decode desagregado (ANE-Split) y caché KV de 3 niveles",
+                            pt: "Prefill/Decode desagregado (ANE-Split) e cache KV de 3 níveis",
+                            ru: "Дезагрегированный Prefill/Decode (ANE-Split) и 3-уровневый KV-кэш",
+                            ja: "分離型 Prefill/Decode (ANE-Split) & 3階層 KVキャッシュ",
+                            zh: "分离式 Prefill/Decode (ANE-Split) 与 3 层 KV 缓存"), systemImage: "cpu.fill")
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.mint)
                         Spacer()
@@ -405,22 +484,46 @@ struct ModelStudioView: View {
                             .cornerRadius(6)
                     }
 
-                    Picker("Compute-Aufteilung", selection: $vm.splitPhaseComputeMode) {
+                    Picker(L10n.tr(vm.language,
+                        de: "Compute-Aufteilung",
+                        en: "Compute Split",
+                        fr: "Répartition du calcul",
+                        es: "División de cómputo",
+                        pt: "Divisão de computação",
+                        ru: "Разделение вычислений",
+                        ja: "計算分割",
+                        zh: "计算拆分"), selection: $vm.splitPhaseComputeMode) {
                         ForEach(SplitPhaseComputeMode.allCases) { mode in
-                            Text(mode.rawValue).tag(mode)
+                            Text(mode.localizedTitle(vm.language)).tag(mode)
                         }
                     }
                     .pickerStyle(.segmented)
 
-                    Picker("KV-Cache Tiering & CacheGen", selection: $vm.kvCacheTierMode) {
+                    Picker(L10n.tr(vm.language,
+                        de: "KV-Cache Tiering & CacheGen",
+                        en: "KV Cache Tiering & CacheGen",
+                        fr: "Hiérarchisation du cache KV & CacheGen",
+                        es: "Niveles de caché KV y CacheGen",
+                        pt: "Camadas de cache KV e CacheGen",
+                        ru: "Уровни KV-кэша и CacheGen",
+                        ja: "KVキャッシュ階層化 & CacheGen",
+                        zh: "KV 缓存分级与 CacheGen"), selection: $vm.kvCacheTierMode) {
                         ForEach(KVCacheTierMode.allCases) { tier in
-                            Text(tier.rawValue).tag(tier)
+                            Text(tier.localizedTitle(vm.language)).tag(tier)
                         }
                     }
                     .pickerStyle(.segmented)
 
                     HStack {
-                        Text(String(format: "Prefix-Cache-Trefferrate: %.0f %%", vm.kvPrefixCacheHitRatePct))
+                        Text(String(format: L10n.tr(vm.language,
+                            de: "Prefix-Cache-Trefferrate: %.0f %%",
+                            en: "Prefix Cache Hit Rate: %.0f %%",
+                            fr: "Taux de succès du cache préfixe : %.0f %%",
+                            es: "Tasa de aciertos de caché prefijo: %.0f %%",
+                            pt: "Taxa de acerto do cache de prefixo: %.0f %%",
+                            ru: "Попадание в префиксный кэш: %.0f %%",
+                            ja: "プレフィックスキャッシュヒット率: %.0f %%",
+                            zh: "前缀缓存命中率：%.0f %%"), vm.kvPrefixCacheHitRatePct))
                             .font(SolarisTheme.bodyBold)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Slider(value: $vm.kvPrefixCacheHitRatePct, in: 0...100, step: 1)
@@ -428,10 +531,34 @@ struct ModelStudioView: View {
                     }
 
                     HStack(spacing: 14) {
-                        Text(String(format: "Roh-KV (32K): %.2f GB", kvMetrics.rawKvSizeGB))
-                        Text(String(format: "CacheGen-Transfer: %.2f GB (%.1f×)", kvMetrics.compressedTransferGB, kvMetrics.compressionRatio))
+                        Text(String(format: L10n.tr(vm.language,
+                            de: "Roh-KV (32K): %.2f GB",
+                            en: "Raw KV (32K): %.2f GB",
+                            fr: "KV brut (32K) : %.2f Go",
+                            es: "KV bruto (32K): %.2f GB",
+                            pt: "KV bruto (32K): %.2f GB",
+                            ru: "Сырой KV (32K): %.2f ГБ",
+                            ja: "生KV (32K): %.2f GB",
+                            zh: "原始 KV (32K)：%.2f GB"), kvMetrics.rawKvSizeGB))
+                        Text(String(format: L10n.tr(vm.language,
+                            de: "CacheGen-Transfer: %.2f GB (%.1f×)",
+                            en: "CacheGen Transfer: %.2f GB (%.1f×)",
+                            fr: "Transfert CacheGen : %.2f Go (%.1f×)",
+                            es: "Transferencia CacheGen: %.2f GB (%.1f×)",
+                            pt: "Transferência CacheGen: %.2f GB (%.1f×)",
+                            ru: "Передача CacheGen: %.2f ГБ (%.1f×)",
+                            ja: "CacheGen 転送: %.2f GB (%.1f×)",
+                            zh: "CacheGen 传输：%.2f GB (%.1f×)"), kvMetrics.compressedTransferGB, kvMetrics.compressionRatio))
                             .foregroundColor(SolarisTheme.emerald)
-                        Text(String(format: "TTFT-Reduktion: -%.1f %%", kvMetrics.estimatedTtftReductionPct))
+                        Text(String(format: L10n.tr(vm.language,
+                            de: "TTFT-Reduktion: -%.1f %%",
+                            en: "TTFT Reduction: -%.1f %%",
+                            fr: "Réduction TTFT : -%.1f %%",
+                            es: "Reducción TTFT: -%.1f %%",
+                            pt: "Redução TTFT: -%.1f %%",
+                            ru: "Снижение TTFT: -%.1f %%",
+                            ja: "TTFT削減: -%.1f %%",
+                            zh: "TTFT 降低：-%.1f %%"), kvMetrics.estimatedTtftReductionPct))
                             .foregroundColor(SolarisTheme.amberGlow)
                     }
                     .font(SolarisTheme.monoCode)
@@ -441,5 +568,53 @@ struct ModelStudioView: View {
             .padding(24)
         }
         .solarisShorttip(vm.shorttip(.models), id: "view_models_root", vm: vm)
+    }
+
+    private func runtimeBadgeText(for svc: RuntimeService, isRunning: Bool, isInstalled: Bool) -> String {
+        if isRunning {
+            if svc == .ollama {
+                let modelCount = vm.modelPresets.filter {
+                    $0.isLiveDiscovered && ($0.sourceLabel.localizedCaseInsensitiveContains("ollama") || $0.quantization.localizedCaseInsensitiveContains("ollama"))
+                }.count
+                return L10n.tr(vm.language,
+                    de: "Bereit (Läuft · \(modelCount) Modelle)",
+                    en: "Ready (Running · \(modelCount) models)",
+                    fr: "Prêt (Actif · \(modelCount) modèles)",
+                    es: "Listo (Activo · \(modelCount) modelos)",
+                    pt: "Pronto (Ativo · \(modelCount) modelos)",
+                    ru: "Готово (Запущен · \(modelCount) мод.)",
+                    ja: "準備完了 (稼働中 · \(modelCount) モデル)",
+                    zh: "就绪 (运行中 · \(modelCount) 个模型)")
+            }
+            return L10n.tr(vm.language,
+                de: "Bereit (Läuft)",
+                en: "Ready (Running)",
+                fr: "Prêt (Actif)",
+                es: "Listo (Activo)",
+                pt: "Pronto (Ativo)",
+                ru: "Готово (Запущен)",
+                ja: "準備完了 (稼働中)",
+                zh: "就绪 (运行中)")
+        } else if isInstalled {
+            return L10n.tr(vm.language,
+                de: "Installiert (Gestoppt)",
+                en: "Installed (Stopped)",
+                fr: "Installé (Arrêté)",
+                es: "Instalado (Detenido)",
+                pt: "Instalado (Parado)",
+                ru: "Установлен (Остановлен)",
+                ja: "インストール済み (停止中)",
+                zh: "已安装 (已停止)")
+        } else {
+            return L10n.tr(vm.language,
+                de: "Nicht gefunden",
+                en: "Not found",
+                fr: "Introuvable",
+                es: "No encontrado",
+                pt: "Não encontrado",
+                ru: "Не найден",
+                ja: "未検出",
+                zh: "未找到")
+        }
     }
 }

@@ -128,7 +128,15 @@ struct MainStudioWindow: View {
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))
-                .solarisShorttip("Sprache der gesamten Benutzeroberfläche inkl. Handbuch & Shorttips (8 Sprachen).", id: "sidebar_lang_picker", vm: vm)
+                .solarisShorttip(L10n.tr(vm.language,
+                    de: "Sprache der gesamten Benutzeroberfläche inkl. Handbuch & Shorttips (8 Sprachen).",
+                    en: "Language for the entire UI including manual & shorttips (8 languages).",
+                    fr: "Langue de toute l'interface, y compris le manuel et les infobulles (8 langues).",
+                    es: "Idioma de toda la interfaz, incluido el manual y los consejos (8 idiomas).",
+                    pt: "Idioma de toda a interface, incluindo manual e dicas rápidas (8 idiomas).",
+                    ru: "Язык всего интерфейса, включая руководство и подсказки (8 языков).",
+                    ja: "マニュアルとショートチップを含む全UIの言語（8言語対応）。",
+                    zh: "整个界面（含手册与提示）的显示语言（支持 8 种语言）。"), id: "sidebar_lang_picker", vm: vm)
 
                 // Simulations-Schalter (bis Mac Studio per UPS eintrifft)
                 Button {

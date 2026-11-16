@@ -36,10 +36,20 @@ struct MultiModelModeView: View {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
-                        Text("Multi-Model-Mode (MMM)")
+                        Text(L10n.tr(vm.language,
+                            de: "Multi-Model-Mode (MMM)",
+                            en: "Multi-Model Mode (MMM)",
+                            fr: "Mode Multi-Modèle (MMM)",
+                            es: "Modo Multimodelo (MMM)",
+                            pt: "Modo Multimodelo (MMM)",
+                            ru: "Режим нескольких моделей (MMM)",
+                            ja: "マルチモデルモード (MMM)",
+                            zh: "多模型模式 (MMM)"))
                             .font(SolarisTheme.sectionTitle)
                             .foregroundColor(SolarisTheme.textPrimary)
-                        Text(vm.simulateMacStudio ? "SIMULATION" : "ECHTZEIT-ORCHESTRIERUNG")
+                        Text(vm.simulateMacStudio
+                            ? L10n.tr(vm.language, de: "SIMULATION", en: "SIMULATION", fr: "SIMULATION", es: "SIMULACIÓN", pt: "SIMULAÇÃO", ru: "СИМУЛЯЦИЯ", ja: "シミュレーション", zh: "模拟运行")
+                            : L10n.tr(vm.language, de: "ECHTZEIT-ORCHESTRIERUNG", en: "LIVE ORCHESTRATION", fr: "ORCHESTRATION EN DIRECT", es: "ORQUESTACIÓN EN VIVO", pt: "ORQUESTRAÇÃO AO VIVO", ru: "ОРКЕСТРОВКА LIVE", ja: "ライブオーケストレーション", zh: "实时编排"))
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundColor(.black)
                             .padding(.horizontal, 8)
@@ -47,7 +57,15 @@ struct MultiModelModeView: View {
                             .background(vm.simulateMacStudio ? SolarisTheme.amber : SolarisTheme.emerald)
                             .cornerRadius(5)
                     }
-                    Text("Führe mehrere Modelle innerhalb des lokalen Clusters, des Internet-Clusters oder eines gekoppelten Hybrid-Verbunds zu einer gemeinsamen Gesamtleistung zusammen.")
+                    Text(L10n.tr(vm.language,
+                        de: "Führe mehrere Modelle innerhalb des lokalen Clusters, des Internet-Clusters oder eines gekoppelten Hybrid-Verbunds zu einer gemeinsamen Gesamtleistung zusammen.",
+                        en: "Combine multiple models across the local cluster, the internet cluster, or a coupled hybrid mesh into unified aggregate throughput.",
+                        fr: "Combinez plusieurs modèles sur le cluster local, le cluster Internet ou un maillage hybride pour un débit unifié.",
+                        es: "Combina varios modelos en el clúster local, el clúster de Internet o una malla híbrida en un rendimiento conjunto.",
+                        pt: "Combine vários modelos no cluster local, no cluster Internet ou em rede híbrida para desempenho agregado unificado.",
+                        ru: "Объединяйте несколько моделей в локальном, интернет- или гибридном кластере для суммарной пропускной способности.",
+                        ja: "ローカル・インターネット・ハイブリッドクラスタ間で複数モデルを統合し、合算スループットを引き出します。",
+                        zh: "在本地集群、互联网集群或混合网络中协同调度多个模型，汇聚统一算力输出。"))
                         .font(SolarisTheme.bodyLarge)
                         .foregroundColor(SolarisTheme.textSecondary)
                 }
@@ -55,7 +73,15 @@ struct MultiModelModeView: View {
                 Button {
                     vm.syncMultiModelSlotsFromCluster()
                 } label: {
-                    Label("Aus Verbund synchronisieren", systemImage: "arrow.triangle.2.circlepath")
+                    Label(L10n.tr(vm.language,
+                        de: "Aus Verbund synchronisieren",
+                        en: "Sync from Cluster",
+                        fr: "Synchroniser du cluster",
+                        es: "Sincronizar del clúster",
+                        pt: "Sincronizar do cluster",
+                        ru: "Синхр. с кластером",
+                        ja: "クラスタから同期",
+                        zh: "从集群同步"), systemImage: "arrow.triangle.2.circlepath")
                 }
                 .buttonStyle(.bordered)
             }
@@ -64,12 +90,28 @@ struct MultiModelModeView: View {
 
             // Scope Selector (Lokal / Internet-Cluster / Hybrid)
             HStack(spacing: 12) {
-                Text("Cluster-Bereich:")
+                Text(L10n.tr(vm.language,
+                    de: "Cluster-Bereich:",
+                    en: "Cluster Scope:",
+                    fr: "Portée du cluster :",
+                    es: "Ámbito del clúster:",
+                    pt: "Âmbito do cluster:",
+                    ru: "Область кластера:",
+                    ja: "クラスタ範囲:",
+                    zh: "集群范围："))
                     .font(SolarisTheme.bodyBold)
                     .foregroundColor(SolarisTheme.textSecondary)
-                Picker("Cluster-Bereich", selection: $vm.mmmScope) {
+                Picker(L10n.tr(vm.language,
+                    de: "Cluster-Bereich",
+                    en: "Cluster Scope",
+                    fr: "Portée du cluster",
+                    es: "Ámbito del clúster",
+                    pt: "Âmbito do cluster",
+                    ru: "Область кластера",
+                    ja: "クラスタ範囲",
+                    zh: "集群范围"), selection: $vm.mmmScope) {
                     ForEach(MultiModelScope.allCases) { scope in
-                        Text(scope.rawValue).tag(scope)
+                        Text(scope.localizedTitle(vm.language)).tag(scope)
                     }
                 }
                 .labelsHidden()
@@ -81,18 +123,34 @@ struct MultiModelModeView: View {
 
             // Orchestration Strategy Picker
             VStack(alignment: .leading, spacing: 8) {
-                Text("Orchestrierungs-Strategie:")
+                Text(L10n.tr(vm.language,
+                    de: "Orchestrierungs-Strategie:",
+                    en: "Orchestration Strategy:",
+                    fr: "Stratégie d'orchestration :",
+                    es: "Estrategia de orquestación:",
+                    pt: "Estratégia de orquestração:",
+                    ru: "Стратегия оркестровки:",
+                    ja: "オーケストレーション戦略:",
+                    zh: "编排策略："))
                     .font(SolarisTheme.bodyBold)
                     .foregroundColor(SolarisTheme.textSecondary)
-                Picker("Strategie", selection: $vm.mmmStrategy) {
+                Picker(L10n.tr(vm.language,
+                    de: "Strategie",
+                    en: "Strategy",
+                    fr: "Stratégie",
+                    es: "Estrategia",
+                    pt: "Estratégia",
+                    ru: "Стратегия",
+                    ja: "戦略",
+                    zh: "策略"), selection: $vm.mmmStrategy) {
                     ForEach(MultiModelStrategy.allCases) { strategy in
-                        Text(strategy.rawValue).tag(strategy)
+                        Text(strategy.localizedTitle(vm.language)).tag(strategy)
                     }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
 
-                Text(vm.mmmStrategy.summary)
+                Text(vm.mmmStrategy.localizedSummary(vm.language))
                     .font(Font.caption)
                     .foregroundColor(SolarisTheme.textSecondary)
             }
@@ -105,10 +163,26 @@ struct MultiModelModeView: View {
         SolarisCard(accent: SolarisTheme.mint) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Automatische MMM-Einrichtung (1-Klick-Assistent)")
+                    Text(L10n.tr(vm.language,
+                        de: "Automatische MMM-Einrichtung (1-Klick-Assistent)",
+                        en: "Automatic MMM Setup (1-Click Wizard)",
+                        fr: "Configuration MMM automatique (Assistant 1 clic)",
+                        es: "Configuración MMM automática (Asistente 1 clic)",
+                        pt: "Configuração MMM automática (Assistente 1 clique)",
+                        ru: "Автонастройка MMM (мастер в 1 клик)",
+                        ja: "自動 MMM セットアップ（ワンクリック・ウィザード）",
+                        zh: "自动 MMM 配置（一键向导）"))
                         .font(SolarisTheme.cardTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
-                    Text("Erkennt automatisch verfügbare Knoten, VRAM-Pools und geladene Modelle. Jede Einstellung lässt sich anschließend jederzeit im Slot-Editor anpassen, umsortieren oder duplizieren.")
+                    Text(L10n.tr(vm.language,
+                        de: "Erkennt automatisch verfügbare Knoten, VRAM-Pools und geladene Modelle. Jede Einstellung lässt sich anschließend jederzeit im Slot-Editor anpassen, umsortieren oder duplizieren.",
+                        en: "Automatically detects available nodes, VRAM pools, and loaded models. Every setting can be edited, reordered, or duplicated anytime in the slot editor.",
+                        fr: "Détecte automatiquement les nœuds, pools VRAM et modèles chargés. Chaque paramètre reste modifiable, réordonnable ou duplicable dans l'éditeur.",
+                        es: "Detecta automáticamente nodos, pools de VRAM y modelos cargados. Cada ajuste se puede editar, reordenar o duplicar luego en el editor de slots.",
+                        pt: "Deteta automaticamente nós, pools de VRAM e modelos carregados. Cada definição pode ser editada, reordenada ou duplicada no editor de slots.",
+                        ru: "Автоматически определяет доступные узлы, пулы VRAM и загруженные модели. Любой слот можно изменить, переставить или дублировать.",
+                        ja: "利用可能なノード、VRAMプール、ロード済みモデルを自動検出します。設定は後からスロットエディタでいつでも編集・並び替え・複製できます。",
+                        zh: "自动识别可用节点、显存池与已加载模型。所有参数均可随时在槽位编辑器中修改、排序或复制。"))
                         .font(Font.caption)
                         .foregroundColor(SolarisTheme.textSecondary)
                 }
@@ -116,7 +190,15 @@ struct MultiModelModeView: View {
                 Button {
                     vm.autoConfigureMultiModelSetup()
                 } label: {
-                    Label("Automatisch einrichten", systemImage: "wand.and.stars")
+                    Label(L10n.tr(vm.language,
+                        de: "Automatisch einrichten",
+                        en: "Auto-Configure",
+                        fr: "Configurer auto",
+                        es: "Configurar auto",
+                        pt: "Configurar auto",
+                        ru: "Автонастройка",
+                        ja: "自動構成",
+                        zh: "自动配置"), systemImage: "wand.and.stars")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(SolarisTheme.amber)
@@ -124,19 +206,35 @@ struct MultiModelModeView: View {
             }
 
             HStack(spacing: 10) {
-                Text("Profil:")
+                Text(L10n.tr(vm.language,
+                    de: "Profil:",
+                    en: "Profile:",
+                    fr: "Profil :",
+                    es: "Perfil:",
+                    pt: "Perfil:",
+                    ru: "Профиль:",
+                    ja: "プロファイル:",
+                    zh: "配置文件："))
                     .font(SolarisTheme.bodyBold)
                     .foregroundColor(SolarisTheme.textSecondary)
-                Picker("Auto-Profil", selection: $vm.mmmAutoProfile) {
+                Picker(L10n.tr(vm.language,
+                    de: "Auto-Profil",
+                    en: "Auto Profile",
+                    fr: "Profil auto",
+                    es: "Perfil auto",
+                    pt: "Perfil auto",
+                    ru: "Автопрофиль",
+                    ja: "自動プロファイル",
+                    zh: "自动配置方案"), selection: $vm.mmmAutoProfile) {
                     ForEach(MultiModelAutoProfile.allCases) { profile in
-                        Text(profile.rawValue).tag(profile)
+                        Text(profile.localizedTitle(vm.language)).tag(profile)
                     }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
             }
 
-            Text(vm.mmmAutoProfile.summary)
+            Text(vm.mmmAutoProfile.localizedSummary(vm.language))
                 .font(Font.caption)
                 .foregroundColor(SolarisTheme.textSecondary)
 
@@ -144,15 +242,39 @@ struct MultiModelModeView: View {
                 Button {
                     vm.optimizeMultiModelSlotsForVram()
                 } label: {
-                    Label("VRAM-Fit optimieren", systemImage: "checkmark.shield")
+                    Label(L10n.tr(vm.language,
+                        de: "VRAM-Fit optimieren",
+                        en: "Optimize VRAM Fit",
+                        fr: "Optimiser la VRAM",
+                        es: "Optimizar ajuste VRAM",
+                        pt: "Otimizar ajuste VRAM",
+                        ru: "Оптимизировать VRAM",
+                        ja: "VRAM適合を最適化",
+                        zh: "优化显存适配"), systemImage: "checkmark.shield")
                 }
                 .buttonStyle(.bordered)
 
                 Button {
                     vm.saveMultiModelConfiguration()
-                    vm.mmmStatusMessage = "MMM-Konfiguration dauerhaft gespeichert."
+                    vm.mmmStatusMessage = L10n.tr(vm.language,
+                        de: "MMM-Konfiguration dauerhaft gespeichert.",
+                        en: "MMM configuration saved persistently.",
+                        fr: "Configuration MMM enregistrée.",
+                        es: "Configuración MMM guardada de forma permanente.",
+                        pt: "Configuração MMM guardada permanentemente.",
+                        ru: "Конфигурация MMM сохранена.",
+                        ja: "MMM 設定を永続保存しました。",
+                        zh: "已永久保存 MMM 配置。")
                 } label: {
-                    Label("Konfiguration speichern", systemImage: "square.and.arrow.down")
+                    Label(L10n.tr(vm.language,
+                        de: "Konfiguration speichern",
+                        en: "Save Configuration",
+                        fr: "Enregistrer",
+                        es: "Guardar configuración",
+                        pt: "Guardar configuração",
+                        ru: "Сохранить конфигурацию",
+                        ja: "設定を保存",
+                        zh: "保存配置"), systemImage: "square.and.arrow.down")
                 }
                 .buttonStyle(.bordered)
 
@@ -165,7 +287,9 @@ struct MultiModelModeView: View {
                         vm.mmmConfigCopiedBanner = false
                     }
                 } label: {
-                    Label(vm.mmmConfigCopiedBanner ? "JSON kopiert!" : "Config-JSON kopieren", systemImage: "doc.on.doc")
+                    Label(vm.mmmConfigCopiedBanner
+                        ? L10n.tr(vm.language, de: "JSON kopiert!", en: "JSON copied!", fr: "JSON copié !", es: "¡JSON copiado!", pt: "JSON copiado!", ru: "JSON скопирован!", ja: "JSON をコピー!", zh: "已复制 JSON！")
+                        : L10n.tr(vm.language, de: "Config-JSON kopieren", en: "Copy Config JSON", fr: "Copier Config JSON", es: "Copiar JSON", pt: "Copiar JSON", ru: "Копировать Config JSON", ja: "設定 JSON をコピー", zh: "复制配置 JSON"), systemImage: "doc.on.doc")
                 }
                 .buttonStyle(.bordered)
 
@@ -185,11 +309,27 @@ struct MultiModelModeView: View {
     private var nextGenSotaOrchestrationCard: some View {
         SolarisCard(accent: SolarisTheme.emerald) {
             HStack {
-                Label("Next-Gen MMM Engine (EAGLE-3 · Tree-MoA · Thermal/Carbon)", systemImage: "sparkles.rectangle.stack.fill")
+                Label(L10n.tr(vm.language,
+                    de: "Next-Gen MMM Engine (EAGLE-3 · Tree-MoA · Thermik/CO₂)",
+                    en: "Next-Gen MMM Engine (EAGLE-3 · Tree-MoA · Thermal/Carbon)",
+                    fr: "Moteur MMM Next-Gen (EAGLE-3 · Tree-MoA · Thermique/CO₂)",
+                    es: "Motor MMM Next-Gen (EAGLE-3 · Tree-MoA · Térmica/CO₂)",
+                    pt: "Motor MMM Next-Gen (EAGLE-3 · Tree-MoA · Térmica/CO₂)",
+                    ru: "Движок MMM Next-Gen (EAGLE-3 · Tree-MoA · Термо/CO₂)",
+                    ja: "次世代 MMM エンジン (EAGLE-3 · Tree-MoA · 熱/CO₂)",
+                    zh: "新一代 MMM 引擎 (EAGLE-3 · Tree-MoA · 温控/碳感知)"), systemImage: "sparkles.rectangle.stack.fill")
                     .font(SolarisTheme.cardTitle)
                     .foregroundColor(SolarisTheme.emerald)
                 Spacer()
-                Text(String(format: "%.1f tok/s geschätzt", vm.mmmEstimatedCombinedTokPerSec))
+                Text(String(format: L10n.tr(vm.language,
+                    de: "%.1f tok/s geschätzt",
+                    en: "%.1f tok/s est.",
+                    fr: "%.1f tok/s est.",
+                    es: "%.1f tok/s est.",
+                    pt: "%.1f tok/s est.",
+                    ru: "%.1f tok/с ож.",
+                    ja: "推定 %.1f tok/s",
+                    zh: "预计 %.1f tok/s"), vm.mmmEstimatedCombinedTokPerSec))
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                     .foregroundColor(.black)
                     .padding(.horizontal, 8)
@@ -199,20 +339,44 @@ struct MultiModelModeView: View {
             }
 
             // Punkt 3: EAGLE-3 Speculative Engine
-            Picker("Speculative-Engine", selection: $vm.mmmSpeculativeEngine) {
+            Picker(L10n.tr(vm.language,
+                de: "Speculative-Engine",
+                en: "Speculative Engine",
+                fr: "Moteur spéculatif",
+                es: "Motor especulativo",
+                pt: "Motor especulativo",
+                ru: "Спекулятивный движок",
+                ja: "投機的デコードエンジン",
+                zh: "投机解码引擎"), selection: $vm.mmmSpeculativeEngine) {
                 ForEach(SpeculativeEngineMode.allCases) { engine in
-                    Text(engine.rawValue).tag(engine)
+                    Text(engine.localizedTitle(vm.language)).tag(engine)
                 }
             }
             .pickerStyle(.segmented)
 
             // Punkt 3: Tree-MoA Early-Exit & Adaptive Confidence Escalation
             HStack(spacing: 16) {
-                Toggle("Tree-MoA Early-Exit", isOn: $vm.mmmEnableTreeMoaEarlyExit)
+                Toggle(L10n.tr(vm.language,
+                    de: "Tree-MoA Early-Exit",
+                    en: "Tree-MoA Early-Exit",
+                    fr: "Sortie anticipée Tree-MoA",
+                    es: "Salida temprana Tree-MoA",
+                    pt: "Saída antecipada Tree-MoA",
+                    ru: "Ранний выход Tree-MoA",
+                    ja: "Tree-MoA 早期終了",
+                    zh: "Tree-MoA 提前退出"), isOn: $vm.mmmEnableTreeMoaEarlyExit)
                     .toggleStyle(.switch)
                     .tint(SolarisTheme.mint)
 
-                Toggle("Adaptive Confidence Escalation (Ares)", isOn: $vm.mmmConfidenceEscalationEnabled)
+                Toggle(L10n.tr(vm.language,
+                    de: "Adaptive Konfidenz-Eskalation (Ares)",
+                    en: "Adaptive Confidence Escalation (Ares)",
+                    fr: "Escalade adaptative de confiance (Ares)",
+                    es: "Escalada adaptativa de confianza (Ares)",
+                    pt: "Escalada adaptativa de confiança (Ares)",
+                    ru: "Адаптивная эскалация уверенности (Ares)",
+                    ja: "適応型信頼度エスカレーション (Ares)",
+                    zh: "自适应置信度升级 (Ares)"), isOn: $vm.mmmConfidenceEscalationEnabled)
                     .toggleStyle(.switch)
                     .tint(SolarisTheme.amber)
             }
@@ -220,7 +384,15 @@ struct MultiModelModeView: View {
             .foregroundColor(SolarisTheme.textPrimary)
 
             HStack {
-                Text(String(format: "MoA-Konfidenz-Schwellenwert: %.0f %%", vm.mmmMoaConfidenceThreshold * 100))
+                Text(String(format: L10n.tr(vm.language,
+                    de: "MoA-Konfidenz-Schwellenwert: %.0f %%",
+                    en: "MoA Confidence Threshold: %.0f %%",
+                    fr: "Seuil de confiance MoA : %.0f %%",
+                    es: "Umbral de confianza MoA: %.0f %%",
+                    pt: "Limiar de confiança MoA: %.0f %%",
+                    ru: "Порог уверенности MoA: %.0f %%",
+                    ja: "MoA 信頼度しきい値: %.0f %%",
+                    zh: "MoA 置信度阈值：%.0f %%"), vm.mmmMoaConfidenceThreshold * 100))
                     .font(SolarisTheme.bodyBold)
                     .foregroundColor(SolarisTheme.textSecondary)
                 Slider(value: $vm.mmmMoaConfidenceThreshold, in: 0.50...0.95, step: 0.01)
@@ -231,7 +403,15 @@ struct MultiModelModeView: View {
 
             // Punkt 5: Thermal- & Carbon-Aware Workload Placement
             HStack(spacing: 12) {
-                Toggle("Thermal- & Carbon-Aware Scheduling", isOn: $vm.mmmThermalCarbonAwareScheduling)
+                Toggle(L10n.tr(vm.language,
+                    de: "Thermik- & CO₂-bewusstes Scheduling",
+                    en: "Thermal- & Carbon-Aware Scheduling",
+                    fr: "Ordonnancement thermique & bas carbone",
+                    es: "Planificación térmica y consciente de carbono",
+                    pt: "Escalonamento térmico e de baixo carbono",
+                    ru: "Планирование с учётом термо и CO₂",
+                    ja: "熱・CO₂認識スケジューリング",
+                    zh: "温控与碳感知调度"), isOn: $vm.mmmThermalCarbonAwareScheduling)
                     .toggleStyle(.switch)
                     .tint(SolarisTheme.emerald)
                     .font(SolarisTheme.bodyBold)
@@ -239,9 +419,17 @@ struct MultiModelModeView: View {
 
                 Spacer()
 
-                Picker("Scheduling-Policy", selection: $vm.thermalCarbonPolicy) {
+                Picker(L10n.tr(vm.language,
+                    de: "Scheduling-Policy",
+                    en: "Scheduling Policy",
+                    fr: "Politique",
+                    es: "Política",
+                    pt: "Política",
+                    ru: "Политика",
+                    ja: "ポリシー",
+                    zh: "调度策略"), selection: $vm.thermalCarbonPolicy) {
                     ForEach(ThermalCarbonSchedulingPolicy.allCases) { policy in
-                        Text(policy.rawValue).tag(policy)
+                        Text(policy.localizedTitle(vm.language)).tag(policy)
                     }
                 }
                 .labelsHidden()
@@ -256,27 +444,41 @@ struct MultiModelModeView: View {
         SolarisCard(accent: vm.mmmFitsInClusterPool ? SolarisTheme.mint : SolarisTheme.coral) {
             HStack(spacing: 14) {
                 mmmMetricTile(
-                    title: "Aktive Modelle",
+                    title: L10n.tr(vm.language, de: "Aktive Modelle", en: "Active Models", fr: "Modèles actifs", es: "Modelos activos", pt: "Modelos ativos", ru: "Активные модели", ja: "稼働モデル", zh: "活跃模型"),
                     value: "\(vm.mmmActiveSlots.count) / \(vm.mmmSlots.count)",
-                    sub: "\(vm.mmmAvailableTargets.count) Ziel-Knoten (\(vm.mmmScope.rawValue))",
+                    sub: L10n.tr(vm.language,
+                        de: "\(vm.mmmAvailableTargets.count) Ziel-Knoten (\(vm.mmmScope.localizedTitle(vm.language)))",
+                        en: "\(vm.mmmAvailableTargets.count) target nodes (\(vm.mmmScope.localizedTitle(vm.language)))",
+                        fr: "\(vm.mmmAvailableTargets.count) nœuds cibles (\(vm.mmmScope.localizedTitle(vm.language)))",
+                        es: "\(vm.mmmAvailableTargets.count) nodos destino (\(vm.mmmScope.localizedTitle(vm.language)))",
+                        pt: "\(vm.mmmAvailableTargets.count) nós destino (\(vm.mmmScope.localizedTitle(vm.language)))",
+                        ru: "\(vm.mmmAvailableTargets.count) целевых узлов (\(vm.mmmScope.localizedTitle(vm.language)))",
+                        ja: "\(vm.mmmAvailableTargets.count) ノード (\(vm.mmmScope.localizedTitle(vm.language)))",
+                        zh: "\(vm.mmmAvailableTargets.count) 个目标节点 (\(vm.mmmScope.localizedTitle(vm.language)))"),
                     accent: SolarisTheme.amberGlow
                 )
                 mmmMetricTile(
-                    title: "VRAM-Bedarf vs. Pool",
+                    title: L10n.tr(vm.language, de: "VRAM-Bedarf vs. Pool", en: "VRAM Demand vs. Pool", fr: "Demande VRAM vs Pool", es: "VRAM requerida vs Pool", pt: "VRAM vs Pool", ru: "VRAM / Пул", ja: "VRAM 必要量 / プール", zh: "显存需求 / 总池"),
                     value: String(format: "%.1f / %.1f GB", vm.mmmTotalRequiredVramGB, vm.mmmUsableVramPoolGB),
-                    sub: vm.mmmFitsInClusterPool ? "Passt sicher in nutzbaren Pool" : "Pool überschritten — Slots reduzieren",
+                    sub: vm.mmmFitsInClusterPool
+                        ? L10n.tr(vm.language, de: "Passt sicher in nutzbaren Pool", en: "Fits safely within usable pool", fr: "Rentre dans le pool disponible", es: "Cabe seguro en el pool usable", pt: "Cabe no pool utilizável", ru: "Помещается в доступный пул", ja: "利用可能プール内に安全に収容", zh: "安全适配可用显存池")
+                        : L10n.tr(vm.language, de: "Pool überschritten — Slots reduzieren", en: "Pool exceeded — reduce slots", fr: "Pool dépassé — réduire les slots", es: "Pool superado — reducir slots", pt: "Pool excedido — reduzir slots", ru: "Пул превышен — уменьшите слоты", ja: "プール超過 — スロットを削減", zh: "超出显存池 — 请减少槽位"),
                     accent: vm.mmmFitsInClusterPool ? SolarisTheme.emerald : SolarisTheme.coral
                 )
                 mmmMetricTile(
-                    title: "Kombinierte Leistung",
+                    title: L10n.tr(vm.language, de: "Kombinierte Leistung", en: "Combined Throughput", fr: "Débit combiné", es: "Rendimiento combinado", pt: "Débito combinado", ru: "Совокупная скорость", ja: "合算スループット", zh: "组合吞吐率"),
                     value: String(format: "%.1f tok/s", vm.mmmEstimatedCombinedTokPerSec),
-                    sub: vm.mmmStrategy.rawValue,
+                    sub: vm.mmmStrategy.localizedTitle(vm.language),
                     accent: SolarisTheme.mint
                 )
                 mmmMetricTile(
-                    title: "Letzte Ausführung",
+                    title: L10n.tr(vm.language, de: "Letzte Ausführung", en: "Last Run", fr: "Dernière exécution", es: "Última ejecución", pt: "Última execução", ru: "Последний запуск", ja: "直近の実行", zh: "最近执行"),
                     value: vm.mmmLastResult.map { String(format: "%.2fx", $0.speedupFactor) } ?? "—",
-                    sub: vm.mmmLastResult.map { $0.isLiveExecution ? "Live SSE" : "Simulation" } ?? "Noch nicht gestartet",
+                    sub: vm.mmmLastResult.map {
+                        $0.isLiveExecution
+                            ? L10n.tr(vm.language, de: "Live SSE", en: "Live SSE", fr: "SSE direct", es: "SSE en vivo", pt: "SSE ao vivo", ru: "Live SSE", ja: "ライブ SSE", zh: "实时 SSE")
+                            : L10n.tr(vm.language, de: "Simulation", en: "Simulation", fr: "Simulation", es: "Simulación", pt: "Simulação", ru: "Симуляция", ja: "シミュレーション", zh: "模拟")
+                    } ?? L10n.tr(vm.language, de: "Noch nicht gestartet", en: "Not started yet", fr: "Pas encore lancé", es: "Aún no iniciado", pt: "Ainda não iniciado", ru: "Ещё не запущен", ja: "未実行", zh: "尚未启动"),
                     accent: SolarisTheme.amber
                 )
             }
@@ -286,11 +488,27 @@ struct MultiModelModeView: View {
             let ratio = min(1.0, vm.mmmTotalRequiredVramGB / pool)
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text("Multi-Modell-Speicherauslastung (inkl. iogpu.wired_limit_mb Schutz)")
+                    Text(L10n.tr(vm.language,
+                        de: "Multi-Modell-Speicherauslastung (inkl. iogpu.wired_limit_mb Schutz)",
+                        en: "Multi-Model Memory Utilization (incl. iogpu.wired_limit_mb Guard)",
+                        fr: "Utilisation mémoire multi-modèles (garde iogpu.wired_limit_mb incl.)",
+                        es: "Uso de memoria multimodelo (incl. protección iogpu.wired_limit_mb)",
+                        pt: "Uso de memória multimodelo (incl. proteção iogpu.wired_limit_mb)",
+                        ru: "Использование памяти (с защитой iogpu.wired_limit_mb)",
+                        ja: "マルチモデルメモリ使用率 (iogpu.wired_limit_mb 保護込み)",
+                        zh: "多模型显存占用（含 iogpu.wired_limit_mb 保护）"))
                         .font(SolarisTheme.bodyBold)
                         .foregroundColor(SolarisTheme.textPrimary)
                     Spacer()
-                    Text(String(format: "%.0f%% belegt", (vm.mmmTotalRequiredVramGB / pool) * 100.0))
+                    Text(String(format: L10n.tr(vm.language,
+                        de: "%.0f%% belegt",
+                        en: "%.0f%% used",
+                        fr: "%.0f%% utilisé",
+                        es: "%.0f%% usado",
+                        pt: "%.0f%% utilizado",
+                        ru: "%.0f%% занято",
+                        ja: "%.0f%% 使用中",
+                        zh: "已使用 %.0f%%"), (vm.mmmTotalRequiredVramGB / pool) * 100.0))
                         .font(.system(size: 12, weight: .bold, design: .monospaced))
                         .foregroundColor(vm.mmmFitsInClusterPool ? SolarisTheme.emerald : SolarisTheme.coral)
                 }
@@ -313,11 +531,27 @@ struct MultiModelModeView: View {
     private var modelSlotsCard: some View {
         SolarisCard {
             HStack {
-                Text("Modell-Slots & Knoten-Zuweisung")
+                Text(L10n.tr(vm.language,
+                    de: "Modell-Slots & Knoten-Zuweisung",
+                    en: "Model Slots & Node Assignment",
+                    fr: "Slots de modèles & affectation des nœuds",
+                    es: "Slots de modelos y asignación de nodos",
+                    pt: "Slots de modelos e atribuição de nós",
+                    ru: "Слоты моделей и привязка к узлам",
+                    ja: "モデルスロットとノード割り当て",
+                    zh: "模型槽位与节点分配"))
                     .font(SolarisTheme.cardTitle)
                     .foregroundColor(SolarisTheme.textPrimary)
                 Spacer()
-                Text("Ziele: \(vm.mmmAvailableTargets.joined(separator: " · "))")
+                Text(L10n.tr(vm.language,
+                    de: "Ziele: \(vm.mmmAvailableTargets.joined(separator: " · "))",
+                    en: "Targets: \(vm.mmmAvailableTargets.joined(separator: " · "))",
+                    fr: "Cibles : \(vm.mmmAvailableTargets.joined(separator: " · "))",
+                    es: "Destinos: \(vm.mmmAvailableTargets.joined(separator: " · "))",
+                    pt: "Destinos: \(vm.mmmAvailableTargets.joined(separator: " · "))",
+                    ru: "Цели: \(vm.mmmAvailableTargets.joined(separator: " · "))",
+                    ja: "ターゲット: \(vm.mmmAvailableTargets.joined(separator: " · "))",
+                    zh: "目标节点：\(vm.mmmAvailableTargets.joined(separator: " · "))"))
                     .font(Font.caption)
                     .foregroundColor(SolarisTheme.textSecondary)
                     .lineLimit(1)
@@ -342,16 +576,17 @@ struct MultiModelModeView: View {
                             }
                             .frame(minWidth: 165, alignment: .leading)
 
-                            Picker("Rolle", selection: $slot.role) {
+                            Picker(L10n.tr(vm.language, de: "Rolle", en: "Role", fr: "Rôle", es: "Rol", pt: "Função", ru: "Роль", ja: "役割", zh: "角色"), selection: $slot.role) {
                                 ForEach(MultiModelRole.allCases) { r in
-                                    Text(r.rawValue).tag(r)
+                                    Text(r.localizedTitle(vm.language)).tag(r)
                                 }
                             }
                             .labelsHidden()
                             .frame(width: 115)
 
-                            Picker("Knoten", selection: $slot.assignedTarget) {
-                                ForEach(vm.mmmAvailableTargets.isEmpty ? ["Lokal"] : vm.mmmAvailableTargets, id: \.self) { t in
+                            Picker(L10n.tr(vm.language, de: "Knoten", en: "Node", fr: "Nœud", es: "Nodo", pt: "Nó", ru: "Узел", ja: "ノード", zh: "节点"), selection: $slot.assignedTarget) {
+                                let localFallback = L10n.tr(vm.language, de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
+                                ForEach(vm.mmmAvailableTargets.isEmpty ? [localFallback] : vm.mmmAvailableTargets, id: \.self) { t in
                                     Text(t).tag(t)
                                 }
                             }
@@ -375,7 +610,7 @@ struct MultiModelModeView: View {
                                     Image(systemName: "arrow.up")
                                 }
                                 .buttonStyle(.borderless)
-                                .help("Nach oben verschieben")
+                                .help(L10n.tr(vm.language, de: "Nach oben verschieben", en: "Move up", fr: "Monter", es: "Subir", pt: "Mover para cima", ru: "Вверх", ja: "上へ移動", zh: "上移"))
 
                                 Button {
                                     vm.moveMultiModelSlot(slot.id, direction: 1)
@@ -383,7 +618,7 @@ struct MultiModelModeView: View {
                                     Image(systemName: "arrow.down")
                                 }
                                 .buttonStyle(.borderless)
-                                .help("Nach unten verschieben")
+                                .help(L10n.tr(vm.language, de: "Nach unten verschieben", en: "Move down", fr: "Descendre", es: "Bajar", pt: "Mover para baixo", ru: "Вниз", ja: "下へ移動", zh: "下移"))
 
                                 Button {
                                     vm.duplicateMultiModelSlot(slot.id)
@@ -391,7 +626,7 @@ struct MultiModelModeView: View {
                                     Image(systemName: "plus.square.on.square")
                                 }
                                 .buttonStyle(.borderless)
-                                .help("Slot für weiteren Knoten duplizieren")
+                                .help(L10n.tr(vm.language, de: "Slot für weiteren Knoten duplizieren", en: "Duplicate slot for another node", fr: "Dupliquer pour un autre nœud", es: "Duplicar slot para otro nodo", pt: "Duplicar slot para outro nó", ru: "Дублировать слот для другого узла", ja: "別ノード用にスロットを複製", zh: "复制槽位至其他节点"))
 
                                 Button {
                                     vm.mmmExpandedSlotId = isExpanded ? nil : slot.id
@@ -400,7 +635,7 @@ struct MultiModelModeView: View {
                                         .foregroundColor(isExpanded ? SolarisTheme.amber : SolarisTheme.textSecondary)
                                 }
                                 .buttonStyle(.borderless)
-                                .help("Slot-Details nachträglich anpassen")
+                                .help(L10n.tr(vm.language, de: "Slot-Details nachträglich anpassen", en: "Edit slot details", fr: "Modifier le slot", es: "Editar detalles del slot", pt: "Editar detalhes do slot", ru: "Изменить параметры слота", ja: "スロット詳細を編集", zh: "编辑槽位详情"))
 
                                 Button(role: .destructive) {
                                     vm.removeMultiModelSlot(slot.id)
@@ -408,7 +643,7 @@ struct MultiModelModeView: View {
                                     Image(systemName: "trash")
                                 }
                                 .buttonStyle(.borderless)
-                                .help("Slot entfernen")
+                                .help(L10n.tr(vm.language, de: "Slot entfernen", en: "Remove slot", fr: "Supprimer le slot", es: "Eliminar slot", pt: "Remover slot", ru: "Удалить слот", ja: "スロットを削除", zh: "删除槽位"))
                             }
                         }
 
@@ -417,21 +652,21 @@ struct MultiModelModeView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack(spacing: 10) {
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text("Anzeigename")
+                                        Text(L10n.tr(vm.language, de: "Anzeigename", en: "Display Name", fr: "Nom affiché", es: "Nombre visible", pt: "Nome de exibição", ru: "Имя", ja: "表示名", zh: "显示名称"))
                                             .font(Font.caption)
                                             .foregroundColor(SolarisTheme.textSecondary)
-                                        TextField("Anzeigename", text: $slot.displayName)
+                                        TextField(L10n.tr(vm.language, de: "Anzeigename", en: "Display Name", fr: "Nom affiché", es: "Nombre visible", pt: "Nome de exibição", ru: "Имя", ja: "表示名", zh: "显示名称"), text: $slot.displayName)
                                             .textFieldStyle(.roundedBorder)
                                     }
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text("Modell-ID")
+                                        Text(L10n.tr(vm.language, de: "Modell-ID", en: "Model ID", fr: "ID modèle", es: "ID modelo", pt: "ID modelo", ru: "ID модели", ja: "モデルID", zh: "模型 ID"))
                                             .font(Font.caption)
                                             .foregroundColor(SolarisTheme.textSecondary)
-                                        TextField("Modell-ID", text: $slot.modelId)
+                                        TextField(L10n.tr(vm.language, de: "Modell-ID", en: "Model ID", fr: "ID modèle", es: "ID modelo", pt: "ID modelo", ru: "ID модели", ja: "モデルID", zh: "模型 ID"), text: $slot.modelId)
                                             .textFieldStyle(.roundedBorder)
                                     }
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text("VRAM-Limit")
+                                        Text(L10n.tr(vm.language, de: "VRAM-Limit", en: "VRAM Limit", fr: "Limite VRAM", es: "Límite VRAM", pt: "Limite VRAM", ru: "Лимит VRAM", ja: "VRAM 上限", zh: "显存上限"))
                                             .font(Font.caption)
                                             .foregroundColor(SolarisTheme.textSecondary)
                                         Stepper(String(format: "%.0f GB", slot.estimatedRamGB), value: $slot.estimatedRamGB, in: 1...256, step: 2)
@@ -439,7 +674,7 @@ struct MultiModelModeView: View {
                                     }
                                 }
                                 HStack(spacing: 10) {
-                                    Text("Endpunkt-URL:")
+                                    Text(L10n.tr(vm.language, de: "Endpunkt-URL:", en: "Endpoint URL:", fr: "URL endpoint :", es: "URL endpoint:", pt: "URL endpoint:", ru: "URL конечной точки:", ja: "エンドポイント URL:", zh: "端点 URL："))
                                         .font(Font.caption)
                                         .foregroundColor(SolarisTheme.textSecondary)
                                     TextField("http://127.0.0.1:8000/v1", text: $slot.endpointURL)
@@ -452,10 +687,18 @@ struct MultiModelModeView: View {
                                         slot.endpointURL = "http://127.0.0.1:11434/v1"
                                     }
                                     .buttonStyle(.bordered)
-                                    Button("Übernehmen & Speichern") {
+                                    Button(L10n.tr(vm.language, de: "Übernehmen & Speichern", en: "Apply & Save", fr: "Appliquer & Enregistrer", es: "Aplicar y Guardar", pt: "Aplicar e Guardar", ru: "Применить и сохранить", ja: "適用して保存", zh: "应用并保存")) {
                                         vm.saveMultiModelConfiguration()
                                         vm.mmmExpandedSlotId = nil
-                                        vm.mmmStatusMessage = "Slot '\(slot.displayName)' aktualisiert und gespeichert."
+                                        vm.mmmStatusMessage = L10n.tr(vm.language,
+                                            de: "Slot '\(slot.displayName)' aktualisiert und gespeichert.",
+                                            en: "Slot '\(slot.displayName)' updated and saved.",
+                                            fr: "Slot « \(slot.displayName) » mis à jour et enregistré.",
+                                            es: "Slot '\(slot.displayName)' actualizado y guardado.",
+                                            pt: "Slot '\(slot.displayName)' atualizado e guardado.",
+                                            ru: "Слот '\(slot.displayName)' обновлён и сохранён.",
+                                            ja: "スロット '\(slot.displayName)' を更新して保存しました。",
+                                            zh: "已更新并保存槽位 '\(slot.displayName)'。")
                                     }
                                     .buttonStyle(.borderedProminent)
                                     .tint(SolarisTheme.emerald)
@@ -485,21 +728,29 @@ struct MultiModelModeView: View {
 
             // Add custom model slot
             HStack(spacing: 10) {
-                TextField("Modell-ID (z. B. qwen2.5-coder:7b)", text: $vm.mmmNewModelId)
+                TextField(L10n.tr(vm.language,
+                    de: "Modell-ID (z. B. qwen2.5-coder:7b)",
+                    en: "Model ID (e.g., qwen2.5-coder:7b)",
+                    fr: "ID modèle (ex. qwen2.5-coder:7b)",
+                    es: "ID modelo (p. ej., qwen2.5-coder:7b)",
+                    pt: "ID modelo (ex.: qwen2.5-coder:7b)",
+                    ru: "ID модели (напр., qwen2.5-coder:7b)",
+                    ja: "モデルID (例: qwen2.5-coder:7b)",
+                    zh: "模型 ID（例如 qwen2.5-coder:7b）"), text: $vm.mmmNewModelId)
                     .textFieldStyle(.roundedBorder)
-                TextField("Anzeigename", text: $vm.mmmNewModelName)
+                TextField(L10n.tr(vm.language, de: "Anzeigename", en: "Display Name", fr: "Nom affiché", es: "Nombre visible", pt: "Nome de exibição", ru: "Имя", ja: "表示名", zh: "显示名称"), text: $vm.mmmNewModelName)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 160)
-                Picker("Rolle", selection: $vm.mmmNewModelRole) {
+                Picker(L10n.tr(vm.language, de: "Rolle", en: "Role", fr: "Rôle", es: "Rol", pt: "Função", ru: "Роль", ja: "役割", zh: "角色"), selection: $vm.mmmNewModelRole) {
                     ForEach(MultiModelRole.allCases) { r in
-                        Text(r.rawValue).tag(r)
+                        Text(r.localizedTitle(vm.language)).tag(r)
                     }
                 }
                 .labelsHidden()
                 .frame(width: 120)
                 Stepper(String(format: "%.0f GB", vm.mmmNewModelRamGB), value: $vm.mmmNewModelRamGB, in: 1...256, step: 2)
                     .frame(width: 120)
-                Button("Slot hinzufügen") {
+                Button(L10n.tr(vm.language, de: "Slot hinzufügen", en: "Add Slot", fr: "Ajouter slot", es: "Añadir slot", pt: "Adicionar slot", ru: "Добавить слот", ja: "スロット追加", zh: "添加槽位")) {
                     vm.addMultiModelSlot(
                         modelId: vm.mmmNewModelId,
                         displayName: vm.mmmNewModelName,
@@ -522,7 +773,15 @@ struct MultiModelModeView: View {
     private var executionAndResultsCard: some View {
         SolarisCard(accent: SolarisTheme.emerald) {
             HStack {
-                Text("Multi-Modell-Ausführung & Leistungszusammenführung")
+                Text(L10n.tr(vm.language,
+                    de: "Multi-Modell-Ausführung & Leistungszusammenführung",
+                    en: "Multi-Model Execution & Performance Aggregation",
+                    fr: "Exécution multi-modèles & agrégation des performances",
+                    es: "Ejecución multimodelo y agregación de rendimiento",
+                    pt: "Execução multimodelo e agregação de desempenho",
+                    ru: "Запуск моделей и агрегация производительности",
+                    ja: "マルチモデル実行・性能統合",
+                    zh: "多模型执行与性能汇聚"))
                     .font(SolarisTheme.cardTitle)
                     .foregroundColor(SolarisTheme.textPrimary)
                 Spacer()
@@ -530,7 +789,9 @@ struct MultiModelModeView: View {
                     vm.executeMultiModelOrchestration()
                 } label: {
                     Label(
-                        vm.isRunningMultiModel ? "Orchestrierung läuft..." : "MMM-Lauf starten",
+                        vm.isRunningMultiModel
+                            ? L10n.tr(vm.language, de: "Orchestrierung läuft...", en: "Orchestrating...", fr: "Orchestration en cours...", es: "Orquestando...", pt: "A orquestrar...", ru: "Оркестровка...", ja: "オーケストレーション実行中...", zh: "正在编排运行...")
+                            : L10n.tr(vm.language, de: "MMM-Lauf starten", en: "Start MMM Run", fr: "Lancer l'exécution MMM", es: "Iniciar ejecución MMM", pt: "Iniciar execução MMM", ru: "Запустить MMM", ja: "MMM 実行開始", zh: "启动 MMM 运行"),
                         systemImage: vm.isRunningMultiModel ? "hourglass" : "play.fill"
                     )
                 }
@@ -540,7 +801,15 @@ struct MultiModelModeView: View {
                 .disabled(vm.isRunningMultiModel || vm.mmmActiveSlots.isEmpty)
             }
 
-            TextField("Gemeinsamer Prompt für das Multi-Modell-Ensemble...", text: $vm.mmmPromptInput)
+            TextField(L10n.tr(vm.language,
+                de: "Gemeinsamer Prompt für das Multi-Modell-Ensemble...",
+                en: "Shared prompt for the multi-model ensemble...",
+                fr: "Prompt partagé pour l'ensemble multi-modèles...",
+                es: "Prompt compartido para el conjunto multimodelo...",
+                pt: "Prompt partilhado para o conjunto multimodelo...",
+                ru: "Общий промпт для ансамбля моделей...",
+                ja: "マルチモデル・アンサンブル用の共通プロンプト...",
+                zh: "用于多模型协同集成的共享提示词..."), text: $vm.mmmPromptInput)
                 .textFieldStyle(.roundedBorder)
 
             if !vm.mmmStatusMessage.isEmpty {
@@ -552,14 +821,16 @@ struct MultiModelModeView: View {
             if let res = vm.mmmLastResult {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Text(res.isLiveExecution ? "LIVE SSE ERGEBNIS" : "SIMULATION")
+                        Text(res.isLiveExecution
+                            ? L10n.tr(vm.language, de: "LIVE SSE ERGEBNIS", en: "LIVE SSE RESULT", fr: "RÉSULTAT SSE DIRECT", es: "RESULTADO SSE EN VIVO", pt: "RESULTADO SSE AO VIVO", ru: "LIVE SSE РЕЗУЛЬТАТ", ja: "ライブ SSE 結果", zh: "实时 SSE 结果")
+                            : L10n.tr(vm.language, de: "SIMULATION", en: "SIMULATION", fr: "SIMULATION", es: "SIMULACIÓN", pt: "SIMULAÇÃO", ru: "СИМУЛЯЦИЯ", ja: "シミュレーション", zh: "模拟"))
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundColor(.black)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
                             .background(res.isLiveExecution ? SolarisTheme.emerald : SolarisTheme.amber)
                             .cornerRadius(4)
-                        Text("\(res.strategy.rawValue) · \(res.scope.rawValue)")
+                        Text("\(res.strategy.localizedTitle(vm.language)) · \(res.scope.localizedTitle(vm.language))")
                             .font(SolarisTheme.bodyBold)
                             .foregroundColor(SolarisTheme.textPrimary)
                         Spacer()
@@ -584,18 +855,50 @@ struct MultiModelModeView: View {
         SolarisCard(accent: SolarisTheme.mint) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Multi-IDE & Agent-Harness Leistungsentnahme")
+                    Text(L10n.tr(vm.language,
+                        de: "Multi-IDE & Agent-Harness Leistungsentnahme",
+                        en: "Multi-IDE & Agent-Harness Performance Consumption",
+                        fr: "Consommation multi-IDE & harnais d'agents",
+                        es: "Consumo multi-IDE y arnés de agentes",
+                        pt: "Consumo multi-IDE e harnesses de agentes",
+                        ru: "Подключение Multi-IDE и агентских систем",
+                        ja: "マルチ IDE・エージェントハーネス出力共有",
+                        zh: "多 IDE 与智能体框架并发算力输出"))
                         .font(SolarisTheme.cardTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
-                    Text("Mehrere IDEs (Cursor, VS Code, Xcode) und Agent-Harnesses (OpenCode, Hermes, Antigravity) beziehen gleichzeitig über \(vm.openCodeBaseURL) Leistung aus dem zusammengeführten Verbund.")
+                    Text(L10n.tr(vm.language,
+                        de: "Mehrere IDEs (Cursor, VS Code, Xcode) und Agent-Harnesses (OpenCode, Hermes, Antigravity) beziehen gleichzeitig über \(vm.openCodeBaseURL) Leistung aus dem zusammengeführten Verbund.",
+                        en: "Multiple IDEs (Cursor, VS Code, Xcode) and agent harnesses (OpenCode, Hermes, Antigravity) simultaneously consume unified performance from the cluster via \(vm.openCodeBaseURL).",
+                        fr: "Plusieurs IDE (Cursor, VS Code, Xcode) et agents (OpenCode, Hermes, Antigravity) consomment simultanément la puissance du cluster via \(vm.openCodeBaseURL).",
+                        es: "Múltiples IDE (Cursor, VS Code, Xcode) y agentes (OpenCode, Hermes, Antigravity) consumen potencia simultáneamente vía \(vm.openCodeBaseURL).",
+                        pt: "Vários IDEs (Cursor, VS Code, Xcode) e agentes (OpenCode, Hermes, Antigravity) consomem desempenho unificado em paralelo via \(vm.openCodeBaseURL).",
+                        ru: "Несколько IDE (Cursor, VS Code, Xcode) и агентов (OpenCode, Hermes, Antigravity) одновременно получают мощность кластера через \(vm.openCodeBaseURL).",
+                        ja: "複数の IDE (Cursor, VS Code, Xcode) やエージェント (OpenCode, Hermes, Antigravity) が \(vm.openCodeBaseURL) 経由で同時に推論能力を利用します。",
+                        zh: "多个 IDE (Cursor、VS Code、Xcode) 与智能体框架 (OpenCode、Hermes、Antigravity) 可通过 \(vm.openCodeBaseURL) 并发共享聚合算力。"))
                         .font(Font.caption)
                         .foregroundColor(SolarisTheme.textSecondary)
                 }
                 Spacer()
-                Button("Multi-IDE-Config kopieren") {
+                Button(L10n.tr(vm.language,
+                    de: "Multi-IDE-Config kopieren",
+                    en: "Copy Multi-IDE Config",
+                    fr: "Copier config Multi-IDE",
+                    es: "Copiar config Multi-IDE",
+                    pt: "Copiar config Multi-IDE",
+                    ru: "Копировать конфиг Multi-IDE",
+                    ja: "マルチ IDE 設定をコピー",
+                    zh: "复制多 IDE 配置")) {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(vm.exportMultiIdeMmmGatewayConfig(), forType: .string)
-                    vm.mmmStatusMessage = "Multi-IDE / MMM Gateway-Konfiguration in die Zwischenablage kopiert."
+                    vm.mmmStatusMessage = L10n.tr(vm.language,
+                        de: "Multi-IDE / MMM Gateway-Konfiguration in die Zwischenablage kopiert.",
+                        en: "Multi-IDE / MMM Gateway configuration copied to clipboard.",
+                        fr: "Configuration Multi-IDE / passerelle MMM copiée dans le presse-papiers.",
+                        es: "Configuración Multi-IDE / pasarela MMM copiada al portapapeles.",
+                        pt: "Configuração Multi-IDE / gateway MMM copiada para a área de transferência.",
+                        ru: "Конфигурация Multi-IDE / шлюза MMM скопирована в буфер обмена.",
+                        ja: "マルチ IDE / MMM ゲートウェイ設定をクリップボードにコピーしました。",
+                        zh: "已将多 IDE / MMM 网关配置复制到剪贴板。")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(SolarisTheme.mint)
@@ -603,11 +906,27 @@ struct MultiModelModeView: View {
             }
 
             HStack(spacing: 16) {
-                Stepper("Gleichzeitige IDEs / Harnesses: \(vm.mmmActiveClientCount)", value: $vm.mmmActiveClientCount, in: 1...8)
+                Stepper(L10n.tr(vm.language,
+                    de: "Gleichzeitige IDEs / Harnesses: \(vm.mmmActiveClientCount)",
+                    en: "Concurrent IDEs / Harnesses: \(vm.mmmActiveClientCount)",
+                    fr: "IDE / Harnais simultanés : \(vm.mmmActiveClientCount)",
+                    es: "IDE / Arneses simultáneos: \(vm.mmmActiveClientCount)",
+                    pt: "IDEs / Harnesses simultâneos: \(vm.mmmActiveClientCount)",
+                    ru: "Одновременных IDE / агентов: \(vm.mmmActiveClientCount)",
+                    ja: "同時接続 IDE / ハーネス数: \(vm.mmmActiveClientCount)",
+                    zh: "并发 IDE / 智能体数量：\(vm.mmmActiveClientCount)"), value: $vm.mmmActiveClientCount, in: 1...8)
                     .font(SolarisTheme.bodyBold)
                     .foregroundColor(SolarisTheme.textPrimary)
                 Spacer()
-                Text(String(format: "≈ %.1f tok/s pro aktivem Client", vm.mmmPerClientTokPerSec))
+                Text(String(format: L10n.tr(vm.language,
+                    de: "≈ %.1f tok/s pro aktivem Client",
+                    en: "≈ %.1f tok/s per active client",
+                    fr: "≈ %.1f tok/s par client actif",
+                    es: "≈ %.1f tok/s por cliente activo",
+                    pt: "≈ %.1f tok/s por cliente ativo",
+                    ru: "≈ %.1f tok/с на активный клиент",
+                    ja: "アクティブクライアントあたり ≈ %.1f tok/s",
+                    zh: "每个活跃客户端 ≈ %.1f tok/s"), vm.mmmPerClientTokPerSec))
                     .font(.system(size: 13, weight: .bold, design: .monospaced))
                     .foregroundColor(SolarisTheme.amberGlow)
             }

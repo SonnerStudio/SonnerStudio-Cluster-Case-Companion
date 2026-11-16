@@ -510,6 +510,58 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("verifyClusterReadiness()", setup_view)
         self.assertIn("nodes.filter { !$0.isSimulated }", vm)
 
+    def test_25_eight_language_views_and_gpu_ane_display(self):
+        """Verify full 8-language localization across all 11 views, Modell Werkstatt label, layer unit, and GPU/ANE display."""
+        loc = (APP_SOURCES / "Models" / "Localization.swift").read_text(encoding="utf-8")
+        models = (APP_SOURCES / "Models" / "ClusterModels.swift").read_text(encoding="utf-8")
+        vm = (APP_SOURCES / "ViewModels" / "ClusterViewModel.swift").read_text(encoding="utf-8")
+        overview = (APP_SOURCES / "Views" / "ClusterOverviewView.swift").read_text(encoding="utf-8")
+        ms_view = (APP_SOURCES / "Views" / "ModelStudioView.swift").read_text(encoding="utf-8")
+        net_view = (APP_SOURCES / "Views" / "NetworkRdmaView.swift").read_text(encoding="utf-8")
+        wan_view = (APP_SOURCES / "Views" / "InternetClusterView.swift").read_text(encoding="utf-8")
+        mmm_view = (APP_SOURCES / "Views" / "MultiModelModeView.swift").read_text(encoding="utf-8")
+        sci_view = (APP_SOURCES / "Views" / "ScienceBenchmarksView.swift").read_text(encoding="utf-8")
+        setup_view = (APP_SOURCES / "Views" / "ClusterSetupView.swift").read_text(encoding="utf-8")
+        dev_view = (APP_SOURCES / "Views" / "DevicesCompareView.swift").read_text(encoding="utf-8")
+        agent_view = (APP_SOURCES / "Views" / "AgentIntegrationsView.swift").read_text(encoding="utf-8")
+        api_view = (APP_SOURCES / "Views" / "ApiConsoleView.swift").read_text(encoding="utf-8")
+        help_view = (APP_SOURCES / "Views" / "HelpDocsView.swift").read_text(encoding="utf-8")
+        deep_view = (APP_SOURCES / "Views" / "HelpDocDeepDiveContent.swift").read_text(encoding="utf-8")
+
+        self.assertIn('"Modell Werkstatt"', loc)
+        for key in ["node_gpu_cores", "node_ane_cores", "ms_layers_unit", "ov_verify_btn", "ov_open_setup_btn", "ov_last_check"]:
+            self.assertIn(key, loc)
+
+        # GPU + Neural Engine cores displayed on NodeCardView and DeviceDetailCard
+        self.assertIn("node.gpuCores", overview)
+        self.assertIn("node.neuralEngineCores", overview)
+        self.assertIn("node_gpu_cores", overview)
+        self.assertIn("node_ane_cores", overview)
+        self.assertIn("localizedRole(lang)", overview)
+        self.assertIn("localizedThermal(lang)", dev_view)
+        self.assertIn("DeviceDetailCard(node: node, lang: vm.language)", dev_view)
+
+        # GPU probe supports IOAccelerator and localized macOS SPDisplays output
+        self.assertIn("IOAccelerator", vm)
+        self.assertIn("gpu-core-count", vm)
+        self.assertIn("Gesamtanzahl der Kerne:", vm)
+        self.assertIn("refreshLocalizedDynamicState()", vm)
+
+        # Model Studio uses full layer unit instead of compact 'L'
+        self.assertIn("ms_layers_unit", ms_view)
+        self.assertIn("kvPrecision.localizedMaxContextEstimate", ms_view)
+        self.assertIn("localizedSourceLabel(vm.language)", ms_view)
+        self.assertIn("localizedNotes(vm.language)", ms_view)
+
+        # Views use 8-language L10n.tr / localizedTitle helpers instead of hardcoded German or 2-lang ternaries
+        for v in [overview, ms_view, net_view, wan_view, mmm_view, sci_view, setup_view, dev_view, agent_view, api_view, help_view, deep_view]:
+            self.assertTrue("L10n.tr(" in v or "vm.tr(" in v)
+        self.assertNotIn("let isGerman", help_view)
+        self.assertNotIn("let isGerman", deep_view)
+        self.assertIn("localizedTitle(vm.language)", net_view)
+        self.assertIn("localizedDescription(vm.language)", net_view)
+        self.assertIn("localizedTitle(_ lang: AppLanguage)", models)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

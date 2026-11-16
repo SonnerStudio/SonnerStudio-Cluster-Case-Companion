@@ -14,7 +14,15 @@ struct ApiConsoleView: View {
                         Text("http://127.0.0.1:8000/v1")
                             .font(SolarisTheme.monoCode)
                             .foregroundColor(SolarisTheme.amberGlow)
-                        Text("Für Cursor, Continue, Open WebUI & Xcode")
+                        Text(L10n.tr(vm.language,
+                            de: "Für Cursor, Continue, Open WebUI & Xcode",
+                            en: "For Cursor, Continue, Open WebUI & Xcode",
+                            fr: "Pour Cursor, Continue, Open WebUI & Xcode",
+                            es: "Para Cursor, Continue, Open WebUI y Xcode",
+                            pt: "Para Cursor, Continue, Open WebUI e Xcode",
+                            ru: "Для Cursor, Continue, Open WebUI и Xcode",
+                            ja: "Cursor / Continue / Open WebUI / Xcode 向け",
+                            zh: "适用于 Cursor、Continue、Open WebUI 与 Xcode"))
                             .font(SolarisTheme.bodyLarge)
                             .foregroundColor(SolarisTheme.textSecondary)
                     }
@@ -25,7 +33,25 @@ struct ApiConsoleView: View {
                         Text("http://127.0.0.1:8000/api/tags")
                             .font(SolarisTheme.monoCode)
                             .foregroundColor(SolarisTheme.mint)
-                        Text("Status: \(vm.daemonConnected ? "Daemon verbunden" : "Lokale UI-Vorschau")")
+                        Text(vm.daemonConnected
+                            ? L10n.tr(vm.language,
+                                de: "Status: Daemon verbunden",
+                                en: "Status: Daemon connected",
+                                fr: "Statut : Démon connecté",
+                                es: "Estado: Daemon conectado",
+                                pt: "Estado: Daemon ligado",
+                                ru: "Статус: Демон подключён",
+                                ja: "状態: デーモン接続済み",
+                                zh: "状态：守护进程已连接")
+                            : L10n.tr(vm.language,
+                                de: "Status: Lokale UI-Vorschau",
+                                en: "Status: Local UI Preview",
+                                fr: "Statut : Aperçu UI local",
+                                es: "Estado: Vista previa local",
+                                pt: "Estado: Pré-visualização local",
+                                ru: "Статус: Локальный предпросмотр",
+                                ja: "状態: ローカルUIプレビュー",
+                                zh: "状态：本地界面预览"))
                             .font(SolarisTheme.bodyLarge)
                             .foregroundColor(SolarisTheme.textSecondary)
                     }
@@ -90,14 +116,30 @@ struct ApiConsoleView: View {
                 // Punkt 4: /v1/responses + MCP + A2A Agent Card Gateway-Vorschau
                 SolarisCard(accent: SolarisTheme.mint) {
                     HStack {
-                        Label("Gateway-Protokolle (/v1/responses · MCP · A2A)", systemImage: "arrow.left.arrow.right.circle.fill")
+                        Label(L10n.tr(vm.language,
+                            de: "Gateway-Protokolle (/v1/responses · MCP · A2A)",
+                            en: "Gateway Protocols (/v1/responses · MCP · A2A)",
+                            fr: "Protocoles passerelle (/v1/responses · MCP · A2A)",
+                            es: "Protocolos de pasarela (/v1/responses · MCP · A2A)",
+                            pt: "Protocolos gateway (/v1/responses · MCP · A2A)",
+                            ru: "Протоколы шлюза (/v1/responses · MCP · A2A)",
+                            ja: "ゲートウェイプロトコル (/v1/responses · MCP · A2A)",
+                            zh: "网关协议 (/v1/responses · MCP · A2A)"), systemImage: "arrow.left.arrow.right.circle.fill")
                             .font(SolarisTheme.cardTitle)
                             .foregroundColor(SolarisTheme.mint)
                         Spacer()
                     }
-                    Picker("Gateway-Protokoll", selection: $vm.selectedGatewayProtocol) {
+                    Picker(L10n.tr(vm.language,
+                        de: "Gateway-Protokoll",
+                        en: "Gateway Protocol",
+                        fr: "Protocole passerelle",
+                        es: "Protocolo de pasarela",
+                        pt: "Protocolo gateway",
+                        ru: "Протокол шлюза",
+                        ja: "ゲートウェイプロトコル",
+                        zh: "网关协议"), selection: $vm.selectedGatewayProtocol) {
                         ForEach(AgentGatewayProtocol.allCases) { proto in
-                            Text(proto.rawValue).tag(proto)
+                            Text(proto.localizedTitle(vm.language)).tag(proto)
                         }
                     }
                     .pickerStyle(.segmented)

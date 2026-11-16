@@ -88,7 +88,15 @@ struct HelpDocsView: View {
                             .foregroundColor(SolarisTheme.textPrimary)
                         Spacer()
                         HStack(spacing: 5) {
-                            Text(vm.language == .de ? "Details & Grafiken" : "Details & Visuals")
+                            Text(L10n.tr(vm.language,
+                                de: "Details & Grafiken",
+                                en: "Details & Visuals",
+                                fr: "Détails & Schémas",
+                                es: "Detalles y Gráficos",
+                                pt: "Detalhes e Gráficos",
+                                ru: "Детали и схемы",
+                                ja: "詳細・図解",
+                                zh: "详情与架构图"))
                                 .font(.system(size: 11, weight: .semibold))
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 10, weight: .bold))
@@ -141,7 +149,6 @@ struct HelpDocsView: View {
 
     private func detailView(for section: HelpDocSection, index: Int) -> some View {
         let deep = HelpDocDeepDiveCatalog.deepDive(for: section.id, section: section, lang: vm.language)
-        let isGerman = (vm.language == .de)
 
         return VStack(alignment: .leading, spacing: 18) {
             // Top Navigation Bar
@@ -150,7 +157,15 @@ struct HelpDocsView: View {
                     vm.selectedHelpSectionId = nil
                 } label: {
                     Label(
-                        isGerman ? "Zurück zur Handbuch-Übersicht" : "Back to Manual Overview",
+                        L10n.tr(vm.language,
+                            de: "Zurück zur Handbuch-Übersicht",
+                            en: "Back to Manual Overview",
+                            fr: "Retour au sommaire du manuel",
+                            es: "Volver al índice del manual",
+                            pt: "Voltar ao índice do manual",
+                            ru: "Назад к оглавлению",
+                            ja: "マニュアル一覧へ戻る",
+                            zh: "返回手册目录"),
                         systemImage: "chevron.left"
                     )
                 }
@@ -160,7 +175,7 @@ struct HelpDocsView: View {
 
                 Spacer()
 
-                Text("\(isGerman ? "Kapitel" : "Chapter") \(index + 1) / \(sections.count)")
+                Text("\(L10n.tr(vm.language, de: "Kapitel", en: "Chapter", fr: "Chapitre", es: "Capítulo", pt: "Capítulo", ru: "Глава", ja: "第", zh: "章节")) \(index + 1) / \(sections.count)")
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundColor(SolarisTheme.textSecondary)
 
@@ -228,7 +243,15 @@ struct HelpDocsView: View {
             // Explanatory Images & Graphics
             if !deep.visuals.isEmpty {
                 SolarisCard(accent: SolarisTheme.mint) {
-                    Text(isGerman ? "Erklärende Architektur-Grafiken & Ansichten" : "Explanatory Architecture Graphics & Diagrams")
+                    Text(L10n.tr(vm.language,
+                        de: "Erklärende Architektur-Grafiken & Ansichten",
+                        en: "Explanatory Architecture Graphics & Diagrams",
+                        fr: "Schémas d'architecture & vues explicatives",
+                        es: "Gráficos y diagramas explicativos de arquitectura",
+                        pt: "Gráficos e diagramas explicativos da arquitetura",
+                        ru: "Пояснительные архитектурные схемы и диаграммы",
+                        ja: "アーキテクチャ解説図・ビジュアル",
+                        zh: "架构说明图示与视图"))
                         .font(SolarisTheme.cardTitle)
                         .foregroundColor(SolarisTheme.textPrimary)
 
@@ -255,7 +278,15 @@ struct HelpDocsView: View {
 
             // Detailed Technical Explanation & Step-by-Step Guide
             SolarisCard {
-                Text(isGerman ? "Ausführliche Erklärung & Funktionsweise" : "In-Depth Technical Explanation")
+                Text(L10n.tr(vm.language,
+                    de: "Ausführliche Erklärung & Funktionsweise",
+                    en: "In-Depth Technical Explanation",
+                    fr: "Explication technique approfondie",
+                    es: "Explicación técnica en profundidad",
+                    pt: "Explicação técnica aprofundada",
+                    ru: "Подробное техническое описание",
+                    ja: "詳細な技術解説・動作仕組み",
+                    zh: "深入技术原理解析"))
                     .font(SolarisTheme.cardTitle)
                     .foregroundColor(SolarisTheme.textPrimary)
 
@@ -270,7 +301,15 @@ struct HelpDocsView: View {
 
                 Divider().opacity(0.25)
 
-                Text(isGerman ? "Schritt-für-Schritt-Einrichtung" : "Step-by-Step Setup")
+                Text(L10n.tr(vm.language,
+                    de: "Schritt-für-Schritt-Einrichtung",
+                    en: "Step-by-Step Setup",
+                    fr: "Configuration étape par étape",
+                    es: "Configuración paso a paso",
+                    pt: "Configuração passo a passo",
+                    ru: "Пошаговая настройка",
+                    ja: "ステップ別セットアップ手順",
+                    zh: "分步配置指南"))
                     .font(SolarisTheme.cardTitle)
                     .foregroundColor(SolarisTheme.amberGlow)
 
@@ -289,7 +328,15 @@ struct HelpDocsView: View {
 
             // Key Specifications, Best Practices & Copyable Commands
             SolarisCard(accent: SolarisTheme.emerald) {
-                Text(isGerman ? "Kernpunkte & Empfehlungen (Best Practices)" : "Key Points & Best Practices")
+                Text(L10n.tr(vm.language,
+                    de: "Kernpunkte & Empfehlungen (Best Practices)",
+                    en: "Key Points & Best Practices",
+                    fr: "Points clés & bonnes pratiques",
+                    es: "Puntos clave y buenas prácticas",
+                    pt: "Pontos-chave e boas práticas",
+                    ru: "Ключевые рекомендации (Best Practices)",
+                    ja: "重要ポイント・ベストプラクティス",
+                    zh: "核心要点与最佳实践"))
                     .font(SolarisTheme.cardTitle)
                     .foregroundColor(SolarisTheme.textPrimary)
 
@@ -309,7 +356,15 @@ struct HelpDocsView: View {
                 if let code = section.codeSample {
                     Divider().opacity(0.25)
                     HStack {
-                        Text(isGerman ? "Direkte Terminal- & API-Referenz" : "Direct Terminal & API Reference")
+                        Text(L10n.tr(vm.language,
+                            de: "Direkte Terminal- & API-Referenz",
+                            en: "Direct Terminal & API Reference",
+                            fr: "Référence directe Terminal & API",
+                            es: "Referencia directa de Terminal y API",
+                            pt: "Referência direta de Terminal e API",
+                            ru: "Справочник команд и API",
+                            ja: "ターミナル & API リファレンス",
+                            zh: "终端命令与 API 直接参考"))
                             .font(SolarisTheme.bodyBold)
                             .foregroundColor(SolarisTheme.mint)
                         Spacer()
@@ -317,7 +372,7 @@ struct HelpDocsView: View {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(code, forType: .string)
                         } label: {
-                            Label(isGerman ? "Kopieren" : "Copy", systemImage: "doc.on.doc")
+                            Label(L10n.tr(vm.language, de: "Kopieren", en: "Copy", fr: "Copier", es: "Copiar", pt: "Copiar", ru: "Копировать", ja: "コピー", zh: "复制"), systemImage: "doc.on.doc")
                         }
                         .buttonStyle(.bordered)
                     }

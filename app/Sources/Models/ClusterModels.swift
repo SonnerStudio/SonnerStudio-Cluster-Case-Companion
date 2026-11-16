@@ -80,13 +80,56 @@ enum RuntimeService: String, CaseIterable, Identifiable {
     }
 
     var description: String {
+        localizedDescription(.de)
+    }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
         switch self {
         case .omlx:
-            return "Nativer macOS-MLX-Server mit Paged SSD KV-Cache, OpenAI (/v1) & Anthropic (/v1/messages) API."
+            return L10n.tr(lang, de: "oMLX (SSD KV-Cache)", en: "oMLX (SSD KV Cache)", fr: "oMLX (Cache KV SSD)", es: "oMLX (Caché KV SSD)", pt: "oMLX (Cache KV SSD)", ru: "oMLX (SSD KV-кэш)", ja: "oMLX (SSD KVキャッシュ)", zh: "oMLX (SSD KV 缓存)")
+        case .ollama, .llamaCpp:
+            return rawValue
+        }
+    }
+
+    func localizedDescription(_ lang: AppLanguage) -> String {
+        switch self {
+        case .omlx:
+            return L10n.tr(
+                lang,
+                de: "Nativer macOS-MLX-Server mit Paged SSD KV-Cache, OpenAI (/v1) & Anthropic (/v1/messages) API.",
+                en: "Native macOS MLX server with paged SSD KV cache, OpenAI (/v1) & Anthropic (/v1/messages) API.",
+                fr: "Serveur MLX natif macOS avec cache KV SSD paginé, API OpenAI (/v1) et Anthropic (/v1/messages).",
+                es: "Servidor MLX nativo para macOS con caché KV SSD paginado y API OpenAI (/v1) / Anthropic (/v1/messages).",
+                pt: "Servidor MLX nativo para macOS com cache KV SSD paginada e API OpenAI (/v1) / Anthropic (/v1/messages).",
+                ru: "Нативный сервер macOS MLX с подкачкой KV-кэша на SSD, OpenAI (/v1) и Anthropic (/v1/messages) API.",
+                ja: "ページングSSD KVキャッシュ・OpenAI (/v1)・Anthropic (/v1/messages) API対応のネイティブmacOS MLXサーバー。",
+                zh: "原生 macOS MLX 服务器，支持分页 SSD KV 缓存、OpenAI (/v1) 与 Anthropic (/v1/messages) 接口。"
+            )
         case .ollama:
-            return "Lokaler Modell-Dienst auf Port 11434 — ideal für Zero-Config & breite Client-Unterstützung."
+            return L10n.tr(
+                lang,
+                de: "Lokaler Modell-Dienst auf Port 11434 — ideal für Zero-Config & breite Client-Unterstützung.",
+                en: "Local model service on port 11434 — ideal for zero-config setup and broad client compatibility.",
+                fr: "Service de modèles local sur le port 11434 — idéal pour une configuration zéro et une compatibilité étendue.",
+                es: "Servicio local de modelos en el puerto 11434 — ideal para configuración cero y amplia compatibilidad.",
+                pt: "Serviço local de modelos na porta 11434 — ideal para configuração zero e ampla compatibilidade.",
+                ru: "Локальный сервис моделей на порту 11434 — удобен для быстрого запуска и широкой совместимости.",
+                ja: "ポート11434のローカルモデルサービス — ゼロ設定と幅広いクライアント互換性に最適。",
+                zh: "端口 11434 本地模型服务 — 零配置即用，兼容各类客户端。"
+            )
         case .llamaCpp:
-            return "Direkter GGUF-/llama-server-Dienst (Port 8080) oder Import nach schnellem MLX."
+            return L10n.tr(
+                lang,
+                de: "Direkter GGUF-/llama-server-Dienst (Port 8080) oder Import nach schnellem MLX.",
+                en: "Direct GGUF/llama-server service (port 8080) or fast conversion/import to MLX.",
+                fr: "Service GGUF/llama-server direct (port 8080) ou import vers MLX rapide.",
+                es: "Servicio directo GGUF/llama-server (puerto 8080) o importación a MLX rápido.",
+                pt: "Serviço direto GGUF/llama-server (porta 8080) ou importação rápida para MLX.",
+                ru: "Прямой сервис GGUF/llama-server (порт 8080) или импорт в быстрый MLX.",
+                ja: "直接のGGUF/llama-serverサービス (ポート8080) または高速MLXへのインポート。",
+                zh: "直接运行 GGUF/llama-server 服务（端口 8080）或导入为高速 MLX。"
+            )
         }
     }
 }
@@ -107,6 +150,15 @@ enum KVCachePrecision: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .fp16:
+            return L10n.tr(lang, de: "FP16 (Standard)", en: "FP16 (Default)", fr: "FP16 (Standard)", es: "FP16 (Estándar)", pt: "FP16 (Padrão)", ru: "FP16 (Стандарт)", ja: "FP16 (標準)", zh: "FP16（标准）")
+        case .q8, .q4:
+            return rawValue
+        }
+    }
+
     var memoryFactor: Double {
         switch self {
         case .fp16: return 1.0
@@ -116,10 +168,15 @@ enum KVCachePrecision: String, CaseIterable, Identifiable {
     }
 
     var maxContextEstimate: String {
+        localizedMaxContextEstimate(.de)
+    }
+
+    func localizedMaxContextEstimate(_ lang: AppLanguage) -> String {
+        let unit = L10n.tr(lang, de: "Tokens", en: "Tokens", fr: "Jetons", es: "Tokens", pt: "Tokens", ru: "токенов", ja: "トークン", zh: "Tokens")
         switch self {
-        case .fp16: return "~16k Tokens"
-        case .q8: return "~32k Tokens"
-        case .q4: return "~64k+ Tokens"
+        case .fp16: return "~16k \(unit)"
+        case .q8: return "~32k \(unit)"
+        case .q4: return "~64k+ \(unit)"
         }
     }
 }
@@ -132,16 +189,73 @@ enum TransportMode: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var description: String {
+    func localizedTitle(_ lang: AppLanguage) -> String {
         switch self {
         case .autoHybrid:
-            return "Control Plane über LAN/WLAN · Tensor-Daten exklusiv über Thunderbolt (30–37 Gbps) mit automatischem Fallback."
+            return L10n.tr(lang, de: "Auto-Hybrid (Empfohlen)", en: "Auto-Hybrid (Recommended)", fr: "Auto-Hybride (Recommandé)", es: "Auto-Híbrido (Recomendado)", pt: "Auto-Híbrido (Recomendado)", ru: "Авто-гибрид (рекоменд.)", ja: "自動ハイブリッド（推奨）", zh: "自动混合模式（推荐）")
         case .thunderboltOnly:
-            return "Erzwingt punkt-zu-punkt Thunderbolt-IPs (10.99.1.x) für maximale Isolation ohne WLAN-Jitter."
+            return L10n.tr(lang, de: "Thunderbolt-Only", en: "Thunderbolt Only", fr: "Thunderbolt uniquement", es: "Solo Thunderbolt", pt: "Apenas Thunderbolt", ru: "Только Thunderbolt", ja: "Thunderbolt 専用", zh: "仅 Thunderbolt")
         case .lanWlanOnly:
-            return "Nutzt Ethernet/WLAN für alle Transfers — ideal zum Testen ohne TB-Kabel."
+            return L10n.tr(lang, de: "LAN / WLAN-Only", en: "LAN / Wi-Fi Only", fr: "LAN / Wi-Fi uniquement", es: "Solo LAN / Wi-Fi", pt: "Apenas LAN / Wi-Fi", ru: "Только LAN / Wi-Fi", ja: "LAN / Wi-Fi 専用", zh: "仅 LAN / Wi-Fi")
         case .rdmaExperimental:
-            return "Nutzt MLX JACCL über RDMA Verbs (ab TB5 nativ; für TB4 ist ein Community-Enabler nötig)."
+            return L10n.tr(lang, de: "RDMA / JACCL (Opt-In)", en: "RDMA / JACCL (Opt-In)", fr: "RDMA / JACCL (Opt-In)", es: "RDMA / JACCL (Opcional)", pt: "RDMA / JACCL (Opcional)", ru: "RDMA / JACCL (вручную)", ja: "RDMA / JACCL（オプトイン）", zh: "RDMA / JACCL（主动启用）")
+        }
+    }
+
+    var description: String {
+        localizedDescription(.de)
+    }
+
+    func localizedDescription(_ lang: AppLanguage) -> String {
+        switch self {
+        case .autoHybrid:
+            return L10n.tr(
+                lang,
+                de: "Control Plane über LAN/WLAN · Tensor-Daten exklusiv über Thunderbolt (30–37 Gbps) mit automatischem Fallback.",
+                en: "Control plane over LAN/Wi-Fi · Tensor traffic exclusively over Thunderbolt (30–37 Gbps) with automatic fallback.",
+                fr: "Plan de contrôle via LAN/Wi-Fi · Tenseurs exclusivement sur Thunderbolt (30–37 Gbps) avec repli automatique.",
+                es: "Plano de control por LAN/Wi-Fi · Tensores exclusivamente por Thunderbolt (30–37 Gbps) con respaldo automático.",
+                pt: "Plano de controlo por LAN/Wi-Fi · Tensores exclusivamente por Thunderbolt (30–37 Gbps) com contingência automática.",
+                ru: "Управление по LAN/Wi-Fi · Тензоры исключительно через Thunderbolt (30–37 Гбит/с) с автопереключением.",
+                ja: "制御プレーンはLAN/Wi-Fi・テンソル転送はThunderbolt (30–37 Gbps) 専用で自動フォールバック対応。",
+                zh: "控制面走 LAN/Wi-Fi · 张量数据独占 Thunderbolt (30–37 Gbps)，支持自动回退。"
+            )
+        case .thunderboltOnly:
+            return L10n.tr(
+                lang,
+                de: "Erzwingt punkt-zu-punkt Thunderbolt-IPs (10.99.1.x) für maximale Isolation ohne WLAN-Jitter.",
+                en: "Enforces point-to-point Thunderbolt IPs (10.99.1.x) for maximum isolation without Wi-Fi jitter.",
+                fr: "Impose des IP Thunderbolt point à point (10.99.1.x) pour une isolation maximale sans gigue Wi-Fi.",
+                es: "Fuerza IPs Thunderbolt punto a punto (10.99.1.x) para máximo aislamiento sin jitter Wi-Fi.",
+                pt: "Força IPs Thunderbolt ponto-a-ponto (10.99.1.x) para isolamento máximo sem jitter Wi-Fi.",
+                ru: "Принудительные P2P Thunderbolt IP (10.99.1.x) для максимальной изоляции без джиттера Wi-Fi.",
+                ja: "P2P Thunderbolt IP (10.99.1.x) を強制し、Wi-Fiジッターのない完全分離を実現します。",
+                zh: "强制点对点 Thunderbolt 专用 IP (10.99.1.x)，消除 Wi-Fi 抖动实现完全隔离。"
+            )
+        case .lanWlanOnly:
+            return L10n.tr(
+                lang,
+                de: "Nutzt Ethernet/WLAN für alle Transfers — ideal zum Testen ohne TB-Kabel.",
+                en: "Uses Ethernet/Wi-Fi for all transfers — ideal for testing without a Thunderbolt cable.",
+                fr: "Utilise Ethernet/Wi-Fi pour tous les transferts — idéal pour tester sans câble Thunderbolt.",
+                es: "Usa Ethernet/Wi-Fi para todas las transferencias — ideal para probar sin cable Thunderbolt.",
+                pt: "Usa Ethernet/Wi-Fi para todas as transferências — ideal para testar sem cabo Thunderbolt.",
+                ru: "Использует Ethernet/Wi-Fi для всех передач — удобно для тестов без кабеля Thunderbolt.",
+                ja: "すべての転送にEthernet/Wi-Fiを使用 — TBケーブルなしでのテストに最適です。",
+                zh: "所有传输均使用以太网 / Wi-Fi — 适合无 Thunderbolt 线缆时测试。"
+            )
+        case .rdmaExperimental:
+            return L10n.tr(
+                lang,
+                de: "Nutzt MLX JACCL über RDMA Verbs (ab TB5 nativ; für TB4 ist ein Community-Enabler nötig).",
+                en: "Uses MLX JACCL over RDMA Verbs (native on TB5+; TB4 requires a community enabler).",
+                fr: "Utilise MLX JACCL sur RDMA Verbs (natif dès TB5 ; un module tiers est requis sur TB4).",
+                es: "Usa MLX JACCL sobre RDMA Verbs (nativo en TB5+; TB4 requiere un habilitador comunitario).",
+                pt: "Usa MLX JACCL sobre RDMA Verbs (nativo no TB5+; TB4 requer ativador da comunidade).",
+                ru: "Использует MLX JACCL через RDMA Verbs (нативно с TB5; для TB4 нужен модификатор).",
+                ja: "RDMA Verbs経由でMLX JACCLを使用（TB5以降はネイティブ対応、TB4ではコミュニティ有効化が必要）。",
+                zh: "通过 RDMA Verbs 运行 MLX JACCL（TB5 原生支持；TB4 需社区启用补丁）。"
+            )
         }
     }
 
@@ -192,6 +306,37 @@ struct ClusterNodeModel: Identifiable, Hashable {
     var typicalWatts: Double {
         AppleSiliconChipFamily.inferTypicalWatts(from: chip)
     }
+
+    func localizedRole(_ lang: AppLanguage) -> String {
+        if role.hasPrefix("Standalone") {
+            return L10n.tr(lang, de: "Einzelbetrieb (Rang 0)", en: "Standalone (Rank 0)", fr: "Autonome (Rang 0)", es: "Individual (Rango 0)", pt: "Autónomo (Ranque 0)", ru: "Одиночный (Ранг 0)", ja: "スタンドアロン (Rank 0)", zh: "单机模式 (Rank 0)")
+        }
+        if role.hasPrefix("Coordinator") {
+            return L10n.tr(lang, de: "Koordinator (Rang 0)", en: "Coordinator (Rank 0)", fr: "Coordinateur (Rang 0)", es: "Coordinador (Rango 0)", pt: "Coordenador (Ranque 0)", ru: "Координатор (Ранг 0)", ja: "コーディネーター (Rank 0)", zh: "协调器 (Rank 0)")
+        }
+        if role.hasPrefix("Worker (Rank "), let idxStr = role.components(separatedBy: "Rank ").last?.replacingOccurrences(of: ")", with: "") {
+            return L10n.tr(lang, de: "Worker (Rang \(idxStr))", en: "Worker (Rank \(idxStr))", fr: "Nœud (Rang \(idxStr))", es: "Trabajador (Rango \(idxStr))", pt: "Operário (Ranque \(idxStr))", ru: "Воркер (Ранг \(idxStr))", ja: "ワーカー (Rank \(idxStr))", zh: "工作节点 (Rank \(idxStr))")
+        }
+        return L10n.tr(lang, de: "Worker", en: "Worker", fr: "Nœud", es: "Trabajador", pt: "Operário", ru: "Воркер", ja: "ワーカー", zh: "工作节点")
+    }
+
+    func localizedThermal(_ lang: AppLanguage) -> String {
+        let base = thermalLabel
+            .replacingOccurrences(of: "Nominal (Kühl)", with: L10n.tr(lang, de: "Nominal (Kühl)", en: "Nominal (Cool)", fr: "Nominal (Frais)", es: "Nominal (Fresco)", pt: "Nominal (Fresco)", ru: "Номинал (холодн.)", ja: "正常（低温）", zh: "正常（凉爽）"))
+            .replacingOccurrences(of: "Erhöht (Fair)", with: L10n.tr(lang, de: "Erhöht (Fair)", en: "Elevated (Fair)", fr: "Élevée (Modérée)", es: "Elevada (Moderada)", pt: "Elevada (Moderada)", ru: "Повышена", ja: "やや高め", zh: "偏高（尚可）"))
+            .replacingOccurrences(of: "Hoch (Drosselung möglich)", with: L10n.tr(lang, de: "Hoch (Drosselung möglich)", en: "High (Throttling possible)", fr: "Élevée (bridage possible)", es: "Alta (posible limitación)", pt: "Alta (possível limitação)", ru: "Высокая (возможен троттлинг)", ja: "高温（スロットリング可能）", zh: "高温（可能降频）"))
+            .replacingOccurrences(of: "Kritisch (Heiß)", with: L10n.tr(lang, de: "Kritisch (Heiß)", en: "Critical (Hot)", fr: "Critique (Chaud)", es: "Crítica (Caliente)", pt: "Crítica (Quente)", ru: "Критическая (перегрев)", ja: "危険（高温）", zh: "严重（过热）"))
+            .replacingOccurrences(of: "Unbekannt", with: L10n.tr(lang, de: "Unbekannt", en: "Unknown", fr: "Inconnu", es: "Desconocido", pt: "Desconhecido", ru: "Неизвестно", ja: "不明", zh: "未知"))
+        return base
+    }
+
+    func localizedPower(_ lang: AppLanguage) -> String {
+        let ac = L10n.tr(lang, de: "Netzteil", en: "AC Power", fr: "Secteur", es: "Alimentación CA", pt: "Alimentação CA", ru: "сеть питания", ja: "AC電源", zh: "外接电源")
+        let live = L10n.tr(lang, de: "live", en: "live", fr: "en direct", es: "en vivo", pt: "ao vivo", ru: "живые", ja: "実測", zh: "实时")
+        return powerLabel
+            .replacingOccurrences(of: "Netzteil", with: ac)
+            .replacingOccurrences(of: "(live)", with: "(\(live))")
+    }
 }
 
 enum ScienceScope: String, CaseIterable, Identifiable {
@@ -200,6 +345,17 @@ enum ScienceScope: String, CaseIterable, Identifiable {
     case hybridCompare = "Vergleich (Lokal vs. WAN)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .localCluster:
+            return L10n.tr(lang, de: "Lokal (TB/RDMA)", en: "Local (TB/RDMA)", fr: "Local (TB/RDMA)", es: "Local (TB/RDMA)", pt: "Local (TB/RDMA)", ru: "Локальный (TB/RDMA)", ja: "ローカル (TB/RDMA)", zh: "本地 (TB/RDMA)")
+        case .internetWan:
+            return L10n.tr(lang, de: "Internet-WAN", en: "Internet WAN", fr: "WAN Internet", es: "WAN Internet", pt: "WAN Internet", ru: "Интернет-WAN", ja: "インターネット WAN", zh: "互联网 WAN")
+        case .hybridCompare:
+            return L10n.tr(lang, de: "Vergleich (Lokal vs. WAN)", en: "Compare (Local vs. WAN)", fr: "Comparatif (Local vs WAN)", es: "Comparar (Local vs. WAN)", pt: "Comparar (Local vs. WAN)", ru: "Сравнение (Лок. и WAN)", ja: "比較 (ローカル vs WAN)", zh: "对比（本地 vs WAN）")
+        }
+    }
 }
 
 enum ScienceLabTab: String, CaseIterable, Identifiable {
@@ -211,6 +367,17 @@ enum ScienceLabTab: String, CaseIterable, Identifiable {
     case historyLog = "Verlaufsaufzeichnung"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .roofline: return L10n.text("sci_tab_roofline", lang)
+        case .wanTopology: return L10n.text("sci_tab_wan", lang)
+        case .memoryKv: return L10n.text("sci_tab_memory", lang)
+        case .energetics: return L10n.text("sci_tab_energy", lang)
+        case .trialsExport: return L10n.text("sci_tab_trials", lang)
+        case .historyLog: return L10n.text("sci_tab_history", lang)
+        }
+    }
 
     var icon: String {
         switch self {
@@ -233,6 +400,17 @@ enum ScienceHistoryPosition: String, CaseIterable, Identifiable {
     case memoryPool = "Speicher & Kontext"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .globalAll: return L10n.tr(lang, de: "Global (Alle Messwerte)", en: "Global (All Metrics)", fr: "Global (Toutes mesures)", es: "Global (Todas las métricas)", pt: "Global (Todas as métricas)", ru: "Глобально (все метрики)", ja: "全体（全指標）", zh: "全局（全部指标）")
+        case .throughput: return L10n.tr(lang, de: "Durchsatz (tok/s)", en: "Throughput (tok/s)", fr: "Débit (tok/s)", es: "Rendimiento (tok/s)", pt: "Débito (tok/s)", ru: "Скорость (tok/s)", ja: "スループット (tok/s)", zh: "吞吐率 (tok/s)")
+        case .latency: return L10n.tr(lang, de: "Latenz (TTFT / TPOT)", en: "Latency (TTFT / TPOT)", fr: "Latence (TTFT / TPOT)", es: "Latencia (TTFT / TPOT)", pt: "Latência (TTFT / TPOT)", ru: "Задержка (TTFT / TPOT)", ja: "遅延 (TTFT / TPOT)", zh: "延迟 (TTFT / TPOT)")
+        case .energetics: return L10n.tr(lang, de: "Energie & CO₂ (J/tok)", en: "Energy & CO₂ (J/tok)", fr: "Énergie & CO₂ (J/tok)", es: "Energía y CO₂ (J/tok)", pt: "Energia e CO₂ (J/tok)", ru: "Энергия и CO₂ (Дж/ток)", ja: "電力と CO₂ (J/tok)", zh: "能耗与 CO₂ (J/tok)")
+        case .wanNetwork: return L10n.tr(lang, de: "WAN-RTT & Blase", en: "WAN RTT & Bubble", fr: "RTT WAN & Bulle", es: "WAN RTT y burbuja", pt: "WAN RTT e bolha", ru: "WAN RTT и пузырь", ja: "WAN RTT・バブル", zh: "WAN RTT 与气泡")
+        case .memoryPool: return L10n.tr(lang, de: "Speicher & Kontext", en: "Memory & Context", fr: "Mémoire & Contexte", es: "Memoria y contexto", pt: "Memória e contexto", ru: "Память и контекст", ja: "メモリとコンテキスト", zh: "内存与上下文")
+        }
+    }
 }
 
 struct ScienceHistoryEntry: Identifiable {
@@ -273,11 +451,24 @@ enum ActivationCompressionMode: String, CaseIterable, Identifiable {
     }
 
     var qualityNote: String {
+        localizedQualityNote(.de)
+    }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
         switch self {
-        case .fp16Raw: return "Verlustfrei (0,00 PPL-Abweichung)"
-        case .fp8Quantized: return "Vernachlässigbar (<0,02 PPL, Standard für Petals/SWARM)"
-        case .int4Block: return "Gering (+0,08–0,15 PPL, ideal für schmale Uplink-Leitungen)"
-        case .topKSparse: return "Messbar (+0,25–0,45 PPL, maximaler Durchsatz bei CGNAT/DERP)"
+        case .fp16Raw: return L10n.tr(lang, de: "FP16 (16-Bit Roh)", en: "FP16 (16-Bit Raw)", fr: "FP16 (Brut 16 bits)", es: "FP16 (16 bits sin compresión)", pt: "FP16 (16 bits bruto)", ru: "FP16 (16 бит без сжатия)", ja: "FP16 (16ビット非圧縮)", zh: "FP16（16 位原始）")
+        case .fp8Quantized: return L10n.tr(lang, de: "FP8 / INT8 (2× Kompakt)", en: "FP8 / INT8 (2× Compact)", fr: "FP8 / INT8 (2× Compact)", es: "FP8 / INT8 (2× Compacto)", pt: "FP8 / INT8 (2× Compacto)", ru: "FP8 / INT8 (2× сжатие)", ja: "FP8 / INT8 (2× 圧縮)", zh: "FP8 / INT8（2× 压缩）")
+        case .int4Block: return L10n.tr(lang, de: "INT4 Block (4× Kompakt)", en: "INT4 Block (4× Compact)", fr: "Bloc INT4 (4× Compact)", es: "Bloque INT4 (4× Compacto)", pt: "Bloco INT4 (4× Compacto)", ru: "INT4 Блок (4× сжатие)", ja: "INT4 ブロック (4× 圧縮)", zh: "INT4 分块（4× 压缩）")
+        case .topKSparse: return L10n.tr(lang, de: "Top-K Dünnbesetzt (~6×)", en: "Top-K Sparse (~6×)", fr: "Top-K Creux (~6×)", es: "Top-K Disperso (~6×)", pt: "Top-K Esparso (~6×)", ru: "Top-K Разреженное (~6×)", ja: "Top-K スパース (~6×)", zh: "Top-K 稀疏（~6×）")
+        }
+    }
+
+    func localizedQualityNote(_ lang: AppLanguage) -> String {
+        switch self {
+        case .fp16Raw: return L10n.tr(lang, de: "Verlustfrei (0,00 PPL-Abweichung)", en: "Lossless (0.00 PPL delta)", fr: "Sans perte (0,00 écart PPL)", es: "Sin pérdida (0,00 variación PPL)", pt: "Sem perdas (0,00 desvio PPL)", ru: "Без потерь (отклонение 0.00 PPL)", ja: "可逆・劣化なし (0.00 PPL)", zh: "无损传输 (0.00 PPL 偏差)")
+        case .fp8Quantized: return L10n.tr(lang, de: "Vernachlässigbar (<0,02 PPL, Standard für Petals/SWARM)", en: "Negligible (<0.02 PPL, default for Petals/SWARM)", fr: "Négligeable (<0,02 PPL, standard Petals/SWARM)", es: "Insignificante (<0,02 PPL, estándar Petals/SWARM)", pt: "Desprezível (<0,02 PPL, padrão Petals/SWARM)", ru: "Ничтожно (<0.02 PPL, стандарт Petals/SWARM)", ja: "微小 (<0.02 PPL、Petals/SWARM標準)", zh: "极小 (<0.02 PPL，Petals/SWARM 默认)")
+        case .int4Block: return L10n.tr(lang, de: "Gering (+0,08–0,15 PPL, ideal für schmale Uplink-Leitungen)", en: "Low (+0.08–0.15 PPL, ideal for narrow uplinks)", fr: "Faible (+0,08–0,15 PPL, idéal pour liens montants étroits)", es: "Bajo (+0,08–0,15 PPL, ideal para subidas estrechas)", pt: "Baixo (+0,08–0,15 PPL, ideal para uplinks curtos)", ru: "Малое (+0.08–0.15 PPL, для узких каналов)", ja: "低劣化 (+0.08–0.15 PPL、狭帯域アップリンク向け)", zh: "较低 (+0.08–0.15 PPL，适合窄带上传)")
+        case .topKSparse: return L10n.tr(lang, de: "Messbar (+0,25–0,45 PPL, maximaler Durchsatz bei CGNAT/DERP)", en: "Measurable (+0.25–0.45 PPL, max throughput on CGNAT/DERP)", fr: "Mesurable (+0,25–0,45 PPL, débit maximal sur CGNAT/DERP)", es: "Medible (+0,25–0,45 PPL, máximo rendimiento en CGNAT/DERP)", pt: "Mensurável (+0,25–0,45 PPL, máximo débito em CGNAT/DERP)", ru: "Заметное (+0.25–0.45 PPL, макс. скорость CGNAT/DERP)", ja: "計測可能 (+0.25–0.45 PPL、CGNAT/DERP最大効率)", zh: "可测 (+0.25–0.45 PPL，CGNAT/DERP 下最高吞吐)")
         }
     }
 }
@@ -291,6 +482,17 @@ enum CarbonRegionProfile: String, CaseIterable, Identifiable {
     case usAverage = "USA-Mittelwert (380 g/kWh)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .norway: return L10n.tr(lang, de: "Norwegen / Wasserkraft (20 g/kWh)", en: "Norway / Hydro (20 g/kWh)", fr: "Norvège / Hydroélectricité (20 g/kWh)", es: "Noruega / Hidroeléctrica (20 g/kWh)", pt: "Noruega / Hídrica (20 g/kWh)", ru: "Норвегия / ГЭС (20 г/кВт·ч)", ja: "ノルウェー / 水力 (20 g/kWh)", zh: "挪威 / 水电 (20 g/kWh)")
+        case .france: return L10n.tr(lang, de: "Frankreich / Kernkraft (55 g/kWh)", en: "France / Nuclear (55 g/kWh)", fr: "France / Nucléaire (55 g/kWh)", es: "Francia / Nuclear (55 g/kWh)", pt: "França / Nuclear (55 g/kWh)", ru: "Франция / АЭС (55 г/кВт·ч)", ja: "フランス / 原子力 (55 g/kWh)", zh: "法国 / 核电 (55 g/kWh)")
+        case .euAverage: return L10n.tr(lang, de: "EU-Mittelwert (250 g/kWh)", en: "EU Average (250 g/kWh)", fr: "Moyenne UE (250 g/kWh)", es: "Promedio UE (250 g/kWh)", pt: "Média UE (250 g/kWh)", ru: "Средний по ЕС (250 г/кВт·ч)", ja: "EU平均 (250 g/kWh)", zh: "欧盟平均 (250 g/kWh)")
+        case .germany: return L10n.tr(lang, de: "Deutschland (320 g/kWh)", en: "Germany (320 g/kWh)", fr: "Allemagne (320 g/kWh)", es: "Alemania (320 g/kWh)", pt: "Alemanha (320 g/kWh)", ru: "Германия (320 г/кВт·ч)", ja: "ドイツ (320 g/kWh)", zh: "德国 (320 g/kWh)")
+        case .globalWan: return L10n.tr(lang, de: "Weltweiter WAN-Mix (360 g/kWh)", en: "Global WAN Mix (360 g/kWh)", fr: "Mix mondial WAN (360 g/kWh)", es: "Mix global WAN (360 g/kWh)", pt: "Mix global WAN (360 g/kWh)", ru: "Мировой микс WAN (360 г/кВт·ч)", ja: "世界WANミックス (360 g/kWh)", zh: "全球 WAN 混合电网 (360 g/kWh)")
+        case .usAverage: return L10n.tr(lang, de: "USA-Mittelwert (380 g/kWh)", en: "US Average (380 g/kWh)", fr: "Moyenne USA (380 g/kWh)", es: "Promedio EE. UU. (380 g/kWh)", pt: "Média EUA (380 g/kWh)", ru: "Средний по США (380 г/кВт·ч)", ja: "米国平均 (380 g/kWh)", zh: "美国平均 (380 g/kWh)")
+        }
+    }
 
     var gco2PerKwh: Double {
         switch self {
@@ -383,6 +585,14 @@ enum MultiModelScope: String, CaseIterable, Identifiable, Codable {
     case hybrid = "Lokal + Internet (Hybrid)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .local: return L10n.tr(lang, de: "Lokaler Cluster", en: "Local Cluster", fr: "Grappe locale", es: "Clúster local", pt: "Cluster local", ru: "Локальный кластер", ja: "ローカルクラスター", zh: "本地集群")
+        case .internet: return L10n.tr(lang, de: "Internet-Cluster", en: "Internet Cluster", fr: "Grappe Internet", es: "Clúster Internet", pt: "Cluster Internet", ru: "Интернет-кластер", ja: "インターネットクラスター", zh: "互联网集群")
+        case .hybrid: return L10n.tr(lang, de: "Lokal + Internet (Hybrid)", en: "Local + Internet (Hybrid)", fr: "Local + Internet (Hybride)", es: "Local + Internet (Híbrido)", pt: "Local + Internet (Híbrido)", ru: "Локальный + Интернет (Гибрид)", ja: "ローカル + インターネット (ハイブリッド)", zh: "本地 + 互联网（混合）")
+        }
+    }
 }
 
 enum MultiModelStrategy: String, CaseIterable, Identifiable, Codable {
@@ -393,16 +603,29 @@ enum MultiModelStrategy: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .parallelPool: return L10n.tr(lang, de: "Paralleler Multi-Modell-Pool", en: "Parallel Multi-Model Pool", fr: "Pool multi-modèles parallèle", es: "Pool paralelo multimodelo", pt: "Pool paralelo multimodelo", ru: "Параллельный пул моделей", ja: "並列マルチモデルプール", zh: "并行多模型池")
+        case .mixtureOfAgents: return "Mixture-of-Agents (MoA)"
+        case .speculativeDecoding: return L10n.tr(lang, de: "Speculative Decoding (Draft + Target)", en: "Speculative Decoding (Draft + Target)", fr: "Décodage spéculatif (Draft + Target)", es: "Decodificación especulativa (Draft + Target)", pt: "Descodificação especulativa (Draft + Target)", ru: "Speculative Decoding (Draft + Target)", ja: "投機的デコーディング (Draft + Target)", zh: "投机解码 (Draft + Target)")
+        case .sequentialPipeline: return L10n.tr(lang, de: "Sequenzielle Modell-Pipeline", en: "Sequential Model Pipeline", fr: "Pipeline séquentiel de modèles", es: "Pipeline secuencial de modelos", pt: "Pipeline sequencial de modelos", ru: "Последовательный конвейер", ja: "逐次モデルパイプライン", zh: "顺序模型流水线")
+        }
+    }
+
     var summary: String {
+        localizedSummary(.de)
+    }
+
+    func localizedSummary(_ lang: AppLanguage) -> String {
         switch self {
         case .parallelPool:
-            return "Hält mehrere Modelle gleichzeitig in getrennten VRAM-Budgets (lokal & WAN) für parallele Anfragen."
+            return L10n.tr(lang, de: "Hält mehrere Modelle gleichzeitig in getrennten VRAM-Budgets (lokal & WAN) für parallele Anfragen.", en: "Keeps multiple models resident in separate VRAM budgets (local & WAN) for concurrent requests.", fr: "Maintient plusieurs modèles en parallèle dans des budgets VRAM séparés (local & WAN).", es: "Mantiene varios modelos activos en presupuestos VRAM separados (local y WAN) para peticiones paralelas.", pt: "Mantém vários modelos residentes em orçamentos VRAM separados (local e WAN) para pedidos paralelos.", ru: "Удерживает несколько моделей в раздельных бюджетах VRAM (локально и WAN) для параллельных запросов.", ja: "複数のモデルを別々のVRAM予算（ローカルおよびWAN）に常駐させ、並列リクエストを処理します。", zh: "在独立显存预算（本地与 WAN）中同时常驻多个模型以并发处理请求。")
         case .mixtureOfAgents:
-            return "Sendet den Prompt parallel an mehrere Spezialisten-Modelle und führt die Antworten über einen Aggregator zusammen."
+            return L10n.tr(lang, de: "Sendet den Prompt parallel an mehrere Spezialisten-Modelle und führt die Antworten über einen Aggregator zusammen.", en: "Dispatches the prompt to multiple specialist models in parallel and synthesizes responses via an aggregator.", fr: "Envoie la requête en parallèle à plusieurs modèles spécialistes puis fusionne les réponses.", es: "Envía el prompt en paralelo a varios modelos especialistas y combina las respuestas mediante un agregador.", pt: "Envia o prompt em paralelo a vários modelos especialistas e sintetiza as respostas num agregador.", ru: "Отправляет запрос нескольким моделям-специалистам параллельно и объединяет ответы агрегатором.", ja: "プロンプトを複数の専門モデルへ並列送信し、アグリゲーターで統合します。", zh: "将提示并发发送至多个专家模型，并通过聚合器融合结果。")
         case .speculativeDecoding:
-            return "Kombiniert ein schnelles lokales Draft-Modell mit einem großen Target-Modell im Verbund zur Beschleunigung."
+            return L10n.tr(lang, de: "Kombiniert ein schnelles lokales Draft-Modell mit einem großen Target-Modell im Verbund zur Beschleunigung.", en: "Pairs a fast local draft model with a large target model across the cluster to accelerate generation.", fr: "Combine un modèle draft local rapide avec un grand modèle cible sur la grappe pour accélérer l'inférence.", es: "Combina un modelo borrador local rápido con un modelo objetivo grande en el clúster para acelerar.", pt: "Combina um modelo draft local rápido com um modelo alvo grande no cluster para acelerar a geração.", ru: "Сочетает быструю локальную draft-модель с крупной target-моделью в кластере для ускорения.", ja: "高速なローカルDraftモデルと大規模Targetモデルを組み合わせて生成を高速化します。", zh: "将本地快速草案模型与集群大型目标模型结合以实现加速生成。")
         case .sequentialPipeline:
-            return "Verkettet Modelle als Stufen (z. B. Planer → Coder → Reviewer) über lokale TB- und WAN-Knoten."
+            return L10n.tr(lang, de: "Verkettet Modelle als Stufen (z. B. Planer → Coder → Reviewer) über lokale TB- und WAN-Knoten.", en: "Chains models sequentially (e.g. Planner → Coder → Reviewer) across local Thunderbolt and WAN nodes.", fr: "Chaîne les modèles en étapes (ex. Planificateur → Codeur → Relecteur) sur TB local et WAN.", es: "Encadena modelos por etapas (p. ej., Planificador → Programador → Revisor) en nodos TB locales y WAN.", pt: "Encadeia modelos em etapas (ex. Planeador → Programador → Revisor) entre nós TB locais e WAN.", ru: "Выстраивает модели цепочкой (Планировщик → Кодер → Ревьюер) по локальным и WAN-узлам.", ja: "ローカルTBノードとWANノード間でモデルを段階連鎖（設計→実装→レビュー）させます。", zh: "在本地 Thunderbolt 与 WAN 节点上将模型串联（规划→编码→审查）。")
         }
     }
 }
@@ -414,6 +637,15 @@ enum MultiModelRole: String, CaseIterable, Identifiable, Codable {
     case aggregator = "Aggregator"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .primary: return L10n.tr(lang, de: "Hauptmodell", en: "Primary", fr: "Principal", es: "Principal", pt: "Principal", ru: "Основная", ja: "メイン", zh: "主模型")
+        case .draft: return L10n.tr(lang, de: "Entwurf (Draft)", en: "Draft", fr: "Brouillon (Draft)", es: "Borrador (Draft)", pt: "Rascunho (Draft)", ru: "Черновик (Draft)", ja: "ドラフト", zh: "草案 (Draft)")
+        case .specialist: return L10n.tr(lang, de: "Spezialist", en: "Specialist", fr: "Spécialiste", es: "Especialista", pt: "Especialista", ru: "Специалист", ja: "スペシャリスト", zh: "专家模型")
+        case .aggregator: return L10n.tr(lang, de: "Aggregator", en: "Aggregator", fr: "Agrégateur", es: "Agregador", pt: "Agregador", ru: "Агрегатор", ja: "アグリゲーター", zh: "聚合器")
+        }
+    }
 }
 
 enum MultiModelAutoProfile: String, CaseIterable, Identifiable, Codable {
@@ -423,6 +655,15 @@ enum MultiModelAutoProfile: String, CaseIterable, Identifiable, Codable {
     case hybridPipeline = "Stufen-Pipeline"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .balancedCoding: return L10n.tr(lang, de: "Coding & IDE-Schwarm", en: "Coding & IDE Swarm", fr: "Code & Essaim d'EDI", es: "Código y enjambre IDE", pt: "Código e enxame IDE", ru: "Кодинг и рой IDE", ja: "コーディング & IDEスウォーム", zh: "编程与 IDE 蜂群")
+        case .consensusReview: return L10n.tr(lang, de: "Konsens & Audit", en: "Consensus & Audit", fr: "Consensus & Audit", es: "Consenso y auditoría", pt: "Consenso e auditoria", ru: "Консенсус и аудит", ja: "合意と監査", zh: "共识与审计")
+        case .fastSpeculative: return L10n.tr(lang, de: "Turbo (Draft + Target)", en: "Turbo (Draft + Target)", fr: "Turbo (Draft + Target)", es: "Turbo (Draft + Target)", pt: "Turbo (Draft + Target)", ru: "Турбо (Draft + Target)", ja: "ターボ (Draft + Target)", zh: "极速 (Draft + Target)")
+        case .hybridPipeline: return L10n.tr(lang, de: "Stufen-Pipeline", en: "Staged Pipeline", fr: "Pipeline par étapes", es: "Pipeline por etapas", pt: "Pipeline por etapas", ru: "Поэтапный конвейер", ja: "段階パイプライン", zh: "阶段流水线")
+        }
+    }
 
     var recommendedStrategy: MultiModelStrategy {
         switch self {
@@ -434,15 +675,19 @@ enum MultiModelAutoProfile: String, CaseIterable, Identifiable, Codable {
     }
 
     var summary: String {
+        localizedSummary(.de)
+    }
+
+    func localizedSummary(_ lang: AppLanguage) -> String {
         switch self {
         case .balancedCoding:
-            return "Verteilt Haupt-Coder, Spezialist und Prüfer gleichmäßig über lokale & WAN-Knoten für mehrere IDEs."
+            return L10n.tr(lang, de: "Verteilt Haupt-Coder, Spezialist und Prüfer gleichmäßig über lokale & WAN-Knoten für mehrere IDEs.", en: "Balances Primary Coder, Specialist, and Reviewer across local & WAN nodes for multiple IDEs.", fr: "Répartit codeur principal, spécialiste et réviseur entre nœuds locaux et WAN.", es: "Equilibra programador principal, especialista y revisor entre nodos locales y WAN para varios IDEs.", pt: "Distribui programador principal, especialista e revisor por nós locais e WAN para vários IDEs.", ru: "Распределяет кодера, специалиста и ревьюера по локальным и WAN-узлам для нескольких IDE.", ja: "メインコーダー・専門モデル・レビュー担当をローカル/WANノードへ均等に割り当てます。", zh: "在本地和 WAN 节点上均衡部署主编码、专家和审查模型供多 IDE 并发使用。")
         case .consensusReview:
-            return "Wählt bis zu 4 diverse Modelle im sicheren VRAM-Budget für parallele Abstimmung & Synthese."
+            return L10n.tr(lang, de: "Wählt bis zu 4 diverse Modelle im sicheren VRAM-Budget für parallele Abstimmung & Synthese.", en: "Selects up to 4 diverse models within safe VRAM limits for parallel consensus voting & synthesis.", fr: "Sélectionne jusqu'à 4 modèles diversifiés dans le budget VRAM pour vote et synthèse.", es: "Elige hasta 4 modelos diversos dentro del presupuesto VRAM seguro para votación paralela.", pt: "Seleciona até 4 modelos distintos dentro do limite VRAM seguro para votação paralela.", ru: "Выбирает до 4 разных моделей в пределах безопасной VRAM для консенсуса.", ja: "安全なVRAM予算内で最大4つの異なるモデルを選び並列合意・統合を行います。", zh: "在安全显存范围内挑选最多 4 个不同模型进行并行共识投票与综合。")
         case .fastSpeculative:
-            return "Koppelt das kleinste schnelle Draft-Modell mit dem leistungsstärksten passenden Target-Modell."
+            return L10n.tr(lang, de: "Koppelt das kleinste schnelle Draft-Modell mit dem leistungsstärksten passenden Target-Modell.", en: "Pairs the fastest compact Draft model with the strongest fitting Target model.", fr: "Associe le plus rapide des modèles Draft au modèle Target le plus performant compatible.", es: "Empareja el modelo Draft más rápido con el modelo Target más potente que quepa en memoria.", pt: "Associa o modelo Draft mais rápido ao modelo Target mais capaz dentro da memória.", ru: "Соединяет самую быструю компактную Draft-модель с самой мощной Target-моделью.", ja: "最小・高速なDraftモデルと適合する最強Targetモデルを組み合わせます。", zh: "将最快的小型草案模型与可容纳的最强目标模型配对。")
         case .hybridPipeline:
-            return "Baut eine geordnete Kette (Planer → Coder → Reviewer) über TB5- und Internet-Knoten auf."
+            return L10n.tr(lang, de: "Baut eine geordnete Kette (Planer → Coder → Reviewer) über TB5- und Internet-Knoten auf.", en: "Builds an ordered chain (Planner → Coder → Reviewer) across TB5 and Internet WAN nodes.", fr: "Construit une chaîne ordonnée (Planificateur → Codeur → Réviseur) sur TB5 et WAN.", es: "Construye una cadena ordenada (Planificador → Programador → Revisor) sobre nodos TB5 y WAN.", pt: "Constrói uma cadeia ordenada (Planeador → Programador → Revisor) em nós TB5 e WAN.", ru: "Строит упорядоченную цепочку (Планировщик → Кодер → Ревьюер) через TB5 и WAN.", ja: "TB5およびインターネットノード上に順序付きチェーン（設計→実装→レビュー）を構築します。", zh: "跨 TB5 与广域网节点构建有序链条（规划→编码→审查）。")
         }
     }
 }
@@ -509,6 +754,126 @@ struct ModelPreset: Identifiable, Hashable {
     let notes: String
     var sourceLabel: String = "Referenz"
     var isLiveDiscovered: Bool = false
+
+    func localizedSourceLabel(_ lang: AppLanguage) -> String {
+        switch sourceLabel {
+        case "Referenz":
+            return L10n.tr(lang, de: "Referenz", en: "Reference", fr: "Référence", es: "Referencia", pt: "Referência", ru: "Эталон", ja: "リファレンス", zh: "参考")
+        case "Lokal GGUF":
+            return L10n.tr(lang, de: "Lokal GGUF", en: "Local GGUF", fr: "GGUF local", es: "GGUF local", pt: "GGUF local", ru: "Локальный GGUF", ja: "ローカル GGUF", zh: "本地 GGUF")
+        default:
+            return sourceLabel
+        }
+    }
+
+    func localizedNotes(_ lang: AppLanguage) -> String {
+        if notes.hasPrefix("Lokale GGUF-Datei (") {
+            let folder = notes.replacingOccurrences(of: "Lokale GGUF-Datei (", with: "").replacingOccurrences(of: ")", with: "")
+            return L10n.tr(lang,
+                de: "Lokale GGUF-Datei (\(folder))",
+                en: "Local GGUF file (\(folder))",
+                fr: "Fichier GGUF local (\(folder))",
+                es: "Archivo GGUF local (\(folder))",
+                pt: "Arquivo GGUF local (\(folder))",
+                ru: "Локальный файл GGUF (\(folder))",
+                ja: "ローカル GGUF ファイル (\(folder))",
+                zh: "本地 GGUF 文件 (\(folder))")
+        }
+        switch notes {
+        case "Referenzprofil · kompakter Verbund oder Einzel-Mac ab 24 GB":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Reference profile · compact cluster or single Mac (24 GB+)",
+                fr: "Profil de référence · cluster compact ou Mac unique dès 24 Go",
+                es: "Perfil de referencia · clúster compacto o Mac único desde 24 GB",
+                pt: "Perfil de referência · cluster compacto ou Mac único (24 GB+)",
+                ru: "Эталонный профиль · компактный кластер или один Mac от 24 ГБ",
+                ja: "参照プロファイル · 24 GB以上の単体Macまたは小規模クラスタ",
+                zh: "参考配置 · 紧凑型集群或 24 GB+ 单台 Mac")
+        case "Referenzprofil · Schlussfolgerungs-Modell im Verbund":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Reference profile · distributed reasoning model",
+                fr: "Profil de référence · modèle de raisonnement distribué",
+                es: "Perfil de referencia · modelo de razonamiento distribuido",
+                pt: "Perfil de referência · modelo de raciocínio distribuído",
+                ru: "Эталонный профиль · распределённая модель рассуждений",
+                ja: "参照プロファイル · クラスタ向け推論モデル",
+                zh: "参考配置 · 集群分布式推理模型")
+        case "Referenzprofil · großer Verbund ab ~48 GB nutzbarem Speicher":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Reference profile · large cluster (~48 GB+ usable RAM)",
+                fr: "Profil de référence · grand cluster (~48 Go+ utilisables)",
+                es: "Perfil de referencia · clúster grande (~48 GB+ utilizables)",
+                pt: "Perfil de referência · grande cluster (~48 GB+ utilizáveis)",
+                ru: "Эталонный профиль · крупный кластер (от ~48 ГБ доступной памяти)",
+                ja: "参照プロファイル · 約48 GB以上の大規模クラスタ",
+                zh: "参考配置 · ~48 GB+ 可用显存的大型集群")
+        case "Referenzprofil · Hochkapazitäts-Verbund (z. B. Ultra / Multi-Max)":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Reference profile · high-capacity cluster (e.g., Ultra / Multi-Max)",
+                fr: "Profil de référence · cluster haute capacité (ex. Ultra / Multi-Max)",
+                es: "Perfil de referencia · clúster de alta capacidad (p. ej., Ultra / Multi-Max)",
+                pt: "Perfil de referência · cluster de alta capacidade (ex.: Ultra / Multi-Max)",
+                ru: "Эталонный профиль · высокоёмкий кластер (напр., Ultra / Multi-Max)",
+                ja: "参照プロファイル · 大容量クラスタ（Ultra / Multi-Max 等）",
+                zh: "参考配置 · 超大容量集群（如 Ultra / Multi-Max）")
+        case "Live erkannt über oMLX (:8000)":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Live detected via oMLX (:8000)",
+                fr: "Détecté en direct via oMLX (:8000)",
+                es: "Detectado en vivo vía oMLX (:8000)",
+                pt: "Detetado em direto via oMLX (:8000)",
+                ru: "Обнаружено в реальном времени через oMLX (:8000)",
+                ja: "oMLX (:8000) 経由でライブ検出",
+                zh: "通过 oMLX (:8000) 实时检测到")
+        case "Live erkannt über Ollama (:11434)":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Live detected via Ollama (:11434)",
+                fr: "Détecté en direct via Ollama (:11434)",
+                es: "Detectado en vivo vía Ollama (:11434)",
+                pt: "Detetado em direto via Ollama (:11434)",
+                ru: "Обнаружено в реальном времени через Ollama (:11434)",
+                ja: "Ollama (:11434) 経由でライブ検出",
+                zh: "通过 Ollama (:11434) 实时检测到")
+        case "Live erkannt über llama.cpp (:8080)":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Live detected via llama.cpp (:8080)",
+                fr: "Détecté en direct via llama.cpp (:8080)",
+                es: "Detectado en vivo vía llama.cpp (:8080)",
+                pt: "Detetado em direto via llama.cpp (:8080)",
+                ru: "Обнаружено в реальном времени через llama.cpp (:8080)",
+                ja: "llama.cpp (:8080) 経由でライブ検出",
+                zh: "通过 llama.cpp (:8080) 实时检测到")
+        case "Live erkannt über Ollama CLI":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Live detected via Ollama CLI",
+                fr: "Détecté en direct via Ollama CLI",
+                es: "Detectado en vivo vía Ollama CLI",
+                pt: "Detetado em direto via Ollama CLI",
+                ru: "Обнаружено через Ollama CLI",
+                ja: "Ollama CLI 経由でライブ検出",
+                zh: "通过 Ollama CLI 实时检测到")
+        case "Lokaler HuggingFace-/MLX-Cache":
+            return L10n.tr(lang,
+                de: notes,
+                en: "Local HuggingFace / MLX cache",
+                fr: "Cache local HuggingFace / MLX",
+                es: "Caché local de HuggingFace / MLX",
+                pt: "Cache local HuggingFace / MLX",
+                ru: "Локальный кэш HuggingFace / MLX",
+                ja: "ローカル HuggingFace / MLX キャッシュ",
+                zh: "本地 HuggingFace / MLX 缓存")
+        default:
+            return notes
+        }
+    }
 }
 
 struct NodeLayerAllocation: Identifiable {
@@ -801,6 +1166,15 @@ enum WanOverlayTransport: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .tailscaleMesh: return "Tailscale / WireGuard Mesh (100.64.x.x)"
+        case .wireGuardDirect: return L10n.tr(lang, de: "WireGuard P2P Tunnel (ChaCha20)", en: "WireGuard P2P Tunnel (ChaCha20)", fr: "Tunnel WireGuard P2P (ChaCha20)", es: "Túnel P2P WireGuard (ChaCha20)", pt: "Túnel P2P WireGuard (ChaCha20)", ru: "Туннель WireGuard P2P (ChaCha20)", ja: "WireGuard P2P トンネル (ChaCha20)", zh: "WireGuard P2P 隧道 (ChaCha20)")
+        case .libp2pQuic: return L10n.tr(lang, de: "libp2p / QUIC + DCUtR (Petals-Stil)", en: "libp2p / QUIC + DCUtR (Petals-style)", fr: "libp2p / QUIC + DCUtR (style Petals)", es: "libp2p / QUIC + DCUtR (estilo Petals)", pt: "libp2p / QUIC + DCUtR (estilo Petals)", ru: "libp2p / QUIC + DCUtR (стиль Petals)", ja: "libp2p / QUIC + DCUtR (Petals方式)", zh: "libp2p / QUIC + DCUtR（Petals 风格）")
+        case .derpRelay: return L10n.tr(lang, de: "Verschlüsselter DERP / WebSocket-Relay", en: "Encrypted DERP / WebSocket Relay", fr: "Relais chiffré DERP / WebSocket", es: "Relé cifrado DERP / WebSocket", pt: "Retransmissor cifrado DERP / WebSocket", ru: "Шифрованный DERP / WebSocket-релей", ja: "暗号化 DERP / WebSocket リレー", zh: "加密 DERP / WebSocket 中继")
+        }
+    }
+
     var mtuBytes: Int {
         switch self {
         case .tailscaleMesh, .wireGuardDirect: return 1280
@@ -819,15 +1193,19 @@ enum WanOverlayTransport: String, CaseIterable, Identifiable {
     }
 
     var natNote: String {
+        localizedNatNote(.de)
+    }
+
+    func localizedNatNote(_ lang: AppLanguage) -> String {
         switch self {
         case .tailscaleMesh:
-            return "Automatisches UDP-Hole-Punching über CGNAT (100.64.0.0/10) mit DERP-Rückfall."
+            return L10n.tr(lang, de: "Automatisches UDP-Hole-Punching über CGNAT (100.64.0.0/10) mit DERP-Rückfall.", en: "Automatic UDP hole punching across CGNAT (100.64.0.0/10) with DERP fallback.", fr: "Perforation UDP automatique via CGNAT (100.64.0.0/10) avec repli DERP.", es: "Perforación UDP automática tras CGNAT (100.64.0.0/10) con respaldo DERP.", pt: "Perfuração UDP automática em CGNAT (100.64.0.0/10) com contingência DERP.", ru: "Автоматический UDP hole-punching через CGNAT (100.64.0.0/10) с резервом DERP.", ja: "CGNAT (100.64.0.0/10) 越えの自動UDPホールパンチングとDERPフォールバック。", zh: "支持 CGNAT (100.64.0.0/10) 自动 UDP 打洞与 DERP 回退。")
         case .wireGuardDirect:
-            return "Direkter Layer-3-Tunnel (ChaCha20-Poly1305) mit minimalem Protokoll-Overhead."
+            return L10n.tr(lang, de: "Direkter Layer-3-Tunnel (ChaCha20-Poly1305) mit minimalem Protokoll-Overhead.", en: "Direct Layer-3 tunnel (ChaCha20-Poly1305) with minimal protocol overhead.", fr: "Tunnel Layer-3 direct (ChaCha20-Poly1305) à surcoût minimal.", es: "Túnel directo de capa 3 (ChaCha20-Poly1305) con sobrecarga mínima.", pt: "Túnel direto de camada 3 (ChaCha20-Poly1305) com sobrecarga mínima.", ru: "Прямой туннель Layer-3 (ChaCha20-Poly1305) с минимальными накладными расходами.", ja: "最小オーバーヘッドの直接Layer-3トンネル (ChaCha20-Poly1305)。", zh: "直接三层隧道（ChaCha20-Poly1305），协议开销极低。")
         case .libp2pQuic:
-            return "Dezentrales Kademlia-DHT & DCUtR-Hole-Punching ohne zentralen VPN-Server."
+            return L10n.tr(lang, de: "Dezentrales Kademlia-DHT & DCUtR-Hole-Punching ohne zentralen VPN-Server.", en: "Decentralized Kademlia DHT & DCUtR hole punching with no central VPN server.", fr: "DHT Kademlia décentralisé & perforation DCUtR sans serveur VPN central.", es: "DHT Kademlia descentralizada y DCUtR sin servidor VPN central.", pt: "DHT Kademlia descentralizada e DCUtR sem servidor VPN central.", ru: "Децентрализованный Kademlia DHT и DCUtR без центрального VPN-сервера.", ja: "中央VPN不要の分散Kademlia DHTとDCUtRホールパンチング。", zh: "去中心化 Kademlia DHT 与 DCUtR 打洞，无需中心 VPN 服务器。")
         case .derpRelay:
-            return "Ende-zu-Ende-verschlüsselter TCP/WSS-Relay für strenge Firmen-Firewalls."
+            return L10n.tr(lang, de: "Ende-zu-Ende-verschlüsselter TCP/WSS-Relay für strenge Firmen-Firewalls.", en: "End-to-end encrypted TCP/WSS relay for strict corporate firewalls.", fr: "Relais TCP/WSS chiffré de bout en bout pour pare-feux stricts.", es: "Relé TCP/WSS cifrado de extremo a extremo para cortafuegos corporativos estrictos.", pt: "Retransmissor TCP/WSS cifrado ponto-a-ponto para firewalls restritivas.", ru: "Сквозной шифрованный TCP/WSS-релей для строгих корпоративных брандмауэров.", ja: "厳格な企業ファイアウォール向けのE2E暗号化TCP/WSSリレー。", zh: "端到端加密 TCP/WSS 中继，穿透严格企业防火墙。")
         }
     }
 }
@@ -838,6 +1216,14 @@ enum InternetClusterScale: String, CaseIterable, Identifiable {
     case megaCluster = "Riesiger Welt-Verbund (32–256+ Macs)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .privateTeam: return L10n.tr(lang, de: "Privates Team (2–8 Macs)", en: "Private Team (2–8 Macs)", fr: "Équipe privée (2–8 Mac)", es: "Equipo privado (2–8 Macs)", pt: "Equipa privada (2–8 Macs)", ru: "Частная команда (2–8 Mac)", ja: "プライベートチーム (2–8台)", zh: "私人团队（2–8 台 Mac）")
+        case .researchSwarm: return L10n.tr(lang, de: "Forschungs-Schwarm (8–32 Macs)", en: "Research Swarm (8–32 Macs)", fr: "Essaim de recherche (8–32 Mac)", es: "Enjambre de investigación (8–32 Macs)", pt: "Enxame de investigação (8–32 Macs)", ru: "Исследовательский рой (8–32 Mac)", ja: "研究スウォーム (8–32台)", zh: "科研集群（8–32 台 Mac）")
+        case .megaCluster: return L10n.tr(lang, de: "Riesiger Welt-Verbund (32–256+ Macs)", en: "Global Mega Cluster (32–256+ Macs)", fr: "Méga-grappe mondiale (32–256+ Mac)", es: "Megaclúster global (32–256+ Macs)", pt: "Megacluster global (32–256+ Macs)", ru: "Глобальный мегакластер (32–256+ Mac)", ja: "グローバルメガクラスター (32–256+台)", zh: "全球超级集群（32–256+ 台 Mac）")
+        }
+    }
 }
 
 struct WanPeerNode: Identifiable, Hashable {
@@ -875,6 +1261,14 @@ enum AudioPartyCodec: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .opus16: return L10n.tr(lang, de: "Opus 16 kbps (WAN-Sparmodus)", en: "Opus 16 kbps (WAN Low-BW)", fr: "Opus 16 kbps (Éco WAN)", es: "Opus 16 kbps (Ahorro WAN)", pt: "Opus 16 kbps (Poupança WAN)", ru: "Opus 16 кбит/с (Эконом WAN)", ja: "Opus 16 kbps (WAN省帯域)", zh: "Opus 16 kbps（WAN 省流）")
+        case .opus32: return L10n.tr(lang, de: "Opus 32 kbps (Klar · Standard)", en: "Opus 32 kbps (Clear · Default)", fr: "Opus 32 kbps (Clair · Défaut)", es: "Opus 32 kbps (Claro · Estándar)", pt: "Opus 32 kbps (Nítido · Padrão)", ru: "Opus 32 кбит/с (Чётко · Стандарт)", ja: "Opus 32 kbps (クリア · 標準)", zh: "Opus 32 kbps（清晰·默认）")
+        case .opus64: return L10n.tr(lang, de: "Opus 64 kbps (Studio-Sprache)", en: "Opus 64 kbps (Studio Voice)", fr: "Opus 64 kbps (Voix Studio)", es: "Opus 64 kbps (Voz de estudio)", pt: "Opus 64 kbps (Voz de estúdio)", ru: "Opus 64 кбит/с (Студийный)", ja: "Opus 64 kbps (スタジオ音声)", zh: "Opus 64 kbps（演播室音质）")
+        }
+    }
+
     var kbps: Double {
         switch self {
         case .opus16: return 16.0
@@ -890,6 +1284,14 @@ enum AudioPartyMicMode: String, CaseIterable, Identifiable {
     case alertsOnly = "Nur Verbund-Warnungen"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .openMic: return L10n.tr(lang, de: "Offenes Mikrofon", en: "Open Mic", fr: "Micro ouvert", es: "Micrófono abierto", pt: "Microfone aberto", ru: "Открытый микрофон", ja: "常時マイク", zh: "自由麦")
+        case .pushToTalk: return L10n.tr(lang, de: "Sprech-Taste (PTT)", en: "Push-to-Talk (PTT)", fr: "Appuyer pour parler (PTT)", es: "Pulsar para hablar (PTT)", pt: "Premir para falar (PTT)", ru: "Нажать для речи (PTT)", ja: "プッシュトゥトーク (PTT)", zh: "按键通话 (PTT)")
+        case .alertsOnly: return L10n.tr(lang, de: "Nur Verbund-Warnungen", en: "Cluster Alerts Only", fr: "Alertes de grappe seules", es: "Solo alertas del clúster", pt: "Apenas alertas do cluster", ru: "Только оповещения кластера", ja: "クラスター警報のみ", zh: "仅集群告警")
+        }
+    }
 }
 
 struct AudioPartyMember: Identifiable, Hashable {
@@ -970,6 +1372,13 @@ enum ClusterMeshTopology: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .ring: return L10n.tr(lang, de: "Ring (Pipeline)", en: "Ring (Pipeline)", fr: "Anneau (Pipeline)", es: "Anillo (Pipeline)", pt: "Anel (Pipeline)", ru: "Кольцо (Pipeline)", ja: "リング (Pipeline)", zh: "环形（流水线）")
+        case .fullMesh: return L10n.tr(lang, de: "Full-Mesh (TB5 RDMA Tensor Parallelism)", en: "Full-Mesh (TB5 RDMA Tensor Parallelism)", fr: "Maillage complet (TB5 RDMA Tensor)", es: "Malla completa (TB5 RDMA Tensor)", pt: "Malha completa (TB5 RDMA Tensor)", ru: "Full-Mesh (TB5 RDMA Tensor)", ja: "フルメッシュ (TB5 RDMA Tensor)", zh: "全互联（TB5 RDMA 张量并行）")
+        }
+    }
+
     var shortLabel: String {
         switch self {
         case .ring: return "Ring (PP)"
@@ -993,6 +1402,14 @@ enum WanTransportProtocol: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .tailscaleWireGuard: return "Tailscale / WireGuard (UDP/TCP)"
+        case .quicIrohP2P: return L10n.tr(lang, de: "QUIC / Iroh P2P (0-RTT Multiplex)", en: "QUIC / Iroh P2P (0-RTT Multiplex)", fr: "QUIC / Iroh P2P (Multiplex 0-RTT)", es: "QUIC / Iroh P2P (Multiplex 0-RTT)", pt: "QUIC / Iroh P2P (Multiplex 0-RTT)", ru: "QUIC / Iroh P2P (0-RTT Мультиплекс)", ja: "QUIC / Iroh P2P (0-RTT多重)", zh: "QUIC / Iroh P2P（0-RTT 多路复用）")
+        case .libp2pDerp: return L10n.tr(lang, de: "libp2p + DERP Relay", en: "libp2p + DERP Relay", fr: "Relais libp2p + DERP", es: "Relé libp2p + DERP", pt: "Relé libp2p + DERP", ru: "libp2p + DERP-релей", ja: "libp2p + DERP リレー", zh: "libp2p + DERP 中继")
+        }
+    }
+
     var latencyFactor: Double {
         switch self {
         case .tailscaleWireGuard: return 1.00
@@ -1012,6 +1429,13 @@ enum SplitPhaseComputeMode: String, CaseIterable, Identifiable, Codable {
     case anePrefillGpuDecode = "ANE Prefill + MLX GPU Decode (Split-Phase)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .unifiedGpu: return L10n.tr(lang, de: "Unified GPU (Standard)", en: "Unified GPU (Default)", fr: "GPU unifié (Standard)", es: "GPU unificada (Estándar)", pt: "GPU unificada (Padrão)", ru: "Общий GPU (Стандарт)", ja: "統合GPU (標準)", zh: "统一 GPU（标准）")
+        case .anePrefillGpuDecode: return L10n.tr(lang, de: "ANE Prefill + MLX GPU Decode (Split-Phase)", en: "ANE Prefill + MLX GPU Decode (Split-Phase)", fr: "Préfill ANE + Décodage GPU MLX (Split-Phase)", es: "Prefill ANE + Decode GPU MLX (Fases separadas)", pt: "Prefill ANE + Decode GPU MLX (Fases separadas)", ru: "ANE Prefill + MLX GPU Decode (Раздельно)", ja: "ANE Prefill + MLX GPU Decode (フェーズ分離)", zh: "ANE 预填充 + MLX GPU 解码（分阶段）")
+        }
+    }
 
     var prefillEdpGainFactor: Double {
         switch self {
@@ -1035,6 +1459,14 @@ enum KVCacheTierMode: String, CaseIterable, Identifiable, Codable {
     case distributedCacheGen = "Tier 1–3: RAM + NVMe + Peer CacheGen"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .ramOnly: return L10n.tr(lang, de: "Stufe 1: Nur Unified RAM", en: "Tier 1: Unified RAM Only", fr: "Niveau 1 : RAM unifiée seule", es: "Nivel 1: Solo RAM unificada", pt: "Nível 1: Apenas RAM unificada", ru: "Уровень 1: Только Unified RAM", ja: "第1層: 統合RAMのみ", zh: "第 1 层：仅统一内存")
+        case .ramNvmeTiered: return L10n.tr(lang, de: "Stufe 1+2: RAM + NVMe SSD Offload", en: "Tier 1+2: RAM + NVMe SSD Offload", fr: "Niveaux 1+2 : RAM + Déchargement NVMe SSD", es: "Nivel 1+2: RAM + Descarga SSD NVMe", pt: "Nível 1+2: RAM + Descarga SSD NVMe", ru: "Уровень 1+2: RAM + NVMe SSD", ja: "第1+2層: RAM + NVMe SSD退避", zh: "第 1+2 层：RAM + NVMe SSD 卸载")
+        case .distributedCacheGen: return L10n.tr(lang, de: "Stufe 1–3: RAM + NVMe + Peer CacheGen", en: "Tier 1–3: RAM + NVMe + Peer CacheGen", fr: "Niveaux 1–3 : RAM + NVMe + CacheGen pairs", es: "Nivel 1–3: RAM + NVMe + CacheGen entre nodos", pt: "Nível 1–3: RAM + NVMe + CacheGen entre nós", ru: "Уровень 1–3: RAM + NVMe + Peer CacheGen", ja: "第1–3層: RAM + NVMe + Peer CacheGen", zh: "第 1–3 层：RAM + NVMe + 节点 CacheGen")
+        }
+    }
 
     var compressionRatio: Double {
         switch self {
@@ -1061,6 +1493,13 @@ enum SpeculativeEngineMode: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .standardDraftTarget: return L10n.tr(lang, de: "Standard Draft + Target", en: "Standard Draft + Target", fr: "Draft + Target standard", es: "Draft + Target estándar", pt: "Draft + Target padrão", ru: "Стандартная Draft + Target", ja: "標準 Draft + Target", zh: "标准 Draft + Target")
+        case .eagle3Fusion: return L10n.tr(lang, de: "EAGLE-3 Mehrschicht-Fusion", en: "EAGLE-3 Multi-Layer Feature Fusion", fr: "Fusion multicouche EAGLE-3", es: "Fusión multicapa EAGLE-3", pt: "Fusão multicamada EAGLE-3", ru: "EAGLE-3 Многослойный фьюжн", ja: "EAGLE-3 多層特徴融合", zh: "EAGLE-3 多层特征融合")
+        }
+    }
+
     var speedupBonusMultiplier: Double {
         switch self {
         case .standardDraftTarget: return 1.00
@@ -1076,6 +1515,13 @@ enum AgentGatewayProtocol: String, CaseIterable, Identifiable, Codable {
     case a2aAgentCard = "A2A Agent Card (/.well-known/agent.json)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .chatCompletions, .responsesWithMcp: return rawValue
+        case .a2aAgentCard: return L10n.tr(lang, de: "A2A Agenten-Visitenkarte (/.well-known/agent.json)", en: "A2A Agent Card (/.well-known/agent.json)", fr: "Carte d'agent A2A (/.well-known/agent.json)", es: "Tarjeta de agente A2A (/.well-known/agent.json)", pt: "Cartão de agente A2A (/.well-known/agent.json)", ru: "Визитка агента A2A (/.well-known/agent.json)", ja: "A2A エージェントカード (/.well-known/agent.json)", zh: "A2A 智能体名片 (/.well-known/agent.json)")
+        }
+    }
 }
 
 /// Punkt 5: Thermal- & Carbon-Aware Workload Placement
@@ -1085,6 +1531,14 @@ enum ThermalCarbonSchedulingPolicy: String, CaseIterable, Identifiable, Codable 
     case ecoCarbonAware = "Eco Carbon-Aware (Min Watt/Token)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .performanceFirst: return L10n.tr(lang, de: "Max. Leistung (Thermik/CO₂ ignorieren)", en: "Max Performance (Ignore Thermal/Carbon)", fr: "Performances max (Ignorer thermique/CO₂)", es: "Máximo rendimiento (Ignorar térmico/CO₂)", pt: "Desempenho máx. (Ignorar térmico/CO₂)", ru: "Макс. производительность (без лимитов)", ja: "最高性能（熱・CO₂無視）", zh: "最高性能（忽略温控与碳排）")
+        case .balancedThermal: return L10n.tr(lang, de: "Thermisch balanciert (Schutz ab .serious)", en: "Thermal-Balanced (Throttle .serious/.critical)", fr: "Équilibré thermique (Limite dès .serious)", es: "Equilibrado térmico (Limitar en .serious)", pt: "Equilibrado térmico (Abrandar .serious)", ru: "Термобаланс (снижение при нагреве)", ja: "熱バランス（高温時は自動抑制）", zh: "温控均衡（高热自动降载）")
+        case .ecoCarbonAware: return L10n.tr(lang, de: "Öko & CO₂-bewusst (Min. Watt/Token)", en: "Eco Carbon-Aware (Min Watt/Token)", fr: "Éco & Bas Carbone (Min Watt/Jeton)", es: "Eco consciente de carbono (Min Watt/Token)", pt: "Eco consciente de carbono (Min Watt/Token)", ru: "Эко / Низкий CO₂ (Мин. Вт/токен)", ja: "エコ・低炭素（最小ワット/トークン）", zh: "低碳节能（最低瓦特/Token）")
+        }
+    }
 }
 
 // MARK: - Phase 12: Cluster Auto-Setup & Readiness Verification Models
@@ -1095,6 +1549,14 @@ enum ClusterSetupVariant: String, CaseIterable, Identifiable, Codable {
     case hybrid = "Kombinationsverbund (Lokal + Internet)"
 
     var id: String { rawValue }
+
+    func localizedTitle(_ lang: AppLanguage) -> String {
+        switch self {
+        case .local: return L10n.tr(lang, de: "Lokaler Verbund (TB / RDMA / LAN)", en: "Local Cluster (TB / RDMA / LAN)", fr: "Grappe locale (TB / RDMA / LAN)", es: "Clúster local (TB / RDMA / LAN)", pt: "Cluster local (TB / RDMA / LAN)", ru: "Локальный кластер (TB / RDMA / LAN)", ja: "ローカルクラスター (TB / RDMA / LAN)", zh: "本地集群 (TB / RDMA / LAN)")
+        case .internet: return L10n.tr(lang, de: "Internet-Verbund (QUIC Iroh / Tailscale)", en: "Internet Cluster (QUIC Iroh / Tailscale)", fr: "Grappe Internet (QUIC Iroh / Tailscale)", es: "Clúster Internet (QUIC Iroh / Tailscale)", pt: "Cluster Internet (QUIC Iroh / Tailscale)", ru: "Интернет-кластер (QUIC Iroh / Tailscale)", ja: "インターネットクラスター (QUIC Iroh / Tailscale)", zh: "互联网集群 (QUIC Iroh / Tailscale)")
+        case .hybrid: return L10n.tr(lang, de: "Kombinationsverbund (Lokal + Internet)", en: "Hybrid Cluster (Local + Internet)", fr: "Grappe hybride (Local + Internet)", es: "Clúster híbrido (Local + Internet)", pt: "Cluster híbrido (Local + Internet)", ru: "Гибридный кластер (Локально + Интернет)", ja: "ハイブリッドクラスター (ローカル + インターネット)", zh: "混合集群（本地 + 互联网）")
+        }
+    }
 
     var icon: String {
         switch self {

@@ -60,7 +60,7 @@ enum L10n {
         case (.devices, .ja): return "デバイスと比較"
         case (.devices, .zh): return "设备与对比"
 
-        case (.models, .de): return "Modell-Werkstatt"
+        case (.models, .de): return "Modell Werkstatt"
         case (.models, .en): return "Model Studio"
         case (.models, .fr): return "Atelier de modèles"
         case (.models, .es): return "Taller de modelos"
@@ -1485,7 +1485,84 @@ enum L10n {
         case ("tip_tab_help", .ja): return "詳細ビュー・アーキテクチャ図・検索付きの12章対話型マニュアル。"
         case ("tip_tab_help", .zh): return "12 个交互式手册章节，含深度视图、架构图解与全文搜索。"
 
+        case ("node_gpu_cores", .de): return "GPU-Kerne"
+        case ("node_gpu_cores", .en): return "GPU Cores"
+        case ("node_gpu_cores", .fr): return "cœurs GPU"
+        case ("node_gpu_cores", .es): return "núcleos GPU"
+        case ("node_gpu_cores", .pt): return "núcleos GPU"
+        case ("node_gpu_cores", .ru): return "ядер GPU"
+        case ("node_gpu_cores", .ja): return "GPUコア"
+        case ("node_gpu_cores", .zh): return "GPU 核心"
+
+        case ("node_ane_cores", .de): return "Neural Engine"
+        case ("node_ane_cores", .en): return "Neural Engine"
+        case ("node_ane_cores", .fr): return "Neural Engine"
+        case ("node_ane_cores", .es): return "Neural Engine"
+        case ("node_ane_cores", .pt): return "Neural Engine"
+        case ("node_ane_cores", .ru): return "Neural Engine"
+        case ("node_ane_cores", .ja): return "Neural Engine"
+        case ("node_ane_cores", .zh): return "神经网络引擎"
+
+        case ("ms_layers_unit", .de): return "Schichten"
+        case ("ms_layers_unit", .en): return "Layers"
+        case ("ms_layers_unit", .fr): return "couches"
+        case ("ms_layers_unit", .es): return "capas"
+        case ("ms_layers_unit", .pt): return "camadas"
+        case ("ms_layers_unit", .ru): return "слоёв"
+        case ("ms_layers_unit", .ja): return "レイヤー"
+        case ("ms_layers_unit", .zh): return "层"
+
+        case ("ov_verify_btn", .de): return "Prüfen"
+        case ("ov_verify_btn", .en): return "Verify"
+        case ("ov_verify_btn", .fr): return "Vérifier"
+        case ("ov_verify_btn", .es): return "Verificar"
+        case ("ov_verify_btn", .pt): return "Verificar"
+        case ("ov_verify_btn", .ru): return "Проверить"
+        case ("ov_verify_btn", .ja): return "確認"
+        case ("ov_verify_btn", .zh): return "检查"
+
+        case ("ov_open_setup_btn", .de): return "Setup öffnen"
+        case ("ov_open_setup_btn", .en): return "Open Setup"
+        case ("ov_open_setup_btn", .fr): return "Ouvrir Setup"
+        case ("ov_open_setup_btn", .es): return "Abrir Setup"
+        case ("ov_open_setup_btn", .pt): return "Abrir Setup"
+        case ("ov_open_setup_btn", .ru): return "Открыть настройку"
+        case ("ov_open_setup_btn", .ja): return "セットアップを開く"
+        case ("ov_open_setup_btn", .zh): return "打开设置"
+
+        case ("ov_last_check", .de): return "Letzte Prüfung"
+        case ("ov_last_check", .en): return "Last check"
+        case ("ov_last_check", .fr): return "Dernière vérif."
+        case ("ov_last_check", .es): return "Última comprobación"
+        case ("ov_last_check", .pt): return "Última verificação"
+        case ("ov_last_check", .ru): return "Последняя проверка"
+        case ("ov_last_check", .ja): return "最終確認"
+        case ("ov_last_check", .zh): return "上次检查"
+
         default: return key
+        }
+    }
+
+    static func tr(
+        _ lang: AppLanguage,
+        de: String,
+        en: String,
+        fr: String,
+        es: String,
+        pt: String,
+        ru: String,
+        ja: String,
+        zh: String
+    ) -> String {
+        switch lang {
+        case .de: return de
+        case .en: return en
+        case .fr: return fr
+        case .es: return es
+        case .pt: return pt
+        case .ru: return ru
+        case .ja: return ja
+        case .zh: return zh
         }
     }
 

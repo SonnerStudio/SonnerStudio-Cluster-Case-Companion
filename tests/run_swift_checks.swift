@@ -106,6 +106,19 @@ for lang in AppLanguage.allCases {
         let tip = L10n.tabShorttip(tab, lang)
         check(!tip.isEmpty && !tip.hasPrefix("tip_tab_"), "Missing shorttip \(tab) for \(lang)")
     }
+    for key in ["node_gpu_cores", "node_ane_cores", "ms_layers_unit", "ov_verify_btn", "ov_open_setup_btn", "ov_last_check"] {
+        let val = L10n.text(key, lang)
+        check(!val.isEmpty && val != key, "Missing localization key \(key) for \(lang)")
+    }
+    check(!TransportMode.autoHybrid.localizedTitle(lang).isEmpty, "TransportMode localizedTitle empty")
+    check(!ScienceScope.localCluster.localizedTitle(lang).isEmpty, "ScienceScope localizedTitle empty")
+    check(!MultiModelScope.hybrid.localizedTitle(lang).isEmpty, "MultiModelScope localizedTitle empty")
+    check(!MultiModelStrategy.mixtureOfAgents.localizedTitle(lang).isEmpty, "MultiModelStrategy localizedTitle empty")
+    check(!ClusterSetupVariant.hybrid.localizedTitle(lang).isEmpty, "ClusterSetupVariant localizedTitle empty")
 }
+check(L10n.tabTitle(.models, .de) == "Modell Werkstatt", "German Models tab must be 'Modell Werkstatt'")
+check(L10n.tabTitle(.models, .en) == "Model Studio", "English Models tab must be 'Model Studio'")
+check(AppleSiliconChipFamily.inferGPUCores(from: "Apple M4") >= 8, "M4 GPU cores must infer >= 8")
+check(AppleSiliconChipFamily.inferANECores(from: "Apple M4") >= 16, "M4 ANE cores must infer >= 16")
 
-print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, MMM Auto-Setup, 2026 SOTA Points 1-5, Setup/Readiness & 8-language Shorttips) passed!")
+print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, MMM Auto-Setup, 2026 SOTA Points 1-5, Setup/Readiness & 8-language UI parity) passed!")

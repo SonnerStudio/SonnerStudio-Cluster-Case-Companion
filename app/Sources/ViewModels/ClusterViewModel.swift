@@ -6,7 +6,11 @@ import AppKit
 @MainActor
 final class ClusterViewModel: ObservableObject {
     @Published var selectedTab: NavigationTab = .overview
-    @Published var language: AppLanguage = .en
+    @Published var language: AppLanguage = .en {
+        didSet {
+            refreshLocalizedDynamicState()
+        }
+    }
     @Published var simulateMacStudio: Bool = true {
         didSet {
             if !simulateMacStudio {
@@ -266,6 +270,7 @@ final class ClusterViewModel: ObservableObject {
         refreshLocalHardwareProbe()
         probeWanOverlayTools()
         refreshLocalCommitSHA()
+        refreshLocalizedDynamicState()
         Task {
             await checkDaemonHealth()
             await refreshLiveModels()
@@ -314,14 +319,22 @@ final class ClusterViewModel: ObservableObject {
 
         localRamGB = (Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824.0).rounded()
 
-        // GPU-Kerne aus system_profiler SPDisplaysDataType auslesen (mit Chip-Fallback)
-        let displays = runShell("/usr/sbin/system_profiler", ["SPDisplaysDataType"])
-        if let line = displays.components(separatedBy: .newlines).first(where: { $0.contains("Total Number of Cores:") }),
-           let numStr = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines),
-           let parsedGPU = Int(numStr) {
+        // GPU-Kerne aus IOAccelerator (ioreg) oder system_profiler SPDisplaysDataType auslesen (mit Chip-Fallback)
+        let ioAccel = runShell("/usr/sbin/ioreg", ["-r", "-d", "1", "-c", "IOAccelerator"])
+        if let regex = try? NSRegularExpression(pattern: "\"gpu-core-count\"\\s*=\\s*(\\d+)", options: []),
+           let match = regex.firstMatch(in: ioAccel, options: [], range: NSRange(ioAccel.startIndex..., in: ioAccel)),
+           let range = Range(match.range(at: 1), in: ioAccel),
+           let parsedGPU = Int(ioAccel[range]), parsedGPU > 0 {
             localGPUCores = parsedGPU
         } else {
-            localGPUCores = AppleSiliconChipFamily.inferGPUCores(from: localChipName)
+            let displays = runShell("/usr/sbin/system_profiler", ["SPDisplaysDataType"])
+            if let line = displays.components(separatedBy: .newlines).first(where: { $0.contains("Total Number of Cores:") || $0.contains("Gesamtanzahl der Kerne:") }),
+               let numStr = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines),
+               let parsedGPU = Int(numStr), parsedGPU > 0 {
+                localGPUCores = parsedGPU
+            } else {
+                localGPUCores = AppleSiliconChipFamily.inferGPUCores(from: localChipName)
+            }
         }
         localANECores = AppleSiliconChipFamily.inferANECores(from: localChipName)
 
@@ -394,19 +407,103 @@ final class ClusterViewModel: ObservableObject {
             let cmd = "omlx serve --model \(modelId) --port 8000"
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(cmd, forType: .string)
-            bridgeStatusMessage = "oMLX-Startbefehl kopiert (Paged SSD KV-Cache aktiv): \(cmd)"
+            bridgeStatusMessage = tr(de: "oMLX-Startbefehl kopiert (Paged SSD KV-Cache aktiv): \(cmd)", en: "Copied oMLX launch command (Paged SSD KV Cache active): \(cmd)", fr: "Commande oMLX copiée (cache KV SSD paginé actif) : \(cmd)", es: "Comando oMLX copiado (caché KV SSD paginada activa): \(cmd)", pt: "Comando oMLX copiado (cache KV SSD paginada ativa): \(cmd)", ru: "Команда oMLX скопирована (SSD KV-кэш активен): \(cmd)", ja: "oMLX 起動コマンドをコピーしました: \(cmd)", zh: "已复制 oMLX 启动命令（已启用分页 SSD KV 缓存）：\(cmd)")
         case .ollama:
             let ollamaTag = modelId.contains("70B") ? "llama3.3:70b" : (modelId.contains("Qwen2.5") ? "qwen2.5:32b" : "deepseek-r1:32b")
             let cmd = "ollama run \(ollamaTag)"
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(cmd, forType: .string)
-            bridgeStatusMessage = "Ollama-Ladebefehl kopiert: \(cmd) (oder direkt über SS-CCC Port 8000/11434 ansprechen)."
+            bridgeStatusMessage = tr(de: "Ollama-Ladebefehl kopiert: \(cmd)", en: "Copied Ollama command: \(cmd)", fr: "Commande Ollama copiée : \(cmd)", es: "Comando Ollama copiado: \(cmd)", pt: "Comando Ollama copiado: \(cmd)", ru: "Команда Ollama скопирована: \(cmd)", ja: "Ollama コマンドをコピーしました: \(cmd)", zh: "已复制 Ollama 运行命令：\(cmd)")
         case .llamaCpp:
             let cmd = "llama-server --hf-repo \(modelId) --port 8080 -ngl 99"
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(cmd, forType: .string)
-            bridgeStatusMessage = "llama.cpp-Serverbefehl kopiert: \(cmd)"
+            bridgeStatusMessage = tr(de: "llama.cpp-Serverbefehl kopiert: \(cmd)", en: "Copied llama.cpp server command: \(cmd)", fr: "Commande llama.cpp copiée : \(cmd)", es: "Comando llama.cpp copiado: \(cmd)", pt: "Comando llama.cpp copiado: \(cmd)", ru: "Команда llama.cpp скопирована: \(cmd)", ja: "llama.cpp サーバーコマンドをコピーしました: \(cmd)", zh: "已复制 llama.cpp 启动命令：\(cmd)")
         }
+    }
+
+    func tr(
+        de: String,
+        en: String,
+        fr: String,
+        es: String,
+        pt: String,
+        ru: String,
+        ja: String,
+        zh: String
+    ) -> String {
+        L10n.tr(language, de: de, en: en, fr: fr, es: es, pt: pt, ru: ru, ja: ja, zh: zh)
+    }
+
+    func refreshLocalizedDynamicState() {
+        agentStatusMessage = tr(
+            de: "Bereit für 1-Klick-Konfiguration.",
+            en: "Ready for 1-click configuration.",
+            fr: "Prêt pour la configuration en 1 clic.",
+            es: "Listo para configuración en 1 clic.",
+            pt: "Pronto para configuração num clique.",
+            ru: "Готово к настройке в 1 клик.",
+            ja: "ワンクリック設定の準備完了。",
+            zh: "已就绪，支持一键配置。"
+        )
+        bridgeStatusMessage = tr(
+            de: "Bereit: Modelle direkt in oMLX, Ollama oder llama.cpp laden & als schnelles MLX einbinden.",
+            en: "Ready: Load models directly in oMLX, Ollama, or llama.cpp & bridge into fast MLX.",
+            fr: "Prêt : chargez des modèles dans oMLX, Ollama ou llama.cpp et intégrez-les en MLX rapide.",
+            es: "Listo: carga modelos en oMLX, Ollama o llama.cpp e intégralos como MLX rápido.",
+            pt: "Pronto: carregue modelos no oMLX, Ollama ou llama.cpp e integre como MLX rápido.",
+            ru: "Готово: загружайте модели в oMLX, Ollama или llama.cpp и подключайте к MLX.",
+            ja: "準備完了：oMLX・Ollama・llama.cpp でモデルを読み込み高速 MLX に連携できます。",
+            zh: "已就绪：直接在 oMLX、Ollama 或 llama.cpp 加载模型并接入高速 MLX。"
+        )
+        promptInput = tr(
+            de: "Erkläre kurz, wie mehrere Apple-Silicon-Macs per Pipeline-Parallelität gekoppelt werden.",
+            en: "Briefly explain how multiple Apple Silicon Macs are coupled via pipeline parallelism.",
+            fr: "Expliquez brièvement comment plusieurs Mac Apple Silicon sont couplés par parallélisme en pipeline.",
+            es: "Explica brevemente cómo se acoplan varios Mac Apple Silicon mediante paralelismo en pipeline.",
+            pt: "Explique brevemente como vários Macs Apple Silicon são acoplados via paralelismo em pipeline.",
+            ru: "Кратко объясните, как несколько Mac Apple Silicon объединяются через конвейерный параллелизм.",
+            ja: "複数の Apple Silicon Mac をパイプライン並列で結合する仕組みを簡潔に説明してください。",
+            zh: "简要说明多台 Apple Silicon Mac 如何通过流水线并行耦合协同推理。"
+        )
+        consoleOutput = tr(
+            de: "Bereit. Starte den Python-Daemon (uvicorn core.api.gateway:app --port 8000) oder teste direkt im Vorschau-Modus.",
+            en: "Ready. Start the Python daemon (uvicorn core.api.gateway:app --port 8000) or test in preview mode.",
+            fr: "Prêt. Démarrez le démon Python (uvicorn core.api.gateway:app --port 8000) ou testez en mode aperçu.",
+            es: "Listo. Inicia el servicio Python (uvicorn core.api.gateway:app --port 8000) o prueba en vista previa.",
+            pt: "Pronto. Inicie o serviço Python (uvicorn core.api.gateway:app --port 8000) ou teste em pré-visualização.",
+            ru: "Готово. Запустите Python-демон (uvicorn core.api.gateway:app --port 8000) или проверьте в предпросмотре.",
+            ja: "準備完了。Python デーモン (uvicorn core.api.gateway:app --port 8000) を起動するかプレビューでテストしてください。",
+            zh: "已就绪。请启动 Python 守护进程 (uvicorn core.api.gateway:app --port 8000) 或直接在预览模式测试。"
+        )
+        mmmPromptInput = tr(
+            de: "Analysiere die Leistungsverteilung im Verbund und erstelle einen kompakten Optimierungsvorschlag.",
+            en: "Analyze cluster load distribution and create a concise optimization recommendation.",
+            fr: "Analysez la répartition de charge dans la grappe et proposez une optimisation concise.",
+            es: "Analiza la distribución de carga del clúster y crea una recomendación de optimización concisa.",
+            pt: "Analise a distribuição de carga no cluster e crie uma recomendação concisa de otimização.",
+            ru: "Проанализируйте распределение нагрузки в кластере и дайте краткую рекомендацию.",
+            ja: "クラスターの負荷分散を分析し、簡潔な最適化提案を作成してください。",
+            zh: "分析集群算力与显存分配，并生成简明的优化建议。"
+        )
+        wanBandwidthSourceLabel = tr(de: "Bereit", en: "Ready", fr: "Prêt", es: "Listo", pt: "Pronto", ru: "Готово", ja: "待機中", zh: "就绪")
+        audioPartyStatusText = tr(
+            de: "Bereit · Sprach-Kanal für Verbund-Koordination",
+            en: "Ready · Voice channel for cluster coordination",
+            fr: "Prêt · Canal vocal de coordination",
+            es: "Listo · Canal de voz del clúster",
+            pt: "Pronto · Canal de voz do cluster",
+            ru: "Готово · Голосовой канал кластера",
+            ja: "準備完了 · クラスター連携用ボイスチャンネル",
+            zh: "已就绪 · 集群语音协作频道"
+        )
+        if !clusterReadinessChecks.isEmpty {
+            verifyClusterReadiness()
+        } else if !discoveredProvisionTargets.isEmpty {
+            discoverClusterSetupTargets()
+        }
+        probeWanOverlayTools()
+        syncAudioPartyMembers()
     }
 
     func t(_ key: String) -> String {
@@ -431,9 +528,9 @@ final class ClusterViewModel: ObservableObject {
             name: name,
             role: "Worker (Rank \(index - 1))",
             modelIdentifier: formFactor.rawValue,
-            chip: "\(chip.rawValue) · \(chip.cpuCores)-Core CPU / \(chip.gpuCores)-Core GPU",
+            chip: chip.rawValue,
             cpuCores: chip.cpuCores,
-            cpuTopology: "\(chip.cpuCores) Kerne",
+            cpuTopology: "\(chip.cpuCores) Cores",
             gpuCores: chip.gpuCores,
             neuralEngineCores: chip.aneCores,
             osVersion: "macOS (Apple Silicon)",
@@ -471,7 +568,7 @@ final class ClusterViewModel: ObservableObject {
                     name: "Mac Studio M5 Max",
                     role: "Coordinator (Rank 0)",
                     modelIdentifier: "MacStudio (M5 Max)",
-                    chip: "Apple M5 Max · 18-Core CPU / 32-Core GPU",
+                    chip: "Apple M5 Max",
                     cpuCores: 18,
                     cpuTopology: "12P + 6E",
                     gpuCores: 32,
@@ -612,7 +709,7 @@ final class ClusterViewModel: ObservableObject {
     var effectiveLinkStats: (rangeLabel: String, nominalGbps: Double, badge: String) {
         let active = nodes
         guard active.count > 1 else {
-            return (t("ov_local_internal"), 0.0, "1 Node")
+            return (t("ov_local_internal"), 0.0, t("ov_one_node"))
         }
         let minTb = active.map(\.thunderboltGen).min() ?? 4
         let maxTb = active.map(\.thunderboltGen).max() ?? 4
@@ -744,9 +841,27 @@ final class ClusterViewModel: ObservableObject {
                 atomically: true,
                 encoding: .utf8
             )
-            agentStatusMessage = "OpenCode konfiguriert: ~/.config/opencode/opencode.json & auth.json geschrieben."
+            agentStatusMessage = tr(
+                de: "OpenCode konfiguriert: ~/.config/opencode/opencode.json & auth.json geschrieben.",
+                en: "OpenCode configured: wrote ~/.config/opencode/opencode.json & auth.json.",
+                fr: "OpenCode configuré : ~/.config/opencode/opencode.json & auth.json écrits.",
+                es: "OpenCode configurado: ~/.config/opencode/opencode.json y auth.json escritos.",
+                pt: "OpenCode configurado: ~/.config/opencode/opencode.json e auth.json gravados.",
+                ru: "OpenCode настроен: записаны ~/.config/opencode/opencode.json и auth.json.",
+                ja: "OpenCode 設定完了: ~/.config/opencode/opencode.json と auth.json を書き込みました。",
+                zh: "OpenCode 已配置：已写入 ~/.config/opencode/opencode.json 与 auth.json。"
+            )
         } catch {
-            agentStatusMessage = "Fehler beim Schreiben der OpenCode-Config: \(error.localizedDescription)"
+            agentStatusMessage = tr(
+                de: "Fehler beim Schreiben der OpenCode-Config: \(error.localizedDescription)",
+                en: "Error writing OpenCode config: \(error.localizedDescription)",
+                fr: "Erreur d'écriture config OpenCode : \(error.localizedDescription)",
+                es: "Error al escribir config OpenCode: \(error.localizedDescription)",
+                pt: "Erro ao gravar config OpenCode: \(error.localizedDescription)",
+                ru: "Ошибка записи конфига OpenCode: \(error.localizedDescription)",
+                ja: "OpenCode 設定の書き込みエラー: \(error.localizedDescription)",
+                zh: "写入 OpenCode 配置失败：\(error.localizedDescription)"
+            )
         }
     }
 
@@ -767,9 +882,27 @@ final class ClusterViewModel: ObservableObject {
                 atomically: true,
                 encoding: .utf8
             )
-            agentStatusMessage = "Hermes Agent konfiguriert: ~/.hermes/config.yaml & .env geschrieben."
+            agentStatusMessage = tr(
+                de: "Hermes Agent konfiguriert: ~/.hermes/config.yaml & .env geschrieben.",
+                en: "Hermes Agent configured: wrote ~/.hermes/config.yaml & .env.",
+                fr: "Hermes Agent configuré : ~/.hermes/config.yaml & .env écrits.",
+                es: "Hermes Agent configurado: ~/.hermes/config.yaml y .env escritos.",
+                pt: "Hermes Agent configurado: ~/.hermes/config.yaml e .env gravados.",
+                ru: "Hermes Agent настроен: записаны ~/.hermes/config.yaml и .env.",
+                ja: "Hermes Agent 設定完了: ~/.hermes/config.yaml と .env を書き込みました。",
+                zh: "Hermes Agent 已配置：已写入 ~/.hermes/config.yaml 与 .env。"
+            )
         } catch {
-            agentStatusMessage = "Fehler beim Schreiben der Hermes-Config: \(error.localizedDescription)"
+            agentStatusMessage = tr(
+                de: "Fehler beim Schreiben der Hermes-Config: \(error.localizedDescription)",
+                en: "Error writing Hermes config: \(error.localizedDescription)",
+                fr: "Erreur d'écriture config Hermes : \(error.localizedDescription)",
+                es: "Error al escribir config Hermes: \(error.localizedDescription)",
+                pt: "Erro ao gravar config Hermes: \(error.localizedDescription)",
+                ru: "Ошибка записи конфига Hermes: \(error.localizedDescription)",
+                ja: "Hermes 設定の書き込みエラー: \(error.localizedDescription)",
+                zh: "写入 Hermes 配置失败：\(error.localizedDescription)"
+            )
         }
     }
 
@@ -809,9 +942,27 @@ final class ClusterViewModel: ObservableObject {
                 atomically: true,
                 encoding: .utf8
             )
-            agentStatusMessage = "Antigravity konfiguriert: ~/.gemini/antigravity/ssccc_local_provider.json & ssccc_local_agent.py geschrieben."
+            agentStatusMessage = tr(
+                de: "Antigravity konfiguriert: ~/.gemini/antigravity/ssccc_local_provider.json & ssccc_local_agent.py geschrieben.",
+                en: "Antigravity configured: wrote ~/.gemini/antigravity/ssccc_local_provider.json & ssccc_local_agent.py.",
+                fr: "Antigravity configuré : ~/.gemini/antigravity/ssccc_local_provider.json & ssccc_local_agent.py écrits.",
+                es: "Antigravity configurado: ssccc_local_provider.json y ssccc_local_agent.py escritos.",
+                pt: "Antigravity configurado: ssccc_local_provider.json e ssccc_local_agent.py gravados.",
+                ru: "Antigravity настроен: записаны ssccc_local_provider.json и ssccc_local_agent.py.",
+                ja: "Antigravity 設定完了: ssccc_local_provider.json と ssccc_local_agent.py を書き込みました。",
+                zh: "Antigravity 已配置：已写入 ssccc_local_provider.json 与 ssccc_local_agent.py。"
+            )
         } catch {
-            agentStatusMessage = "Fehler beim Schreiben der Antigravity-Config: \(error.localizedDescription)"
+            agentStatusMessage = tr(
+                de: "Fehler beim Schreiben der Antigravity-Config: \(error.localizedDescription)",
+                en: "Error writing Antigravity config: \(error.localizedDescription)",
+                fr: "Erreur d'écriture config Antigravity : \(error.localizedDescription)",
+                es: "Error al escribir config Antigravity: \(error.localizedDescription)",
+                pt: "Erro ao gravar config Antigravity: \(error.localizedDescription)",
+                ru: "Ошибка записи конфига Antigravity: \(error.localizedDescription)",
+                ja: "Antigravity 設定の書き込みエラー: \(error.localizedDescription)",
+                zh: "写入 Antigravity 配置失败：\(error.localizedDescription)"
+            )
         }
     }
 
@@ -829,7 +980,16 @@ final class ClusterViewModel: ObservableObject {
             }
             agentStatusMessage = successLabel
         } catch {
-            agentStatusMessage = "Fehler beim Schreiben (\(relativeDir)): \(error.localizedDescription)"
+            agentStatusMessage = tr(
+                de: "Fehler beim Schreiben (\(relativeDir)): \(error.localizedDescription)",
+                en: "Error writing (\(relativeDir)): \(error.localizedDescription)",
+                fr: "Erreur d'écriture (\(relativeDir)) : \(error.localizedDescription)",
+                es: "Error al escribir (\(relativeDir)): \(error.localizedDescription)",
+                pt: "Erro ao gravar (\(relativeDir)): \(error.localizedDescription)",
+                ru: "Ошибка записи (\(relativeDir)): \(error.localizedDescription)",
+                ja: "書き込みエラー (\(relativeDir)): \(error.localizedDescription)",
+                zh: "写入失败 (\(relativeDir))：\(error.localizedDescription)"
+            )
         }
     }
 
@@ -878,7 +1038,16 @@ final class ClusterViewModel: ObservableObject {
         writeIntegrationFiles(
             relativeDir: ".cursor",
             files: [("ssccc_cluster.json", cursorConfigJSON)],
-            successLabel: "Cursor konfiguriert: ~/.cursor/ssccc_cluster.json geschrieben."
+            successLabel: tr(
+                de: "Cursor konfiguriert: ~/.cursor/ssccc_cluster.json geschrieben.",
+                en: "Cursor configured: wrote ~/.cursor/ssccc_cluster.json.",
+                fr: "Cursor configuré : ~/.cursor/ssccc_cluster.json écrit.",
+                es: "Cursor configurado: ~/.cursor/ssccc_cluster.json escrito.",
+                pt: "Cursor configurado: ~/.cursor/ssccc_cluster.json gravado.",
+                ru: "Cursor настроен: ~/.cursor/ssccc_cluster.json записан.",
+                ja: "Cursor 設定完了: ~/.cursor/ssccc_cluster.json を書き込みました。",
+                zh: "Cursor 已配置：已写入 ~/.cursor/ssccc_cluster.json。"
+            )
         )
     }
 
@@ -886,7 +1055,16 @@ final class ClusterViewModel: ObservableObject {
         writeIntegrationFiles(
             relativeDir: ".vscode",
             files: [("ssccc_cluster.json", vscodeConfigJSON)],
-            successLabel: "Visual Studio Code konfiguriert: ~/.vscode/ssccc_cluster.json geschrieben."
+            successLabel: tr(
+                de: "Visual Studio Code konfiguriert: ~/.vscode/ssccc_cluster.json geschrieben.",
+                en: "Visual Studio Code configured: wrote ~/.vscode/ssccc_cluster.json.",
+                fr: "VS Code configuré : ~/.vscode/ssccc_cluster.json écrit.",
+                es: "VS Code configurado: ~/.vscode/ssccc_cluster.json escrito.",
+                pt: "VS Code configurado: ~/.vscode/ssccc_cluster.json gravado.",
+                ru: "VS Code настроен: ~/.vscode/ssccc_cluster.json записан.",
+                ja: "VS Code 設定完了: ~/.vscode/ssccc_cluster.json を書き込みました。",
+                zh: "VS Code 已配置：已写入 ~/.vscode/ssccc_cluster.json。"
+            )
         )
     }
 
@@ -894,7 +1072,16 @@ final class ClusterViewModel: ObservableObject {
         writeIntegrationFiles(
             relativeDir: "Library/Developer/Xcode/UserData",
             files: [("SSCCCClusterProvider.json", xcodeConfigJSON)],
-            successLabel: "Xcode konfiguriert: ~/Library/Developer/Xcode/UserData/SSCCCClusterProvider.json geschrieben."
+            successLabel: tr(
+                de: "Xcode konfiguriert: ~/Library/Developer/Xcode/UserData/SSCCCClusterProvider.json geschrieben.",
+                en: "Xcode configured: wrote ~/Library/Developer/Xcode/UserData/SSCCCClusterProvider.json.",
+                fr: "Xcode configuré : ~/Library/Developer/Xcode/UserData/SSCCCClusterProvider.json écrit.",
+                es: "Xcode configurado: SSCCCClusterProvider.json escrito.",
+                pt: "Xcode configurado: SSCCCClusterProvider.json gravado.",
+                ru: "Xcode настроен: SSCCCClusterProvider.json записан.",
+                ja: "Xcode 設定完了: SSCCCClusterProvider.json を書き込みました。",
+                zh: "Xcode 已配置：已写入 SSCCCClusterProvider.json。"
+            )
         )
     }
 
@@ -932,9 +1119,9 @@ final class ClusterViewModel: ObservableObject {
 
         discoveredExternalModels = Array(found.prefix(10))
         if found.isEmpty {
-            bridgeStatusMessage = "Keine lokalen Ollama-/GGUF-Dateien gefunden. Nutze direkte schnelle MLX-Modelle (mlx-community/*-4bit)."
+            bridgeStatusMessage = tr(de: "Keine lokalen Ollama-/GGUF-Dateien gefunden. Nutze direkte schnelle MLX-Modelle (mlx-community/*-4bit).", en: "No local Ollama/GGUF files found. Use fast native MLX models (mlx-community/*-4bit).", fr: "Aucun fichier Ollama/GGUF local trouvé. Utilisez des modèles MLX natifs rapides.", es: "No se encontraron archivos Ollama/GGUF locales. Usa modelos MLX nativos rápidos.", pt: "Nenhum ficheiro Ollama/GGUF local encontrado. Utilize modelos MLX nativos rápidos.", ru: "Локальные файлы Ollama/GGUF не найдены. Используйте быстрые модели MLX.", ja: "ローカルの Ollama/GGUF ファイルが見つかりません。高速なネイティブ MLX モデルをご利用ください。", zh: "未发现本地 Ollama/GGUF 模型文件，建议直接使用高速原生 MLX 模型。")
         } else {
-            bridgeStatusMessage = "\(found.count) Ollama/GGUF-Quelle(n) erkannt — bereit zur schnellen MLX-Einbindung (mlx_lm.convert --quantize)."
+            bridgeStatusMessage = tr(de: "\(found.count) Ollama/GGUF-Quelle(n) erkannt — bereit zur schnellen MLX-Einbindung (mlx_lm.convert --quantize).", en: "Detected \(found.count) Ollama/GGUF source(s) — ready for fast MLX bridging (mlx_lm.convert --quantize).", fr: "\(found.count) source(s) Ollama/GGUF détectée(s) — prêt pour intégration MLX.", es: "\(found.count) fuente(s) Ollama/GGUF detectada(s) — listo para puente MLX.", pt: "\(found.count) fonte(s) Ollama/GGUF detetada(s) — pronto para ponte MLX.", ru: "Найдено источников Ollama/GGUF: \(found.count) — готово к подключению к MLX.", ja: "\(found.count) 件の Ollama/GGUF を検出 — MLX への高速連携準備完了。", zh: "已发现 \(found.count) 个 Ollama/GGUF 源 — 已就绪导入高速 MLX。")
         }
     }
 
@@ -970,9 +1157,9 @@ final class ClusterViewModel: ObservableObject {
                 atomically: true,
                 encoding: .utf8
             )
-            bridgeStatusMessage = "Bereitgestellt: ~/.ssccc/bridges/Modelfile.ssccc & llamacpp_ollama_bridge.json (Endpoint: \(openCodeBaseURL))."
+            bridgeStatusMessage = tr(de: "Bereitgestellt: ~/.ssccc/bridges/Modelfile.ssccc & llamacpp_ollama_bridge.json (Endpoint: \(openCodeBaseURL)).", en: "Exported ~/.ssccc/bridges/Modelfile.ssccc & llamacpp_ollama_bridge.json (Endpoint: \(openCodeBaseURL)).", fr: "Exporté : ~/.ssccc/bridges/Modelfile.ssccc & llamacpp_ollama_bridge.json (\(openCodeBaseURL)).", es: "Exportado: ~/.ssccc/bridges/Modelfile.ssccc y llamacpp_ollama_bridge.json (\(openCodeBaseURL)).", pt: "Exportado: ~/.ssccc/bridges/Modelfile.ssccc e llamacpp_ollama_bridge.json (\(openCodeBaseURL)).", ru: "Создано: ~/.ssccc/bridges/Modelfile.ssccc и llamacpp_ollama_bridge.json (\(openCodeBaseURL)).", ja: "出力完了: ~/.ssccc/bridges/Modelfile.ssccc & llamacpp_ollama_bridge.json (\(openCodeBaseURL))。", zh: "已导出至 ~/.ssccc/bridges/Modelfile.ssccc 与 llamacpp_ollama_bridge.json (端点：\(openCodeBaseURL))。")
         } catch {
-            bridgeStatusMessage = "Fehler beim Bridge-Export: \(error.localizedDescription)"
+            bridgeStatusMessage = tr(de: "Fehler beim Bridge-Export: \(error.localizedDescription)", en: "Bridge export error: \(error.localizedDescription)", fr: "Erreur d'export de passerelle : \(error.localizedDescription)", es: "Error al exportar pasarela: \(error.localizedDescription)", pt: "Erro ao exportar ponte: \(error.localizedDescription)", ru: "Ошибка экспорта моста: \(error.localizedDescription)", ja: "ブリッジ出力エラー: \(error.localizedDescription)", zh: "导出桥接配置失败：\(error.localizedDescription)")
         }
     }
 
@@ -1134,7 +1321,16 @@ final class ClusterViewModel: ObservableObject {
                 selectedModel = live[0]
                 kvCacheReserveGB = live[0].kvReserveGB
             }
-            modelDiscoveryNote = "\(live.count) echte(s) Modell(e) aus oMLX / Ollama / llama.cpp / lokalem Speicher eingelesen."
+            modelDiscoveryNote = tr(
+                de: "\(live.count) echte(s) Modell(e) aus oMLX / Ollama / llama.cpp / lokalem Speicher eingelesen.",
+                en: "Loaded \(live.count) live model(s) from oMLX / Ollama / llama.cpp / local cache.",
+                fr: "\(live.count) modèle(s) réel(s) détecté(s) via oMLX / Ollama / llama.cpp / cache local.",
+                es: "\(live.count) modelo(s) real(es) detectado(s) desde oMLX / Ollama / llama.cpp / caché local.",
+                pt: "\(live.count) modelo(s) real(is) detetado(s) via oMLX / Ollama / llama.cpp / cache local.",
+                ru: "Загружено \(live.count) моделей из oMLX / Ollama / llama.cpp / локального кэша.",
+                ja: "oMLX・Ollama・llama.cpp・ローカルキャッシュから \(live.count) 個のモデルを読み込みました。",
+                zh: "已从 oMLX / Ollama / llama.cpp / 本地缓存读取 \(live.count) 个真实模型。"
+            )
         } else {
             modelPresets = []
             modelDiscoveryNote = t("ms_no_models_note")
@@ -1257,10 +1453,10 @@ final class ClusterViewModel: ObservableObject {
             "/Applications/Ollama.app/Contents/Resources/ollama"
         ]
         guard let bin = candidates.first(where: { fm.isExecutableFile(atPath: $0) }) else {
-            bridgeStatusMessage = "Ollama-Binary nicht gefunden."
+            bridgeStatusMessage = tr(de: "Ollama-Binary nicht gefunden.", en: "Ollama binary not found.", fr: "Binaire Ollama introuvable.", es: "Binario de Ollama no encontrado.", pt: "Binário Ollama não encontrado.", ru: "Бинарник Ollama не найден.", ja: "Ollama バイナリが見つかりません。", zh: "未找到 Ollama 可执行文件。")
             return
         }
-        bridgeStatusMessage = "Lade \(modelTag) über Ollama…"
+        bridgeStatusMessage = tr(de: "Lade \(modelTag) über Ollama…", en: "Pulling \(modelTag) via Ollama…", fr: "Téléchargement de \(modelTag) via Ollama…", es: "Descargando \(modelTag) con Ollama…", pt: "A transferir \(modelTag) via Ollama…", ru: "Загрузка \(modelTag) через Ollama…", ja: "Ollama で \(modelTag) を取得中…", zh: "正在通过 Ollama 拉取 \(modelTag)…")
         let status = await Task.detached { () -> Int32 in
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: bin)
@@ -1272,10 +1468,10 @@ final class ClusterViewModel: ObservableObject {
             return proc.terminationStatus
         }.value
         if status == 0 {
-            bridgeStatusMessage = "\(modelTag) erfolgreich in Ollama geladen."
+            bridgeStatusMessage = tr(de: "\(modelTag) erfolgreich in Ollama geladen.", en: "Successfully pulled \(modelTag) in Ollama.", fr: "\(modelTag) téléchargé dans Ollama.", es: "\(modelTag) descargado en Ollama.", pt: "\(modelTag) transferido para o Ollama.", ru: "\(modelTag) загружен в Ollama.", ja: "Ollama で \(modelTag) の取得が完了しました。", zh: "已在 Ollama 中成功拉取 \(modelTag)。")
             await refreshLiveModels()
         } else {
-            bridgeStatusMessage = "Ollama-Pull fehlgeschlagen (Status \(status))."
+            bridgeStatusMessage = tr(de: "Ollama-Pull fehlgeschlagen (Status \(status)).", en: "Ollama pull failed (status \(status)).", fr: "Échec du pull Ollama (code \(status)).", es: "Error al descargar con Ollama (estado \(status)).", pt: "Falha no pull Ollama (estado \(status)).", ru: "Ошибка загрузки Ollama (код \(status)).", ja: "Ollama pull に失敗しました (ステータス \(status))。", zh: "Ollama 拉取失败（状态码 \(status)）。")
         }
     }
 
@@ -1407,7 +1603,7 @@ final class ClusterViewModel: ObservableObject {
                     typicalWatts: watts,
                     rttMs: peer.isLocalHost ? 0.0 : peer.rttMs,
                     uplinkMbps: peer.uplinkMbps,
-                    linkLabel: peer.isLocalHost ? "Lokal (\(peer.transport.rawValue))" : "\(peer.region) · \(Int(peer.rttMs))ms",
+                    linkLabel: peer.isLocalHost ? "\(tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")) (\(peer.transport.localizedTitle(language)))" : "\(peer.region) · \(Int(peer.rttMs))ms",
                     isRemoteWan: !peer.isLocalHost
                 )
             }
@@ -1417,7 +1613,7 @@ final class ClusterViewModel: ObservableObject {
                 id: node.id,
                 name: node.name,
                 chip: node.chip,
-                region: "Lokal (TB\(node.thunderboltGen))",
+                region: "\(tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")) (TB\(node.thunderboltGen))",
                 totalRamGB: node.totalRamGB,
                 usableVramGB: node.usableVramGB,
                 bandwidthGBs: node.bandwidthGBs,
@@ -1576,20 +1772,65 @@ final class ClusterViewModel: ObservableObject {
         let netMs = activeStepRttMs + activeStepTransferMs
         if isWanScienceActive && activeScienceNodes.count > 1 {
             if activeStepRttMs > activeStepComputeMs && activeStepRttMs >= activeStepTransferMs {
-                return "WAN-RTT-Latenz-begrenzt (B* = \(criticalBatchSizeBStar))"
+                return tr(
+                    de: "WAN-RTT-Latenz-begrenzt (B* = \(criticalBatchSizeBStar))",
+                    en: "WAN RTT Latency-Bound (B* = \(criticalBatchSizeBStar))",
+                    fr: "Limité par latence RTT WAN (B* = \(criticalBatchSizeBStar))",
+                    es: "Limitado por latencia RTT WAN (B* = \(criticalBatchSizeBStar))",
+                    pt: "Limitado por latência RTT WAN (B* = \(criticalBatchSizeBStar))",
+                    ru: "Ограничено задержкой RTT WAN (B* = \(criticalBatchSizeBStar))",
+                    ja: "WAN RTT 遅延律速 (B* = \(criticalBatchSizeBStar))",
+                    zh: "WAN RTT 延迟受限 (B* = \(criticalBatchSizeBStar))"
+                )
             }
             if activeStepTransferMs > activeStepComputeMs {
-                return "WAN-Uplink-begrenzt (Aktivierungs-Kompression empfohlen)"
+                return tr(
+                    de: "WAN-Uplink-begrenzt (Aktivierungs-Kompression empfohlen)",
+                    en: "WAN Uplink-Bound (Activation compression recommended)",
+                    fr: "Limité par lien montant WAN (compression conseillée)",
+                    es: "Limitado por subida WAN (compresión recomendada)",
+                    pt: "Limitado por uplink WAN (compressão recomendada)",
+                    ru: "Ограничено аплинком WAN (рекомендуется сжатие)",
+                    ja: "WAN アップリンク帯域律速（活性化圧縮推奨）",
+                    zh: "WAN 上行带宽受限（建议开启激活压缩）"
+                )
             }
         }
         if netMs > activeStepComputeMs * 0.8 && activeScienceNodes.count > 1 {
-            return "Verbindungs-begrenzt (TB/LAN-Übergabe)"
+            return tr(
+                de: "Verbindungs-begrenzt (TB/LAN-Übergabe)",
+                en: "Interconnect-Bound (TB/LAN Handoff)",
+                fr: "Limité par l'interconnexion (TB/LAN)",
+                es: "Limitado por interconexión (TB/LAN)",
+                pt: "Limitado por interligação (TB/LAN)",
+                ru: "Ограничено межсоединением (TB/LAN)",
+                ja: "インターコネクト律速 (TB/LAN)",
+                zh: "互联传输受限 (TB/LAN 切换)"
+            )
         }
         let activeMinRidge = activeScienceNodes.map(\.ridgePointFLOPPerByte).min() ?? 80.0
         if decodeArithmeticIntensity < activeMinRidge {
-            return "Speicherbandbreiten-begrenzt (UMA-Decode)"
+            return tr(
+                de: "Speicherbandbreiten-begrenzt (UMA-Decode)",
+                en: "Memory Bandwidth-Bound (UMA Decode)",
+                fr: "Limité par bande passante mémoire (UMA Decode)",
+                es: "Limitado por ancho de banda de memoria (UMA Decode)",
+                pt: "Limitado por largura de banda de memória (UMA Decode)",
+                ru: "Ограничено пропускной способностью памяти (UMA Decode)",
+                ja: "メモリ帯域幅律速 (UMA Decode)",
+                zh: "显存带宽受限 (UMA 解码阶段)"
+            )
         }
-        return "Rechenleistungs-begrenzt (Metal FP16)"
+        return tr(
+            de: "Rechenleistungs-begrenzt (Metal FP16)",
+            en: "Compute-Bound (Metal FP16)",
+            fr: "Limité par le calcul (Metal FP16)",
+            es: "Limitado por cómputo (Metal FP16)",
+            pt: "Limitado por computação (Metal FP16)",
+            ru: "Ограничено вычислениями (Metal FP16)",
+            ja: "演算性能律速 (Metal FP16)",
+            zh: "算力受限 (Metal FP16)"
+        )
     }
 
     var estimatedModelTrafficGBPerStep: Double {
@@ -1764,6 +2005,16 @@ final class ClusterViewModel: ObservableObject {
         let remotePeers = wanPeers.filter { !$0.isLocalHost && $0.isOnline && !$0.overlayIP.isEmpty }
         let wanPeerIPs = remotePeers.map(\.overlayIP)
 
+        let realNoEndpointErr = tr(
+            de: "Echtbetrieb: Kein aktiver Inferenz-Endpunkt unter \(openCodeBaseURL) erreichbar",
+            en: "Live mode: No active inference endpoint reachable at \(openCodeBaseURL)",
+            fr: "Mode réel : aucun point d'inférence actif joignable sur \(openCodeBaseURL)",
+            es: "Modo real: ningún endpoint de inferencia activo en \(openCodeBaseURL)",
+            pt: "Modo real: nenhum endpoint de inferência ativo em \(openCodeBaseURL)",
+            ru: "Реальный режим: нет активного эндпоинта инференса по адресу \(openCodeBaseURL)",
+            ja: "実測モード：\(openCodeBaseURL) で稼働中の推論エンドポイントが見つかりません",
+            zh: "实时模式：未能在 \(openCodeBaseURL) 检测到活跃的推理端点"
+        )
         Task {
             var collected: [ScientificBenchmarkTrial] = []
 
@@ -1772,7 +2023,16 @@ final class ClusterViewModel: ObservableObject {
                 guard let endpointURL = URL(string: endpointString) else {
                     isRunningBenchmark = false
                     sciSummary = nil
-                    sciStatusMessage = "Echtbetrieb: Ungültige Endpunkt-URL (\(endpointString))."
+                    sciStatusMessage = tr(
+                        de: "Echtbetrieb: Ungültige Endpunkt-URL (\(endpointString)).",
+                        en: "Live mode: Invalid endpoint URL (\(endpointString)).",
+                        fr: "Mode réel : URL invalide (\(endpointString)).",
+                        es: "Modo real: URL no válida (\(endpointString)).",
+                        pt: "Modo real: URL inválida (\(endpointString)).",
+                        ru: "Реальный режим: неверный URL эндпоинта (\(endpointString)).",
+                        ja: "実測モード：無効なエンドポイント URL (\(endpointString))。",
+                        zh: "实时模式：无效的端点 URL (\(endpointString))。"
+                    )
                     return
                 }
 
@@ -1785,9 +2045,18 @@ final class ClusterViewModel: ObservableObject {
                         isRunningBenchmark = false
                         if collected.isEmpty {
                             sciSummary = nil
-                            sciStatusMessage = "Echtbetrieb: Kein aktiver Inferenz-Endpunkt unter \(openCodeBaseURL) erreichbar (\(error.localizedDescription)). Starte oMLX, Ollama oder llama.cpp – oder aktiviere den Simulationsmodus in der Seitenleiste."
+                            sciStatusMessage = "\(realNoEndpointErr) (\(error.localizedDescription))."
                         } else {
-                            sciStatusMessage = "Echtbetrieb unterbrochen nach \(collected.count) realen Läufen: \(error.localizedDescription)"
+                            sciStatusMessage = tr(
+                                de: "Echtbetrieb unterbrochen nach \(collected.count) realen Läufen: \(error.localizedDescription)",
+                                en: "Live mode interrupted after \(collected.count) real trials: \(error.localizedDescription)",
+                                fr: "Mode réel interrompu après \(collected.count) essais : \(error.localizedDescription)",
+                                es: "Modo real interrumpido tras \(collected.count) pruebas: \(error.localizedDescription)",
+                                pt: "Modo real interrompido após \(collected.count) testes: \(error.localizedDescription)",
+                                ru: "Прервано после \(collected.count) замеров: \(error.localizedDescription)",
+                                ja: "実測が \(collected.count) 回後に中断されました：\(error.localizedDescription)",
+                                zh: "实时测量在 \(collected.count) 次后中断：\(error.localizedDescription)"
+                            )
                         }
                         return
                     }
@@ -1815,7 +2084,7 @@ final class ClusterViewModel: ObservableObject {
                         watts: watts,
                         joulesPerToken: jPerTok,
                         sloPass: sloPass,
-                        scopeLabel: scopeSnapshot.rawValue
+                        scopeLabel: scopeSnapshot.localizedTitle(language)
                     )
                     collected.append(trial)
                     sciTrials = collected
@@ -1851,7 +2120,7 @@ final class ClusterViewModel: ObservableObject {
                         watts: watts,
                         joulesPerToken: jPerTok,
                         sloPass: sloPass,
-                        scopeLabel: scopeSnapshot.rawValue
+                        scopeLabel: scopeSnapshot.localizedTitle(language)
                     )
                     collected.append(trial)
                     sciTrials = collected
@@ -1891,7 +2160,7 @@ final class ClusterViewModel: ObservableObject {
             let formatter = ISO8601DateFormatter()
             sciSummary = ScientificBenchmarkSummary(
                 modelId: selectedModel.id,
-                scopeLabel: scopeSnapshot.rawValue,
+                scopeLabel: scopeSnapshot.localizedTitle(language),
                 hardwareFingerprint: hardwareFingerprint,
                 backendLabel: backendDesc,
                 trialCount: collected.count,
@@ -1921,11 +2190,23 @@ final class ClusterViewModel: ObservableObject {
             )
             isRunningBenchmark = false
             sciStatusMessage = isSimulatedMode
-                ? "Simulation abgeschlossen (\(collected.count) realistische Läufe)."
+                ? tr(
+                    de: "Simulation abgeschlossen (\(collected.count) realistische Läufe).",
+                    en: "Simulation complete (\(collected.count) realistic runs).",
+                    fr: "Simulation terminée (\(collected.count) essais réalistes).",
+                    es: "Simulación completada (\(collected.count) pruebas realistas).",
+                    pt: "Simulação concluída (\(collected.count) ensaios realistas).",
+                    ru: "Симуляция завершена (\(collected.count) реалистичных прогонов).",
+                    ja: "シミュレーション完了（\(collected.count) 回の実践的試行）。",
+                    zh: "模拟测试完成（\(collected.count) 轮仿真测量）。"
+                )
                 : t("sci_bench_done")
             if sciAutoRecordHistory {
-                let modeTag = isSimulatedMode ? "Simulation" : "Live-Messung"
-                recordScienceHistory(position: .globalAll, note: "\(modeTag) (\(collected.count) Läufe, T=0,0)")
+                let modeTag = isSimulatedMode
+                    ? tr(de: "Simulation", en: "Simulation", fr: "Simulation", es: "Simulación", pt: "Simulação", ru: "Симуляция", ja: "シミュレーション", zh: "模拟")
+                    : tr(de: "Live-Messung", en: "Live Run", fr: "Mesure directe", es: "Medición en vivo", pt: "Medição ao vivo", ru: "Живой замер", ja: "実測", zh: "实测")
+                let runLabel = tr(de: "Läufe", en: "runs", fr: "essais", es: "pruebas", pt: "ensaios", ru: "прогонов", ja: "回", zh: "次")
+                recordScienceHistory(position: .globalAll, note: "\(modeTag) (\(collected.count) \(runLabel), T=0.0)")
             }
         }
     }
@@ -2035,7 +2316,7 @@ final class ClusterViewModel: ObservableObject {
         let entry = ScienceHistoryEntry(
             timestamp: currentClockTime(),
             positionFilter: pos,
-            scopeLabel: sciScope.rawValue,
+            scopeLabel: sciScope.localizedTitle(language),
             modelName: selectedModel.displayName,
             nodeCount: activeScienceNodes.count,
             usableVramGB: activeTotalUsableVramGB,
@@ -2304,16 +2585,25 @@ final class ClusterViewModel: ObservableObject {
 
     var wanConnectionQualityGrade: String {
         if wanMeasuredDownloadMbps <= 0 && wanMeasuredUploadMbps <= 0 && wanMeasuredPingMs <= 0 {
-            return "Nicht gemessen — Live-Check oder Speedtest starten"
+            return tr(
+                de: "Nicht gemessen — Live-Check oder Speedtest starten",
+                en: "Not measured — run Live Check or Speedtest",
+                fr: "Non mesuré — lancer vérif. live ou test de débit",
+                es: "Sin medir — ejecuta Live Check o Speedtest",
+                pt: "Não medido — iniciar verificação ou Speedtest",
+                ru: "Не измерено — запустите Live Check или Speedtest",
+                ja: "未計測 — ライブ確認または Speedtest を実行",
+                zh: "未测量 — 请点击实时检测或速度测试"
+            )
         }
         let uplink = wanBottleneckUplinkMbps
         let rtt = wanMeasuredPingMs
         if uplink >= 150.0 && rtt <= 30.0 && wanMeasuredPacketLossPct < 0.5 {
-            return "Exzellent (High-Throughput Fiber · ideal für PP)"
+            return tr(de: "Exzellent (High-Throughput Fiber · ideal für PP)", en: "Excellent (High-Throughput Fiber · ideal for PP)", fr: "Excellent (Fibre haut débit · idéal pour PP)", es: "Excelente (Fibra de alto rendimiento · ideal PP)", pt: "Excelente (Fibra de alto débito · ideal para PP)", ru: "Отлично (Высокоскоростная оптика · идеал для PP)", ja: "優秀（高速光回線 · PP に最適）", zh: "极佳（高速光纤 · 极适合流水线并行）")
         } else if uplink >= 50.0 && rtt <= 65.0 && wanMeasuredPacketLossPct < 1.5 {
-            return "Gut (Stabil für Pipeline-Parallelism)"
+            return tr(de: "Gut (Stabil für Pipeline-Parallelism)", en: "Good (Stable for Pipeline Parallelism)", fr: "Bon (Stable pour parallélisme en pipeline)", es: "Bueno (Estable para paralelismo en pipeline)", pt: "Bom (Estável para paralelismo em pipeline)", ru: "Хорошо (Стабильно для Pipeline Parallelism)", ja: "良好（パイプライン並列に安定）", zh: "良好（流水线并行稳定）")
         } else {
-            return "Eingeschränkt (Hohe Latenz/Engpass · DiLoCo empfohlen)"
+            return tr(de: "Eingeschränkt (Hohe Latenz/Engpass · DiLoCo empfohlen)", en: "Constrained (High Latency/Bottleneck · DiLoCo recommended)", fr: "Limité (Latence élevée · DiLoCo recommandé)", es: "Limitado (Latencia alta · se recomienda DiLoCo)", pt: "Limitado (Latência elevada · DiLoCo recomendado)", ru: "Ограничено (Высокая задержка · нужен DiLoCo)", ja: "制限あり（高遅延/ボトルネック · DiLoCo 推奨）", zh: "受限（延迟较高或带宽窄 · 建议使用 DiLoCo）")
         }
     }
 
@@ -2325,8 +2615,10 @@ final class ClusterViewModel: ObservableObject {
         let isSimulated = simulateMacStudio
         let targetPeerIP = wanRemotePeers.first(where: { $0.isOnline && !$0.overlayIP.isEmpty })?.overlayIP ?? "1.1.1.1"
         wanBandwidthSourceLabel = isSimulated
-            ? "Simulation läuft..."
-            : (runActiveSpeedTest ? "Aktiver macOS Speedtest (/usr/bin/networkQuality)..." : "Messe Live-Interface & ICMP-Ping...")
+            ? tr(de: "Simulation läuft...", en: "Running simulation...", fr: "Simulation en cours...", es: "Ejecutando simulación...", pt: "Simulação em curso...", ru: "Идёт симуляция...", ja: "シミュレーション計測中...", zh: "正在模拟测速...")
+            : (runActiveSpeedTest
+                ? tr(de: "Aktiver macOS Speedtest (/usr/bin/networkQuality)...", en: "Running macOS Speedtest (/usr/bin/networkQuality)...", fr: "Test macOS en cours (/usr/bin/networkQuality)...", es: "Prueba macOS en curso (/usr/bin/networkQuality)...", pt: "Teste macOS em curso (/usr/bin/networkQuality)...", ru: "Тест скорости macOS (/usr/bin/networkQuality)...", ja: "macOS Speedtest 実行中...", zh: "正在运行 macOS 速度测试 (/usr/bin/networkQuality)...")
+                : tr(de: "Messe Live-Interface & ICMP-Ping...", en: "Probing live interface & ICMP ping...", fr: "Mesure d'interface live & ping ICMP...", es: "Midiendo interfaz en vivo y ping ICMP...", pt: "A medir interface ao vivo e ping ICMP...", ru: "Замер интерфейса и ICMP ping...", ja: "ライブNICとICMPピングを計測中...", zh: "正在探测实时网卡速率与 ICMP 延迟..."))
 
         Task {
             if isSimulated {
@@ -2346,7 +2638,7 @@ final class ClusterViewModel: ObservableObject {
                 self.wanMeasuredPingMs = ping
                 self.wanMeasuredJitterMs = jitter
                 self.wanMeasuredPacketLossPct = loss
-                self.wanBandwidthSourceLabel = "Simulation (Realistische Glasfaser-WAN-Telemetrie)"
+                self.wanBandwidthSourceLabel = self.tr(de: "Simulation (Realistische Glasfaser-WAN-Telemetrie)", en: "Simulation (Realistic Fiber WAN Telemetry)", fr: "Simulation (Télémétrie Fibre WAN réaliste)", es: "Simulación (Telemetría WAN Fibra realista)", pt: "Simulação (Telemetria WAN Fibra realista)", ru: "Симуляция (Реалистичная оптоволоконная телеметрия)", ja: "シミュレーション（現実的な光回線WANテレメトリ）", zh: "模拟（真实光纤 WAN 遥测基准）")
                 self.wanBandwidthLastUpdated = self.currentClockTime()
                 self.appendWanThroughputSample(
                     downloadMbps: dl,
@@ -2595,8 +2887,9 @@ final class ClusterViewModel: ObservableObject {
     }
 
     func syncMultiModelSlotsFromCluster() {
+        let localLabel = tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
         let targets = mmmAvailableTargets
-        let primaryTarget = targets.first ?? (nodes.first?.name ?? "Lokal")
+        let primaryTarget = targets.first ?? (nodes.first?.name ?? localLabel)
         let secondaryTarget = targets.count > 1 ? targets[1] : primaryTarget
 
         let liveModels = modelPresets.filter(\.isLiveDiscovered)
@@ -2614,7 +2907,16 @@ final class ClusterViewModel: ObservableObject {
                     isEnabled: true
                 )
             }
-            mmmStatusMessage = "MMM-Slots aus \(mmmSlots.count) erkannten Live-Modellen synchronisiert."
+            mmmStatusMessage = tr(
+                de: "MMM-Slots aus \(mmmSlots.count) erkannten Live-Modellen synchronisiert.",
+                en: "Synced MMM slots from \(mmmSlots.count) live discovered models.",
+                fr: "Slots MMM synchronisés depuis \(mmmSlots.count) modèles actifs.",
+                es: "Slots MMM sincronizados desde \(mmmSlots.count) modelos en vivo.",
+                pt: "Slots MMM sincronizados de \(mmmSlots.count) modelos ao vivo.",
+                ru: "Слоты MMM синхронизированы с \(mmmSlots.count) активными моделями.",
+                ja: "検出された \(mmmSlots.count) 個のライブモデルから MMM スロットを同期しました。",
+                zh: "已从 \(mmmSlots.count) 个在线模型同步 MMM 槽位。"
+            )
             return
         }
 
@@ -2633,13 +2935,23 @@ final class ClusterViewModel: ObservableObject {
                 isEnabled: idx < 2
             )
         }
-        mmmStatusMessage = "MMM-Slots auf aktive \(mmmScope.rawValue)-Knoten ausgerichtet."
+        mmmStatusMessage = tr(
+            de: "MMM-Slots auf aktive \(mmmScope.localizedTitle(language))-Knoten ausgerichtet.",
+            en: "Aligned MMM slots with active \(mmmScope.localizedTitle(language)) nodes.",
+            fr: "Slots MMM alignés sur les nœuds \(mmmScope.localizedTitle(language)).",
+            es: "Slots MMM alineados con nodos \(mmmScope.localizedTitle(language)).",
+            pt: "Slots MMM alinhados com nós \(mmmScope.localizedTitle(language)).",
+            ru: "Слоты MMM выровнены под активные узлы (\(mmmScope.localizedTitle(language))).",
+            ja: "MMM スロットをアクティブなノード（\(mmmScope.localizedTitle(language))）に合わせました。",
+            zh: "已将 MMM 槽位对齐至 \(mmmScope.localizedTitle(language)) 活跃节点。"
+        )
     }
 
     func addMultiModelSlot(modelId: String, displayName: String, role: MultiModelRole, estimatedRamGB: Double) {
         let cleanId = modelId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanId.isEmpty else { return }
-        let target = mmmAvailableTargets.first ?? (nodes.first?.name ?? "Lokal")
+        let localLabel = tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
+        let target = mmmAvailableTargets.first ?? (nodes.first?.name ?? localLabel)
         mmmSlots.append(
             MultiModelSlot(
                 modelId: cleanId,
@@ -2669,16 +2981,18 @@ final class ClusterViewModel: ObservableObject {
     func duplicateMultiModelSlot(_ id: UUID) {
         guard let idx = mmmSlots.firstIndex(where: { $0.id == id }) else { return }
         let source = mmmSlots[idx]
-        let targets = mmmAvailableTargets.isEmpty ? ["Lokal"] : mmmAvailableTargets
+        let localLabel = tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
+        let targets = mmmAvailableTargets.isEmpty ? [localLabel] : mmmAvailableTargets
         let nextTarget: String
         if let curTIdx = targets.firstIndex(of: source.assignedTarget), targets.count > 1 {
             nextTarget = targets[(curTIdx + 1) % targets.count]
         } else {
             nextTarget = source.assignedTarget
         }
+        let replicaLabel = tr(de: "Replikat", en: "Replica", fr: "Réplique", es: "Réplica", pt: "Réplica", ru: "Реплика", ja: "レプリカ", zh: "副本")
         let copy = MultiModelSlot(
             modelId: source.modelId,
-            displayName: "\(source.displayName) (Replikat)",
+            displayName: "\(source.displayName) (\(replicaLabel))",
             role: source.role == .primary ? .specialist : source.role,
             assignedTarget: nextTarget,
             endpointURL: source.endpointURL,
@@ -2687,7 +3001,16 @@ final class ClusterViewModel: ObservableObject {
         )
         mmmSlots.insert(copy, at: idx + 1)
         saveMultiModelConfiguration()
-        mmmStatusMessage = "Slot '\(source.displayName)' dupliziert auf \(nextTarget)."
+        mmmStatusMessage = tr(
+            de: "Slot '\(source.displayName)' dupliziert auf \(nextTarget).",
+            en: "Duplicated slot '\(source.displayName)' onto \(nextTarget).",
+            fr: "Slot « \(source.displayName) » dupliqué sur \(nextTarget).",
+            es: "Slot «\(source.displayName)» duplicado en \(nextTarget).",
+            pt: "Slot '\(source.displayName)' duplicado para \(nextTarget).",
+            ru: "Слот '\(source.displayName)' дублирован на \(nextTarget).",
+            ja: "スロット '\(source.displayName)' を \(nextTarget) に複製しました。",
+            zh: "已将槽位 '\(source.displayName)' 复制到 \(nextTarget)。"
+        )
     }
 
     /// 1-Click Automatic Cluster Setup for Multi-Model-Mode (MMM).
@@ -2698,7 +3021,8 @@ final class ClusterViewModel: ObservableObject {
         mmmAutoProfile = chosenProfile
         mmmStrategy = chosenProfile.recommendedStrategy
 
-        let targets = mmmAvailableTargets.isEmpty ? [nodes.first?.name ?? "Lokal"] : mmmAvailableTargets
+        let localLabel = tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
+        let targets = mmmAvailableTargets.isEmpty ? [nodes.first?.name ?? localLabel] : mmmAvailableTargets
         let usablePool = max(8.0, mmmUsableVramPoolGB)
         let liveModels = modelPresets.filter(\.isLiveDiscovered)
         let sourcePool = liveModels.isEmpty ? modelPresets : liveModels
@@ -2760,8 +3084,19 @@ final class ClusterViewModel: ObservableObject {
         }
 
         saveMultiModelConfiguration()
-        let sourceNote = liveModels.isEmpty ? "Katalog-Referenz" : "Live-Erkennung"
-        mmmAutoSetupSummary = "Auto-Setup (\(chosenProfile.rawValue)): \(mmmSlots.count) Modelle (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM) auf \(targets.count) Knoten (\(sourceNote)) eingerichtet."
+        let sourceNote = liveModels.isEmpty
+            ? tr(de: "Katalog-Referenz", en: "Catalog Reference", fr: "Catalogue de référence", es: "Referencia de catálogo", pt: "Referência de catálogo", ru: "Справочник моделей", ja: "カタログ参照", zh: "参考目录")
+            : tr(de: "Live-Erkennung", en: "Live Discovery", fr: "Détection en direct", es: "Detección en vivo", pt: "Deteção ao vivo", ru: "Живое обнаружение", ja: "ライブ検出", zh: "实时发现")
+        mmmAutoSetupSummary = tr(
+            de: "Auto-Setup (\(chosenProfile.localizedTitle(language))): \(mmmSlots.count) Modelle (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM) auf \(targets.count) Knoten (\(sourceNote)) eingerichtet.",
+            en: "Auto-Setup (\(chosenProfile.localizedTitle(language))): Configured \(mmmSlots.count) models (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM) across \(targets.count) node(s) (\(sourceNote)).",
+            fr: "Auto-Setup (\(chosenProfile.localizedTitle(language))) : \(mmmSlots.count) modèles (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) Go VRAM) sur \(targets.count) nœud(s) (\(sourceNote)).",
+            es: "Auto-Setup (\(chosenProfile.localizedTitle(language))): \(mmmSlots.count) modelos (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM) en \(targets.count) nodo(s) (\(sourceNote)).",
+            pt: "Auto-Setup (\(chosenProfile.localizedTitle(language))): \(mmmSlots.count) modelos (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM) em \(targets.count) nó(s) (\(sourceNote)).",
+            ru: "Автонастройка (\(chosenProfile.localizedTitle(language))): \(mmmSlots.count) моделей (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) ГБ VRAM) на \(targets.count) узл. (\(sourceNote)).",
+            ja: "自動構成 (\(chosenProfile.localizedTitle(language))): \(mmmSlots.count) モデル (\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM) を \(targets.count) ノードに配置（\(sourceNote)）。",
+            zh: "自动配置 (\(chosenProfile.localizedTitle(language)))：已在 \(targets.count) 个节点上配置 \(mmmSlots.count) 个模型（\(String(format: "%.1f", mmmTotalRequiredVramGB)) / \(String(format: "%.1f", usablePool)) GB VRAM · \(sourceNote)）。"
+        )
         mmmStatusMessage = mmmAutoSetupSummary
     }
 
@@ -2785,9 +3120,27 @@ final class ClusterViewModel: ObservableObject {
         }
         saveMultiModelConfiguration()
         if disabledCount > 0 {
-            mmmStatusMessage = "VRAM-Optimierung: \(disabledCount) Slot(s) pausiert, \(keptActive) aktiv (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB)."
+            mmmStatusMessage = tr(
+                de: "VRAM-Optimierung: \(disabledCount) Slot(s) pausiert, \(keptActive) aktiv (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB).",
+                en: "VRAM Optimization: paused \(disabledCount) slot(s), \(keptActive) active (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB).",
+                fr: "Optimisation VRAM : \(disabledCount) slot(s) en pause, \(keptActive) actif(s) (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) Go).",
+                es: "Optimización VRAM: \(disabledCount) slot(s) en pausa, \(keptActive) activos (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB).",
+                pt: "Otimização VRAM: \(disabledCount) slot(s) pausado(s), \(keptActive) ativo(s) (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB).",
+                ru: "Оптимизация VRAM: приостановлено \(disabledCount), активно \(keptActive) (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) ГБ).",
+                ja: "VRAM 最適化: \(disabledCount) スロット停止、\(keptActive) 有効 (\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB)。",
+                zh: "显存优化：已暂停 \(disabledCount) 个槽位，保留 \(keptActive) 个活跃（\(String(format: "%.1f", running)) / \(String(format: "%.1f", pool)) GB）。"
+            )
         } else {
-            mmmStatusMessage = "VRAM-Prüfung OK: Alle \(keptActive) aktiven Modelle passen sicher in \(String(format: "%.1f", pool)) GB."
+            mmmStatusMessage = tr(
+                de: "VRAM-Prüfung OK: Alle \(keptActive) aktiven Modelle passen sicher in \(String(format: "%.1f", pool)) GB.",
+                en: "VRAM Check OK: All \(keptActive) active models fit safely within \(String(format: "%.1f", pool)) GB.",
+                fr: "Vérif. VRAM OK : Les \(keptActive) modèles actifs tiennent dans \(String(format: "%.1f", pool)) Go.",
+                es: "VRAM OK: Los \(keptActive) modelos activos caben en \(String(format: "%.1f", pool)) GB.",
+                pt: "VRAM OK: Todos os \(keptActive) modelos ativos cabem em \(String(format: "%.1f", pool)) GB.",
+                ru: "Проверка VRAM OK: Все \(keptActive) активные модели помещаются в \(String(format: "%.1f", pool)) ГБ.",
+                ja: "VRAM 検査 OK: 有効な \(keptActive) モデルすべて \(String(format: "%.1f", pool)) GB 内に収まります。",
+                zh: "显存校验通过：全部 \(keptActive) 个活跃模型均安全适配于 \(String(format: "%.1f", pool)) GB 内。"
+            )
         }
     }
 
@@ -2826,7 +3179,16 @@ final class ClusterViewModel: ObservableObject {
         mmmAutoProfile = decoded.autoProfile
         mmmActiveClientCount = max(1, decoded.activeClientCount)
         mmmSlots = decoded.slots
-        mmmStatusMessage = "Gespeicherte MMM-Konfiguration (\(decoded.slots.count) Slots) geladen."
+        mmmStatusMessage = tr(
+            de: "Gespeicherte MMM-Konfiguration (\(decoded.slots.count) Slots) geladen.",
+            en: "Loaded saved MMM configuration (\(decoded.slots.count) slots).",
+            fr: "Configuration MMM enregistrée chargée (\(decoded.slots.count) slots).",
+            es: "Configuración MMM guardada cargada (\(decoded.slots.count) slots).",
+            pt: "Configuração MMM guardada carregada (\(decoded.slots.count) slots).",
+            ru: "Загружена сохранённая конфигурация MMM (\(decoded.slots.count) слотов).",
+            ja: "保存済みの MMM 設定（\(decoded.slots.count) スロット）を読み込みました。",
+            zh: "已加载保存的 MMM 配置（共 \(decoded.slots.count) 个槽位）。"
+        )
         return true
     }
 
@@ -2851,7 +3213,7 @@ final class ClusterViewModel: ObservableObject {
         guard !isRunningMultiModel else { return }
         let active = mmmActiveSlots
         guard !active.isEmpty else {
-            mmmStatusMessage = "Bitte mindestens einen Modell-Slot aktivieren."
+            mmmStatusMessage = tr(de: "Bitte mindestens einen Modell-Slot aktivieren.", en: "Please enable at least one model slot.", fr: "Veuillez activer au moins un slot de modèle.", es: "Por favor activa al menos un slot de modelo.", pt: "Por favor ative pelo menos um slot de modelo.", ru: "Включите хотя бы один слот модели.", ja: "少なくとも1つのモデルスロットを有効にしてください。", zh: "请至少启用一个模型槽位。")
             return
         }
 
@@ -2866,9 +3228,11 @@ final class ClusterViewModel: ObservableObject {
         let poolVram = mmmUsableVramPoolGB
         let formatter = ISO8601DateFormatter()
 
+        let stratTitle = strategy.localizedTitle(language)
+        let scopeTitle = scope.localizedTitle(language)
         mmmStatusMessage = isSimulated
-            ? "Simuliere \(strategy.rawValue) über \(active.count) Modelle (\(scope.rawValue))..."
-            : "Führe \(strategy.rawValue) über \(active.count) Live-Modelle aus..."
+            ? tr(de: "Simuliere \(stratTitle) über \(active.count) Modelle (\(scopeTitle))...", en: "Simulating \(stratTitle) across \(active.count) models (\(scopeTitle))...", fr: "Simulation de \(stratTitle) sur \(active.count) modèles (\(scopeTitle))...", es: "Simulando \(stratTitle) en \(active.count) modelos (\(scopeTitle))...", pt: "A simular \(stratTitle) em \(active.count) modelos (\(scopeTitle))...", ru: "Симуляция \(stratTitle) на \(active.count) моделях (\(scopeTitle))...", ja: "\(active.count) モデルで \(stratTitle) をシミュレーション中 (\(scopeTitle))...", zh: "正在模拟 \(stratTitle)（\(active.count) 个模型 · \(scopeTitle)）...")
+            : tr(de: "Führe \(stratTitle) über \(active.count) Live-Modelle aus...", en: "Executing \(stratTitle) across \(active.count) live models...", fr: "Exécution de \(stratTitle) sur \(active.count) modèles actifs...", es: "Ejecutando \(stratTitle) en \(active.count) modelos activos...", pt: "A executar \(stratTitle) em \(active.count) modelos ativos...", ru: "Выполнение \(stratTitle) на \(active.count) моделях...", ja: "\(active.count) 台のライブモデルで \(stratTitle) を実行中...", zh: "正在运行 \(stratTitle)（\(active.count) 个在线模型）...")
 
         Task {
             if isSimulated {
@@ -2901,7 +3265,16 @@ final class ClusterViewModel: ObservableObject {
                     totalVramUsedGB: usedVram,
                     usableVramPoolGB: poolVram,
                     speedupFactor: speedup,
-                    responsePreview: "Simulation (\(strategy.rawValue)): \(active.count) Modelle auf \(scope.rawValue) kombiniert (\(String(format: "%.1f", combinedTok)) tok/s, \(String(format: "%.2fx", speedup)) vs. Einzelmodell).",
+                    responsePreview: tr(
+                        de: "Simulation (\(stratTitle)): \(active.count) Modelle auf \(scopeTitle) kombiniert (\(String(format: "%.1f", combinedTok)) tok/s, \(String(format: "%.2fx", speedup)) vs. Einzelmodell).",
+                        en: "Simulation (\(stratTitle)): combined \(active.count) models across \(scopeTitle) (\(String(format: "%.1f", combinedTok)) tok/s, \(String(format: "%.2fx", speedup)) vs. single model).",
+                        fr: "Simulation (\(stratTitle)) : \(active.count) modèles combinés sur \(scopeTitle) (\(String(format: "%.1f", combinedTok)) tok/s, \(String(format: "%.2fx", speedup)) vs modèle unique).",
+                        es: "Simulación (\(stratTitle)): \(active.count) modelos combinados en \(scopeTitle) (\(String(format: "%.1f", combinedTok)) tok/s, \(String(format: "%.2fx", speedup)) vs modelo único).",
+                        pt: "Simulação (\(stratTitle)): \(active.count) modelos combinados em \(scopeTitle) (\(String(format: "%.1f", combinedTok)) tok/s, \(String(format: "%.2fx", speedup)) vs modelo único).",
+                        ru: "Симуляция (\(stratTitle)): \(active.count) моделей на \(scopeTitle) (\(String(format: "%.1f", combinedTok)) tok/с, \(String(format: "%.2fx", speedup)) к 1 модели).",
+                        ja: "シミュレーション (\(stratTitle)): \(scopeTitle) で \(active.count) モデル統合 (\(String(format: "%.1f", combinedTok)) tok/s, 単体比 \(String(format: "%.2fx", speedup)))。",
+                        zh: "模拟完成 (\(stratTitle))：已在 \(scopeTitle) 上组合 \(active.count) 个模型（\(String(format: "%.1f", combinedTok)) tok/s，单模型加速比 \(String(format: "%.2fx", speedup))）。"
+                    ),
                     isLiveExecution: false
                 )
                 mmmLastResult = res
@@ -2910,7 +3283,16 @@ final class ClusterViewModel: ObservableObject {
                 if sciAutoRecordHistory {
                     recordScienceHistoryFromMMM(res)
                 }
-                mmmStatusMessage = "Simulation abgeschlossen (\(active.count) Modelle · \(String(format: "%.1f", combinedTok)) tok/s)."
+                mmmStatusMessage = tr(
+                    de: "Simulation abgeschlossen (\(active.count) Modelle · \(String(format: "%.1f", combinedTok)) tok/s).",
+                    en: "Simulation complete (\(active.count) models · \(String(format: "%.1f", combinedTok)) tok/s).",
+                    fr: "Simulation terminée (\(active.count) modèles · \(String(format: "%.1f", combinedTok)) tok/s).",
+                    es: "Simulación completada (\(active.count) modelos · \(String(format: "%.1f", combinedTok)) tok/s).",
+                    pt: "Simulação concluída (\(active.count) modelos · \(String(format: "%.1f", combinedTok)) tok/s).",
+                    ru: "Симуляция завершена (\(active.count) моделей · \(String(format: "%.1f", combinedTok)) tok/с).",
+                    ja: "シミュレーション完了（\(active.count) モデル · \(String(format: "%.1f", combinedTok)) tok/s）。",
+                    zh: "模拟完成（\(active.count) 个模型 · \(String(format: "%.1f", combinedTok)) tok/s）。"
+                )
                 isRunningMultiModel = false
                 return
             }
@@ -2926,7 +3308,16 @@ final class ClusterViewModel: ObservableObject {
                 let slot = updatedSlots[idx]
                 let base = slot.endpointURL.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard let url = URL(string: "\(base)/chat/completions") else {
-                    lastError = "Ungültige URL für \(slot.displayName)"
+                    lastError = tr(
+                        de: "Ungültige URL für \(slot.displayName)",
+                        en: "Invalid URL for \(slot.displayName)",
+                        fr: "URL invalide pour \(slot.displayName)",
+                        es: "URL no válida para \(slot.displayName)",
+                        pt: "URL inválido para \(slot.displayName)",
+                        ru: "Некорректный URL для \(slot.displayName)",
+                        ja: "\(slot.displayName) の URL が無効です",
+                        zh: "\(slot.displayName) 的 URL 无效"
+                    )
                     continue
                 }
                 do {
@@ -2943,7 +3334,17 @@ final class ClusterViewModel: ObservableObject {
             mmmSlots = updatedSlots
 
             guard successCount > 0 else {
-                mmmStatusMessage = "Echtbetrieb: Kein aktiver MMM-Endpunkt erreichbar (\(lastError.isEmpty ? openCodeBaseURL : lastError)). Starte oMLX, Ollama oder llama.cpp – oder aktiviere den Simulationsmodus."
+                let detail = lastError.isEmpty ? openCodeBaseURL : lastError
+                mmmStatusMessage = tr(
+                    de: "Echtbetrieb: Kein aktiver MMM-Endpunkt erreichbar (\(detail)). Starte oMLX, Ollama oder llama.cpp – oder aktiviere den Simulationsmodus.",
+                    en: "Live mode: no active MMM endpoint reachable (\(detail)). Start oMLX, Ollama, or llama.cpp – or enable simulation mode.",
+                    fr: "Mode réel : aucun endpoint MMM actif joignable (\(detail)). Démarrez oMLX, Ollama ou llama.cpp — ou activez la simulation.",
+                    es: "Modo real: ningún endpoint MMM activo accesible (\(detail)). Inicia oMLX, Ollama o llama.cpp — o activa la simulación.",
+                    pt: "Modo real: nenhum endpoint MMM ativo alcançável (\(detail)). Inicie oMLX, Ollama ou llama.cpp — ou ative a simulação.",
+                    ru: "Боевой режим: нет доступных конечных точек MMM (\(detail)). Запустите oMLX, Ollama или llama.cpp — или включите симуляцию.",
+                    ja: "ライブモード: 有効な MMM エンドポイントに到達できません (\(detail))。oMLX・Ollama・llama.cpp を起動するかシミュレーションを有効にしてください。",
+                    zh: "实时模式：无法连接任何活跃的 MMM 端点 (\(detail))。请先启动 oMLX、Ollama 或 llama.cpp，或开启模拟模式。"
+                )
                 isRunningMultiModel = false
                 return
             }
@@ -2960,7 +3361,16 @@ final class ClusterViewModel: ObservableObject {
                 totalVramUsedGB: usedVram,
                 usableVramPoolGB: poolVram,
                 speedupFactor: speedup,
-                responsePreview: "Live-Ausführung (\(promptText.prefix(64))...): \(successCount)/\(active.count) Modelle erfolgreich gestreamt.",
+                responsePreview: tr(
+                    de: "Live-Ausführung (\(promptText.prefix(64))...): \(successCount)/\(active.count) Modelle erfolgreich gestreamt.",
+                    en: "Live execution (\(promptText.prefix(64))...): \(successCount)/\(active.count) models streamed cleanly.",
+                    fr: "Exécution directe (\(promptText.prefix(64))...) : \(successCount)/\(active.count) modèles diffusés.",
+                    es: "Ejecución en vivo (\(promptText.prefix(64))...): \(successCount)/\(active.count) modelos transmitidos.",
+                    pt: "Execução ao vivo (\(promptText.prefix(64))...): \(successCount)/\(active.count) modelos em streaming.",
+                    ru: "Выполнение LIVE (\(promptText.prefix(64))...): \(successCount)/\(active.count) моделей успешно ответили.",
+                    ja: "ライブ実行 (\(promptText.prefix(64))...): \(successCount)/\(active.count) モデルがストリーミング完了。",
+                    zh: "实时运行 (\(promptText.prefix(64))...)：\(successCount)/\(active.count) 个模型已成功完成流式输出。"
+                ),
                 isLiveExecution: true
             )
             mmmLastResult = res
@@ -2969,7 +3379,16 @@ final class ClusterViewModel: ObservableObject {
             if sciAutoRecordHistory {
                 recordScienceHistoryFromMMM(res)
             }
-            mmmStatusMessage = "Live-Ausführung abgeschlossen (\(successCount) Modelle · \(String(format: "%.1f", combined)) tok/s)."
+            mmmStatusMessage = tr(
+                de: "Live-Ausführung abgeschlossen (\(successCount) Modelle · \(String(format: "%.1f", combined)) tok/s).",
+                en: "Live execution finished (\(successCount) models · \(String(format: "%.1f", combined)) tok/s).",
+                fr: "Exécution directe terminée (\(successCount) modèles · \(String(format: "%.1f", combined)) tok/s).",
+                es: "Ejecución en vivo finalizada (\(successCount) modelos · \(String(format: "%.1f", combined)) tok/s).",
+                pt: "Execução ao vivo concluída (\(successCount) modelos · \(String(format: "%.1f", combined)) tok/s).",
+                ru: "Выполнение LIVE завершено (\(successCount) моделей · \(String(format: "%.1f", combined)) tok/с).",
+                ja: "ライブ実行完了（\(successCount) モデル · \(String(format: "%.1f", combined)) tok/s）。",
+                zh: "实时运行完成（\(successCount) 个模型 · \(String(format: "%.1f", combined)) tok/s）。"
+            )
             isRunningMultiModel = false
         }
     }
@@ -2998,8 +3417,8 @@ final class ClusterViewModel: ObservableObject {
         let entry = ScienceHistoryEntry(
             timestamp: currentClockTime(),
             positionFilter: .globalAll,
-            scopeLabel: "MMM · \(res.scope.rawValue)",
-            modelName: "\(res.strategy.rawValue) (\(res.activeModelsCount)x)",
+            scopeLabel: "MMM · \(res.scope.localizedTitle(language))",
+            modelName: "\(res.strategy.localizedTitle(language)) (\(res.activeModelsCount)x)",
             nodeCount: max(1, mmmAvailableTargets.count),
             usableVramGB: res.usableVramPoolGB,
             ttftMs: res.aggregateTtftMs,
@@ -3054,15 +3473,16 @@ final class ClusterViewModel: ObservableObject {
         wanTailscaleInstalled = !tsBin.isEmpty
         wanWireGuardInstalled = !wgBin.isEmpty
 
-        let localHost = Host.current().localizedName ?? "Lokaler Mac"
+        let localHost = Host.current().localizedName ?? tr(de: "Lokaler Mac", en: "Local Mac", fr: "Mac local", es: "Mac local", pt: "Mac local", ru: "Локальный Mac", ja: "ローカル Mac", zh: "本地 Mac")
         let localUsable = AppleSiliconChipFamily.usableVramGB(for: localRamGB)
         let localBw = AppleSiliconChipFamily.inferBandwidth(from: localChipName)
+        let localHostRegion = tr(de: "Lokal (Host)", en: "Local (Host)", fr: "Local (Hôte)", es: "Local (Host)", pt: "Local (Host)", ru: "Локально (Хост)", ja: "ローカル (ホスト)", zh: "本地（主节点）")
 
         var discovered: [WanPeerNode] = [
             WanPeerNode(
                 id: "wan-local-host",
                 displayName: localHost,
-                region: "Lokal (Host)",
+                region: localHostRegion,
                 chip: localChipName,
                 ramGB: localRamGB,
                 usableVramGB: localUsable,
@@ -3140,15 +3560,43 @@ final class ClusterViewModel: ObservableObject {
                     senderRegion: "System",
                     senderChip: localChipName,
                     timestamp: currentClockTime(),
-                    text: "Raum \(wanRoomCode) bereit. Verbinde Macs über Tailscale, WireGuard oder libp2p-QUIC und nutze /status oder /layers im Chat.",
+                    text: tr(
+                        de: "Raum \(wanRoomCode) bereit. Verbinde Macs über Tailscale, WireGuard oder libp2p-QUIC und nutze /status oder /layers im Chat.",
+                        en: "Room \(wanRoomCode) ready. Connect Macs via Tailscale, WireGuard, or libp2p-QUIC and use /status or /layers in chat.",
+                        fr: "Salle \(wanRoomCode) prête. Connectez vos Macs via Tailscale, WireGuard ou libp2p-QUIC et utilisez /status ou /layers.",
+                        es: "Sala \(wanRoomCode) lista. Conecta Macs por Tailscale, WireGuard o libp2p-QUIC y usa /status o /layers.",
+                        pt: "Sala \(wanRoomCode) pronta. Ligue Macs via Tailscale, WireGuard ou libp2p-QUIC e use /status ou /layers.",
+                        ru: "Комната \(wanRoomCode) готова. Подключите Mac через Tailscale, WireGuard или libp2p-QUIC (/status, /layers).",
+                        ja: "ルーム \(wanRoomCode) 準備完了。Tailscale / WireGuard / libp2p-QUIC で接続し /status や /layers を利用できます。",
+                        zh: "房间 \(wanRoomCode) 已就绪。可通过 Tailscale、WireGuard 或 libp2p-QUIC 连接 Mac，并在聊天中使用 /status 或 /layers。"
+                    ),
                     isSystemEvent: true,
                     isSelf: false
                 )
             ]
         }
+        let readyWord = tr(de: "bereit", en: "ready", fr: "prêt", es: "listo", pt: "pronto", ru: "готов", ja: "準備完了", zh: "就绪")
         wanStatusNote = wanTailscaleInstalled
-            ? "Tailscale erkannt (\(wanTailscaleIP.isEmpty ? "bereit" : wanTailscaleIP)) · \(wanPeers.count) Knoten im Verbund."
-            : "Bereit für Tailscale / WireGuard / libp2p-QUIC Mesh (\(wanPeers.count) lokaler Knoten)."
+            ? tr(
+                de: "Tailscale erkannt (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · \(wanPeers.count) Knoten im Verbund.",
+                en: "Tailscale detected (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · \(wanPeers.count) node(s) in cluster.",
+                fr: "Tailscale détecté (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · \(wanPeers.count) nœud(s) dans le cluster.",
+                es: "Tailscale detectado (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · \(wanPeers.count) nodo(s) en el clúster.",
+                pt: "Tailscale detetado (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · \(wanPeers.count) nó(s) no cluster.",
+                ru: "Tailscale обнаружен (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · \(wanPeers.count) узл. в кластере.",
+                ja: "Tailscale 検出 (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · クラスタ内 \(wanPeers.count) ノード。",
+                zh: "已检测到 Tailscale (\(wanTailscaleIP.isEmpty ? readyWord : wanTailscaleIP)) · 集群共 \(wanPeers.count) 个节点。"
+            )
+            : tr(
+                de: "Bereit für Tailscale / WireGuard / libp2p-QUIC Mesh (\(wanPeers.count) lokaler Knoten).",
+                en: "Ready for Tailscale / WireGuard / libp2p-QUIC Mesh (\(wanPeers.count) local node(s)).",
+                fr: "Prêt pour maillage Tailscale / WireGuard / libp2p-QUIC (\(wanPeers.count) nœud local).",
+                es: "Listo para malla Tailscale / WireGuard / libp2p-QUIC (\(wanPeers.count) nodo local).",
+                pt: "Pronto para malha Tailscale / WireGuard / libp2p-QUIC (\(wanPeers.count) nó local).",
+                ru: "Готово к сети Tailscale / WireGuard / libp2p-QUIC (\(wanPeers.count) лок. узел).",
+                ja: "Tailscale / WireGuard / libp2p-QUIC メッシュ待機中（ローカル \(wanPeers.count) ノード）。",
+                zh: "Tailscale / WireGuard / libp2p-QUIC 网格已就绪（当前 \(wanPeers.count) 个本地节点）。"
+            )
     }
 
     func toggleWanConnection() {
@@ -3162,12 +3610,30 @@ final class ClusterViewModel: ObservableObject {
                     senderRegion: "System",
                     senderChip: "",
                     timestamp: currentClockTime(),
-                    text: "Verbindung zum Internet-Verbund \(wanRoomCode) getrennt.",
+                    text: tr(
+                        de: "Verbindung zum Internet-Verbund \(wanRoomCode) getrennt.",
+                        en: "Disconnected from Internet cluster \(wanRoomCode).",
+                        fr: "Déconnecté du cluster Internet \(wanRoomCode).",
+                        es: "Desconectado del clúster de Internet \(wanRoomCode).",
+                        pt: "Desligado do cluster Internet \(wanRoomCode).",
+                        ru: "Отключено от интернет-кластера \(wanRoomCode).",
+                        ja: "インターネットクラスタ \(wanRoomCode) から切断しました。",
+                        zh: "已断开互联网集群 \(wanRoomCode) 的连接。"
+                    ),
                     isSystemEvent: true,
                     isSelf: false
                 )
             )
-            wanStatusNote = "Getrennt vom Internet-Verbund."
+            wanStatusNote = tr(
+                de: "Getrennt vom Internet-Verbund.",
+                en: "Disconnected from Internet cluster.",
+                fr: "Déconnecté du cluster Internet.",
+                es: "Desconectado del clúster de Internet.",
+                pt: "Desligado do cluster Internet.",
+                ru: "Отключено от интернет-кластера.",
+                ja: "インターネットクラスタから切断済み。",
+                zh: "已断开互联网集群。"
+            )
             return
         }
 
@@ -3179,7 +3645,16 @@ final class ClusterViewModel: ObservableObject {
                 senderRegion: "System",
                 senderChip: localChipName,
                 timestamp: currentClockTime(),
-                text: "Beigetreten: \(wanRoomCode) über \(wanTransport.rawValue) (MTU \(wanTransport.mtuBytes)).",
+                text: tr(
+                    de: "Beigetreten: \(wanRoomCode) über \(wanTransport.localizedTitle(language)) (MTU \(wanTransport.mtuBytes)).",
+                    en: "Joined: \(wanRoomCode) via \(wanTransport.localizedTitle(language)) (MTU \(wanTransport.mtuBytes)).",
+                    fr: "Connecté à \(wanRoomCode) via \(wanTransport.localizedTitle(language)) (MTU \(wanTransport.mtuBytes)).",
+                    es: "Conectado a \(wanRoomCode) vía \(wanTransport.localizedTitle(language)) (MTU \(wanTransport.mtuBytes)).",
+                    pt: "Ligado a \(wanRoomCode) via \(wanTransport.localizedTitle(language)) (MTU \(wanTransport.mtuBytes)).",
+                    ru: "Подключено к \(wanRoomCode) через \(wanTransport.localizedTitle(language)) (MTU \(wanTransport.mtuBytes)).",
+                    ja: "参加完了: \(wanRoomCode) (\(wanTransport.localizedTitle(language)), MTU \(wanTransport.mtuBytes))。",
+                    zh: "已加入房间 \(wanRoomCode)（经由 \(wanTransport.localizedTitle(language))，MTU \(wanTransport.mtuBytes)）。"
+                ),
                 isSystemEvent: true,
                 isSelf: false
             )
@@ -3202,7 +3677,16 @@ final class ClusterViewModel: ObservableObject {
                 task.send(.string(str)) { _ in }
             }
         }
-        wanStatusNote = "Aktiv verbunden mit \(wanRoomCode) (\(wanPeers.count) Knoten · \(Int(wanTotalRamGB)) GB RAM)."
+        wanStatusNote = tr(
+            de: "Aktiv verbunden mit \(wanRoomCode) (\(wanPeers.count) Knoten · \(Int(wanTotalRamGB)) GB RAM).",
+            en: "Active connection to \(wanRoomCode) (\(wanPeers.count) nodes · \(Int(wanTotalRamGB)) GB RAM).",
+            fr: "Connecté à \(wanRoomCode) (\(wanPeers.count) nœuds · \(Int(wanTotalRamGB)) Go RAM).",
+            es: "Conectado activamente a \(wanRoomCode) (\(wanPeers.count) nodos · \(Int(wanTotalRamGB)) GB RAM).",
+            pt: "Ligado a \(wanRoomCode) (\(wanPeers.count) nós · \(Int(wanTotalRamGB)) GB RAM).",
+            ru: "Активное подключение к \(wanRoomCode) (\(wanPeers.count) узл. · \(Int(wanTotalRamGB)) ГБ ОЗУ).",
+            ja: "\(wanRoomCode) に接続中（\(wanPeers.count) ノード · \(Int(wanTotalRamGB)) GB RAM）。",
+            zh: "已连接到 \(wanRoomCode)（\(wanPeers.count) 个节点 · \(Int(wanTotalRamGB)) GB 内存）。"
+        )
     }
 
     private func listenForWanMessages(_ task: URLSessionWebSocketTask) {
@@ -3267,7 +3751,16 @@ final class ClusterViewModel: ObservableObject {
                 senderRegion: peer.region,
                 senderChip: peer.chip,
                 timestamp: currentClockTime(),
-                text: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) ist dem Verbund beigetreten.",
+                text: tr(
+                    de: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) ist dem Verbund beigetreten.",
+                    en: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) joined the cluster.",
+                    fr: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) Go, RTT \(Int(peer.rttMs)) ms) a rejoint le cluster.",
+                    es: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) se unió al clúster.",
+                    pt: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) juntou-se ao cluster.",
+                    ru: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) ГБ, RTT \(Int(peer.rttMs)) мс) присоединился к кластеру.",
+                    ja: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) がクラスタに参加しました。",
+                    zh: "\(peer.displayName) (\(peer.chip), \(Int(peer.ramGB)) GB, RTT \(Int(peer.rttMs)) ms) 已加入集群。"
+                ),
                 isSystemEvent: true,
                 isSelf: false
             )
@@ -3310,7 +3803,16 @@ final class ClusterViewModel: ObservableObject {
                 senderRegion: "Global",
                 senderChip: "Swarm-\(count)",
                 timestamp: currentClockTime(),
-                text: "Weltweiter Mega-Verbund mit \(wanPeers.count) Macs (\(Int(wanTotalRamGB)) GB Gesamt-RAM / \(Int(wanTotalUsableVramGB)) GB nutzbar) initialisiert.",
+                text: tr(
+                    de: "Weltweiter Mega-Verbund mit \(wanPeers.count) Macs (\(Int(wanTotalRamGB)) GB Gesamt-RAM / \(Int(wanTotalUsableVramGB)) GB nutzbar) initialisiert.",
+                    en: "Global Mega Cluster initialized with \(wanPeers.count) Macs (\(Int(wanTotalRamGB)) GB Total RAM / \(Int(wanTotalUsableVramGB)) GB usable).",
+                    fr: "Méga-cluster mondial initialisé avec \(wanPeers.count) Macs (\(Int(wanTotalRamGB)) Go RAM totale / \(Int(wanTotalUsableVramGB)) Go utilisables).",
+                    es: "Megaclúster global inicializado con \(wanPeers.count) Macs (\(Int(wanTotalRamGB)) GB RAM total / \(Int(wanTotalUsableVramGB)) GB utilizables).",
+                    pt: "Megacluster global inicializado com \(wanPeers.count) Macs (\(Int(wanTotalRamGB)) GB RAM total / \(Int(wanTotalUsableVramGB)) GB utilizáveis).",
+                    ru: "Глобальный мега-кластер инициализирован: \(wanPeers.count) Mac (\(Int(wanTotalRamGB)) ГБ ОЗУ / \(Int(wanTotalUsableVramGB)) ГБ доступно).",
+                    ja: "\(wanPeers.count) 台の Mac でグローバル・メガクラスタを初期化しました（総計 \(Int(wanTotalRamGB)) GB / 利用可能 \(Int(wanTotalUsableVramGB)) GB）。",
+                    zh: "已初始化全球超大集群，共 \(wanPeers.count) 台 Mac（总内存 \(Int(wanTotalRamGB)) GB / 可用显存 \(Int(wanTotalUsableVramGB)) GB）。"
+                ),
                 isSystemEvent: true,
                 isSelf: false
             )
@@ -3334,13 +3836,17 @@ final class ClusterViewModel: ObservableObject {
 
     func syncLocalClusterIntoWan(announceInChat: Bool = false) {
         let remoteOnly = wanPeers.filter { !$0.isLocalHost && !$0.id.hasPrefix("local-bridge-") }
+        let localLabel = tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
+        let localMacFallback = tr(de: "Lokaler Mac", en: "Local Mac", fr: "Mac local", es: "Mac local", pt: "Mac local", ru: "Локальный Mac", ja: "ローカル Mac", zh: "本地 Mac")
+        let bridgeSender = tr(de: "Hybrid-Brücke", en: "Hybrid Bridge", fr: "Pont Hybride", es: "Puente Híbrido", pt: "Ponte Híbrida", ru: "Гибридный мост", ja: "ハイブリッドブリッジ", zh: "混合桥接")
+        let bridgeRegion = "\(localLabel) ↔ WAN"
         if isLocalClusterCoupledWithWan {
             let localBridgePeers: [WanPeerNode] = nodes.enumerated().map { idx, node in
                 let tbMbps = Double(node.thunderboltGen >= 5 ? 80000 : 32000)
                 return WanPeerNode(
                     id: idx == 0 ? "local-host" : "local-bridge-\(node.id)",
                     displayName: idx == 0 ? "\(node.name) (Gateway)" : "\(node.name) (TB\(node.thunderboltGen))",
-                    region: "Lokal · TB\(node.thunderboltGen)\(node.rdmaEnabled ? " RDMA" : "")",
+                    region: "\(localLabel) · TB\(node.thunderboltGen)\(node.rdmaEnabled ? " RDMA" : "")",
                     chip: node.chip,
                     ramGB: node.totalRamGB,
                     usableVramGB: node.usableVramGB,
@@ -3356,15 +3862,33 @@ final class ClusterViewModel: ObservableObject {
             }
             wanPeers = localBridgePeers + remoteOnly
             recomputeWanLayerAssignments()
-            wanStatusNote = "Gekoppelt: \(localBridgePeers.count) lokale TB-Macs + \(remoteOnly.count) WAN-Macs (\(Int(wanTotalRamGB)) GB Gesamt-RAM)."
+            wanStatusNote = tr(
+                de: "Gekoppelt: \(localBridgePeers.count) lokale TB-Macs + \(remoteOnly.count) WAN-Macs (\(Int(wanTotalRamGB)) GB Gesamt-RAM).",
+                en: "Coupled: \(localBridgePeers.count) local TB Macs + \(remoteOnly.count) WAN Macs (\(Int(wanTotalRamGB)) GB total RAM).",
+                fr: "Couplé : \(localBridgePeers.count) Macs TB locaux + \(remoteOnly.count) Macs WAN (\(Int(wanTotalRamGB)) Go RAM).",
+                es: "Acoplado: \(localBridgePeers.count) Macs TB locales + \(remoteOnly.count) Macs WAN (\(Int(wanTotalRamGB)) GB RAM).",
+                pt: "Acoplado: \(localBridgePeers.count) Macs TB locais + \(remoteOnly.count) Macs WAN (\(Int(wanTotalRamGB)) GB RAM).",
+                ru: "Объединено: \(localBridgePeers.count) лок. TB-Mac + \(remoteOnly.count) WAN-Mac (\(Int(wanTotalRamGB)) ГБ ОЗУ).",
+                ja: "結合中: ローカル TB Mac \(localBridgePeers.count) 台 + WAN Mac \(remoteOnly.count) 台（総計 \(Int(wanTotalRamGB)) GB RAM）。",
+                zh: "已耦合：\(localBridgePeers.count) 台本地雷雳 Mac + \(remoteOnly.count) 台广域网 Mac（共 \(Int(wanTotalRamGB)) GB 内存）。"
+            )
             if announceInChat {
                 chatMessages.append(
                     ClusterChatMessage(
-                        senderName: "Hybrid-Brücke",
-                        senderRegion: "Lokal ↔ WAN",
+                        senderName: bridgeSender,
+                        senderRegion: bridgeRegion,
                         senderChip: "\(localBridgePeers.count) TB + \(remoteOnly.count) WAN",
                         timestamp: currentClockTime(),
-                        text: "🔗 Lokaler Thunderbolt/RDMA-Verbund (\(localBridgePeers.count) Macs · \(Int(totalPhysicalRamGB)) GB) mit Internet-Cluster gekoppelt. Gesamtspeicher: \(Int(wanTotalRamGB)) GB (\(Int(wanTotalUsableVramGB)) GB nutzbar).",
+                        text: tr(
+                            de: "🔗 Lokaler Thunderbolt/RDMA-Verbund (\(localBridgePeers.count) Macs · \(Int(totalPhysicalRamGB)) GB) mit Internet-Cluster gekoppelt. Gesamtspeicher: \(Int(wanTotalRamGB)) GB (\(Int(wanTotalUsableVramGB)) GB nutzbar).",
+                            en: "🔗 Local Thunderbolt/RDMA cluster (\(localBridgePeers.count) Macs · \(Int(totalPhysicalRamGB)) GB) coupled with Internet cluster. Total RAM: \(Int(wanTotalRamGB)) GB (\(Int(wanTotalUsableVramGB)) GB usable).",
+                            fr: "🔗 Cluster Thunderbolt/RDMA local (\(localBridgePeers.count) Macs · \(Int(totalPhysicalRamGB)) Go) couplé au cluster Internet. Total : \(Int(wanTotalRamGB)) Go (\(Int(wanTotalUsableVramGB)) Go utilisables).",
+                            es: "🔗 Clúster local Thunderbolt/RDMA (\(localBridgePeers.count) Macs · \(Int(totalPhysicalRamGB)) GB) acoplado al clúster de Internet. Total: \(Int(wanTotalRamGB)) GB (\(Int(wanTotalUsableVramGB)) GB utilizables).",
+                            pt: "🔗 Cluster local Thunderbolt/RDMA (\(localBridgePeers.count) Macs · \(Int(totalPhysicalRamGB)) GB) acoplado ao cluster Internet. Total: \(Int(wanTotalRamGB)) GB (\(Int(wanTotalUsableVramGB)) GB utilizáveis).",
+                            ru: "🔗 Локальный TB/RDMA кластер (\(localBridgePeers.count) Mac · \(Int(totalPhysicalRamGB)) ГБ) подключён к интернет-кластеру. Всего: \(Int(wanTotalRamGB)) ГБ (\(Int(wanTotalUsableVramGB)) ГБ доступно).",
+                            ja: "🔗 ローカル Thunderbolt/RDMA (\(localBridgePeers.count) 台 · \(Int(totalPhysicalRamGB)) GB) をインターネットクラスタに結合しました。合計 \(Int(wanTotalRamGB)) GB（利用可能 \(Int(wanTotalUsableVramGB)) GB）。",
+                            zh: "🔗 已将本地雷雳/RDMA 集群（\(localBridgePeers.count) 台 Mac · \(Int(totalPhysicalRamGB)) GB）耦合至互联网集群。总内存：\(Int(wanTotalRamGB)) GB（可用 \(Int(wanTotalUsableVramGB)) GB）。"
+                        ),
                         isSystemEvent: true,
                         isSelf: false
                     )
@@ -3373,8 +3897,8 @@ final class ClusterViewModel: ObservableObject {
         } else {
             let primaryHost = wanPeers.first(where: { $0.id == "local-host" }) ?? WanPeerNode(
                 id: "local-host",
-                displayName: Host.current().localizedName ?? "Lokaler Mac",
-                region: "Lokal",
+                displayName: Host.current().localizedName ?? localMacFallback,
+                region: localLabel,
                 chip: localChipName,
                 ramGB: localRamGB,
                 usableVramGB: AppleSiliconChipFamily.usableVramGB(for: localRamGB),
@@ -3389,15 +3913,33 @@ final class ClusterViewModel: ObservableObject {
             )
             wanPeers = [primaryHost] + remoteOnly
             recomputeWanLayerAssignments()
-            wanStatusNote = "Kopplung gelöst: \(wanPeers.count) Knoten im Internet-Verbund."
+            wanStatusNote = tr(
+                de: "Kopplung gelöst: \(wanPeers.count) Knoten im Internet-Verbund.",
+                en: "Uncoupled: \(wanPeers.count) node(s) in Internet cluster.",
+                fr: "Découplé : \(wanPeers.count) nœud(s) dans le cluster Internet.",
+                es: "Desacoplado: \(wanPeers.count) nodo(s) en el clúster de Internet.",
+                pt: "Desacoplado: \(wanPeers.count) nó(s) no cluster Internet.",
+                ru: "Разъединено: \(wanPeers.count) узл. в интернет-кластере.",
+                ja: "結合解除: インターネットクラスタ内 \(wanPeers.count) ノード。",
+                zh: "已解除耦合：互联网集群剩余 \(wanPeers.count) 个节点。"
+            )
             if announceInChat {
                 chatMessages.append(
                     ClusterChatMessage(
-                        senderName: "Hybrid-Brücke",
-                        senderRegion: "Lokal ↔ WAN",
-                        senderChip: "Getrennt",
+                        senderName: bridgeSender,
+                        senderRegion: bridgeRegion,
+                        senderChip: tr(de: "Getrennt", en: "Detached", fr: "Détaché", es: "Desacoplado", pt: "Desligado", ru: "Отключено", ja: "切断済み", zh: "已断开"),
                         timestamp: currentClockTime(),
-                        text: "🔌 Lokale Thunderbolt-Brücke vom Internet-Cluster getrennt.",
+                        text: tr(
+                            de: "🔌 Lokale Thunderbolt-Brücke vom Internet-Cluster getrennt.",
+                            en: "🔌 Local Thunderbolt bridge uncoupled from Internet cluster.",
+                            fr: "🔌 Pont Thunderbolt local découplé du cluster Internet.",
+                            es: "🔌 Puente Thunderbolt local desacoplado del clúster de Internet.",
+                            pt: "🔌 Ponte Thunderbolt local desligada do cluster Internet.",
+                            ru: "🔌 Локальный мост Thunderbolt отключён от интернет-кластера.",
+                            ja: "🔌 ローカル Thunderbolt ブリッジをインターネットクラスタから切り離しました。",
+                            zh: "🔌 已断开本地 Thunderbolt 网桥与互联网集群的耦合。"
+                        ),
                         isSystemEvent: true,
                         isSelf: false
                     )
@@ -3450,21 +3992,52 @@ final class ClusterViewModel: ObservableObject {
         guard !raw.isEmpty else { return }
         if overrideText == nil { chatInput = "" }
 
-        let sender = Host.current().localizedName ?? "Lokaler Mac"
+        let localLabel = tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
+        let localMacFallback = tr(de: "Lokaler Mac", en: "Local Mac", fr: "Mac local", es: "Mac local", pt: "Mac local", ru: "Локальный Mac", ja: "ローカル Mac", zh: "本地 Mac")
+        let sender = Host.current().localizedName ?? localMacFallback
         var finalText = raw
         if raw == "/status" {
-            finalText = "📊 Status: \(localChipName) · \(Int(localRamGB)) GB RAM · \(localThermalLabel) · \(localPowerLabel) · Transport: \(wanTransport.rawValue)"
+            let localizedTherm = nodes.first?.localizedThermal(language) ?? localThermalLabel
+            let localizedPwr = nodes.first?.localizedPower(language) ?? localPowerLabel
+            finalText = tr(
+                de: "📊 Status: \(localChipName) · \(Int(localRamGB)) GB RAM · \(localizedTherm) · \(localizedPwr) · Transport: \(wanTransport.localizedTitle(language))",
+                en: "📊 Status: \(localChipName) · \(Int(localRamGB)) GB RAM · \(localizedTherm) · \(localizedPwr) · Transport: \(wanTransport.localizedTitle(language))",
+                fr: "📊 Statut : \(localChipName) · \(Int(localRamGB)) Go RAM · \(localizedTherm) · \(localizedPwr) · Transport : \(wanTransport.localizedTitle(language))",
+                es: "📊 Estado: \(localChipName) · \(Int(localRamGB)) GB RAM · \(localizedTherm) · \(localizedPwr) · Transporte: \(wanTransport.localizedTitle(language))",
+                pt: "📊 Estado: \(localChipName) · \(Int(localRamGB)) GB RAM · \(localizedTherm) · \(localizedPwr) · Transporte: \(wanTransport.localizedTitle(language))",
+                ru: "📊 Статус: \(localChipName) · \(Int(localRamGB)) ГБ ОЗУ · \(localizedTherm) · \(localizedPwr) · Транспорт: \(wanTransport.localizedTitle(language))",
+                ja: "📊 状態: \(localChipName) · \(Int(localRamGB)) GB RAM · \(localizedTherm) · \(localizedPwr) · 転送: \(wanTransport.localizedTitle(language))",
+                zh: "📊 状态：\(localChipName) · \(Int(localRamGB)) GB 内存 · \(localizedTherm) · \(localizedPwr) · 传输：\(wanTransport.localizedTitle(language))"
+            )
         } else if raw == "/layers" {
             let myLayers = wanPeers.first(where: \.isLocalHost)?.assignedLayers ?? "Auto"
-            finalText = "🧩 Schichten-Anteil: \(myLayers) für \(selectedModel.displayName) · Verbund-Summe: \(wanPeers.count) Macs (\(Int(wanTotalUsableVramGB)) GB nutzbar)"
+            finalText = tr(
+                de: "🧩 Schichten-Anteil: \(myLayers) für \(selectedModel.displayName) · Verbund-Summe: \(wanPeers.count) Macs (\(Int(wanTotalUsableVramGB)) GB nutzbar)",
+                en: "🧩 Layer Share: \(myLayers) for \(selectedModel.displayName) · Cluster Total: \(wanPeers.count) Macs (\(Int(wanTotalUsableVramGB)) GB usable)",
+                fr: "🧩 Répartition : \(myLayers) pour \(selectedModel.displayName) · Total : \(wanPeers.count) Macs (\(Int(wanTotalUsableVramGB)) Go utilisables)",
+                es: "🧩 Reparto de capas: \(myLayers) para \(selectedModel.displayName) · Total: \(wanPeers.count) Macs (\(Int(wanTotalUsableVramGB)) GB utilizables)",
+                pt: "🧩 Camadas: \(myLayers) para \(selectedModel.displayName) · Total: \(wanPeers.count) Macs (\(Int(wanTotalUsableVramGB)) GB utilizáveis)",
+                ru: "🧩 Доля слоёв: \(myLayers) для \(selectedModel.displayName) · Всего: \(wanPeers.count) Mac (\(Int(wanTotalUsableVramGB)) ГБ доступно)",
+                ja: "🧩 担当層: \(selectedModel.displayName) 用 \(myLayers) · クラスタ計 \(wanPeers.count) 台 (\(Int(wanTotalUsableVramGB)) GB 利用可能)",
+                zh: "🧩 分层配额：\(selectedModel.displayName) 分配 \(myLayers) · 集群总计 \(wanPeers.count) 台 Mac（可用 \(Int(wanTotalUsableVramGB)) GB）"
+            )
         } else if raw == "/ping" {
-            finalText = String(format: "🏓 WAN-Pipeline RTT: %.1f ms · Geschätzte Rate: %.2f tok/s", wanTotalRttMs, wanEstimatedTokPerSec)
+            finalText = String(format: tr(
+                de: "🏓 WAN-Pipeline RTT: %.1f ms · Geschätzte Rate: %.2f tok/s",
+                en: "🏓 WAN Pipeline RTT: %.1f ms · Est. Throughput: %.2f tok/s",
+                fr: "🏓 RTT Pipeline WAN : %.1f ms · Débit est. : %.2f tok/s",
+                es: "🏓 RTT Pipeline WAN: %.1f ms · Tasa est.: %.2f tok/s",
+                pt: "🏓 RTT Pipeline WAN: %.1f ms · Débito est.: %.2f tok/s",
+                ru: "🏓 RTT конвейера WAN: %.1f мс · Оценка: %.2f tok/с",
+                ja: "🏓 WAN パイプライン RTT: %.1f ms · 推定速度: %.2f tok/s",
+                zh: "🏓 WAN 流水线 RTT：%.1f ms · 预计速率：%.2f tok/s"
+            ), wanTotalRttMs, wanEstimatedTokPerSec)
         }
 
         chatMessages.append(
             ClusterChatMessage(
                 senderName: sender,
-                senderRegion: "Lokal",
+                senderRegion: localLabel,
                 senderChip: localChipName,
                 timestamp: currentClockTime(),
                 text: finalText,
@@ -3508,14 +4081,34 @@ final class ClusterViewModel: ObservableObject {
         syncAudioPartyMembers()
         startPartyAudioMonitor()
         connectPartyAudioWebSocket()
-        audioPartyStatusText = "In Audio-Party (\(audioPartyMembers.count) Teilnehmer · \(audioPartyCodec.rawValue))"
+        let localMacFallback = tr(de: "Lokaler Mac", en: "Local Mac", fr: "Mac local", es: "Mac local", pt: "Mac local", ru: "Локальный Mac", ja: "ローカル Mac", zh: "本地 Mac")
+        let hostName = Host.current().localizedName ?? localMacFallback
+        audioPartyStatusText = tr(
+            de: "In Audio-Party (\(audioPartyMembers.count) Teilnehmer · \(audioPartyCodec.localizedTitle(language)))",
+            en: "In Audio Party (\(audioPartyMembers.count) members · \(audioPartyCodec.localizedTitle(language)))",
+            fr: "En salon audio (\(audioPartyMembers.count) membres · \(audioPartyCodec.localizedTitle(language)))",
+            es: "En sala de audio (\(audioPartyMembers.count) miembros · \(audioPartyCodec.localizedTitle(language)))",
+            pt: "Na festa áudio (\(audioPartyMembers.count) membros · \(audioPartyCodec.localizedTitle(language)))",
+            ru: "В аудио-комнате (\(audioPartyMembers.count) участн. · \(audioPartyCodec.localizedTitle(language)))",
+            ja: "オーディオパーティ参加中（\(audioPartyMembers.count) 名 · \(audioPartyCodec.localizedTitle(language))）",
+            zh: "已加入语音派对（\(audioPartyMembers.count) 人 · \(audioPartyCodec.localizedTitle(language))）"
+        )
         chatMessages.append(
             ClusterChatMessage(
                 senderName: "Audio-Party",
                 senderRegion: wanPeerRegionInput,
                 senderChip: localChipName,
                 timestamp: currentClockTime(),
-                text: "🎧 \(Host.current().localizedName ?? "Lokaler Mac") ist der Cluster-Audio-Party beigetreten (\(audioPartyCodec.rawValue)).",
+                text: tr(
+                    de: "🎧 \(hostName) ist der Cluster-Audio-Party beigetreten (\(audioPartyCodec.localizedTitle(language))).",
+                    en: "🎧 \(hostName) joined Cluster Audio Party (\(audioPartyCodec.localizedTitle(language))).",
+                    fr: "🎧 \(hostName) a rejoint le salon audio (\(audioPartyCodec.localizedTitle(language))).",
+                    es: "🎧 \(hostName) se unió a la sala de audio (\(audioPartyCodec.localizedTitle(language))).",
+                    pt: "🎧 \(hostName) entrou na festa áudio (\(audioPartyCodec.localizedTitle(language))).",
+                    ru: "🎧 \(hostName) присоединился к аудио-комнате (\(audioPartyCodec.localizedTitle(language))).",
+                    ja: "🎧 \(hostName) がクラスタ・オーディオパーティに参加しました (\(audioPartyCodec.localizedTitle(language)))。",
+                    zh: "🎧 \(hostName) 已加入集群语音派对 (\(audioPartyCodec.localizedTitle(language)))。"
+                ),
                 isSystemEvent: true,
                 isSelf: false
             )
@@ -3532,14 +4125,34 @@ final class ClusterViewModel: ObservableObject {
         partyAudioEngine = nil
         partyAudioSocket?.cancel(with: .normalClosure, reason: nil)
         partyAudioSocket = nil
-        audioPartyStatusText = "Audio-Party verlassen."
+        let localMacFallback = tr(de: "Lokaler Mac", en: "Local Mac", fr: "Mac local", es: "Mac local", pt: "Mac local", ru: "Локальный Mac", ja: "ローカル Mac", zh: "本地 Mac")
+        let hostName = Host.current().localizedName ?? localMacFallback
+        audioPartyStatusText = tr(
+            de: "Audio-Party verlassen.",
+            en: "Left Audio Party.",
+            fr: "Salon audio quitté.",
+            es: "Has salido de la sala de audio.",
+            pt: "Saiu da festa áudio.",
+            ru: "Вы вышли из аудио-комнаты.",
+            ja: "オーディオパーティから退出しました。",
+            zh: "已离开语音派对。"
+        )
         chatMessages.append(
             ClusterChatMessage(
                 senderName: "Audio-Party",
                 senderRegion: wanPeerRegionInput,
                 senderChip: localChipName,
                 timestamp: currentClockTime(),
-                text: "🔇 \(Host.current().localizedName ?? "Lokaler Mac") hat die Audio-Party verlassen.",
+                text: tr(
+                    de: "🔇 \(hostName) hat die Audio-Party verlassen.",
+                    en: "🔇 \(hostName) left Audio Party.",
+                    fr: "🔇 \(hostName) a quitté le salon audio.",
+                    es: "🔇 \(hostName) salió de la sala de audio.",
+                    pt: "🔇 \(hostName) saiu da festa áudio.",
+                    ru: "🔇 \(hostName) покинул аудио-комнату.",
+                    ja: "🔇 \(hostName) がオーディオパーティから退出しました。",
+                    zh: "🔇 \(hostName) 已离开语音派对。"
+                ),
                 isSystemEvent: true,
                 isSelf: false
             )
@@ -3572,11 +4185,13 @@ final class ClusterViewModel: ObservableObject {
     }
 
     func syncAudioPartyMembers() {
+        let localLabel = tr(de: "Lokal", en: "Local", fr: "Local", es: "Local", pt: "Local", ru: "Локально", ja: "ローカル", zh: "本地")
+        let localMacFallback = tr(de: "Lokaler Mac", en: "Local Mac", fr: "Mac local", es: "Mac local", pt: "Mac local", ru: "Локальный Mac", ja: "ローカル Mac", zh: "本地 Mac")
         let peers = wanPeers.isEmpty ? [
             WanPeerNode(
                 id: "local-host",
-                displayName: Host.current().localizedName ?? "Lokaler Mac",
-                region: "Lokal",
+                displayName: Host.current().localizedName ?? localMacFallback,
+                region: localLabel,
                 chip: localChipName,
                 ramGB: localRamGB,
                 usableVramGB: AppleSiliconChipFamily.usableVramGB(for: localRamGB),
@@ -3594,7 +4209,11 @@ final class ClusterViewModel: ObservableObject {
         let existingMap = Dictionary(uniqueKeysWithValues: audioPartyMembers.map { ($0.id, $0) })
         audioPartyMembers = peers.prefix(16).enumerated().map { idx, peer in
             let prev = existingMap[peer.id]
-            let role = idx == 0 ? "Party-Leiter (Rang 0)" : (peer.isLocalHost ? "TB-Insel-Knoten" : "WAN-Knoten")
+            let role = idx == 0
+                ? tr(de: "Party-Leiter (Rang 0)", en: "Party Leader (Rank 0)", fr: "Chef de groupe (Rang 0)", es: "Líder del grupo (Rango 0)", pt: "Líder do grupo (Ranque 0)", ru: "Лидер группы (Ранг 0)", ja: "パーティリーダー (Rank 0)", zh: "语音队长 (Rank 0)")
+                : (peer.isLocalHost
+                    ? tr(de: "TB-Insel-Knoten", en: "TB Island Node", fr: "Nœud îlot TB", es: "Nodo isla TB", pt: "Nó ilha TB", ru: "Локальный узел TB", ja: "TBアイランド", zh: "本地 TB 节点")
+                    : tr(de: "WAN-Knoten", en: "WAN Peer", fr: "Pair WAN", es: "Par WAN", pt: "Par WAN", ru: "WAN-узел", ja: "WANピア", zh: "WAN 节点"))
             return AudioPartyMember(
                 id: peer.id,
                 displayName: peer.displayName,
@@ -4210,7 +4829,7 @@ final class ClusterViewModel: ObservableObject {
         POST \(openCodeBaseURL)/v1/responses
         {
           "model": "\(model)",
-          "input": "Analysiere den Cluster-Zustand und optimiere das Sharding.",
+          "input": "\(tr(de: "Analysiere den Cluster-Zustand und optimiere das Sharding.", en: "Analyze cluster state and optimize sharding.", fr: "Analysez l'état du cluster et optimisez le découpage.", es: "Analiza el estado del clúster y optimiza el sharding.", pt: "Analise o estado do cluster e otimize o sharding.", ru: "Проанализируйте состояние кластера и оптимизируйте шардинг.", ja: "クラスタ状態を分析しシャーディングを最適化してください。", zh: "分析集群状态并优化模型分片。"))",
           "tools": [
             {
               "type": "mcp",
@@ -4348,7 +4967,7 @@ final class ClusterViewModel: ObservableObject {
                         id: "wan-\(peer.id)",
                         hostname: peer.displayName,
                         address: peer.region,
-                        transport: wanTransportProtocol.rawValue,
+                        transport: wanTransportProtocol.localizedTitle(language),
                         chipLabel: peer.chip,
                         usableVramGB: peer.usableVramGB,
                         sshTrusted: peer.isLocalHost || hasCompletedClusterSetup,
@@ -4361,16 +4980,37 @@ final class ClusterViewModel: ObservableObject {
         }
 
         discoveredProvisionTargets = targets
+        let vTitle = clusterSetupVariant.localizedTitle(language)
         if targets.isEmpty {
             clusterReadinessState = .unconfigured
-            setupStatusMessage = "Keine Ziel-Macs für Variante '\(clusterSetupVariant.rawValue)' gefunden."
+            setupStatusMessage = tr(
+                de: "Keine Ziel-Macs für Variante '\(vTitle)' gefunden.",
+                en: "No target Macs found for '\(vTitle)'.",
+                fr: "Aucun Mac cible trouvé pour '\(vTitle)'.",
+                es: "No se encontraron Macs para '\(vTitle)'.",
+                pt: "Nenhum Mac encontrado para '\(vTitle)'.",
+                ru: "Целевые Mac для '\(vTitle)' не найдены.",
+                ja: "「\(vTitle)」の対象Macが見つかりません。",
+                zh: "未找到适用于“\(vTitle)”的目标 Mac。"
+            )
         } else {
             if !hasCompletedClusterSetup {
                 let anyMissing = targets.contains { !$0.sshTrusted || !$0.wiredLimitConfigured || !$0.rdmaOrWanReady }
                 clusterReadinessState = anyMissing ? .incomplete : .notReady
             }
-            let modeTag = simulateMacStudio ? "Simulation" : "Echtzeitdaten"
-            setupStatusMessage = "\(targets.count) Mac-Knoten (\(modeTag)) für '\(clusterSetupVariant.rawValue)' erkannt."
+            let modeTag = simulateMacStudio
+                ? tr(de: "Simulation", en: "Simulation", fr: "Simulation", es: "Simulación", pt: "Simulação", ru: "Симуляция", ja: "シミュレーション", zh: "模拟")
+                : tr(de: "Echtzeitdaten", en: "Live Telemetry", fr: "Temps réel", es: "Datos en vivo", pt: "Tempo real", ru: "Реальные данные", ja: "実測データ", zh: "实时数据")
+            setupStatusMessage = tr(
+                de: "\(targets.count) Mac-Knoten (\(modeTag)) für '\(vTitle)' erkannt.",
+                en: "Discovered \(targets.count) Mac node(s) (\(modeTag)) for '\(vTitle)'.",
+                fr: "\(targets.count) nœud(s) Mac détecté(s) (\(modeTag)) pour '\(vTitle)'.",
+                es: "\(targets.count) nodo(s) Mac detectado(s) (\(modeTag)) para '\(vTitle)'.",
+                pt: "\(targets.count) nó(s) Mac detetado(s) (\(modeTag)) para '\(vTitle)'.",
+                ru: "Обнаружено \(targets.count) узлов Mac (\(modeTag)) для '\(vTitle)'.",
+                ja: "\(targets.count) 台のMacノードを検出（\(modeTag)・\(vTitle)）。",
+                zh: "已发现 \(targets.count) 个 Mac 节点（\(modeTag) · \(vTitle)）。"
+            )
         }
     }
 
@@ -4380,14 +5020,12 @@ final class ClusterViewModel: ObservableObject {
             discoverClusterSetupTargets()
         }
 
-        // Apply provisioning state across all selected targets
         for idx in discoveredProvisionTargets.indices where discoveredProvisionTargets[idx].isSelected {
             discoveredProvisionTargets[idx].sshTrusted = true
             discoveredProvisionTargets[idx].wiredLimitConfigured = true
             discoveredProvisionTargets[idx].rdmaOrWanReady = true
         }
 
-        // Sync Cluster Overview scope & MMM scope automatically to match setup variant
         switch clusterSetupVariant {
         case .local:
             overviewScope = .local
@@ -4402,7 +5040,17 @@ final class ClusterViewModel: ObservableObject {
 
         hasCompletedClusterSetup = true
         isRunningClusterSetup = false
-        setupStatusMessage = "Automatische Einrichtung für \(discoveredProvisionTargets.filter(\.isSelected).count) Macs abgeschlossen — starte Betriebsbereitschafts-Prüfung..."
+        let count = discoveredProvisionTargets.filter(\.isSelected).count
+        setupStatusMessage = tr(
+            de: "Automatische Einrichtung für \(count) Macs abgeschlossen — starte Betriebsbereitschafts-Prüfung...",
+            en: "Auto-provisioning finished for \(count) Mac(s) — running readiness check...",
+            fr: "Configuration automatique terminée pour \(count) Mac — vérification en cours...",
+            es: "Aprovisionamiento automático completado para \(count) Mac(s) — verificando estado...",
+            pt: "Configuração automática concluída para \(count) Mac(s) — a verificar prontidão...",
+            ru: "Автонастройка для \(count) Mac завершена — запуск проверки готовности...",
+            ja: "\(count) 台の自動構成が完了 — 稼働確認を実行中...",
+            zh: "已完成 \(count) 台 Mac 的自动配置 — 正在执行就绪检测..."
+        )
         verifyClusterReadiness()
     }
 
@@ -4418,10 +5066,12 @@ final class ClusterViewModel: ObservableObject {
         checks.append(
             ClusterReadinessCheckItem(
                 id: "chk-discovery",
-                title: "Bonjour / mDNS & Peer-Erkennung",
-                detail: hasTargets ? "\(selectedTargets.count) aktive Ziel-Macs im Verbund erkannt." : "Keine Ziel-Macs erkannt.",
+                title: tr(de: "Bonjour / mDNS & Peer-Erkennung", en: "Bonjour / mDNS & Peer Discovery", fr: "Bonjour / mDNS & Découverte des pairs", es: "Bonjour / mDNS y descubrimiento de pares", pt: "Bonjour / mDNS e descoberta de pares", ru: "Bonjour / mDNS и поиск узлов", ja: "Bonjour / mDNS・ピア検出", zh: "Bonjour / mDNS 与节点发现"),
+                detail: hasTargets
+                    ? tr(de: "\(selectedTargets.count) aktive Ziel-Macs im Verbund erkannt.", en: "Detected \(selectedTargets.count) active target Mac(s) in cluster.", fr: "\(selectedTargets.count) Mac cible(s) actif(s) détecté(s) dans la grappe.", es: "\(selectedTargets.count) Mac(s) destino activo(s) detectado(s) en el clúster.", pt: "\(selectedTargets.count) Mac(s) destino ativo(s) detetado(s) no cluster.", ru: "Обнаружено \(selectedTargets.count) активных Mac в кластере.", ja: "クラスター内で \(selectedTargets.count) 台の有効なMacを検出。", zh: "集群中已检测到 \(selectedTargets.count) 台活跃目标 Mac。")
+                    : tr(de: "Keine Ziel-Macs erkannt.", en: "No target Macs detected.", fr: "Aucun Mac cible détecté.", es: "No se detectaron Macs destino.", pt: "Nenhum Mac destino detetado.", ru: "Целевые Mac не обнаружены.", ja: "対象Macが検出されません。", zh: "未检测到目标 Mac。"),
                 status: hasTargets ? .pass : .fail,
-                remediation: "Bonjour/mDNS auf allen Macs prüfen oder Nachbildung/WAN-Peers verbinden."
+                remediation: tr(de: "Bonjour/mDNS auf allen Macs prüfen oder Nachbildung/WAN-Peers verbinden.", en: "Check Bonjour/mDNS on all Macs or connect simulation/WAN peers.", fr: "Vérifiez Bonjour/mDNS sur les Mac ou connectez des pairs WAN.", es: "Verifica Bonjour/mDNS o conecta pares WAN / simulación.", pt: "Verifique o Bonjour/mDNS ou ligue pares WAN.", ru: "Проверьте Bonjour/mDNS на всех Mac или подключите WAN-узлы.", ja: "Bonjour/mDNSまたはWANピア接続を確認してください。", zh: "检查各 Mac 的 Bonjour/mDNS 或连接 WAN 节点。")
             )
         )
 
@@ -4430,23 +5080,29 @@ final class ClusterViewModel: ObservableObject {
         checks.append(
             ClusterReadinessCheckItem(
                 id: "chk-ssh",
-                title: "SSH-Vertrauen & mlx.distributed_config",
-                detail: allSshTrusted ? "Passwortloser SSH-Zugriff & Hostfile auf allen Knoten bestätigt." : "SSH-Vertrauen fehlt noch auf mindestens einem entfernten Mac.",
+                title: tr(de: "SSH-Vertrauen & mlx.distributed_config", en: "SSH Trust & mlx.distributed_config", fr: "Confiance SSH & mlx.distributed_config", es: "Confianza SSH y mlx.distributed_config", pt: "Confiança SSH e mlx.distributed_config", ru: "Доверие SSH и mlx.distributed_config", ja: "SSH 信頼・mlx.distributed_config", zh: "SSH 免密信任与 mlx.distributed_config"),
+                detail: allSshTrusted
+                    ? tr(de: "Passwortloser SSH-Zugriff & Hostfile auf allen Knoten bestätigt.", en: "Passwordless SSH access & hostfile verified on all nodes.", fr: "Accès SSH sans mot de passe et hostfile vérifiés sur tous les nœuds.", es: "Acceso SSH sin contraseña y hostfile verificados en todos los nodos.", pt: "Acesso SSH sem palavra-passe e hostfile verificados em todos os nós.", ru: "Беспарольный SSH-доступ и hostfile подтверждены на всех узлах.", ja: "全ノードでパスワードなしSSHとHostfileを確認済み。", zh: "所有节点的免密 SSH 与 Hostfile 已验证。")
+                    : tr(de: "SSH-Vertrauen fehlt noch auf mindestens einem entfernten Mac.", en: "SSH trust is missing on at least one remote Mac.", fr: "La confiance SSH manque encore sur au moins un Mac distant.", es: "Falta confianza SSH en al menos un Mac remoto.", pt: "Falta confiança SSH em pelo menos um Mac remoto.", ru: "Отсутствует SSH-доверие как минимум на одном удалённом Mac.", ja: "少なくとも1台のリモートMacでSSH信頼が未設定です。", zh: "至少一台远程 Mac 尚未建立 SSH 互信。"),
                 status: allSshTrusted ? .pass : .warn,
-                remediation: "Automatische Einrichtung starten oder `ssh-copy-id user@host.local` ausführen."
+                remediation: tr(de: "Automatische Einrichtung starten oder `ssh-copy-id user@host.local` ausführen.", en: "Run Automatic Setup or execute `ssh-copy-id user@host.local`.", fr: "Lancez la configuration automatique ou exécutez `ssh-copy-id user@host.local`.", es: "Inicia la configuración automática o ejecuta `ssh-copy-id user@host.local`.", pt: "Execute a configuração automática ou `ssh-copy-id user@host.local`.", ru: "Запустите автонастройку или выполните `ssh-copy-id user@host.local`.", ja: "自動セットアップを実行するか `ssh-copy-id user@host.local` を実行してください。", zh: "启动自动配置或运行 `ssh-copy-id user@host.local`。")
             )
         )
 
-        // Check 3: Interconnect & Transport (TB/RDMA or QUIC/Iroh/Tailscale)
+        // Check 3: Interconnect & Transport
         let transportOK = hasTargets && selectedTargets.allSatisfy(\.rdmaOrWanReady)
-        let transportLabel = clusterSetupVariant == .local ? "Thunderbolt / RDMA (bridge0-frei)" : wanTransportProtocol.rawValue
+        let transportLabel = clusterSetupVariant == .local
+            ? tr(de: "Thunderbolt / RDMA (bridge0-frei)", en: "Thunderbolt / RDMA (bridge0-free)", fr: "Thunderbolt / RDMA (sans bridge0)", es: "Thunderbolt / RDMA (sin bridge0)", pt: "Thunderbolt / RDMA (sem bridge0)", ru: "Thunderbolt / RDMA (без bridge0)", ja: "Thunderbolt / RDMA (bridge0なし)", zh: "Thunderbolt / RDMA（无 bridge0 环路）")
+            : wanTransportProtocol.localizedTitle(language)
         checks.append(
             ClusterReadinessCheckItem(
                 id: "chk-transport",
-                title: "Interconnect & Transport (\(transportLabel))",
-                detail: transportOK ? "Alle Daten-Links und Transportkanäle sind aktiv." : "Ein oder mehrere Transport-Links sind getrennt oder unvollständig.",
+                title: tr(de: "Interconnect & Transport (\(transportLabel))", en: "Interconnect & Transport (\(transportLabel))", fr: "Interconnexion & Transport (\(transportLabel))", es: "Interconexión y transporte (\(transportLabel))", pt: "Interligação e transporte (\(transportLabel))", ru: "Интерконнект и транспорт (\(transportLabel))", ja: "インターコネクト＆転送 (\(transportLabel))", zh: "互联与传输通道 (\(transportLabel))"),
+                detail: transportOK
+                    ? tr(de: "Alle Daten-Links und Transportkanäle sind aktiv.", en: "All data links and transport channels are active.", fr: "Toutes les liaisons de données et canaux de transport sont actifs.", es: "Todos los enlaces de datos y canales de transporte están activos.", pt: "Todas as ligações de dados e canais de transporte estão ativos.", ru: "Все каналы данных и транспорта активны.", ja: "すべてのデータリンクと転送チャネルが有効です。", zh: "所有数据链路和传输通道均已激活。")
+                    : tr(de: "Ein oder mehrere Transport-Links sind getrennt oder unvollständig.", en: "One or more transport links are disconnected or incomplete.", fr: "Une ou plusieurs liaisons sont déconnectées ou incomplètes.", es: "Uno o más enlaces están desconectados o incompletos.", pt: "Uma ou mais ligações estão desligadas ou incompletas.", ru: "Один или несколько транспортных каналов отключены.", ja: "1つ以上の転送リンクが未接続または不完全です。", zh: "一个或多个传输链路已断开或配置不完整。"),
                 status: transportOK ? .pass : .fail,
-                remediation: "Thunderbolt-Kabel / `rdma_ctl enable` oder Tailscale/QUIC-Tunnel prüfen."
+                remediation: tr(de: "Thunderbolt-Kabel / `rdma_ctl enable` oder Tailscale/QUIC-Tunnel prüfen.", en: "Check Thunderbolt cables / `rdma_ctl enable` or Tailscale/QUIC tunnels.", fr: "Vérifiez les câbles Thunderbolt / `rdma_ctl enable` ou tunnels Tailscale/QUIC.", es: "Verifica cables Thunderbolt / `rdma_ctl enable` o túneles Tailscale/QUIC.", pt: "Verifique cabos Thunderbolt / `rdma_ctl enable` ou túneis Tailscale/QUIC.", ru: "Проверьте кабели Thunderbolt / `rdma_ctl enable` или туннели Tailscale/QUIC.", ja: "Thunderboltケーブル / `rdma_ctl enable` または Tailscale/QUIC トンネルを確認してください。", zh: "检查 Thunderbolt 线缆 / `rdma_ctl enable` 或 Tailscale/QUIC 隧道。")
             )
         )
 
@@ -4457,10 +5113,14 @@ final class ClusterViewModel: ObservableObject {
         checks.append(
             ClusterReadinessCheckItem(
                 id: "chk-memory-thermal",
-                title: "Speicherschutz (iogpu.wired_limit_mb) & Thermal-State",
-                detail: thermalCritical ? "Kritische Temperatur auf mindestens einem Knoten!" : (wiredOK ? "OS-Reserve (4–8 GB) und Thermal-Status nominal." : "Wired-Limit auf Teilknoten noch nicht gesetzt."),
+                title: tr(de: "Speicherschutz (iogpu.wired_limit_mb) & Thermal-State", en: "Memory Guard (iogpu.wired_limit_mb) & Thermal State", fr: "Protection mémoire (iogpu.wired_limit_mb) & État thermique", es: "Protección de memoria (iogpu.wired_limit_mb) y estado térmico", pt: "Proteção de memória (iogpu.wired_limit_mb) e estado térmico", ru: "Защита памяти (iogpu.wired_limit_mb) и температура", ja: "メモリ保護 (iogpu.wired_limit_mb) と熱状態", zh: "内存保护 (iogpu.wired_limit_mb) 与热状态"),
+                detail: thermalCritical
+                    ? tr(de: "Kritische Temperatur auf mindestens einem Knoten!", en: "Critical thermal state detected on at least one node!", fr: "Température critique détectée sur au moins un nœud !", es: "¡Estado térmico crítico en al menos un nodo!", pt: "Estado térmico crítico em pelo menos um nó!", ru: "Критическая температура на одном из узлов!", ja: "少なくとも1台のノードが危険温度です！", zh: "至少一个节点温度过高！")
+                    : (wiredOK
+                        ? tr(de: "OS-Reserve (4–8 GB) und Thermal-Status nominal.", en: "OS reserve (4–8 GB) and thermal state nominal.", fr: "Réserve OS (4–8 Go) et état thermique nominaux.", es: "Reserva de SO (4–8 GB) y estado térmico nominales.", pt: "Reserva de SO (4–8 GB) e estado térmico nominais.", ru: "Резерв ОС (4–8 ГБ) и температура в норме.", ja: "OS予約領域 (4–8 GB) と熱状態は正常です。", zh: "系统预留 (4–8 GB) 与温度状态正常。")
+                        : tr(de: "Wired-Limit auf Teilknoten noch nicht gesetzt.", en: "Wired memory limit not yet applied on some nodes.", fr: "Limite mémoire câblée non encore définie sur certains nœuds.", es: "Límite de memoria fija aún no aplicado en algunos nodos.", pt: "Limite de memória fixa ainda não aplicado nalguns nós.", ru: "Лимит wired-памяти ещё не задан на части узлов.", ja: "一部ノードで iogpu.wired_limit_mb が未設定です。", zh: "部分节点尚未设置 wired 内存上限。")),
                 status: hwStatus,
-                remediation: "`scripts/setup_wired_limit.sh` ausführen bzw. überhitzten Knoten abkühlen lassen."
+                remediation: tr(de: "`scripts/setup_wired_limit.sh` ausführen bzw. überhitzten Knoten abkühlen lassen.", en: "Run `scripts/setup_wired_limit.sh` or allow overheated node to cool.", fr: "Exécutez `scripts/setup_wired_limit.sh` ou laissez refroidir le nœud.", es: "Ejecuta `scripts/setup_wired_limit.sh` o enfría el nodo.", pt: "Execute `scripts/setup_wired_limit.sh` ou arrefeça o nó.", ru: "Выполните `scripts/setup_wired_limit.sh` или дайте узлу остыть.", ja: "`scripts/setup_wired_limit.sh` を実行するか高温ノードを冷却してください。", zh: "运行 `scripts/setup_wired_limit.sh` 或等待过热节点降温。")
             )
         )
 
@@ -4469,10 +5129,14 @@ final class ClusterViewModel: ObservableObject {
         checks.append(
             ClusterReadinessCheckItem(
                 id: "chk-runtime",
-                title: "Inferenz-Gateway (:8000/v1 · oMLX / Ollama / llama.cpp)",
-                detail: runtimeOK ? (simulateMacStudio ? "Simulations-Endpunkt bereit für Trockenläufe." : "Lokales Gateway bzw. Modell-Laufzeit antwortet.") : "Kein aktiver Inferenz-Daemon auf :8000 / :11434 erreichbar.",
+                title: tr(de: "Inferenz-Gateway (:8000/v1 · oMLX / Ollama / llama.cpp)", en: "Inference Gateway (:8000/v1 · oMLX / Ollama / llama.cpp)", fr: "Passerelle d'inférence (:8000/v1 · oMLX / Ollama / llama.cpp)", es: "Pasarela de inferencia (:8000/v1 · oMLX / Ollama / llama.cpp)", pt: "Gateway de inferência (:8000/v1 · oMLX / Ollama / llama.cpp)", ru: "Шлюз инференса (:8000/v1 · oMLX / Ollama / llama.cpp)", ja: "推論ゲートウェイ (:8000/v1 · oMLX / Ollama / llama.cpp)", zh: "推理网关 (:8000/v1 · oMLX / Ollama / llama.cpp)"),
+                detail: runtimeOK
+                    ? (simulateMacStudio
+                        ? tr(de: "Simulations-Endpunkt bereit für Trockenläufe.", en: "Simulation endpoint ready for dry runs.", fr: "Point de simulation prêt pour tests à blanc.", es: "Endpoint de simulación listo para pruebas.", pt: "Endpoint de simulação pronto para testes.", ru: "Симуляционный эндпоинт готов к тестам.", ja: "シミュレーション用エンドポイントの準備完了。", zh: "模拟端点已就绪，可用于演练测试。")
+                        : tr(de: "Lokales Gateway bzw. Modell-Laufzeit antwortet.", en: "Local gateway / model runtime is responding.", fr: "La passerelle locale ou un moteur de modèles répond.", es: "La pasarela local o motor de modelos está respondiendo.", pt: "O gateway local ou motor de modelos está a responder.", ru: "Локальный шлюз или среда выполнения моделей отвечает.", ja: "ローカルゲートウェイ／モデルランタイムが応答中。", zh: "本地网关或模型运行时响应正常。"))
+                    : tr(de: "Kein aktiver Inferenz-Daemon auf :8000 / :11434 erreichbar.", en: "No active inference daemon reachable on :8000 / :11434.", fr: "Aucun démon d'inférence actif joignable sur :8000 / :11434.", es: "Ningún servicio de inferencia activo en :8000 / :11434.", pt: "Nenhum serviço de inferência ativo em :8000 / :11434.", ru: "Нет доступного сервиса инференса на :8000 / :11434.", ja: ":8000 / :11434 で稼働中の推論デーモンが見つかりません。", zh: "未能在 :8000 / :11434 检测到活跃的推理服务。"),
                 status: runtimeOK ? .pass : .warn,
-                remediation: "oMLX, Ollama oder llama.cpp starten und über 'Modell-Studio' prüfen."
+                remediation: tr(de: "oMLX, Ollama oder llama.cpp starten und über 'Modell Werkstatt' prüfen.", en: "Start oMLX, Ollama, or llama.cpp and verify in 'Model Studio'.", fr: "Démarrez oMLX, Ollama ou llama.cpp et vérifiez dans 'Atelier de modèles'.", es: "Inicia oMLX, Ollama o llama.cpp y verifica en 'Taller de modelos'.", pt: "Inicie oMLX, Ollama ou llama.cpp e verifique na 'Oficina de modelos'.", ru: "Запустите oMLX, Ollama или llama.cpp и проверьте в 'Студия моделей'.", ja: "oMLX・Ollama・llama.cpp を起動し「モデルスタジオ」で確認してください。", zh: "启动 oMLX、Ollama 或 llama.cpp 并在“模型工坊”中检查。")
             )
         )
 
@@ -4493,6 +5157,15 @@ final class ClusterViewModel: ObservableObject {
         fmt.dateFormat = "HH:mm:ss"
         lastReadinessCheckedAt = fmt.string(from: Date())
         isVerifyingReadiness = false
-        setupStatusMessage = "Prüfung abgeschlossen (\(lastReadinessCheckedAt)): \(currentReadinessLabel)"
+        setupStatusMessage = tr(
+            de: "Prüfung abgeschlossen (\(lastReadinessCheckedAt)): \(currentReadinessLabel)",
+            en: "Check completed (\(lastReadinessCheckedAt)): \(currentReadinessLabel)",
+            fr: "Vérification terminée (\(lastReadinessCheckedAt)) : \(currentReadinessLabel)",
+            es: "Verificación completada (\(lastReadinessCheckedAt)): \(currentReadinessLabel)",
+            pt: "Verificação concluída (\(lastReadinessCheckedAt)): \(currentReadinessLabel)",
+            ru: "Проверка завершена (\(lastReadinessCheckedAt)): \(currentReadinessLabel)",
+            ja: "確認完了 (\(lastReadinessCheckedAt)): \(currentReadinessLabel)",
+            zh: "检查完成 (\(lastReadinessCheckedAt))：\(currentReadinessLabel)"
+        )
     }
 }
