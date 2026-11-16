@@ -4442,7 +4442,7 @@ final class ClusterViewModel: ObservableObject {
         let currentBuild = AppReleaseMetadata.currentBuild
         let versionCmp = Self.compareVersions(info.version, currentVer)
         let shaChanged = isRemoteCommitAheadOfLocal(info.commitSHA)
-        let isNewer = (versionCmp == .orderedDescending) || (versionCmp == .orderedSame && info.build > currentBuild) || shaChanged
+        let isNewer = (versionCmp == .orderedDescending) || (versionCmp == .orderedSame && info.build > currentBuild) || (versionCmp == .orderedDescending && shaChanged)
 
         if isNewer {
             availableUpdate = info
@@ -4593,12 +4593,34 @@ final class ClusterViewModel: ObservableObject {
         return nil
     }
 
-    nonisolated private static func syncBuiltBinaryToTmp(repoRoot: URL) -> Bool {
-        let spmBin = repoRoot.appendingPathComponent("app/.build/debug/SSCCCApp").path
+    nonisolated private static func syncBuiltBinaryToTmp(repoRoot: URL, onlyIfNewer: Bool = false) -> Bool {
+        let candidates = [
+            repoRoot.appendingPathComponent("app/.build/out/Products/Debug/SSCCCApp").path,
+            repoRoot.appendingPathComponent("app/.build/debug/SSCCCApp").path,
+            "/tmp/ssccc-build/out/Products/Debug/SSCCCApp",
+            "/tmp/ssccc-build/debug/SSCCCApp"
+        ]
         let outBin = "/tmp/SSCCCApp"
         let tmpBin = "/tmp/SSCCCApp.new"
         let fm = FileManager.default
-        guard fm.isExecutableFile(atPath: spmBin) else { return fm.isExecutableFile(atPath: outBin) }
+
+        let newestCandidate = candidates
+            .filter { fm.isExecutableFile(atPath: $0) }
+            .max { a, b in
+                let da = (try? fm.attributesOfItem(atPath: a)[.modificationDate] as? Date) ?? .distantPast
+                let db = (try? fm.attributesOfItem(atPath: b)[.modificationDate] as? Date) ?? .distantPast
+                return da < db
+            }
+        guard let spmBin = newestCandidate else { return fm.isExecutableFile(atPath: outBin) }
+
+        if onlyIfNewer && fm.isExecutableFile(atPath: outBin) {
+            let srcDate = (try? fm.attributesOfItem(atPath: spmBin)[.modificationDate] as? Date) ?? .distantPast
+            let outDate = (try? fm.attributesOfItem(atPath: outBin)[.modificationDate] as? Date) ?? .distantPast
+            if srcDate <= outDate {
+                return true
+            }
+        }
+
         do {
             if fm.fileExists(atPath: tmpBin) {
                 try fm.removeItem(atPath: tmpBin)
@@ -4674,7 +4696,11 @@ final class ClusterViewModel: ObservableObject {
             }
 
             if buildOut.exitCode == 0 {
-                _ = Self.syncBuiltBinaryToTmp(repoRoot: repoRoot)
+                let runScript = repoRoot.appendingPathComponent("scripts/run_ssccc.sh").path
+                let buildOnlyOut = Self.runCommandInDir(repoRoot, "/bin/bash", [runScript, "--build-only"])
+                if buildOnlyOut.exitCode != 0 {
+                    _ = Self.syncBuiltBinaryToTmp(repoRoot: repoRoot)
+                }
             }
 
             await MainActor.run {
@@ -4732,13 +4758,8 @@ final class ClusterViewModel: ObservableObject {
         let fallbackExec = CommandLine.arguments.first ?? "/tmp/SSCCCApp"
 
         if let repoRoot = localGitRepoRoot {
-            let spmBin = repoRoot.appendingPathComponent("app/.build/debug/SSCCCApp").path
             let tmpBin = "/tmp/SSCCCApp"
-            let spmDate = (try? fm.attributesOfItem(atPath: spmBin)[.modificationDate] as? Date) ?? .distantPast
-            let tmpDate = (try? fm.attributesOfItem(atPath: tmpBin)[.modificationDate] as? Date) ?? .distantPast
-            if fm.isExecutableFile(atPath: spmBin) && (!fm.isExecutableFile(atPath: tmpBin) || spmDate > tmpDate) {
-                _ = Self.syncBuiltBinaryToTmp(repoRoot: repoRoot)
-            }
+            _ = Self.syncBuiltBinaryToTmp(repoRoot: repoRoot, onlyIfNewer: true)
 
             let script = repoRoot.appendingPathComponent("scripts/run_ssccc.sh").path
             if fm.isExecutableFile(atPath: script) {

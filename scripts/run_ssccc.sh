@@ -3,7 +3,17 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 OUT_BIN="/tmp/SSCCCApp"
-SPM_BIN="${ROOT_DIR}/app/.build/debug/SSCCCApp"
+SPM_BIN="${ROOT_DIR}/app/.build/out/Products/Debug/SSCCCApp"
+if [[ ! -x "${SPM_BIN}" ]]; then
+  SPM_BIN="${ROOT_DIR}/app/.build/debug/SSCCCApp"
+fi
+
+BUILD_ONLY=0
+if [[ "${1:-}" == "--build-only" ]]; then
+  BUILD_ONLY=1
+fi
+SKIP_BUILD="${SSCCC_SKIP_BUILD:-0}"
+unset SSCCC_SKIP_BUILD || true
 
 SWIFT_REL_FILES=(
   "Models/ClusterModels.swift"
@@ -25,7 +35,7 @@ SWIFT_REL_FILES=(
   "SSCCCApp.swift"
 )
 
-if [[ "${SSCCC_SKIP_BUILD:-0}" == "1" && -x "${OUT_BIN}" ]]; then
+if [[ "${BUILD_ONLY}" != "1" && "${SKIP_BUILD}" == "1" && -x "${OUT_BIN}" ]]; then
   echo "Überspringe Build (SSCCC_SKIP_BUILD=1), starte bestehendes Binary ${OUT_BIN}..."
 else
   echo "Baue SonnerStudio Cluster-Case-Companion (SS-CCC)..."
@@ -47,17 +57,21 @@ else
     -sdk "$(xcrun --show-sdk-path)" \
     -o "${OUT_BIN}.new" \
     "${STAGE_ARGS[@]}"; then
-    chmod +x "${OUT_BIN}.new"
+    chmod 755 "${OUT_BIN}.new"
     mv -f "${OUT_BIN}.new" "${OUT_BIN}"
   elif [[ -x "${SPM_BIN}" ]]; then
     echo "Warnung: swiftc fehlgeschlagen — nutze Fallback-Binary ${SPM_BIN}..."
     cp -f "${SPM_BIN}" "${OUT_BIN}.new"
-    chmod +x "${OUT_BIN}.new"
+    chmod 755 "${OUT_BIN}.new"
     mv -f "${OUT_BIN}.new" "${OUT_BIN}"
   else
     echo "Fehler: Kompilierung fehlgeschlagen und kein Fallback-Binary vorhanden." >&2
     exit 1
   fi
+fi
+
+if [[ "${BUILD_ONLY}" == "1" ]]; then
+  exit 0
 fi
 
 echo "Starte SS-CCC..."
