@@ -222,7 +222,7 @@ class GlobalProjectTests(unittest.TestCase):
             )
 
     def test_15_help_manual_parity_across_eight_languages(self):
-        """Verify HelpDocsView.swift has all 12 chapters with identical IDs across all 8 languages."""
+        """Verify HelpDocsView.swift has all 12 chapters with identical IDs across all 17 languages."""
         import re
         src = (APP_SOURCES / "Views" / "HelpDocsView.swift").read_text(encoding="utf-8")
         expected_ids = [
@@ -239,8 +239,8 @@ class GlobalProjectTests(unittest.TestCase):
             "updater-ci",
             "launch-tests",
         ]
-        blocks = re.split(r"case \.(de|en|fr|es|pt|ru|ja|zh):", src)
-        self.assertEqual(len(blocks), 17, "Expected 8 language cases in HelpDocsView.swift")
+        blocks = re.split(r"case \.(de|en|fr|es|pt|ru|ja|zh|nl|af|pl|cs|sk|hu|ko|hi|ta):", src)
+        self.assertEqual(len(blocks), 35, "Expected 17 language cases in HelpDocsView.swift")
         for i in range(1, len(blocks), 2):
             lang = blocks[i]
             body = blocks[i + 1]
@@ -553,7 +553,7 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("localizedSourceLabel(vm.language)", ms_view)
         self.assertIn("localizedNotes(vm.language)", ms_view)
 
-        # Views use 8-language L10n.tr / localizedTitle helpers instead of hardcoded German or 2-lang ternaries
+        # Views use 17-language L10n.tr / localizedTitle helpers instead of hardcoded German or 2-lang ternaries
         for v in [overview, ms_view, net_view, wan_view, mmm_view, sci_view, setup_view, dev_view, agent_view, api_view, help_view, deep_view]:
             self.assertTrue("L10n.tr(" in v or "vm.tr(" in v)
         self.assertNotIn("let isGerman", help_view)
@@ -561,6 +561,32 @@ class GlobalProjectTests(unittest.TestCase):
         self.assertIn("localizedTitle(vm.language)", net_view)
         self.assertIn("localizedDescription(vm.language)", net_view)
         self.assertIn("localizedTitle(_ lang: AppLanguage)", models)
+
+        # 17 languages in Localization.swift (EN..TA)
+        for lang_code in ["nl", "af", "pl", "cs", "sk", "hu", "ko", "hi", "ta"]:
+            self.assertIn(f'case {lang_code} = "{lang_code}"', loc)
+        self.assertIn("enum L10nExtendedCatalog", loc)
+        for mb_key in ["mb_title", "mb_btn_minimize", "mb_restore_window", "mb_auto_minimize_toggle", "mb_endpoints_label"]:
+            self.assertIn(mb_key, loc)
+
+        # Menu Bar background service mode in SSCCCApp.swift & ClusterViewModel.swift
+        app = (APP_SOURCES / "SSCCCApp.swift").read_text(encoding="utf-8")
+        self.assertIn("MenuBarExtra", app)
+        self.assertIn("SSCCCMenuBarExtraView", app)
+        self.assertIn("minimizeWindowToMenuBar", app)
+        self.assertIn("willMiniaturizeNotification", app)
+        self.assertIn("func minimizeWindowToMenuBar()", vm)
+        self.assertIn("func restoreWindowFromMenuBar()", vm)
+
+        # All 17 README files exist with Visitor Counter and cross-links to all 17 READMEs
+        readme_files = ["README.md"] + [f"README.{code}.md" for code in ["de", "fr", "es", "pt", "ru", "ja", "zh", "nl", "af", "pl", "cs", "sk", "hu", "ko", "hi", "ta"]]
+        for rname in readme_files:
+            rpath = ROOT / rname
+            self.assertTrue(rpath.exists(), f"Missing localized README: {rname}")
+            rtxt = rpath.read_text(encoding="utf-8")
+            self.assertIn("hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg", rtxt, f"Missing visitor counter in {rname}")
+            for target in readme_files:
+                self.assertIn(f"({target})", rtxt, f"{rname} missing switcher link to {target}")
 
 
 if __name__ == "__main__":

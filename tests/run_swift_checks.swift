@@ -93,7 +93,8 @@ check(SpeculativeEngineMode.eagle3Fusion.speedupBonusMultiplier > SpeculativeEng
 check(AgentGatewayProtocol.allCases.count == 3, "3 AgentGatewayProtocol standards supported")
 check(ThermalCarbonSchedulingPolicy.allCases.count == 3, "3 ThermalCarbonSchedulingPolicy options supported")
 
-// 10. Phase 12: Cluster Auto-Setup, 4-State Readiness & 8-Language Shorttips
+// 10. Phase 12 & 13: Cluster Auto-Setup, 4-State Readiness, Menu Bar Service Mode & 17-Language Parity
+check(AppLanguage.allCases.count == 17, "Expected 17 AppLanguage cases, got \(AppLanguage.allCases.count)")
 check(NavigationTab.allCases.contains(.setup), "NavigationTab includes .setup")
 check(ClusterSetupVariant.allCases.count == 3, "3 ClusterSetupVariant options supported (local, internet, hybrid)")
 check(ClusterReadinessState.allCases.count == 4 && ClusterReadinessState.ready.isOperational && !ClusterReadinessState.notReady.isOperational, "4-state Readiness lifecycle valid")
@@ -106,7 +107,7 @@ for lang in AppLanguage.allCases {
         let tip = L10n.tabShorttip(tab, lang)
         check(!tip.isEmpty && !tip.hasPrefix("tip_tab_"), "Missing shorttip \(tab) for \(lang)")
     }
-    for key in ["node_gpu_cores", "node_ane_cores", "ms_layers_unit", "ov_verify_btn", "ov_open_setup_btn", "ov_last_check"] {
+    for key in ["node_gpu_cores", "node_ane_cores", "ms_layers_unit", "ov_verify_btn", "ov_open_setup_btn", "ov_last_check", "mb_title", "mb_btn_minimize", "mb_restore_window", "mb_auto_minimize_toggle"] {
         let val = L10n.text(key, lang)
         check(!val.isEmpty && val != key, "Missing localization key \(key) for \(lang)")
     }
@@ -116,9 +117,35 @@ for lang in AppLanguage.allCases {
     check(!MultiModelStrategy.mixtureOfAgents.localizedTitle(lang).isEmpty, "MultiModelStrategy localizedTitle empty")
     check(!ClusterSetupVariant.hybrid.localizedTitle(lang).isEmpty, "ClusterSetupVariant localizedTitle empty")
 }
+for extLang: AppLanguage in [.nl, .af, .pl, .cs, .sk, .hu, .ko, .hi, .ta] {
+    let staticSample = L10n.tr(
+        extLang,
+        de: "1. Clustervariante wählen & Automatisch konfigurieren",
+        en: "1. Choose Cluster Variant & Auto-Configure",
+        fr: "1. Choisir la variante",
+        es: "1. Elegir variante",
+        pt: "1. Escolher variante",
+        ru: "1. Выберите вариант",
+        ja: "1. 構成を選択",
+        zh: "1. 选择集群类型"
+    )
+    check(staticSample != "1. Choose Cluster Variant & Auto-Configure" && !staticSample.isEmpty, "Static L10nExtendedCatalog lookup failed for \(extLang): got '\(staticSample)'")
+    let interpSample = L10n.tr(
+        extLang,
+        de: "Arbeiter (Rang 2)",
+        en: "Worker (Rank 2)",
+        fr: "Travailleur (Rang 2)",
+        es: "Trabajador (Rango 2)",
+        pt: "Trabalhador (Rank 2)",
+        ru: "Воркер (Ранг 2)",
+        ja: "ワーカー (ランク 2)",
+        zh: "工作节点 (Rank 2)"
+    )
+    check(interpSample != "Worker (Rank 2)" && interpSample.contains("2"), "Interpolated L10nExtendedCatalog lookup failed for \(extLang): got '\(interpSample)'")
+}
 check(L10n.tabTitle(.models, .de) == "Modell Werkstatt", "German Models tab must be 'Modell Werkstatt'")
 check(L10n.tabTitle(.models, .en) == "Model Studio", "English Models tab must be 'Model Studio'")
 check(AppleSiliconChipFamily.inferGPUCores(from: "Apple M4") >= 8, "M4 GPU cores must infer >= 8")
 check(AppleSiliconChipFamily.inferANECores(from: "Apple M4") >= 16, "M4 ANE cores must infer >= 16")
 
-print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, MMM Auto-Setup, 2026 SOTA Points 1-5, Setup/Readiness & 8-language UI parity) passed!")
+print("PASS: All Swift runtime checks (M1-M12+, TB3/4/5, VRAM guard, Science Lab WAN, MMM Auto-Setup, 2026 SOTA Points 1-5, Setup/Readiness, Menu Bar Service Mode & 17-language UI parity) passed!")

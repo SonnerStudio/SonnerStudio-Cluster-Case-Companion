@@ -3,7 +3,10 @@
 # ☀️ Compagnon de grappe SonnerStudio (SS-CCC)
 
 <img src="docs/images/flags/us.png" width="20" height="16" alt="US"/> <img src="docs/images/flags/gb.png" width="20" height="16" alt="GB"/> <img src="docs/images/flags/ca.png" width="20" height="16" alt="CA"/> **[English](README.md)** · <img src="docs/images/flags/de.png" width="20" height="16" alt="DE"/> <img src="docs/images/flags/at.png" width="20" height="16" alt="AT"/> <img src="docs/images/flags/ch.png" width="20" height="16" alt="CH"/> **[Deutsch](README.de.md)** · <img src="docs/images/flags/fr.png" width="20" height="16" alt="FR"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> <img src="docs/images/flags/ch.png" width="20" height="16" alt="CH"/> **[Français](README.fr.md)** · <img src="docs/images/flags/es.png" width="20" height="16" alt="ES"/> <img src="docs/images/flags/mx.png" width="20" height="16" alt="MX"/> <img src="docs/images/flags/ar.png" width="20" height="16" alt="AR"/> **[Español](README.es.md)**<br/>
-<img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**
+<img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
+<img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
+<img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=Visiteurs&color=f59e0b&labelColor=0f172a" alt="Visiteurs"/></a>
 
 *Gestionnaire natif macOS de grappe Apple Silicon et atelier d'inférence MLX répartie*
 
@@ -86,7 +89,7 @@ Dans **Grappe Internet & Discussion**, SS-CCC mesure en continu les performances
 - **Mises à jour pilotées par GitHub et contrôle automatique de version :** Vérifie `version.json`, les *GitHub Releases* et le SHA de `commits/main` au démarrage puis toutes les 30 minutes (`⌘U`). Affiche une invite de mise à jour intégrée avec `git pull` + `swift build` + relance en un clic ou téléchargement GitHub, appuyée par `scripts/bump_version.py` et `.github/workflows/auto-version-control.yml`.
 - **Agents et environnements en un clic :** Configuration directe pour **OpenCode**, **Hermes Agent**, **Google Antigravity**, **Cursor**, **Visual Studio Code** et **Xcode**.
 - **Mode simulation commutable, thème jaune SonnerStudio (`#FFD400`) et suite de tests (`tests/`) :** Le nœud simulé de démonstration reste activable dans la barre latérale ; l'ensemble est vérifié par `tests/test_global_suite.py` (`python3 -m unittest discover -s tests -v`).
-- **Interface multilingue, infobulles & centre d'aide interactif :** Changement immédiat entre **8 langues** (anglais, allemand, français, espagnol, portugais, russe, japonais et chinois), **infobulles contextuelles au survol** dans toute l'application, **aide interactive à 12 chapitres** avec graphiques détaillés et surbrillance lumineuse, et télémétrie en temps réel (zéro donnée fictive hors simulation).
+- **Interface multilingue, infobulles & centre d'aide interactif :** Changement immédiat entre **17 langues** (anglais, allemand, français, espagnol, portugais, russe, japonais et chinois), **infobulles contextuelles au survol** dans toute l'application, **aide interactive à 12 chapitres** avec graphiques détaillés et surbrillance lumineuse, et télémétrie en temps réel (zéro donnée fictive hors simulation).
 
 ### 🖥️ Les 11 domaines du programme en un coup d'œil
 
@@ -104,7 +107,7 @@ Dans **Grappe Internet & Discussion**, SS-CCC mesure en continu les performances
 | **8. Science et Roofline** | Laboratoire 6 onglets avec **streaming SSE réel & ping ICMP** en mode réel (simulation réaliste étiquetée), **évaluation directe du Mode Multi-Modèles (MMM)**, courbe Roofline, `N=1..128`, *Petals/SWARM* & *DiLoCo*, mémoire KV, `J/jeton` / `EDP` / `CO₂`, `IC₉₅`, export `CSV / JSON / LaTeX / BibTeX` et **Historique** |
 | **9. API et console** | Points de terminaison compatibles OpenAI (`/v1/chat/completions`, `/v1/responses` + MCP), Ollama (`/api/tags`) et **A2A Agent Card** (`/.well-known/agent.json`), journal d'activité et tests en direct |
 | **10. Configurer & provisionner** | Découverte automatique des Mac locaux (Bonjour/mDNS), pairs WAN (`QUIC Iroh` / `Tailscale`) ou grappes hybrides ; provisionnement SSH, `iogpu.wired_limit_mb` & `mlx.distributed_config`, et **vérification de disponibilité opérationnelle** (**Prêt / Non prêt / Partiellement configuré / Non configuré**) |
-| **11. Aide et documentation** | Manuel interactif à **12 chapitres en 8 langues** (`⌘?`) avec cartes cliquables, graphiques détaillés, surbrillance lumineuse et guide pas à pas |
+| **11. Aide et documentation** | Manuel interactif à **12 chapitres en 17 langues** (`⌘?`) avec cartes cliquables, graphiques détaillés, surbrillance lumineuse et guide pas à pas |
 
 ---
 
@@ -308,7 +311,7 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 - **MMM Next-Gen (EAGLE-3, Tree-MoA Early-Exit & Routeur Adaptatif) :** Fusion **EAGLE-3**, seuil de confiance **Tree-MoA Early-Exit** (`50–95 %`) et **Adaptive Confidence Escalation (Ares)** directement dans le Mode Multi-Modèles.
 - **Standards Modernes d'Agents & Passerelles :** Aperçu et export **OpenAI `/v1/responses` + MCP**, **MCP Server Registry JSON** et **A2A Agent Card** (`/.well-known/agent.json`).
 - **Ordonnancement Thermique & Éco-Responsable :** Dépriorise automatiquement les nœuds en état thermique `.serious`/`.critical` et privilégie l'efficacité énergétique.
-- **Phase 12 — Auto-Setup de Grappe (`Configuration & Setup`), Vérification de Disponibilité & Shorttips :** 11ᵉ catégorie latérale pour détecter et configurer automatiquement Local/WAN/Hybride, afficher **Prêt / Non prêt / Incomplet / Non configuré** (aussi dans la Vue d'ensemble), proposer des *Shorttips* au survol dans les 8 langues, ouvrir l'aide interactive par clic et fonctionner sur des données temps réel hors simulation.
+- **Phase 12 — Auto-Setup de Grappe (`Configuration & Setup`), Vérification de Disponibilité & Shorttips :** 11ᵉ catégorie latérale pour détecter et configurer automatiquement Local/WAN/Hybride, afficher **Prêt / Non prêt / Incomplet / Non configuré** (aussi dans la Vue d'ensemble), proposer des *Shorttips* au survol dans les 17 langues, ouvrir l'aide interactive par clic et fonctionner sur des données temps réel hors simulation.
 
 ![Configuration Auto & État de Disponibilité](docs/images/i18n/ssccc_setup_readiness_fr.jpg)
 
@@ -321,7 +324,7 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 │   ├── SSCCCApp.swift              # Fenêtre principale, pastille de mise à jour & UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # Inférence M1–M12+, modèles WAN/Science/Historique & versions
-│   │   └── Localization.swift      # Dictionnaire complet en 8 langues (EN/DE/FR/ES/PT/RU/JA/ZH)
+│   │   └── Localization.swift      # Dictionnaire complet en 17 langues (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # Sondes matérielles, modèles, Audio-Party WAN & mise à jour GitHub
 │   └── Views/                      # 12 vues SwiftUI modulaires + Theme.swift (11 onglets latéraux, Setup, aide interactive, bandes & surbrillance)
@@ -336,13 +339,20 @@ Nous invitons les universités, laboratoires, studios et passionnés d'Apple Sil
 └── version.json                    # Manifeste de contrôle des mises à jour hébergé sur GitHub
 ```
 
+### 🛰️ Mode service en barre des menus lors de la réduction (Agents & IDE, `⌘⇧M`)
+
+- **Passage discret dans la barre des menus macOS :** Cliquez sur le bouton jaune réduire, appuyez sur **`⌘⇧M`** ou sur **Barre des menus** — la fenêtre principale se masque et SS-CCC fonctionne en arrière-plan (mode `.accessory`) juste à côté d'**Ollama**.
+- **Indicateurs en direct dans le popover :** Affiche immédiatement **Disponibilité**, **RAM mutualisée/utilisable (Go)**, **Nœuds actifs**, **Modèle & couches chargées**, **Moteur** et **Slots MMM**.
+- **Copie en 1 clic des points de terminaison & IDE :** Copiez **`http://127.0.0.1:8000/v1`** ou **`http://127.0.0.1:11434`** pour Cursor, OpenCode, Hermes Agent, Antigravity, VS Code et Xcode.
+- **Restauration instantanée :** Réaffichez la fenêtre complète à tout moment depuis la barre des menus (`⌘⇧M`).
+
 ---
 
 ## 🚧 État d'avancement et contribution
 
 > [!IMPORTANT]
 > **SS-CCC (v1.6+) est pleinement exécutable et validé par `25/25` tests automatisés, tandis que les essais d'endurance multi-nœuds se poursuivent.**
-> **Déjà opérationnel et vérifié :** langue de démarrage en anglais avec **traduction complète en 8 langues (`EN/DE/FR/ES/PT/RU/JA/ZH`) de l'ensemble des 11 vues, sous-menus, boutons, tableaux et fiches détaillées (`L10n.tr`)**, **lecture et affichage des cœurs CPU, GPU et Neural Engine (ANE)** sur les cartes des Mac locaux, **barre latérale à 11 onglets** incl. **Configurer & Provisionner**, **vue d'ensemble en 3 onglets**, **bandes de signalisation industrielles jaune-noir** & **surbrillance Solaris**, détection évolutive M1–M12+ (incl. M5 Max/Ultra & M6), télémétrie en temps réel (aucune donnée fictive hors simulation), découverte de modèles en direct (oMLX / Ollama / llama.cpp / GGUF), laboratoire scientifique à 6 onglets, pont hybride Local ↔ Internet-WAN, Audio-Party `AVAudioEngine`, **manuel interactif à 12 chapitres**, **Shorttips en 8 langues** et mise à jour automatique pilotée par GitHub + CI.
+> **Déjà opérationnel et vérifié :** langue de démarrage en anglais avec **traduction complète en 17 langues (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) de l'ensemble des 11 vues, sous-menus, boutons, tableaux et fiches détaillées (`L10n.tr`)**, **lecture et affichage des cœurs CPU, GPU et Neural Engine (ANE)** sur les cartes des Mac locaux, **barre latérale à 11 onglets** incl. **Configurer & Provisionner**, **vue d'ensemble en 3 onglets**, **bandes de signalisation industrielles jaune-noir** & **surbrillance Solaris**, détection évolutive M1–M12+ (incl. M5 Max/Ultra & M6), télémétrie en temps réel (aucune donnée fictive hors simulation), découverte de modèles en direct (oMLX / Ollama / llama.cpp / GGUF), laboratoire scientifique à 6 onglets, pont hybride Local ↔ Internet-WAN, Audio-Party `AVAudioEngine`, **manuel interactif à 12 chapitres**, **Shorttips en 17 langues** et mise à jour automatique pilotée par GitHub + CI.
 
 Nous encourageons vivement les développeurs, chercheurs et passionnés d'Apple Silicon à **participer au développement et à faire évoluer SS-CCC** :
 - **Tester sur votre matériel :** Essayez SS-CCC sur vos Mac M1–M12+ et partagez vos mesures de débit, mémoire et RDMA/JACCL.

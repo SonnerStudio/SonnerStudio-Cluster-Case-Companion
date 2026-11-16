@@ -1768,6 +1768,1554 @@ enum HelpDocsContent {
                     codeSample: "./scripts/run_ssccc.sh\npython3 -m unittest discover -s tests -v   # 预期输出: Ran 14 tests ... OK"
                 )
             ]
+
+        case .nl:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. Elke Apple Mac met M-processor in het cluster (M1–M12+)",
+                    summary: "Elke Mac met Apple Silicon-chip (M1 tot M12+ — Basis, Pro, Max of Ultra) kan als volwaardige rekenknooppunt aan het cluster deelnemen: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio en Mac Pro.",
+                    bullets: [
+                        "Toekomstbestendige generatiedetectie: Geheugenbandbreedte, FP16-TFLOPS en Thunderbolt-generatie worden ook voor toekomstige M-chips (M7–M12+) automatisch afgeleid.",
+                        "Automatische rangtoewijzing: De Mac met de hoogste geheugendoorvoer (bijv. Ultra of Max) krijgt automatisch Rang 0 (coördinator).",
+                        "Gemengde generaties: Een MacBook Pro M2 Max werkt probleemloos samen met een Mac mini M4 of een Mac Studio M5 Max.",
+                        "Alle modellen ondersteund: Vaste werkstations (Mac Studio, Mac Pro, Mac mini, iMac) en draagbare Macs (MacBook Air/Pro) delen gezamenlijk modellagen."
+                    ],
+                    codeSample: "Rang 0 = hoogste geheugendoorvoer (GB/s) -> Coördinator & API-ingang\nRang 1..N = gekoppelde werknodes in gewogen laagverdeling"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. 3-tabbladen clusteroverzicht & industriële waarschuwingsstrepen",
+                    summary: "Het clusteroverzicht verdeelt het volledige rekencluster in drie grote, duidelijk gescheiden selectietabbladen en markeert veiligheidskritische prestatie- en geheugenzones met diagonale geel-zwarte waarschuwingsstrepen.",
+                    bullets: [
+                        "Tabblad 1 — Lokaal cluster: Toont alle lokale Thunderbolt-3/4/5- (RDMA/JACCL) en 10GbE-Macs inclusief Rang 0, bruikbare geheugenpool en gezamenlijke bandbreedte.",
+                        "Tabblad 2 — Internetcluster: Toont externe WAN-deelnemers en onderverdeelde regionale en lokale deelclusters (subclusters) overzichtelijk.",
+                        "Tabblad 3 — Lokaal + Internet: Verenigt de lokale Thunderbolt-kern en het wereldwijde WAN-netwerk in één gekoppelde hybride totaalweergave.",
+                        "Geel-zwarte waarschuwingsstrepen (HazardStripesBar & IndustrialHazardBanner): Diagonale 45°-markeringen duiden kritische reken-, RDMA-, model-, WAN- en onderzoeks­zones aan in alle kernweergaven."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nWaarschuwingscomponenten: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. Verenigd geheugen & veiligheidsgrens (iogpu.wired_limit_mb)",
+                    summary: "Op Apple Silicon delen CPU en GPU hetzelfde fysieke geheugen. Nooit mag 100 % van het werkgeheugen aan AI-modellen worden toegewezen.",
+                    bullets: [
+                        "Tot 24 GB RAM: Minimaal 4 GB blijft vrij voor macOS en WindowServer (bijv. 16 GB → 12 GB bruikbaar).",
+                        "32 GB tot 64 GB RAM: 6 GB blijft gereserveerd voor het besturingssysteem (bijv. 36 GB → 30 GB bruikbaar).",
+                        "Vanaf 96 GB RAM (Ultra/Max): 8 GB blijft gereserveerd voor macOS (bijv. 128 GB → 120 GB bruikbaar).",
+                        "Vóór het laden controleert SS-CCC de totale behoefte (modelgewichten + KV-cache) ten opzichte van de bruikbare som van alle apparaten."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # Voorbeeld voor 36-GB-Mac (30 GB bruikbaar)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. Netwerk, Thunderbolt-brug (TB3/4/5) & RDMA (JACCL)",
+                    summary: "SS-CCC scheidt besturingsgegevens (LAN/wifi) en model-activeringsdata (Thunderbolt) strikt op twee gescheiden netwerklagen.",
+                    bullets: [
+                        "Besturingsvlak (LAN/wifi): Bonjour-detectie, API-verzoeken, telemetrie en statusuitwisseling.",
+                        "Gegevensvlak (Thunderbolt 3/4/5): Punt-naar-punt-brug in subnet 10.99.1.x met reële 30–37 Gbps (TB4) en tot 90 Gbps (TB5 RDMA).",
+                        "Snelle GPU-synchronisatie: MLX_METAL_FAST_SYNCH=1 verlaagt de wachttijd bij laagovergangen van ~180 µs naar ~4 µs (45× sneller).",
+                        "RDMA / JACCL: Vanaf Thunderbolt 5 systeemeigen bruikbaar; op Thunderbolt 4 optioneel inschakelbaar."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # of: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. Gewogen sharding, modellen laden & multi-modelgebruik",
+                    summary: "In plaats van starre gelijke verdeling wijst SS-CCC elke Mac precies het aantal lagen toe dat bij zijn bruikbare geheugen past — en regelt exact wie laadt en hoeveel modellen parallel passen.",
+                    bullets: [
+                        "Wie laadt het model? Altijd Rang 0 (coördinator met hoogste geheugenbandbreedte) stuurt het shardplan via POST /v1/cluster/plan; elke worker (Rang 1..N) laadt alleen zijn toegewezen laagbereik.",
+                        "Hoeveel modellen kunnen tegelijk draaien? Onbeperkt (multi-modelresidentie) zolang som(gewichten + KV-cache) ≤ bruikbaar clustergeheugen (bijv. 1× 70B–405B+ of 2–4× 7B–32B parallel).",
+                        "Laagformule & KV-compressie: Lagen_i = Totaallagen × (Bruikbaar_i / Totaal_Bruikbaar); KV-cache naar keuze in FP16 (~16k), 8-bits (~32k) of 4-bits (~64k+ context).",
+                        "Gefragmenteerde voorvulling (--prefill-step-size 512) en SSD-KV-offloading (oMLX) voorkomen geheugenpieken bij grote broncodeprojecten."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. Installatiegids: Lokaal cluster & Hybride Lokaal + Internet",
+                    summary: "Stapsgewijze handleiding voor het opzetten van een lokaal TB/RDMA-cluster en de koppeling met een wereldwijd internet-WAN-netwerk (Tailscale, WireGuard, ZeroTier of libp2p QUIC).",
+                    bullets: [
+                        "Stap 1 (Lokaal): Thunderbolt-brug (setup_tb_network.sh) en geheugenbeveiliging (setup_wired_limit.sh) op elke lokale Mac instellen; Rang 0 wordt automatisch gekozen.",
+                        "Stap 2 (Gateway & Model): Op Rang 0 de FastAPI-gateway (poort 8000) en oMLX/Ollama/llama.cpp starten en het doelmodel laden in de Modelwerkplaats.",
+                        "Stap 3 (Internet-WAN): Op externe Macs een versleuteld mesh (Tailscale/WireGuard) inschakelen en in Internetcluster met kamer-ID en uitnodigingstoken deelnemen.",
+                        "Stap 4 (Hybride koppeling): In Overzicht → Lokaal + Internet of Internetcluster op ‘Lokaal + Internet koppelen’ klikken — lokale TB-eilanden vormen de snelle Tier-0-kern, WAN-knooppunten nemen extra lagen over."
+                    ],
+                    codeSample: "WebSocket-chatrelais: ws://127.0.0.1:8000/ws/wan-chat\nKoppeling: Lokaal (TB/RDMA Tier-0) + Internet-WAN -> Hybride supercluster"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. Live deelnemerschat & Cluster Audio-Party (spraakchat)",
+                    summary: "Direct naast de tekstchat biedt SS-CCC een volwaardige Audio-Party geïnspireerd op console-partykamers, afgestemd op gedistribueerde AI-teams.",
+                    bullets: [
+                        "Realtime spraakoverdracht: Gebruikt AVAudioEngine (16 kHz PCM16, Opus-compatibel) via het eigen relais-eindpunt /ws/wan-audio.",
+                        "Spraakmodi: Schakelbaar tussen Push-to-Talk (spreektoets) en Open-Mic (continu), plus microfoondemping en geluid-uitmodus.",
+                        "Deelnemersweergave: Toont actieve sprekers met live niveaumeter, rol van verbonden knooppunten en kamerstatus in realtime.",
+                        "Minimaal bandbreedtegebruik: Spraakkanalen gebruiken minder dan 0,02 % van een normale WAN-uplink en verstoren de tensoroverdracht niet."
+                    ],
+                    codeSample: "WebSocket-audiorelais: ws://127.0.0.1:8000/ws/wan-audio\nAudioformaat: AVAudioEngine 16 kHz PCM16 (Push-to-Talk / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. Onderzoekslaboratorium (6 tabbladen) & Geschiedenisopname",
+                    summary: "De wetenschappelijke module onderzoekt lokale TB/RDMA-clusters, internet-WAN-clusters en de directe vergelijking tussen beide over zes gespecialiseerde tabbladen.",
+                    bullets: [
+                        "Tabblad 1–2 (Roofline & WAN): Williams-Roofline (Log-Log), TTFT/TPOT, GPipe-bubbels, Petals/SWARM-compressie, N=1..128 schaling en DiLoCo vs. DDP.",
+                        "Tabblad 3–4 (Geheugen & Energie): Transformer-geheugenvergelijking, TokenPowerBench (J/token, EDP), regionale stroommix (gCO₂/1M tokens) en stroomkosten vs. cloud.",
+                        "Tabblad 5 (Meetreeksen & Export): N=5/10/20 metingen met p50/p95/p99, 95%-betrouwbaarheidsinterval, SLO-goodput en export naar CSV, JSON, LaTeX (booktabs) en 8-bronnen BibTeX.",
+                        "Tabblad 6 (Geschiedenislogboek): Legt meetwaarden automatisch of handmatig per positie of globaal als tijdreeks vast met trendgrafiek en CSV-export."
+                    ],
+                    codeSample: "Analysebereik: Lokaal (TB/RDMA) | Internet-WAN | Vergelijken\nGeschiedenis: Positie vastleggen | Globaal vastleggen | Auto-opname"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. Runtimeservices: MLX, oMLX, Ollama & llama.cpp",
+                    summary: "In de Modelwerkplaats kunnen modellen rechtstreeks voor de gewenste lokale service worden gestart, live gedetecteerd of tussen formaten geconverteerd.",
+                    bullets: [
+                        "oMLX (poort 8000): Systeemeigen macOS MLX-service met SSD KV-cache en zowel OpenAI- als Anthropic-API.",
+                        "Ollama (poort 11434): Veelgebruikte service voor lokale GGUF-modellen; aanwezige modellen worden live ingelezen.",
+                        "llama.cpp (poort 8080): Directe GGUF-service rechtstreeks via llama-server.",
+                        "Live detectie: SS-CCC bevraagt actieve services automatisch en toont draaiende en lokaal gedownloade modellen direct."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nPoorten: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. AI-agenten (1-klik), Menüleiste & Lokale API-eindpunten",
+                    summary: "Alle ontwikkeltools benaderen via de lokale interface het volledige cluster — volledig zonder cloudoverdracht van broncode of documenten.",
+                    bullets: [
+                        "1-klikconfiguratie: Schrijft kant-en-klare configuraties voor OpenCode, Hermes Agent en Google Antigravity vanuit Agenten & IDE's.",
+                        "Brede IDE-compatibiliteit: Werkt naadloos samen met Cursor, Continue, Open WebUI en Apple Xcode.",
+                        "Menüleist-achtergrondmodus: Minimaliseer naar de bovenste menubalk (⌘⇧M) om het cluster stil op de achtergrond actief te houden voor agenten & IDE's.",
+                        "API-console: Ingebouwde liveconsole om prompts, latentie en tokendoorvoer direct te testen."
+                    ],
+                    codeSample: "OpenAI-eindpunt:    http://127.0.0.1:8000/v1/chat/completions\nAnthropic-eindpunt: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. GitHub-updater & automatische CI-versiecontrole",
+                    summary: "SS-CCC controleert automatisch de nieuwste programmaversie op GitHub en houdt broncode- en release-installaties eenvoudig up-to-date.",
+                    bullets: [
+                        "Automatische controle: Vergelijkt bij opstarten en elke 30 minuten (of handmatig via ⌘U) met version.json, GitHub Releases en main-SHA.",
+                        "UpdatePromptSheet: Toont nieuwere versies inclusief wijzigingslogboek en commitverschil direct in de app.",
+                        "1-klikupdate: Voert git pull + swift build uit en wacht op klik op de knop 'App nu opnieuw starten'.",
+                        "CI-versiebeheer: Elke push naar main voert scripts/bump_version.py uit, synchroniseert version.json & ClusterModels.swift en zet tag vX.Y.Z."
+                    ],
+                    codeSample: "Sneltoetsen: ⌘U (Update check) | ⌘⇧M (Menubalk) | ⌘? (Handleiding)\nManifest: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. Opstarten, probleemoplossing & 25-delige testsuite",
+                    summary: "Eén enkel commando bouwt de macOS-app en opent het venster; de globale testsuite bewaakt alle functies met 25 geautomatiseerde tests.",
+                    bullets: [
+                        "App starten: ./scripts/run_ssccc.sh bouwt het Swift-pakket en opent het SS-CCC-venster.",
+                        "25/25 globale tests: python3 tests/test_global_suite.py controleert Swift-build, alle 17 talen, menubalkmodus, 3-tabbladenoverzicht, WAN, onderzoekslaboratorium en API's.",
+                        "Veelvoorkomende problemen: Bij ontbrekende Thunderbolt-verbinding ./scripts/setup_tb_network.sh opnieuw uitvoeren; bij geheugenwaarschuwingen iogpu.wired_limit_mb controleren.",
+                        "17 talen: Start standaard in het Engels en schakelt live tussen DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI en TA."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # Verwacht: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .af:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. Enige Apple Mac met M-verwerker in die kluster (M1–M12+)",
+                    summary: "Elke Mac met 'n Apple Silicon-skyfie (M1 tot M12+ — Basis, Pro, Max of Ultra) kan as gelykwaardige rekennodus by die kluster aansluit: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio en Mac Pro.",
+                    bullets: [
+                        "Toekomsvaste generasie-opsporing: Geheuebandwydte, FP16-TFLOPS en Thunderbolt-generasie word ook vir toekomstige M-skyfies (M7–M12+) outomaties afgelei.",
+                        "Outomatiese rangtoewysing: Die Mac met die hoogste geheuedeurvloei (bv. Ultra of Max) neem outomaties Rang 0 (koördineerder) oor.",
+                        "Gemengde generasies: 'n MacBook Pro M2 Max werk naatloos saam met 'n Mac mini M4 of 'n Mac Studio M5 Max.",
+                        "Alle vormfaktore ondersteun: Werkstasies (Mac Studio, Mac Pro, Mac mini, iMac) en draagbare Macs (MacBook Air/Pro) deel modellae saam."
+                    ],
+                    codeSample: "Rang 0 = hoogste geheuedeurvloei (GB/s) -> Koördineerder & API-poort\nRang 1..N = werknodusse in geweegde laagverdeling"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. 3-oortjie kluster-oorsig & industriële gevaarstrepe",
+                    summary: "Die Kluster-oorsig verdeel die hele rekenkluster oor drie duidelike keuse-oortjies en merk veiligheids-kritiese werkverrigting- en geheuesones met skuins geel-swart waarskuwingstrepe.",
+                    bullets: [
+                        "Oortjie 1 — Plaaslike kluster: Wys alle plaaslike Thunderbolt-3/4/5- (RDMA/JACCL) en 10GbE-Macs met Rang 0, bruikbare geheuepoel en gesamentlike bandwydte.",
+                        "Oortjie 2 — Internetkluster: Stel afgeleë WAN-deelnemers sowel as onderverdeelde streeks- en plaaslike subklusters duidelik voor.",
+                        "Oortjie 3 — Plaaslik + Internet: Verenig die plaaslike Thunderbolt-kern en die wêreldwye WAN-netwerk in een gekoppelde hibriede aansig.",
+                        "Geel-swart waarskuwingstrepe (HazardStripesBar & IndustrialHazardBanner): Skuins 45°-merkers dui kritiese reken-, RDMA-, model-, WAN- en navorsingssones aan."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nStreepkomponente: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. Verenigde geheue & veiligheidsgrens (iogpu.wired_limit_mb)",
+                    summary: "Op Apple Silicon deel die CPU en GPU dieselfde fisiese geheuepoel. 100 % van die RAM mag nooit vir KI-modelle vrygestel word nie.",
+                    bullets: [
+                        "Tot 24 GB RAM: Ten minste 4 GB bly gereserveer vir macOS en WindowServer (bv. 16 GB → 12 GB bruikbaar).",
+                        "32 GB tot 64 GB RAM: 6 GB bly beskerm vir die bedryfstelsel (bv. 36 GB → 30 GB bruikbaar).",
+                        "Vanaf 96 GB RAM (Ultra/Max): 8 GB bly beskerm vir macOS (bv. 128 GB → 120 GB bruikbaar).",
+                        "Voor elke laai kontroleer SS-CCC die totale aanvraag (modelgewigte + KV-kas) teenoor die bruikbare som van alle toestelle."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # Voorbeeld vir 36-GB-Mac (30 GB bruikbaar)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. Netwerk, Thunderbolt-brug (TB3/4/5) & RDMA (JACCL)",
+                    summary: "SS-CCC skei beheervlak-verkeer (LAN/Wi-Fi) en model-aktiveringsdata (Thunderbolt) skoon oor twee vlakke.",
+                    bullets: [
+                        "Beheervlak (LAN/Wi-Fi): Bonjour-ontdekking, API-versoeke, telemetrie en toestandsuitruiling.",
+                        "Datavlak (Thunderbolt 3/4/5): Punt-tot-punt-brug in netwerk 10.99.1.x met werklike 30–37 Gbps (TB4) of tot 90 Gbps (TB5 RDMA).",
+                        "Vinnige GPU-sinchronisasie: MLX_METAL_FAST_SYNCH=1 verlaag wagtye by laaggrense van ~180 µs na ~4 µs (45× vinniger).",
+                        "RDMA / JACCL: Inheems beskikbaar vanaf Thunderbolt 5; opsioneel op Thunderbolt 4."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # of: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. Geweegde skeiding, modelloop & multi-modelmodus",
+                    summary: "In plaas van starre gelyke verdeling ken SS-CCC aan elke Mac presies die lae toe wat by sy bruikbare geheue pas — en reël wie laai en hoeveel modelle gelyk pas.",
+                    bullets: [
+                        "Wie laai die model? Altyd Rang 0 (koördineerder) koördineer die skurfplan via POST /v1/cluster/plan; elke werker (Rang 1..N) laai slegs sy toegekende laagomvang.",
+                        "Hoeveel modelle gelyk? Enige aantal (multi-model-residensie) solank som(gewigte + KV-kas) ≤ bruikbare klustergeheue.",
+                        "Laagformule & KV-kompressie: Lae_i = TotaleLae × (Bruikbaar_i / Totaal_Bruikbaar); KV-kas in FP16 (~16k), 8-bis (~32k) of 4-bis (~64k+ konteks).",
+                        "Verdeelde voorvulling (--prefill-step-size 512) en SSD-KV-aflaaier (oMLX) voorkom geheuepieke by groot kodebasisse."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. Opstelgids: Plaaslike kluster & Hibried Plaaslik + Internet",
+                    summary: "Stap-vir-stap gids vir die opstel van 'n plaaslike TB/RDMA-kluster en koppeling met 'n wêreldwye internet-WAN-netwerk (Tailscale, WireGuard, ZeroTier of libp2p QUIC).",
+                    bullets: [
+                        "Stap 1 (Plaaslik): Stel Thunderbolt-brug (setup_tb_network.sh) en geheuebeskerming (setup_wired_limit.sh) op elke Mac op; Rang 0 word outomaties gekies.",
+                        "Stap 2 (Poort & Model): Begin FastAPI-poort (8000) en oMLX/Ollama/llama.cpp op Rang 0 en laai die teikenmodel in Modelwerkwinkel.",
+                        "Stap 3 (Internet-WAN): Aktiveer geënkripteerde maas (Tailscale/WireGuard) op afgeleë Macs en sluit aan met kamer-ID in Internetkluster.",
+                        "Stap 4 (Hibriede koppeling): Klik op ‘Koppel Plaaslik + Internet’ — plaaslike TB-eilande vorm die vinnige Vlak-0-kern terwyl WAN-nodusse oorblywende lae hanteer."
+                    ],
+                    codeSample: "WebSocket-kletsaflosser: ws://127.0.0.1:8000/ws/wan-chat\nKoppeling: Plaaslik (TB/RDMA Vlak-0) + Internet-WAN -> Hibriede superkluster"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. Lewendige deelnemerklets & Kluster Oudio-Partytjie",
+                    summary: "Direk langs die teksklets bied SS-CCC 'n volwaardige Oudio-Partytjie geïnspireer deur konsole-partytjiekamers vir verspreide KI-spanne.",
+                    bullets: [
+                        "Intydse stemoordrag: Gebruik AVAudioEngine (16 kHz PCM16, Opus-versoenbaar) oor /ws/wan-audio.",
+                        "Stemmodusse: Skakel tussen Druk-om-te-praat (PTT) en Oop Mikrofoon sowel as demp- en stilmaakmodusse.",
+                        "Deelnemer-aansig: Wys aktiewe sprekers met lewendige klankvlakmeter, nodusrolle en kamerstatus intyds.",
+                        "Lae bandwydte: Stemkanale gebruik minder as 0,02 % van 'n tipiese WAN-oplaaiskakel."
+                    ],
+                    codeSample: "WebSocket-oudio-aflosser: ws://127.0.0.1:8000/ws/wan-audio\nOudioformaat: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. Navorsingslaboratorium (6 oortjies) & Geskiedenisopname",
+                    summary: "Die wetenskaplike afdeling ontleed plaaslike TB/RDMA-klusters, internet-WAN-klusters en direkte vergelykings oor ses spesialisoortjies.",
+                    bullets: [
+                        "Oortjie 1–2 (Roofline & WAN): Williams-Roofline (Log-Log), TTFT/TPOT, GPipe-borrels, Petals/SWARM-kompressie, N=1..128 skalering en DiLoCo.",
+                        "Oortjie 3–4 (Geheue & Energie): Transformator-geheuevergelyking, TokenPowerBench (J/teken, EDP), streekkragmengsel (gCO₂/1M) en kragkoste teenoor wolk.",
+                        "Oortjie 5 (Meetreekse & Uitvoer): N=5/10/20 lope met p50/p95/p99, CI95, SLO-goodput en CSV-, JSON-, LaTeX- en 8-bron-BibTeX-uitvoer.",
+                        "Oortjie 6 (Geskiedenislogboek): Teken meetwaardes outomaties of handmatig as tydreeks aan met CSV-uitvoer."
+                    ],
+                    codeSample: "Ontledingsomvang: Plaaslik (TB/RDMA) | Internet-WAN | Vergelyk\nGeskiedenis: Teken posisie aan | Teken globaal aan | Outo-opname"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. Looptyddienste: MLX, oMLX, Ollama & llama.cpp",
+                    summary: "In Modelwerkwinkel kan modelle direk vir die gekose plaaslike diens begin, lewendig bespeur of tussen formate omgeskakel word.",
+                    bullets: [
+                        "oMLX (poort 8000): Inheemse macOS MLX-diens met SSD KV-kas en OpenAI-/Anthropic-koppelvlakke.",
+                        "Ollama (poort 11434): Gewilde diens vir plaaslike GGUF-modelle; beskikbare modelle word lewendig gelaai.",
+                        "llama.cpp (poort 8080): Direkte GGUF-bediener oor llama-server.",
+                        "Lewendige ontdekking: SS-CCC ondersoek aktiewe dienste outomaties en wys dadelik alle gereed modelle."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nPoorte: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. KI-agente (1-klik), Kieslysbalk & Plaaslike API's",
+                    summary: "Alle ontwikkelhulpmiddels kry toegang tot die hele kluster oor die plaaslike koppelvlak — sonder wolk-oordrag van bronkode.",
+                    bullets: [
+                        "1-klik opstelling: Skryf klaargemaakte konfigurasies vir OpenCode, Hermes Agent en Google Antigravity.",
+                        "Wye IDE-ondersteuning: Werk naatloos met Cursor, Continue, Open WebUI en Apple Xcode.",
+                        "Kieslysbalk-agtergrondmodus: Minimaliseer na die boonste kieslysbalk (⌘⇧M) sodat SS-CCC stil as diensverskaffer in die agtergrond aanhou werk.",
+                        "API-konsole: Ingeboude toetskonsole vir aanwysings, latensie en tokendeurvloei."
+                    ],
+                    codeSample: "OpenAI-eindpunt:    http://127.0.0.1:8000/v1/chat/completions\nAnthropic-eindpunt: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. GitHub-opdateerder & outomatiese CI-weergawebeheer",
+                    summary: "SS-CCC monitor outomaties die nuutste programweergawe op GitHub en hou bronkode- en vrystellinginstallasies op datum.",
+                    bullets: [
+                        "Outomatiese kontrole: Vergelyk by begin en elke 30 minute (of met ⌘U) teen version.json, GitHub Releases en main-SHA.",
+                        "UpdatePromptSheet: Wys veranderingslogboek en commit-verskille direk in die program.",
+                        "1-klik opdatering: Voer git pull + swift build uit en wag totdat die gebruiker op 'Herbegin program nou' klik.",
+                        "CI-weergawebeheer: Elke stoot na main laat scripts/bump_version.py loop en skep merker vX.Y.Z."
+                    ],
+                    codeSample: "Kortpaaie: ⌘U (Soek opdaterings) | ⌘⇧M (Kieslysbalk) | ⌘? (Handleiding)\nManifes: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. Begin, foutsporing & 25-delige toetspakket",
+                    summary: "Een opdrag kompileer die macOS-toepassing en maak die venster oop; 25 globale toetse verifieer elke module.",
+                    bullets: [
+                        "Begin program: ./scripts/run_ssccc.sh bou die Swift-pakket en maak die SS-CCC-venster oop.",
+                        "25/25 globale toetse: python3 tests/test_global_suite.py verifieer Swift-bou, 17 tale, kieslysbalkmodus, 3-oortjie-oorsig, WAN en API's.",
+                        "Algemene probleme: Indien Thunderbolt ontbreek, voer ./scripts/setup_tb_network.sh weer uit; kontroleer iogpu.wired_limit_mb vir geheuewaarskuwings.",
+                        "17 tale: Begin in Engels en wissel regstreeks tussen DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI en TA."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # Verwag: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .pl:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. Dowolny Apple Mac z procesorem serii M w klastrze (M1–M12+)",
+                    summary: "Każdy komputer Mac z układem Apple Silicon (od M1 do M12+ — wersje Base, Pro, Max lub Ultra) może dołączyć do klastra jako pełnoprawny węzeł obliczeniowy: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio oraz Mac Pro.",
+                    bullets: [
+                        "Przyszłościowe wykrywanie generacji: Przepustowość pamięci, moc FP16 TFLOPS i klasa Thunderbolt są automatycznie wyznaczane także dla przyszłych układów M7–M12+.",
+                        "Automatyczne nadawanie rang: Mac o najwyższej przepustowości pamięci (np. Ultra lub Max) automatycznie obejmuje Rangę 0 (koordynator).",
+                        "Mieszane generacje: MacBook Pro M2 Max bezproblemowo współpracuje z Maciem mini M4 lub Mac Studio M5 Max.",
+                        "Wszystkie obudowy wspierane: Stacjonarne stacje robocze i mobilne MacBooki wspólnie dzielą warstwy modeli."
+                    ],
+                    codeSample: "Ranga 0 = najwyższa przepustowość pamięci (GB/s) -> Koordynator i brama API\nRanga 1..N = węzły robocze w ważonym podziale warstw"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. 3-kartowy przegląd klastra i przemysłowe pasy ostrzegawcze",
+                    summary: "Przegląd klastra dzieli cały klaster obliczeniowy na trzy przejrzyste karty zakresu i oznacza krytyczne strefy mocy oraz pamięci ukośnymi żółto-czarnymi pasami ostrzegawczymi.",
+                    bullets: [
+                        "Karta 1 — Klaster lokalny: Wyświetla wszystkie lokalne komputery Thunderbolt 3/4/5 (RDMA/JACCL) i 10GbE wraz z Rangą 0, użyteczną pulą pamięci oraz łączną przepustowością.",
+                        "Karta 2 — Klaster internetowy: Przejrzyście prezentuje zdalnych uczestników WAN oraz podzielone podklastry regionalne i lokalne.",
+                        "Karta 3 — Lokalnie + Internet: Łączy lokalny rdzeń Thunderbolt i globalną sieć WAN w jednym sprzężonym widoku hybrydowym.",
+                        "Żółto-czarne pasy ostrzegawcze (HazardStripesBar i IndustrialHazardBanner): Oznaczenia pod kątem 45° wskazują krytyczne strefy obliczeniowe, RDMA, modeli i WAN."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nKomponenty ostrzegawcze: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. Zunifikowana pamięć i limit bezpieczeństwa (iogpu.wired_limit_mb)",
+                    summary: "W układach Apple Silicon CPU i GPU dzielą tę samą pamięć fizyczną. Nigdy nie wolno przydzielać 100 % pamięci RAM dla modeli AI.",
+                    bullets: [
+                        "Do 24 GB RAM: Co najmniej 4 GB pozostają zarezerwowane dla macOS i WindowServer (np. 16 GB → 12 GB użyteczne).",
+                        "Od 32 GB do 64 GB RAM: 6 GB pozostaje chronione dla systemu operacyjnego (np. 36 GB → 30 GB użyteczne).",
+                        "Od 96 GB RAM (Ultra/Max): 8 GB pozostaje chronione dla macOS (np. 128 GB → 120 GB użyteczne).",
+                        "Przed załadowaniem SS-CCC sprawdza łączne zapotrzebowanie (wagi modelu + pamięć KV) wobec użytecznej sumy wszystkich urządzeń."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # Przykład dla Maca 36 GB (30 GB użyteczne)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. Sieć, mostek Thunderbolt (TB3/4/5) i RDMA (JACCL)",
+                    summary: "SS-CCC wyraźnie rozdziela dane sterowania (LAN/Wi-Fi) oraz tensory aktywacji modeli (Thunderbolt) na dwie warstwy.",
+                    bullets: [
+                        "Płaszczyzna sterowania (LAN/Wi-Fi): Wykrywanie Bonjour, zapytania API, telemetria i wymiana stanu.",
+                        "Płaszczyzna danych (Thunderbolt 3/4/5): Mostek punkt-punkt w sieci 10.99.1.x osiągający realnie 30–37 Gbps (TB4) oraz do 90 Gbps (TB5 RDMA).",
+                        "Szybka synchronizacja GPU: MLX_METAL_FAST_SYNCH=1 skraca czas oczekiwania na granicach warstw z ~180 µs do ~4 µs (45× szybciej).",
+                        "RDMA / JACCL: Dostępne natywnie od Thunderbolt 5; opcjonalnie włączane na Thunderbolt 4."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # lub: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. Podział ważony, ładowanie modeli i tryb wielomodelowy",
+                    summary: "Zamiast sztywnego podziału po równo SS-CCC przydziela każdemu Macowi dokładnie tyle warstw, ile odpowiada jego użytecznej pamięci — oraz zarządza równoległym ładowaniem wielu modeli.",
+                    bullets: [
+                        "Kto ładuje model? Zawsze Ranga 0 koordynuje plan podziału przez POST /v1/cluster/plan; każdy Worker (Ranga 1..N) ładuje tylko swój zakres warstw.",
+                        "Ile modeli naraz? Dowolna liczba, dopóki suma(wag + KV Cache) ≤ użytecznej pamięci klastra (np. 1× 70B–405B+ lub 2–4× 7B–32B równolegle).",
+                        "Wzór na warstwy i kwantyzacja KV: Warstwy_i = SumaWarstw × (Użyteczne_i / Suma_Użyteczne); pamięć KV w FP16 (~16k), 8-bit (~32k) lub 4-bit (~64k+ kontekstu).",
+                        "Krokowe wstępne wypełnianie (--prefill-step-size 512) i zrzut KV na SSD (oMLX) zapobiegają skokom zużycia pamięci."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. Instrukcja konfiguracji: Klaster lokalny i Hybryda Lokalnie + Internet",
+                    summary: "Przewodnik krok po kroku do uruchomienia lokalnego klastra TB/RDMA i połączenia go z globalną siecią Internet WAN (Tailscale, WireGuard, ZeroTier lub libp2p QUIC).",
+                    bullets: [
+                        "Krok 1 (Lokalnie): Skonfiguruj mostek Thunderbolt (setup_tb_network.sh) i ochronę pamięci (setup_wired_limit.sh) na każdym lokalnym Macu; Ranga 0 wybierana automatycznie.",
+                        "Krok 2 (Bramka i Model): Uruchom bramkę FastAPI (port 8000) oraz oMLX/Ollama/llama.cpp na Randze 0 i załaduj model w Warsztacie modeli.",
+                        "Krok 3 (Internet WAN): Włącz szyfrowaną sieć Mesh (Tailscale/WireGuard) na zdalnych Macach i dołącz podając ID pokoju w Klastrze internetowym.",
+                        "Krok 4 (Łączenie hybrydowe): Kliknij „Połącz Lokalnie + Internet” — lokalne wyspy TB tworzą szybki rdzeń Tier-0, a węzły WAN przejmują pozostałe warstwy."
+                    ],
+                    codeSample: "Przekaźnik czatu WebSocket: ws://127.0.0.1:8000/ws/wan-chat\nSprzężenie: Lokalnie (TB/RDMA Tier-0) + Internet WAN -> Superklaster hybrydowy"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. Czat uczestników na żywo i Klaster Audio-Party (czat głosowy)",
+                    summary: "Tuż obok czatu tekstowego SS-CCC oferuje pełnoprawne Audio-Party wzorowane na czatach konsolowych, stworzone dla rozproszonych zespołów AI.",
+                    bullets: [
+                        "Dźwięk w czasie rzeczywistym: Wykorzystuje AVAudioEngine (16 kHz PCM16, zgodny z Opus) przez własny punkt przekaźnikowy /ws/wan-audio.",
+                        "Tryby głosowe: Przełączane między Naciśnij i mów (PTT) a Otwartym mikrofonem oraz wyciszaniem mikrofonu i dźwięku.",
+                        "Podgląd uczestników: Wyświetla aktywnych mówców ze wskaźnikiem poziomu na żywo, rolą węzła i statusem pokoju.",
+                        "Minimalne zużycie pasma: Kanał głosowy zajmuje poniżej 0,02 % typowego łącza wysyłającego WAN."
+                    ],
+                    codeSample: "Przekaźnik audio WebSocket: ws://127.0.0.1:8000/ws/wan-audio\nFormat audio: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. Laboratorium badawcze (6 kart) i Dziennik historii",
+                    summary: "Sekcja naukowa analizuje klastry lokalne TB/RDMA, klastry Internet WAN oraz bezpośrednie porównania na sześciu specjalistycznych kartach.",
+                    bullets: [
+                        "Karty 1–2 (Roofline i WAN): Model Williams-Roofline (Log-Log), TTFT/TPOT, bąbel GPipe, kompresja Petals/SWARM, skalowanie N=1..128 i DiLoCo.",
+                        "Karty 3–4 (Pamięć i Energia): Równanie pamięci Transformera, TokenPowerBench (J/token, EDP), regionalny miks energii (gCO₂/1M) i koszt vs. chmura.",
+                        "Karta 5 (Pomiary i Eksport): Serie N=5/10/20 z p50/p95/p99, CI95, SLO-goodput oraz eksportem do CSV, JSON, LaTeX (booktabs) i BibTeX (8 prac).",
+                        "Karta 6 (Historia): Automatycznie lub ręcznie zapisuje przebiegi dla pojedynczych pozycji i globalnie z wykresem trendu i eksportem CSV."
+                    ],
+                    codeSample: "Zakresy analizy: Lokalnie (TB/RDMA) | Internet WAN | Porównanie\nHistoria: Zapisz pozycję | Zapisz globalnie | Autozapis"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. Usługi uruchomieniowe: MLX, oMLX, Ollama i llama.cpp",
+                    summary: "W Warsztacie modeli można uruchamiać modele bezpośrednio dla wybranej usługi lokalnej, wykrywać je na żywo lub konwertować między formatami.",
+                    bullets: [
+                        "oMLX (port 8000): Natywny serwer macOS MLX z pamięcią podręczną KV na SSD oraz API OpenAI i Anthropic.",
+                        "Ollama (port 11434): Popularna usługa dla lokalnych modeli GGUF; obecne modele są wczytywane na żywo.",
+                        "llama.cpp (port 8080): Bezpośrednia usługa GGUF przez llama-server.",
+                        "Wykrywanie na żywo: SS-CCC automatycznie odpytuje działające usługi i od razu pokazuje dostępne modele."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nPorty: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. Agenci AI (1 kliknięcie), Pasek menu i Lokalne API",
+                    summary: "Wszystkie narzędzia programistyczne łączą się z klastrem przez lokalny interfejs — bez wysyłania kodu źródłowego ani dokumentów do chmury.",
+                    bullets: [
+                        "Konfiguracja 1 kliknięciem: Tworzy gotowe pliki dla OpenCode, Hermes Agent i Google Antigravity z karty Agenci i IDE.",
+                        "Szeroka obsługa IDE: Bezproblemowo współpracuje z Cursor, Continue, Open WebUI i Apple Xcode.",
+                        "Tryb paska menu w tle: Zminimalizuj do górnego paska menu (⌘⇧M), aby klaster dyskretnie w tle obsługiwał agentów i IDE jak Ollama.",
+                        "Konsola API: Wbudowana konsola na żywo do testowania zapytań, opóźnień i przepustowości."
+                    ],
+                    codeSample: "Punkt końcowy OpenAI:    http://127.0.0.1:8000/v1/chat/completions\nPunkt końcowy Anthropic: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. Aktualizator GitHub i automatyczna kontrola wersji CI",
+                    summary: "SS-CCC automatycznie sprawdza aktualną wersję programu na GitHubie i dba o aktualność instalacji źródłowych oraz wydań.",
+                    bullets: [
+                        "Automatyczne sprawdzanie: Porównuje przy starcie i co 30 minut (lub skrótem ⌘U) z version.json, GitHub Releases i SHA gałęzi main.",
+                        "UpdatePromptSheet: Wyświetla listę zmian oraz różnice commitów bezpośrednio w aplikacji.",
+                        "Aktualizacja 1 kliknięciem: Wykonuje git pull + swift build i czeka na kliknięcie przycisku 'Uruchom ponownie aplikację teraz'.",
+                        "Kontrola wersji CI: Każdy push na main uruchamia scripts/bump_version.py i tworzy tag vX.Y.Z."
+                    ],
+                    codeSample: "Skróty: ⌘U (Aktualizacje) | ⌘⇧M (Pasek menu) | ⌘? (Podręcznik)\nManifest: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. Uruchamianie, rozwiązywanie problemów i 25 testów globalnych",
+                    summary: "Jedno polecenie kompiluje aplikację macOS i otwiera okno; globalny zestaw testów weryfikuje wszystkie funkcje za pomocą 25 automatycznych sprawdzeń.",
+                    bullets: [
+                        "Uruchomienie aplikacji: ./scripts/run_ssccc.sh kompiluje pakiet Swift i otwiera okno SS-CCC.",
+                        "25/25 testów globalnych: python3 tests/test_global_suite.py sprawdza kompilację Swift, 17 języków, tryb paska menu, 3-kartowy przegląd, WAN, laboratorium i API.",
+                        "Rozwiązywanie problemów: W razie braku łącza Thunderbolt uruchom ponownie ./scripts/setup_tb_network.sh; przy ostrzeżeniach pamięci sprawdź iogpu.wired_limit_mb.",
+                        "17 języków interfejsu: Domyślnie startuje po angielsku z przełączaniem na żywo między DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI i TA."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # Oczekiwano: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .cs:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. Libovolný Apple Mac s čipem řady M v clusteru (M1–M12+)",
+                    summary: "Každý Mac s čipem Apple Silicon (M1 až M12+ — Base, Pro, Max nebo Ultra) se může zapojit do clusteru jako rovnocenný výpočetní uzel: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio i Mac Pro.",
+                    bullets: [
+                        "Budoucí detekce generací: Propustnost paměti, FP16 TFLOPS a generace Thunderbolt jsou automaticky odvozeny i pro budoucí čipy M7–M12+.",
+                        "Automatické přiřazení pořadí: Mac s nejvyšší propustností paměti (např. Ultra nebo Max) automaticky přebírá Pořadí 0 (koordinátor).",
+                        "Smíšené generace: MacBook Pro M2 Max plynule spolupracuje s Macem mini M4 nebo Mac Studio M5 Max.",
+                        "Podpora všech modelů: Stolní pracovní stanice i přenosné Macy společně sdílejí vrstvy modelů."
+                    ],
+                    codeSample: "Pořadí 0 = nejvyšší propustnost paměti (GB/s) -> Koordinátor & brána API\nPořadí 1..N = podřízené uzly ve váženém rozdělení vrstev"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. Přehled clusteru se 3 kartami a průmyslovým výstražným značením",
+                    summary: "Přehled clusteru rozděluje celý výpočetní cluster na tři jasně oddělené karty a kritické zóny výkonu a paměti označuje šikmými žlutočernými výstražnými pruhy.",
+                    bullets: [
+                        "Karta 1 — Lokální cluster: Zobrazuje všechny místní Macy Thunderbolt 3/4/5 (RDMA/JACCL) a 10GbE včetně Pořadí 0, využitelného fondu paměti a agregované šířky pásma.",
+                        "Karta 2 — Internetový cluster: Přehledně zobrazuje vzdálené WAN účastníky i členěné regionální a místní podclustery.",
+                        "Karta 3 — Lokální + Internet: Spojuje místní jádro Thunderbolt a globální síť WAN do jednoho propojeného hybridního pohledu.",
+                        "Žlutočerné výstražné pruhy (HazardStripesBar & IndustrialHazardBanner): Šikmé pruhy pod úhlem 45° označují kritické výpočetní, RDMA, modelové a WAN zóny."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nVýstražné prvky: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. Sjednocená paměť a ochranný limit (iogpu.wired_limit_mb)",
+                    summary: "Na čipech Apple Silicon sdílejí CPU a GPU tutéž fyzickou paměť. Pro modely AI nesmí být nikdy uvolněno 100 % paměti RAM.",
+                    bullets: [
+                        "Do 24 GB RAM: Minimálně 4 GB zůstávají vyhrazeny pro macOS a WindowServer (např. 16 GB → 12 GB využitelných).",
+                        "32 GB až 64 GB RAM: 6 GB zůstává chráněno pro operační systém (např. 36 GB → 30 GB využitelných).",
+                        "Od 96 GB RAM (Ultra/Max): 8 GB zůstává chráněno pro macOS (např. 128 GB → 120 GB využitelných).",
+                        "Před každým načtením SS-CCC ověří celkovou potřebu (váhy modelu + KV cache) vůči využitelnému součtu všech zařízení."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # Příklad pro 36 GB Mac (30 GB využitelných)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. Síť, most Thunderbolt (TB3/4/5) a RDMA (JACCL)",
+                    summary: "SS-CCC čistě odděluje řídicí provoz (LAN/Wi-Fi) a přenosy aktivačních dat modelů (Thunderbolt) ve dvou rovinách.",
+                    bullets: [
+                        "Řídicí rovina (LAN/Wi-Fi): Vyhledávání Bonjour, požadavky API, telemetrie a výměna stavů.",
+                        "Datová rovina (Thunderbolt 3/4/5): Point-to-point most v síti 10.99.1.x s reálnou rychlostí 30–37 Gbps (TB4) až 90 Gbps (TB5 RDMA).",
+                        "Rychlá synchronizace GPU: MLX_METAL_FAST_SYNCH=1 zkracuje čekání na hranicích vrstev z ~180 µs na ~4 µs (45× rychlejší).",
+                        "RDMA / JACCL: Nativně od Thunderbolt 5; na Thunderbolt 4 volitelně aktivovatelné."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # nebo: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. Vážené dělení, načítání modelů a více-modelový režim",
+                    summary: "Místo pevného rovného dělení přiřadí SS-CCC každému Macu přesně tolik vrstev, kolik odpovídá jeho využitelné paměti — a řídí paralelní běh více modelů.",
+                    bullets: [
+                        "Kdo načítá model? Vždy Pořadí 0 koordinuje plán přes POST /v1/cluster/plan; každý Worker (Pořadí 1..N) načte jen svůj rozsah vrstev.",
+                        "Kolik modelů najednou? Libovolně mnoho, dokud součet(váhy + KV cache) ≤ využitelná paměť clusteru (např. 1× 70B–405B+ nebo 2–4× 7B–32B paralelně).",
+                        "Vzorec vrstev a kvantizace KV: Vrstvy_i = CelkemVrstev × (Využitelné_i / Celkem_Využitelné); KV cache ve FP16 (~16k), 8-bit (~32k) nebo 4-bit (~64k+ kontextu).",
+                        "Dávkový prefill (--prefill-step-size 512) a odkládání KV na SSD (oMLX) brání paměťovým špičkám."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. Návod k sestavení: Lokální cluster a Hybrid Lokální + Internet",
+                    summary: "Podrobný průvodce nastavením místního clusteru TB/RDMA a jeho propojením s globální sítí Internet WAN (Tailscale, WireGuard, ZeroTier nebo libp2p QUIC).",
+                    bullets: [
+                        "Krok 1 (Lokálně): Nastavte most Thunderbolt (setup_tb_network.sh) a ochranu paměti (setup_wired_limit.sh) na každém místním Macu; Pořadí 0 se zvolí automaticky.",
+                        "Krok 2 (Brána a Model): Spusťte FastAPI bránu (port 8000) a oMLX/Ollama/llama.cpp na Pořadí 0 a načtěte model v Dílně modelů.",
+                        "Krok 3 (Internet WAN): Aktivujte šifrovanou síť (Tailscale/WireGuard) na vzdálených Macích a připojte se kódem místnosti v Internetovém clusteru.",
+                        "Krok 4 (Hybridní propojení): Klikněte na ‚Propojit Lokální + Internet‘ — místní TB ostrovy tvoří rychlé jádro Tier-0, uzly WAN přebírají zbývající vrstvy."
+                    ],
+                    codeSample: "WebSocket přenašeč chatu: ws://127.0.0.1:8000/ws/wan-chat\nPropojení: Lokální (TB/RDMA Tier-0) + Internet WAN -> Hybridní supercluster"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. Živý chat účastníků a Cluster Audio-Party (hlasový chat)",
+                    summary: "Hned vedle textového chatu nabízí SS-CCC plnohodnotnou Audio-Party po vzoru konzolových party místností pro distribuované AI týmy.",
+                    bullets: [
+                        "Hlas v reálném čase: Využívá AVAudioEngine (16 kHz PCM16, kompatibilní s Opus) přes vlastní endpoint /ws/wan-audio.",
+                        "Hlasové režimy: Přepínání mezi Stiskni a mluv (PTT) a Otevřeným mikrofonem i ztlumením.",
+                        "Přehled účastníků: Zobrazuje aktivní mluvčí se živým ukazatelem úrovně, rolí uzlu a stavem místnosti.",
+                        "Minimální šířka pásma: Hlasový kanál spotřebuje méně než 0,02 % běžného WAN uplinku."
+                    ],
+                    codeSample: "WebSocket audio přenašeč: ws://127.0.0.1:8000/ws/wan-audio\nFormát audia: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. Vědecká laboratoř (6 karet) a Záznam historie",
+                    summary: "Vědecká část analyzuje místní TB/RDMA clustery, internetové WAN clustery i jejich přímé srovnání na šesti odborných kartách.",
+                    bullets: [
+                        "Karty 1–2 (Roofline & WAN): Williams-Roofline (Log-Log), TTFT/TPOT, bublina GPipe, komprese Petals/SWARM, škálování N=1..128 a DiLoCo.",
+                        "Karty 3–4 (Paměť & Energie): Paměťová rovnice Transformeru, TokenPowerBench (J/token, EDP), regionální mix elektřiny (gCO₂/1M) a srovnání s cloudem.",
+                        "Karta 5 (Měření & Export): Série N=5/10/20 s p50/p95/p99, CI95, SLO-goodput a export do CSV, JSON, LaTeX (booktabs) a BibTeX.",
+                        "Karta 6 (Historie): Automaticky nebo ručně zaznamenává časové řady pro jednotlivé pozice i globálně včetně grafu trendu a CSV exportu."
+                    ],
+                    codeSample: "Rozsah analýzy: Místní (TB/RDMA) | Internet WAN | Srovnání\nHistorie: Zaznamenat pozici | Zaznamenat globálně | Auto-záznam"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. Běhové služby: MLX, oMLX, Ollama a llama.cpp",
+                    summary: "V Dílně modelů lze modely přímo spouštět pro vybranou místní službu, živě je detekovat nebo převádět mezi formáty.",
+                    bullets: [
+                        "oMLX (port 8000): Nativní macOS služba MLX s SSD KV mezipamětí a rozhraním OpenAI i Anthropic.",
+                        "Ollama (port 11434): Rozšířená služba pro místní modely GGUF; dostupné modely se načítají živě.",
+                        "llama.cpp (port 8080): Přímá služba GGUF přes llama-server.",
+                        "Živé vyhledávání: SS-CCC automaticky dotazuje běžící služby a ihned zobrazuje dostupné modely."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nPorty: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. AI agenti (1 kliknutí), Řádek nabídek a Místní API",
+                    summary: "Všechny vývojářské nástroje využívají celý cluster přes místní rozhraní — zcela bez odesílání zdrojového kódu do cloudu.",
+                    bullets: [
+                        "Nastavení 1 kliknutím: Zapíše hotové konfigurace pro OpenCode, Hermes Agent a Google Antigravity z karty Agenti a IDE.",
+                        "Široká podpora IDE: Funguje bezproblémově s Cursor, Continue, Open WebUI a Apple Xcode.",
+                        "Režim na pozadí v řádku nabídek: Minimalizujte do horního řádku nabídek (⌘⇧M), aby cluster tiše na pozadí obsluhoval agenty a IDE stejně jako Ollama.",
+                        "API konzole: Integrovaná živá konzole pro přímé testování výzev, latence a propustnosti."
+                    ],
+                    codeSample: "Koncový bod OpenAI:    http://127.0.0.1:8000/v1/chat/completions\nKoncový bod Anthropic: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. Aktualizátor GitHub a automatická kontrola verzí CI",
+                    summary: "SS-CCC automaticky sleduje nejnovější verzi programu na GitHubu a udržuje zdrojové i vydané instalace aktuální.",
+                    bullets: [
+                        "Automatická kontrola: Porovnává při spuštění a každých 30 minut (nebo zkratkou ⌘U) oproti version.json, GitHub Releases a main SHA.",
+                        "UpdatePromptSheet: Zobrazuje seznam změn i rozdíly revizí přímo v aplikaci.",
+                        "Aktualizace 1 kliknutím: Spustí git pull + swift build a vyčká na kliknutí na tlačítko 'Restartovat aplikaci nyní'.",
+                        "Správa verzí CI: Každý push na main spustí scripts/bump_version.py a nastaví značku vX.Y.Z."
+                    ],
+                    codeSample: "Zkratky: ⌘U (Aktualizace) | ⌘⇧M (Řádek nabídek) | ⌘? (Příručka)\nManifest: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. Spuštění, řešení potíží a 25dílná sada testů",
+                    summary: "Jediný příkaz zkompiluje aplikaci macOS a otevře okno; globální sada ověřuje všechny funkce pomocí 25 automatických testů.",
+                    bullets: [
+                        "Spuštění aplikace: ./scripts/run_ssccc.sh sestaví balíček Swift a otevře okno SS-CCC.",
+                        "25/25 globálních testů: python3 tests/test_global_suite.py ověřuje sestavení Swift, 17 jazyků, režim řádku nabídek, 3kartový přehled, WAN a API.",
+                        "Řešení potíží: Pokud chybí spojení Thunderbolt, spusťte znovu ./scripts/setup_tb_network.sh; při varování paměti zkontrolujte iogpu.wired_limit_mb.",
+                        "17 jazyků rozhraní: Výchozí start v angličtině s okamžitým přepínáním mezi DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI a TA."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # Očekáváno: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .sk:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. Akýkoľvek Apple Mac s procesorom radu M v klastri (M1–M12+)",
+                    summary: "Každý Mac s čipom Apple Silicon (M1 až M12+ — Base, Pro, Max alebo Ultra) sa môže zapojiť do klastra ako rovnocenný výpočtový uzol: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio aj Mac Pro.",
+                    bullets: [
+                        "Budúca detekcia generácií: Priepustnosť pamäte, FP16 TFLOPS a generácia Thunderbolt sa automaticky odvodia aj pre budúce čipy M7–M12+.",
+                        "Automatické prideľovanie poradia: Mac s najvyššou priepustnosťou pamäte (napr. Ultra alebo Max) automaticky preberá Poradie 0 (koordinátor).",
+                        "Zmiešané generácie: MacBook Pro M2 Max plynulo spolupracuje s Macom mini M4 alebo Mac Studio M5 Max.",
+                        "Podpora všetkých modelov: Stolné pracovné stanice aj prenosné Macy spoločne zdieľajú vrstvy modelov."
+                    ],
+                    codeSample: "Poradie 0 = najvyššia priepustnosť pamäte (GB/s) -> Koordinátor & brána API\nPoradie 1..N = podriadené uzly vo váženom delení vrstiev"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. Prehľad klastra s 3 kartami a priemyselným výstražným značením",
+                    summary: "Prehľad klastra rozdeľuje celý výpočtový klaster do troch jasne oddelených kariet a kritické zóny výkonu a pamäte označuje šikmými žltočiernymi výstražnými pruhmi.",
+                    bullets: [
+                        "Karta 1 — Lokálny klaster: Zobrazuje všetky miestne Macy Thunderbolt 3/4/5 (RDMA/JACCL) a 10GbE vrátane Poradia 0, využiteľného fondu pamäte a agregovanej šírky pásma.",
+                        "Karta 2 — Internetový klaster: Prehľadne zobrazuje vzdialených WAN účastníkov aj členené regionálne a miestne podklastre.",
+                        "Karta 3 — Lokálne + Internet: Spája miestne jadro Thunderbolt a globálnu sieť WAN do jedného prepojeného hybridného pohľadu.",
+                        "Žltočierne výstražné pruhy (HazardStripesBar & IndustrialHazardBanner): Šikmé pruhy pod uhlom 45° označujú kritické výpočtové, RDMA, modelové a WAN zóny."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nVýstražné prvky: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. Zjednotená pamäť a ochranný limit (iogpu.wired_limit_mb)",
+                    summary: "Na čipoch Apple Silicon zdieľajú CPU a GPU tú istú fyzickú pamäť. Pre modely AI nesmie byť nikdy uvoľnených 100 % pamäte RAM.",
+                    bullets: [
+                        "Do 24 GB RAM: Minimálne 4 GB zostávajú vyhradené pre macOS a WindowServer (napr. 16 GB → 12 GB využiteľných).",
+                        "32 GB až 64 GB RAM: 6 GB zostáva chránených pre operačný systém (napr. 36 GB → 30 GB využiteľných).",
+                        "Od 96 GB RAM (Ultra/Max): 8 GB zostáva chránených pre macOS (napr. 128 GB → 120 GB využiteľných).",
+                        "Pred každým načítaním SS-CCC overí celkovú potrebu (váhy modelu + KV cache) voči využiteľnému súčtu všetkých zariadení."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # Príklad pre 36 GB Mac (30 GB využiteľných)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. Sieť, most Thunderbolt (TB3/4/5) a RDMA (JACCL)",
+                    summary: "SS-CCC čisto oddeľuje riadiacu prevádzku (LAN/Wi-Fi) a prenosy aktivačných dát modelov (Thunderbolt) v dvoch rovinách.",
+                    bullets: [
+                        "Riadiaca rovina (LAN/Wi-Fi): Vyhľadávanie Bonjour, požiadavky API, telemetria a výmena stavov.",
+                        "Dátová rovina (Thunderbolt 3/4/5): Point-to-point most v sieti 10.99.1.x s reálnou rýchlosťou 30–37 Gbps (TB4) až 90 Gbps (TB5 RDMA).",
+                        "Rýchla synchronizácia GPU: MLX_METAL_FAST_SYNCH=1 skracuje čakanie na hraniciach vrstiev z ~180 µs na ~4 µs (45× rýchlejšie).",
+                        "RDMA / JACCL: Natívne od Thunderbolt 5; na Thunderbolt 4 voliteľne aktivovateľné."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # alebo: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. Vážené delenie, načítanie modelov a viacmodelový režim",
+                    summary: "Namiesto pevného rovného delenia priradí SS-CCC každému Macu presne toľko vrstiev, koľko zodpovedá jeho využiteľnej pamäti — a riadi paralelný beh viacerých modelov.",
+                    bullets: [
+                        "Kto načítava model? Vždy Poradie 0 koordinuje plán cez POST /v1/cluster/plan; každý Worker (Poradie 1..N) načíta len svoj rozsah vrstiev.",
+                        "Koľko modelov naraz? Ľubovoľne veľa, pokiaľ súčet(váhy + KV cache) ≤ využiteľná pamäť klastra.",
+                        "Vzorec vrstiev a kvantizácia KV: Vrstvy_i = CelkomVrstiev × (Využiteľné_i / Celkom_Využiteľné); KV cache vo FP16 (~16k), 8-bit (~32k) alebo 4-bit (~64k+ kontextu).",
+                        "Dávkový prefill (--prefill-step-size 512) a odkladanie KV na SSD (oMLX) bránia pamäťovým špičkám."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. Návod na zostavenie: Lokálny klaster a Hybrid Lokálne + Internet",
+                    summary: "Podrobný sprievodca nastavením miestneho klastra TB/RDMA a jeho prepojením s globálnou sieťou Internet WAN (Tailscale, WireGuard, ZeroTier alebo libp2p QUIC).",
+                    bullets: [
+                        "Krok 1 (Lokálne): Nastavte most Thunderbolt (setup_tb_network.sh) a ochranu pamäte (setup_wired_limit.sh) na každom miestnom Macu; Poradie 0 sa zvolí automaticky.",
+                        "Krok 2 (Brána a Model): Spustite FastAPI bránu (port 8000) a oMLX/Ollama/llama.cpp na Poradí 0 a načítajte model v Dielni modelov.",
+                        "Krok 3 (Internet WAN): Aktivujte šifrovanú sieť (Tailscale/WireGuard) na vzdialených Macoch a pripojte sa kódom miestnosti v Internetovom klastri.",
+                        "Krok 4 (Hybridné prepojenie): Kliknite na ‚Prepojiť Lokálne + Internet‘ — miestne TB ostrovy tvoria rýchle jadro Tier-0, uzly WAN preberajú zvyšné vrstvy."
+                    ],
+                    codeSample: "WebSocket prenášač četu: ws://127.0.0.1:8000/ws/wan-chat\nPrepojenie: Lokálne (TB/RDMA Tier-0) + Internet WAN -> Hybridný superklaster"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. Živý čet účastníkov a Cluster Audio-Party (hlasový čet)",
+                    summary: "Hneď vedľa textového četu ponúka SS-CCC plnohodnotnú Audio-Party podľa vzoru konzolových party miestností pre distribuované AI tímy.",
+                    bullets: [
+                        "Hlas v reálnom čase: Využíva AVAudioEngine (16 kHz PCM16, kompatibilný s Opus) cez vlastný endpoint /ws/wan-audio.",
+                        "Hlasové režimy: Prepínanie medzi Stlač a hovor (PTT) a Otvoreným mikrofónom vrátane stlmenia.",
+                        "Prehľad účastníkov: Zobrazuje aktívnych rečníkov so živým ukazovateľom úrovne, rolou uzla a stavom miestnosti.",
+                        "Minimálna šírka pásma: Hlasový kanál spotrebuje menej než 0,02 % bežného WAN uplinku."
+                    ],
+                    codeSample: "WebSocket audio prenášač: ws://127.0.0.1:8000/ws/wan-audio\nFormát audia: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. Vedecké laboratórium (6 kariet) a Záznam histórie",
+                    summary: "Vedecká časť analyzuje miestne TB/RDMA klastre, internetové WAN klastre aj ich priame porovnanie na šiestich odborných kartách.",
+                    bullets: [
+                        "Karty 1–2 (Roofline & WAN): Williams-Roofline (Log-Log), TTFT/TPOT, bublina GPipe, kompresia Petals/SWARM, škálovanie N=1..128 a DiLoCo.",
+                        "Karty 3–4 (Pamäť & Energia): Pamäťová rovnica Transformera, TokenPowerBench (J/token, EDP), regionálny mix elektriny (gCO₂/1M) a porovnanie s cloudom.",
+                        "Karta 5 (Merania & Export): Série N=5/10/20 s p50/p95/p99, CI95, SLO-goodput a export do CSV, JSON, LaTeX (booktabs) a BibTeX.",
+                        "Karta 6 (História): Automaticky alebo ručne zaznamenáva časové rady pre jednotlivé pozície aj globálne vrátane grafu trendu a CSV exportu."
+                    ],
+                    codeSample: "Rozsah analýzy: Miestne (TB/RDMA) | Internet WAN | Porovnanie\nHistória: Zaznamenať pozíciu | Zaznamenať globálne | Auto-záznam"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. Behové služby: MLX, oMLX, Ollama a llama.cpp",
+                    summary: "V Dielni modelov je možné modely priamo spúšťať pre zvolenú miestnu službu, naživo ich detekovať alebo prevádzať medzi formátmi.",
+                    bullets: [
+                        "oMLX (port 8000): Natívna macOS služba MLX s SSD KV vyrovnávacou pamäťou a rozhraním OpenAI aj Anthropic.",
+                        "Ollama (port 11434): Rozšírená služba pre miestne modely GGUF; dostupné modely sa načítavajú naživo.",
+                        "llama.cpp (port 8080): Priama služba GGUF cez llama-server.",
+                        "Živé vyhľadávanie: SS-CCC automaticky dopytuje bežiace služby a hneď zobrazuje dostupné modely."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nPorty: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. AI agenti (1 kliknutie), Lišta menu a Miestne API",
+                    summary: "Všetky vývojárske nástroje využívajú celý klaster cez miestne rozhranie — úplne bez odosielania zdrojového kódu do cloudu.",
+                    bullets: [
+                        "Nastavenie 1 kliknutím: Zapíše hotové konfigurácie pre OpenCode, Hermes Agent a Google Antigravity z karty Agenti a IDE.",
+                        "Široká podpora IDE: Funguje bezproblémovo s Cursor, Continue, Open WebUI a Apple Xcode.",
+                        "Režim na pozadí v lište menu: Minimalizujte do hornej lišty menu (⌘⇧M), aby klaster potichu na pozadí obsluhoval agentov a IDE rovnako ako Ollama.",
+                        "API konzola: Integrovaná živá konzola na priame testovanie výziev, latencie a priepustnosti."
+                    ],
+                    codeSample: "Koncový bod OpenAI:    http://127.0.0.1:8000/v1/chat/completions\nKoncový bod Anthropic: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. Aktualizátor GitHub a automatická kontrola verzií CI",
+                    summary: "SS-CCC automaticky sleduje najnovšiu verziu programu na GitHube a udržuje zdrojové aj vydané inštalácie aktuálne.",
+                    bullets: [
+                        "Automatická kontrola: Porovnáva pri spustení a každých 30 minút (alebo skratkou ⌘U) oproti version.json, GitHub Releases a main SHA.",
+                        "UpdatePromptSheet: Zobrazuje zoznam zmien aj rozdiely revízií priamo v aplikácii.",
+                        "Aktualizácia 1 kliknutím: Spustí git pull + swift build a počká na kliknutie na tlačidlo 'Reštartovať aplikáciu teraz'.",
+                        "Správa verzií CI: Každý push na main spustí scripts/bump_version.py a nastaví značku vX.Y.Z."
+                    ],
+                    codeSample: "Skratky: ⌘U (Aktualizácie) | ⌘⇧M (Lišta menu) | ⌘? (Príručka)\nManifest: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. Spustenie, riešenie problémov a 25-dielny balík testov",
+                    summary: "Jediný príkaz skompiluje aplikáciu macOS a otvorí okno; globálny balík overuje všetky funkcie pomocou 25 automatických testov.",
+                    bullets: [
+                        "Spustenie aplikácie: ./scripts/run_ssccc.sh zostaví balík Swift a otvorí okno SS-CCC.",
+                        "25/25 globálnych testov: python3 tests/test_global_suite.py overuje zostavenie Swift, 17 jazykov, režim lišty menu, 3-kartový prehľad, WAN a API.",
+                        "Riešenie problémov: Ak chýba spojenie Thunderbolt, spustite znova ./scripts/setup_tb_network.sh; pri varovaní pamäte skontrolujte iogpu.wired_limit_mb.",
+                        "17 jazykov rozhrania: Predvolený štart v angličtine s okamžitým prepínaním medzi DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI a TA."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # Očakáva sa: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .hu:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. Bármely M-sorozatú Apple Mac a klaszterben (M1–M12+)",
+                    summary: "Minden Apple Silicon chippel szerelt Mac (M1-től M12+-ig — Base, Pro, Max vagy Ultra) egyenrangú számítási csomópontként csatlakozhat a klaszterhez: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio és Mac Pro.",
+                    bullets: [
+                        "Jövőbiztos generáció-felismerés: A memória-sávszélesség, FP16 TFLOPS és Thunderbolt generáció a jövőbeli M7–M12+ chipekre is automatikusan meghatározásra kerül.",
+                        "Automatikus rang-kiosztás: A legnagyobb memória-sávszélességű Mac (pl. Ultra vagy Max) automatikusan átveszi a Rank 0 (koordinátor) szerepet.",
+                        "Vegyes generációk: Egy MacBook Pro M2 Max zökkenőmentesen működik együtt egy Mac mini M4-gyel vagy Mac Studio M5 Max-szal.",
+                        "Minden kialakítás támogatott: Asztali munkaállomások és hordozható Macek közösen osztják meg a modellrétegeket."
+                    ],
+                    codeSample: "Rank 0 = legnagyobb memória-sávszélesség (GB/s) -> Koordinátor & API-kapu\nRank 1..N = munkacsomópontok súlyozott rétegfelosztásban"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. 3-füles klaszter-áttekintés és ipari figyelmeztető csíkok",
+                    summary: "A Klaszter-áttekintés három jól elkülönített fülre bontja a teljes számítási klasztert, és átlós sárga-fekete figyelmeztető csíkokkal jelöli a kritikus memória- és teljesítményzónákat.",
+                    bullets: [
+                        "1. fül — Helyi klaszter: Megjeleníti az összes helyi Thunderbolt 3/4/5 (RDMA/JACCL) és 10GbE Mac-et a Rank 0-val, használható memóriakerettel és sávszélességgel.",
+                        "2. fül — Internetklaszter: Áttekinthetően mutatja a távoli WAN-résztvevőket és a tagolt regionális/helyi alklasztereket.",
+                        "3. fül — Helyi + Internet: Egyetlen összekapcsolt hibrid nézetben egyesíti a helyi Thunderbolt-magot és a globális WAN-hálózatot.",
+                        "Sárga-fekete figyelmeztető csíkok (HazardStripesBar & IndustrialHazardBanner): A 45°-os csíkok a kritikus számítási, RDMA-, modell- és WAN-zónákat jelzik."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nFigyelmeztető elemek: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. Egyesített memória és védelmi határ (iogpu.wired_limit_mb)",
+                    summary: "Apple Siliconon a CPU és a GPU ugyanazon a fizikai memórián osztozik. A RAM 100%-át soha nem szabad AI-modellek számára zárolni.",
+                    bullets: [
+                        "24 GB RAM-ig: Legalább 4 GB fenntartva marad a macOS és a WindowServer számára (pl. 16 GB → 12 GB használható).",
+                        "32 GB–64 GB RAM: 6 GB védett az operációs rendszer részére (pl. 36 GB → 30 GB használható).",
+                        "96 GB RAM-tól (Ultra/Max): 8 GB védett a macOS számára (pl. 128 GB → 120 GB használható).",
+                        "Minden betöltés előtt az SS-CCC összeveti a teljes igényt (modellsúlyok + KV-gyorsítótár) az eszközök használható összegével."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # Példa 36 GB-os Machez (30 GB használható)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. Hálózat, Thunderbolt-híd (TB3/4/5) és RDMA (JACCL)",
+                    summary: "Az SS-CCC két elkülönített síkon választja szét a vezérlőadatokat (LAN/Wi-Fi) és a modell-aktivációs adatokat (Thunderbolt).",
+                    bullets: [
+                        "Vezérlősík (LAN/Wi-Fi): Bonjour felderítés, API-kérések, telemetria és állapotcsere.",
+                        "Adatsík (Thunderbolt 3/4/5): Pont-pont híd a 10.99.1.x alhálózaton valós 30–37 Gbps (TB4) illetve akár 90 Gbps (TB5 RDMA) sebességgel.",
+                        "Gyors GPU-szinkronizáció: Az MLX_METAL_FAST_SYNCH=1 ~180 µs-ról ~4 µs-ra csökkenti a réteghatári várakozást (45× gyorsabb).",
+                        "RDMA / JACCL: Thunderbolt 5-től natív módon elérhető; Thunderbolt 4-en opcionálisan bekapcsolható."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # vagy: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. Súlyozott felosztás, modellbetöltés és többmodelles mód",
+                    summary: "Merev egyenlő elosztás helyett az SS-CCC pontosan a használható memóriával arányos rétegszámot oszt minden Macre, és kezeli a párhuzamos modelleket.",
+                    bullets: [
+                        "Ki tölti be a modellt? Mindig a Rank 0 koordinálja a tervet a POST /v1/cluster/plan végponton; minden munkacsomópont csak a saját rétegeit tölti be.",
+                        "Hány modell futhat egyszerre? Bármennyi, amíg összeg(súlyok + KV-gyorsítótár) ≤ használható klasztermemória.",
+                        "Rétegképlet és KV-tömörítés: Rétegek_i = ÖsszesRéteg × (Használható_i / Összes_Használható); KV-tár FP16 (~16k), 8-bit (~32k) vagy 4-bit (~64k+).",
+                        "Szakaszos előtöltés (--prefill-step-size 512) és SSD KV-áttöltés (oMLX) előzi meg a memóriacsúcsokat."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. Beállítási útmutató: Helyi klaszter és Hibrid Helyi + Internet",
+                    summary: "Lépésről lépésre útmutató helyi TB/RDMA klaszter kiépítéséhez és globális Internet WAN hálózattal (Tailscale, WireGuard, ZeroTier vagy libp2p QUIC) való összekapcsolásához.",
+                    bullets: [
+                        "1. lépés (Helyi): Állítsa be a Thunderbolt-hidat (setup_tb_network.sh) és memóriavédelmet (setup_wired_limit.sh) minden helyi Macen.",
+                        "2. lépés (Átjáró és Modell): Indítsa el a FastAPI átjárót (:8000) és az oMLX/Ollama/llama.cpp szolgáltatást a Rank 0 gépen, és töltsön be modellt.",
+                        "3. lépés (Internet WAN): Kapcsoljon be titkosított hálót (Tailscale/WireGuard) a távoli Maceken, és csatlakozzon szobakóddal az Internetklaszterben.",
+                        "4. lépés (Hibrid kapcsolat): Kattintson a „Helyi + Internet összekapcsolása” gombra — a helyi TB-sziget alkotja a gyors Tier-0 magot, a WAN-csomópontok átveszik a többletrétegeket."
+                    ],
+                    codeSample: "WebSocket csevegés-relé: ws://127.0.0.1:8000/ws/wan-chat\nKapcsolás: Helyi (TB/RDMA Tier-0) + Internet WAN -> Hibrid szuperklaszter"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. Élő résztvevői csevegés és Klaszter Audio-Party (hangcsevegés)",
+                    summary: "Közvetlenül a szöveges csevegés mellett az SS-CCC konzolos party szobák mintájára teljes értékű Audio-Partyt biztosít elosztott AI csapatoknak.",
+                    bullets: [
+                        "Valós idejű hangátvitel: AVAudioEngine (16 kHz PCM16, Opus-kompatibilis) használata a /ws/wan-audio végponton.",
+                        "Hangmódok: Váltható Adóvevő gomb (PTT) és Nyitott mikrofon, valamint némítási lehetőségek.",
+                        "Résztvevők kijelzése: Mutatja az aktív beszélőket élő jelszintmérővel és szobaállapottal.",
+                        "Minimális sávszélesség: A hangcsatorna egy átlagos WAN feltöltés kevesebb mint 0,02 %-át foglalja el."
+                    ],
+                    codeSample: "WebSocket hang-relé: ws://127.0.0.1:8000/ws/wan-audio\nHangformátum: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. Tudományos labor (6 fül) és Előzménynapló",
+                    summary: "A tudományos modul hat szakszerű fülön elemzi a helyi TB/RDMA klasztereket, Internet WAN klasztereket és közvetlen összehasonlításukat.",
+                    bullets: [
+                        "1–2. fül (Roofline & WAN): Williams-Roofline (Log-Log), TTFT/TPOT, GPipe-buborékok, Petals/SWARM tömörítés, N=1..128 skálázás és DiLoCo.",
+                        "3–4. fül (Memória & Energia): Transformer memóriaegyenlet, TokenPowerBench (J/token, EDP), regionális energiamix (gCO₂/1M) és költség vs. felhő.",
+                        "5. fül (Mérések & Export): N=5/10/20 mérések p50/p95/p99, CI95, SLO-goodput adatokkal, CSV, JSON, LaTeX és BibTeX exporttal.",
+                        "6. fül (Előzménynapló): Automatikusan vagy manuálisan idősorokat rögzít pozíciónként és globálisan, trenddiagrammal és CSV exporttal."
+                    ],
+                    codeSample: "Elemzési hatókör: Helyi (TB/RDMA) | Internet WAN | Összevetés\nElőzmények: Pozíció rögzítése | Globális rögzítés | Auto-rögzítés"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. Futásidejű szolgáltatások: MLX, oMLX, Ollama és llama.cpp",
+                    summary: "A Modellműhelyben a modellek közvetlenül elindíthatók a kívánt helyi szolgáltatáshoz, élőben felderíthetők vagy konvertálhatók.",
+                    bullets: [
+                        "oMLX (8000-es port): Natív macOS MLX szolgáltatás SSD KV-tárral, valamint OpenAI és Anthropic API-val.",
+                        "Ollama (11434-es port): Népszerű szolgáltatás helyi GGUF modellekhez; élő beolvasással.",
+                        "llama.cpp (8080-as port): Közvetlen GGUF szolgáltatás a llama-server segítségével.",
+                        "Élő felderítés: Az SS-CCC automatikusan lekérdezi a futó szolgáltatásokat és azonnal listázza a modelleket."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nPortok: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. AI-ügynökök (1 kattintás), Menüsor és Helyi API-k",
+                    summary: "Minden fejlesztői eszköz a helyi felületen keresztül éri el a teljes klasztert — forráskódok felhőbe töltése nélkül.",
+                    bullets: [
+                        "1 kattintásos beállítás: Kész konfigurációkat ír az OpenCode, Hermes Agent és Google Antigravity eszközökhöz.",
+                        "Széles IDE-kompatibilitás: Zökkenőmentesen működik Cursor, Continue, Open WebUI és Apple Xcode alatt.",
+                        "Menüsoros háttérmód: Minimalizálja a felső menüsorba (⌘⇧M), hogy a klaszter az Ollamához hasonlóan a háttérből szolgálja ki az ügynököket és IDE-ket.",
+                        "API-konzol: Beépített élő konzol promptok, késleltetés és sebesség azonnali teszteléséhez."
+                    ],
+                    codeSample: "OpenAI végpont:    http://127.0.0.1:8000/v1/chat/completions\nAnthropic végpont: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. GitHub-frissítő és automatikus CI verziókövetés",
+                    summary: "Az SS-CCC automatikusan figyeli a legújabb GitHub kiadást, és egyszerűen naprakészen tartja a forrás- és csomagtelepítéseket.",
+                    bullets: [
+                        "Automatikus ellenőrzés: Indításkor és 30 percenként (vagy ⌘U-val) összehasonlít a version.json, GitHub Releases és main SHA alapján.",
+                        "UpdatePromptSheet: Közvetlenül az alkalmazásban jeleníti meg a változásnaplót és a commit-eltéréseket.",
+                        "1 kattintásos frissítés: Lefuttatja a git pull + swift build lépést, és vár az 'Alkalmazás újraindítása most' gombra kattintásra.",
+                        "CI verziókövetés: Minden main push elindítja a scripts/bump_version.py szkriptet és vX.Y.Z címkét helyez el."
+                    ],
+                    codeSample: "Gyorsbillentyűk: ⌘U (Frissítés) | ⌘⇧M (Menüsor) | ⌘? (Kézikönyv)\nJegyzék: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. Indítás, hibaelhárítás és 25 részes tesztcsomag",
+                    summary: "Egyetlen parancs lefordítja és megnyitja a macOS alkalmazást; 25 automatizált globális teszt biztosítja a megbízhatóságot.",
+                    bullets: [
+                        "Alkalmazás indítása: A ./scripts/run_ssccc.sh lefordítja a Swift csomagot és megnyitja az SS-CCC ablakot.",
+                        "25/25 globális teszt: A python3 tests/test_global_suite.py ellenőrzi a Swift fordítást, 17 nyelvet, menüsor-módot, 3-füles áttekintést, WAN-t és API-kat.",
+                        "Gyakori hibák: Hiányzó Thunderbolt kapcsolat esetén futtassa újra a ./scripts/setup_tb_network.sh szkriptet; memóriariasztásnál ellenőrizze az iogpu.wired_limit_mb értéket.",
+                        "17 nyelvű felület: Alapértelmezés szerint angolul indul, és élőben váltható DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI és TA között."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # Elvárt: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .ko:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. 클러스터 내 모든 M 시리즈 Apple Mac 지원 (M1–M12+)",
+                    summary: "Apple Silicon 칩(M1부터 M12+까지 — Base, Pro, Max 또는 Ultra)이 탑재된 모든 Mac(Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio 및 Mac Pro)은 동등한 연산 노드로 클러스터에 참여할 수 있습니다.",
+                    bullets: [
+                        "미래 세대 자동 인식: 메모리 대역폭, FP16 TFLOPS 및 Thunderbolt 세대는 향후 출시될 M7–M12+ 칩에 대해서도 자동으로 추론됩니다.",
+                        "자동 순위 할당: 메모리 대역폭이 가장 높은 Mac(예: Ultra 또는 Max)이 자동으로 순위 0(코디네이터)이 됩니다.",
+                        "혼합 세대 협업: MacBook Pro M2 Max가 Mac mini M4 또는 Mac Studio M5 Max와 매끄럽게 협업합니다.",
+                        "모든 폼팩터 지원: 데스크톱 워크스테이션(Mac Studio, Mac Pro, Mac mini, iMac)과 휴대용 Mac(MacBook Air/Pro)이 모델 계층을 함께 공유합니다."
+                    ],
+                    codeSample: "순위 0 = 최고 메모리 대역폭 (GB/s) -> 코디네이터 및 API 게이트웨이\n순위 1..N = 가중 계층 분할에 참여하는 워커 노드"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. 3-탭 클러스터 개요 및 산업용 경고 줄무늬",
+                    summary: "클러스터 개요는 전체 컴퓨팅 클러스터를 세 개의 명확한 범위 탭으로 구분하며, 안전이 중요한 성능 및 메모리 영역을 대각선 노란색-검은색 경고 줄무늬로 강조합니다.",
+                    bullets: [
+                        "탭 1 — 로컬 클러스터: 순위 0, 가용 메모리 풀 및 총 대역폭과 함께 모든 로컬 Thunderbolt 3/4/5(RDMA/JACCL) 및 10GbE Mac을 표시합니다.",
+                        "탭 2 — 인터넷 클러스터: 원격 WAN 참여자 및 세분화된 지역/로컬 서브클러스터를 명확하게 보여줍니다.",
+                        "탭 3 — 로컬 + 인터넷: 로컬 Thunderbolt 코어와 글로벌 WAN 네트워크를 단일 결합 하이브리드 보기로 통합합니다.",
+                        "노란색-검은색 경고 줄무늬 (HazardStripesBar & IndustrialHazardBanner): 45° 대각선 표식이 핵심 화면의 주요 연산, RDMA, 모델 및 WAN 구역을 나타냅니다."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\n경고 UI 구성 요소: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. 통합 메모리 및 안전 보호 한계 (iogpu.wired_limit_mb)",
+                    summary: "Apple Silicon에서는 CPU와 GPU가 동일한 물리 메모리를 공유합니다. AI 모델을 위해 시스템 RAM의 100%를 할당해서는 절대 안 됩니다.",
+                    bullets: [
+                        "24 GB RAM 이하: macOS와 WindowServer를 위해 최소 4 GB를 예약합니다(예: 16 GB → 12 GB 사용 가능).",
+                        "32 GB ~ 64 GB RAM: 운영 체제를 위해 6 GB가 안전하게 보호됩니다(예: 36 GB → 30 GB 사용 가능).",
+                        "96 GB 이상 RAM (Ultra/Max): macOS를 위해 8 GB가 보호됩니다(예: 128 GB → 120 GB 사용 가능).",
+                        "모델 로드 전 SS-CCC는 총 요구량(모델 가중치 + KV 캐시)을 모든 기기의 가용 총합과 비교 검증합니다."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # 36 GB Mac 예시 (30 GB 사용 가능)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. 네트워크, Thunderbolt 브리지 (TB3/4/5) 및 RDMA (JACCL)",
+                    summary: "SS-CCC는 제어 데이터(LAN/Wi-Fi)와 모델 활성화 데이터(Thunderbolt)를 두 개의 독립된 네트워크 평면으로 cleanly 분리합니다.",
+                    bullets: [
+                        "제어 평면 (LAN/Wi-Fi): Bonjour 검색, API 요청, 텔레메트리 및 상태 교환.",
+                        "데이터 평면 (Thunderbolt 3/4/5): 10.99.1.x 대역의 점대점 브리지로 실제 30–37 Gbps(TB4) 및 최대 90 Gbps(TB5 RDMA) 지원.",
+                        "고속 GPU 동기화: MLX_METAL_FAST_SYNCH=1 설정으로 계층 전환 대기 시간을 ~180 µs에서 ~4 µs로 단축합니다(45× 가속).",
+                        "RDMA / JACCL: Thunderbolt 5 이상에서 기본 지원되며, Thunderbolt 4에서는 선택적으로 활성화할 수 있습니다."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # 또는: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. 가중 샤딩, 모델 로드 및 멀티 모델 운영",
+                    summary: "고정 균등 분할 대신 SS-CCC는 각 Mac에 가용 메모리에 비례한 정확한 계층 비율을 할당하며, 여러 모델의 병렬 상주를 제어합니다.",
+                    bullets: [
+                        "모델 로드는 누가 하나요? 항상 순위 0이 POST /v1/cluster/plan을 통해 샤딩 계획을 조율하며, 각 워커(순위 1..N)는 할당된 계층 범위만 로드합니다.",
+                        "동시에 몇 개까지 로드할 수 있나요? 합계(가중치 + KV 캐시) ≤ 가용 클러스터 메모리를 만족하는 한 무제한(예: 70B–405B+ 1개 또는 7B–32B 2–4개 병렬 실행)입니다.",
+                        "계층 공식 및 KV 압축: Layers_i = TotalLayers × (Usable_i / Total_Usable); KV 캐시는 FP16(~16k), 8비트(~32k), 4비트(~64k+ 컨텍스트) 선택 가능.",
+                        "분할 프리필(--prefill-step-size 512) 및 SSD KV 오프로딩(oMLX)으로 대형 코드베이스에서 메모리 급증을 방지합니다."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. 구축 가이드: 로컬 클러스터 및 로컬 + 인터넷 하이브리드",
+                    summary: "로컬 TB/RDMA 클러스터를 구성하고 글로벌 인터넷 WAN 네트워크(Tailscale, WireGuard, ZeroTier 또는 libp2p QUIC)와 결합하는 단계별 안내입니다.",
+                    bullets: [
+                        "1단계 (로컬): 각 로컬 Mac에 Thunderbolt 브리지(setup_tb_network.sh)와 메모리 보호(setup_wired_limit.sh)를 설정하세요; 순위 0은 자동 지정됩니다.",
+                        "2단계 (게이트웨이 및 모델): 순위 0에서 FastAPI 게이트웨이(:8000)와 oMLX/Ollama/llama.cpp를 시작하고 모델 스튜디오에서 대상 모델을 로드하세요.",
+                        "3단계 (인터넷 WAN): 원격 Mac에서 암호화된 메시(Tailscale/WireGuard)를 활성화하고 인터넷 클러스터 탭에서 방 ID로 참여하세요.",
+                        "4단계 (하이브리드 결합): ‘로컬 + 인터넷 결합’을 클릭하면 로컬 TB 아일랜드가 고속 Tier-0 코어가 되고 WAN 노드가 나머지 계층을 분담합니다."
+                    ],
+                    codeSample: "WebSocket 채팅 릴레이: ws://127.0.0.1:8000/ws/wan-chat\n결합 구조: 로컬 (TB/RDMA Tier-0) + 인터넷 WAN -> 하이브리드 슈퍼클러스터"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. 실시간 참여자 채팅 및 클러스터 오디오 파티 (음성 채팅)",
+                    summary: "텍스트 채팅 바로 옆에 분산 AI 팀을 위해 콘솔 파티 룸에서 영감을 받은 완벽한 클러스터 오디오 파티 기능을 제공합니다.",
+                    bullets: [
+                        "실시간 음성 전송: 전용 릴레이 /ws/wan-audio를 통해 AVAudioEngine(16 kHz PCM16, Opus 호환)을 사용합니다.",
+                        "음성 모드: 눌러서 말하기(PTT)와 오픈 마이크 전환, 마이크 음소거 및 듣기 끄기 모드를 지원합니다.",
+                        "참여자 표시: 활성 화자의 실시간 오디오 레벨 미터, 노드 역할 및 방 상태를 실시간으로 보여줍니다.",
+                        "초저대역폭 사용: 음성 채널은 일반 WAN 업링크의 0.02% 미만을 사용하여 텐서 전송을 방해하지 않습니다."
+                    ],
+                    codeSample: "WebSocket 오디오 릴레이: ws://127.0.0.1:8000/ws/wan-audio\n오디오 포맷: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. 과학 연구실 (6개 탭) 및 기록 로깅",
+                    summary: "과학 분석 영역은 6개의 전문 탭에서 로컬 TB/RDMA 클러스터, 인터넷 WAN 클러스터 및 두 환경의 직접 비교를 심층 분석합니다.",
+                    bullets: [
+                        "탭 1–2 (Roofline & WAN): Williams-Roofline(로그-로그), TTFT/TPOT, GPipe 버블, Petals/SWARM 압축, N=1..128 확장성 및 DiLoCo.",
+                        "탭 3–4 (메모리 & 에너지): 트랜스포머 메모리 방정식, TokenPowerBench(J/tok, EDP), 지역 전력 믹스(gCO₂/1M) 및 클라우드 대비 비용.",
+                        "탭 5 (실험 & 내보내기): p50/p95/p99가 포함된 N=5/10/20 실행, CI95, SLO 굿풋 및 CSV·JSON·LaTeX(booktabs)·8종 BibTeX 내보내기.",
+                        "탭 6 (기록 로그): 항목별 또는 전체 시계열 데이터를 자동·수동으로 기록하며 추세 그래프와 CSV 내보내기를 제공합니다."
+                    ],
+                    codeSample: "분석 범위: 로컬 (TB/RDMA) | 인터넷 WAN | 비교 (로컬 vs WAN)\n기록: 항목 기록 | 전체 기록 | 자동 기록"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. 런타임 서비스: MLX, oMLX, Ollama 및 llama.cpp",
+                    summary: "모델 스튜디오에서 원하는 로컬 서비스에 맞춰 모델을 즉시 실행하거나, 실시간 감지 및 형식 변환을 수행할 수 있습니다.",
+                    bullets: [
+                        "oMLX (포트 8000): SSD KV 캐시와 OpenAI 및 Anthropic API를 함께 제공하는 네이티브 macOS MLX 서비스.",
+                        "Ollama (포트 11434): 로컬 GGUF 모델을 위한 널리 쓰이는 서비스로, 보유 모델을 실시간으로 불러옵니다.",
+                        "llama.cpp (포트 8080): llama-server를 통한 직접 GGUF 추론 서비스.",
+                        "실시간 검색: SS-CCC가 실행 중인 백엔드를 자동으로 확인하여 활성 및 로컬 다운로드 모델을 즉시 표시합니다."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\n포트: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. AI 에이전트 (원클릭), 메뉴 막대 모드 및 로컬 API",
+                    summary: "모든 개발 도구는 소스 코드나 문서를 클라우드로 전송하지 않고 로컬 인터페이스를 통해 전체 클러스터를 활용합니다.",
+                    bullets: [
+                        "원클릭 설정: 에이전트 및 IDE 탭에서 OpenCode, Hermes Agent, Google Antigravity용 구성 파일을 한 번에 생성합니다.",
+                        "폭넓은 IDE 호환성: Cursor, Continue, Open WebUI 및 Apple Xcode와 매끄럽게 연동됩니다.",
+                        "메뉴 막대 백그라운드 서비스 모드: 창을 상단 메뉴 막대로 최소화(⌘⇧M)하면 Ollama처럼 백그라운드에서 에이전트와 IDE를 계속 지원합니다.",
+                        "API 콘솔: 프롬프트, 지연 시간 및 토큰 처리량을 즉시 검증할 수 있는 내장 실시간 콘솔."
+                    ],
+                    codeSample: "OpenAI 엔드포인트:    http://127.0.0.1:8000/v1/chat/completions\nAnthropic 엔드포인트: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. GitHub 업데이터 및 자동 CI 버전 관리",
+                    summary: "SS-CCC는 GitHub에서 최신 프로그램 버전을 자동으로 확인하며 소스 및 릴리스 설치를 손쉽게 최신 상태로 유지합니다.",
+                    bullets: [
+                        "자동 확인: 앱 시작 시 및 30분마다(또는 ⌘U) version.json, GitHub Releases 및 main 커밋 SHA를 비교합니다.",
+                        "UpdatePromptSheet: 변경 로그와 커밋 차이를 앱 내부에서 바로 확인합니다.",
+                        "원클릭 업데이트: git pull + swift build를 수행한 뒤 사용자가 '지금 앱 다시 시작' 버튼을 누를 때까지 제어권을 유지합니다.",
+                        "CI 버전 관리: main 푸시마다 scripts/bump_version.py가 실행되어 version.json과 태그 vX.Y.Z를 동기화합니다."
+                    ],
+                    codeSample: "단축키: ⌘U (업데이트 확인) | ⌘⇧M (메뉴 막대) | ⌘? (설명서)\n매니페스트: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. 앱 실행, 문제 해결 및 25종 글로벌 테스트 스위트",
+                    summary: "단 한 줄의 명령으로 macOS 앱을 빌드하고 창을 열 수 있으며, 25개의 자동화된 글로벌 테스트가 모든 기능을 검증합니다.",
+                    bullets: [
+                        "앱 실행: ./scripts/run_ssccc.sh가 Swift 패키지를 컴파일하고 SS-CCC 창을 엽니다.",
+                        "25/25 글로벌 테스트: python3 tests/test_global_suite.py가 Swift 빌드, 17개 언어, 메뉴 막대 모드, 3-탭 개요, WAN 및 API를 검증합니다.",
+                        "문제 해결: Thunderbolt 연결이 없으면 ./scripts/setup_tb_network.sh를 다시 실행하고, 메모리 경고 시 iogpu.wired_limit_mb를 확인하세요.",
+                        "17개 언어 지원: 기본 영어로 시작하며 DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI, TA 간 즉시 전환됩니다."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # 예상 결과: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .hi:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. क्लस्टर में कोई भी M-सीरीज़ Apple Mac (M1–M12+)",
+                    summary: "Apple Silicon चिप (M1 से M12+ — Base, Pro, Max या Ultra) वाला हर Mac समान कंप्यूट नोड के रूप में क्लस्टर में जुड़ सकता है: Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio और Mac Pro।",
+                    bullets: [
+                        "भविष्य-तैयार पीढ़ी पहचान: मेमोरी बैंडविड्थ, FP16 TFLOPS और Thunderbolt पीढ़ी आने वाले M7–M12+ चिप्स के लिए भी स्वचालित रूप से निकाली जाती है।",
+                        "स्वचालित रैंक असाइनमेंट: सबसे अधिक मेमोरी बैंडविड्थ वाला Mac (जैसे Ultra या Max) स्वतः रैंक 0 (समन्वयक) बन जाता है।",
+                        "मिश्रित पीढ़ियाँ: एक MacBook Pro M2 Max आसानी से Mac mini M4 या Mac Studio M5 Max के साथ काम करता है।",
+                        "सभी फॉर्म-फ़ैक्टर समर्थित: डेस्कटॉप वर्कस्टेशन और पोर्टेबल Macs मिलकर मॉडल लेयर्स साझा करते हैं।"
+                    ],
+                    codeSample: "रैंक 0 = उच्चतम मेमोरी बैंडविड्थ (GB/s) -> समन्वयक और API गेटवे\nरैंक 1..N = भारित लेयर शार्डिंग में वर्कर नोड्स"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. 3-टैब क्लस्टर अवलोकन और औद्योगिक चेतावनी धारियाँ",
+                    summary: "क्लस्टर अवलोकन पूरे कंप्यूट क्लस्टर को तीन स्पष्ट टैब्स में विभाजित करता है और महत्वपूर्ण प्रदर्शन व मेमोरी क्षेत्रों को 45° पीली-काली चेतावनी धारियों से चिह्नित करता है।",
+                    bullets: [
+                        "टैब 1 — स्थानीय क्लस्टर: रैंक 0, उपयोग योग्य मेमोरी पूल और कुल बैंडविड्थ के साथ सभी स्थानीय Thunderbolt 3/4/5 (RDMA/JACCL) और 10GbE Macs दिखाता है।",
+                        "टैब 2 — इंटरनेट क्लस्टर: दूरस्थ WAN प्रतिभागियों और क्षेत्रीय/स्थानीय उप-क्लस्टरों को स्पष्ट रूप से प्रस्तुत करता है।",
+                        "टैब 3 — स्थानीय + इंटरनेट: स्थानीय Thunderbolt कोर और वैश्विक WAN नेटवर्क को एक एकीकृत हाइब्रिड दृश्य में जोड़ता है।",
+                        "पीली-काली चेतावनी धारियाँ (HazardStripesBar और IndustrialHazardBanner): 45° धारियाँ महत्वपूर्ण कंप्यूट, RDMA, मॉडल और WAN क्षेत्रों को इंगित करती हैं।"
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nचेतावनी घटक: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. यूनिफाइड मेमोरी और सुरक्षा सीमा (iogpu.wired_limit_mb)",
+                    summary: "Apple Silicon पर CPU और GPU एक ही भौतिक मेमोरी साझा करते हैं। AI मॉडलों के लिए कभी भी 100 % RAM आवंटित नहीं किया जाना चाहिए।",
+                    bullets: [
+                        "24 GB RAM तक: macOS और WindowServer के लिए कम से कम 4 GB सुरक्षित रहता है (जैसे 16 GB → 12 GB उपयोग योग्य)।",
+                        "32 GB से 64 GB RAM: ऑपरेटिंग सिस्टम के लिए 6 GB आरक्षित रहता है (जैसे 36 GB → 30 GB उपयोग योग्य)।",
+                        "96 GB+ RAM (Ultra/Max): macOS के लिए 8 GB आरक्षित रहता है (जैसे 128 GB → 120 GB उपयोग योग्य)।",
+                        "मॉडल लोड करने से पहले SS-CCC सभी उपकरणों की उपयोग योग्य सीमा के विरुद्ध कुल आवश्यकता (वेट्स + KV कैश) की जांच करता है।"
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # 36 GB Mac का उदाहरण (30 GB उपयोग योग्य)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. नेटवर्क, Thunderbolt ब्रिज (TB3/4/5) और RDMA (JACCL)",
+                    summary: "SS-CCC नियंत्रण डेटा (LAN/Wi-Fi) और मॉडल सक्रियण डेटा (Thunderbolt) को दो अलग-अलग नेटवर्क तलों में साफ-सुथरे ढंग से अलग करता है।",
+                    bullets: [
+                        "नियंत्रण तल (LAN/Wi-Fi): Bonjour खोज, API अनुरोध, टेलीमेट्री और स्थिति विनिमय।",
+                        "डेटा तल (Thunderbolt 3/4/5): 10.99.1.x सबनेट में पॉइंट-टू-पॉइंट ब्रिज जो वास्तविक 30–37 Gbps (TB4) या 90 Gbps तक (TB5 RDMA) प्रदान करता है।",
+                        "तेज़ GPU सिंक्रनाइज़ेशन: MLX_METAL_FAST_SYNCH=1 लेयर सीमाओं पर प्रतीक्षा समय को ~180 µs से घटाकर ~4 µs (45× तेज़) करता है।",
+                        "RDMA / JACCL: Thunderbolt 5 से नेटिव रूप से उपलब्ध; Thunderbolt 4 पर वैकल्पिक रूप से सक्षम।"
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # या: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. भारित शार्डिंग, मॉडल लोडिंग और मल्टी-मॉडल संचालन",
+                    summary: "समान विभाजन के बजाय SS-CCC प्रत्येक Mac को उसकी उपयोग योग्य मेमोरी के अनुपात में ठीक उतनी ही लेयर्स देता है, और समानांतर मॉडलों का प्रबंधन करता है।",
+                    bullets: [
+                        "मॉडल कौन लोड करता है? हमेशा रैंक 0 POST /v1/cluster/plan के माध्यम से शार्डिंग योजना समन्वित करता है; प्रत्येक वर्कर केवल अपनी लेयर सीमा लोड करता है।",
+                        "एक साथ कितने मॉडल? जब तक योग(वेट्स + KV कैश) ≤ उपयोग योग्य क्लस्टर मेमोरी है, तब तक कितने भी मॉडल समानांतर चल सकते हैं।",
+                        "लेयर सूत्र और KV क्वांटाइज़ेशन: Layers_i = TotalLayers × (Usable_i / Total_Usable); FP16 (~16k), 8-बिट (~32k) या 4-बिट (~64k+) KV कैश।",
+                        "विभाजित प्रीफ़िल (--prefill-step-size 512) और SSD KV ऑफ़लोडिंग (oMLX) बड़े प्रोजेक्ट्स में मेमोरी स्पाइक्स रोकते हैं।"
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. सेटअप गाइड: स्थानीय क्लस्टर और हाइब्रिड स्थानीय + इंटरनेट",
+                    summary: "स्थानीय TB/RDMA क्लस्टर स्थापित करने और उसे वैश्विक इंटरनेट WAN नेटवर्क (Tailscale, WireGuard, ZeroTier या libp2p QUIC) से जोड़ने की चरण-दर-चरण मार्गदर्शिका।",
+                    bullets: [
+                        "चरण 1 (स्थानीय): प्रत्येक स्थानीय Mac पर Thunderbolt ब्रिज (setup_tb_network.sh) और मेमोरी सुरक्षा (setup_wired_limit.sh) सेट करें।",
+                        "चरण 2 (गेटवे और मॉडल): रैंक 0 पर FastAPI गेटवे (:8000) और oMLX/Ollama/llama.cpp लॉन्च करें तथा मॉडल कार्यशाला में मॉडल लोड करें।",
+                        "चरण 3 (इंटरनेट WAN): दूरस्थ Macs पर एन्क्रिप्टेड मेश (Tailscale/WireGuard) सक्रिय करें और इंटरनेट क्लस्टर टैब में कक्ष ID से जुड़ें।",
+                        "चरण 4 (हाइब्रिड युग्मन): ‘स्थानीय + इंटरनेट जोड़ें’ पर क्लिक करें — स्थानीय TB द्वीप तेज़ Tier-0 कोर बनाते हैं और WAN नोड्स अतिरिक्त लेयर्स संभालते हैं।"
+                    ],
+                    codeSample: "WebSocket चैट रिले: ws://127.0.0.1:8000/ws/wan-chat\nयुग्मन: स्थानीय (TB/RDMA Tier-0) + इंटरनेट WAN -> हाइब्रिड सुपरक्लस्टर"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. लाइव प्रतिभागी चैट और क्लस्टर ऑडियो-पार्टी (वॉयस चैट)",
+                    summary: "टेक्स्ट चैट के ठीक बगल में, SS-CCC वितरित AI टीमों के लिए कंसोल पार्टी रूम से प्रेरित एक पूर्ण ऑडियो-पार्टी प्रदान करता है।",
+                    bullets: [
+                        "रीयल-टाइम वॉयस: समर्पित /ws/wan-audio रिले पर AVAudioEngine (16 kHz PCM16, Opus-संगत) का उपयोग करता है।",
+                        "वॉयस मोड: पुश-टू-टॉक (PTT) और ओपन-माइक के बीच स्विच, साथ ही माइक म्यूट और ऑडियो बंद मोड।",
+                        "प्रतिभागी दृश्य: सक्रिय वक्ताओं को लाइव लेवल मीटर, नोड भूमिका और कक्ष स्थिति के साथ दिखाता है।",
+                        "न्यूनतम बैंडविड्थ: वॉयस चैनल सामान्य WAN अपलिंक के 0.02% से कम उपयोग करता है और टेंसर डेटा को बाधित नहीं करता।"
+                    ],
+                    codeSample: "WebSocket ऑडियो रिले: ws://127.0.0.1:8000/ws/wan-audio\nऑडियो प्रारूप: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. विज्ञान प्रयोगशाला (6 टैब्स) और इतिहास रिकॉर्डिंग",
+                    summary: "वैज्ञानिक अनुभाग छह विशेष टैब्स में स्थानीय TB/RDMA क्लस्टर, इंटरनेट WAN क्लस्टर और दोनों की सीधी तुलना का विश्लेषण करता है।",
+                    bullets: [
+                        "टैब 1–2 (Roofline और WAN): Williams-Roofline (लॉग-लॉग), TTFT/TPOT, GPipe बबल, Petals/SWARM संपीड़न, N=1..128 स्केलिंग और DiLoCo।",
+                        "टैब 3–4 (मेमोरी और ऊर्जा): ट्रांसफ़ॉर्मर मेमोरी समीकरण, TokenPowerBench (J/tok, EDP), क्षेत्रीय कार्बन मिक्स (gCO₂/1M) और क्लाउड बनाम लागत।",
+                        "टैब 5 (परीक्षण और निर्यात): p50/p95/p99, CI95, SLO गुडपुट के साथ N=5/10/20 रन और CSV, JSON, LaTeX, BibTeX निर्यात।",
+                        "टैब 6 (इतिहास लॉग): प्रति-स्थिति या वैश्विक रूप से समय श्रृंखला को स्वचालित/मैन्युअल रूप से ट्रेंड चार्ट व CSV निर्यात सहित सहेजता है।"
+                    ],
+                    codeSample: "विश्लेषण दायरा: स्थानीय (TB/RDMA) | इंटरनेट WAN | तुलना\nइतिहास: स्थिति रिकॉर्ड करें | वैश्विक रिकॉर्ड करें | ऑटो-रिकॉर्ड"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. रनटाइम सेवाएं: MLX, oMLX, Ollama और llama.cpp",
+                    summary: "मॉडल कार्यशाला में, मॉडलों को सीधे चुनी हुई स्थानीय सेवा के लिए लॉन्च किया जा सकता है, लाइव खोजा जा सकता है या प्रारूपों के बीच परिवर्तित किया जा सकता है।",
+                    bullets: [
+                        "oMLX (पोर्ट 8000): SSD KV कैश और OpenAI व Anthropic API के साथ नेटिव macOS MLX सेवा।",
+                        "Ollama (पोर्ट 11434): स्थानीय GGUF मॉडलों के लिए लोकप्रिय सेवा; उपलब्ध मॉडल लाइव पढ़े जाते हैं।",
+                        "llama.cpp (पोर्ट 8080): llama-server के माध्यम से प्रत्यक्ष GGUF सेवा।",
+                        "लाइव खोज: SS-CCC स्वचालित रूप से चल रही सेवाओं की जांच करता है और सक्रिय व डाउनलोड किए गए मॉडल तुरंत दिखाता है।"
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nपोर्ट्स: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. AI एजेंट (1-क्लिक), मेनू बार मोड और स्थानीय API",
+                    summary: "सभी डेवलपर टूल्स स्थानीय इंटरफ़ेस के माध्यम से पूरे क्लस्टर का उपयोग करते हैं — बिना किसी क्लाउड पर सोर्स कोड भेजे।",
+                    bullets: [
+                        "1-क्लिक सेटअप: एजेंट और IDE टैब से OpenCode, Hermes Agent और Google Antigravity के लिए तैयार कॉन्फ़िग लिखता है।",
+                        "व्यापक IDE संगतता: Cursor, Continue, Open WebUI और Apple Xcode के साथ सहजता से काम करता है।",
+                        "मेनू बार बैकग्राउंड सेवा मोड: विंडो को शीर्ष मेनू बार में मिनिमाइज़ करें (⌘⇧M) ताकि क्लस्टर Ollama की तरह पृष्ठभूमि में एजेंट्स और IDEs की सेवा करता रहे।",
+                        "API कंसोल: प्रॉम्प्ट, विलंबता और टोकन थ्रूपुट के प्रत्यक्ष परीक्षण के लिए अंतर्निहित लाइव कंसोल।"
+                    ],
+                    codeSample: "OpenAI एंडपॉइंट:    http://127.0.0.1:8000/v1/chat/completions\nAnthropic एंडपॉइंट: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. GitHub अपडेटर और स्वचालित CI संस्करण नियंत्रण",
+                    summary: "SS-CCC स्वचालित रूप से GitHub पर नवीनतम प्रोग्राम संस्करण की निगरानी करता है और स्रोत व रिलीज़ इंस्टॉलेशन को अद्यतित रखता है।",
+                    bullets: [
+                        "स्वचालित जांच: स्टार्टअप पर और हर 30 मिनट में (या ⌘U से) version.json, GitHub Releases और main SHA की तुलना करता है।",
+                        "UpdatePromptSheet: सीधे ऐप के भीतर चेंजलॉग और कमिट अंतर दिखाता है।",
+                        "1-क्लिक अपडेट: git pull + swift build चलाता है और 'ऐप अभी पुनः आरंभ करें' बटन दबाने की प्रतीक्षा करता है।",
+                        "CI संस्करण नियंत्रण: main पर प्रत्येक पुश scripts/bump_version.py चलाता है और vX.Y.Z टैग सेट करता है।"
+                    ],
+                    codeSample: "शॉर्टकट्स: ⌘U (अपडेट जांच) | ⌘⇧M (मेनू बार) | ⌘? (पुस्तिका)\nमेनिफ़ेस्ट: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. ऐप लॉन्च, समस्या निवारण और 25-भाग परीक्षण सूट",
+                    summary: "एक कमांड macOS ऐप को संकलित करता है और विंडो खोलता है; वैश्विक परीक्षण सूट 25 स्वचालित परीक्षणों से हर सुविधा की पुष्टि करता है।",
+                    bullets: [
+                        "ऐप लॉन्च करें: ./scripts/run_ssccc.sh Swift पैकेज बनाता है और SS-CCC विंडो खोलता है।",
+                        "25/25 वैश्विक परीक्षण: python3 tests/test_global_suite.py Swift बिल्ड, 17 भाषाएं, मेनू बार मोड, 3-टैब अवलोकन, WAN और API सत्यापित करता है।",
+                        "समस्या निवारण: Thunderbolt लिंक न होने पर ./scripts/setup_tb_network.sh पुनः चलाएं; मेमोरी चेतावनी पर iogpu.wired_limit_mb जांचें।",
+                        "17 भाषाएं: डिफ़ॉल्ट रूप से अंग्रेजी में शुरू होता है और DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI और TA के बीच लाइव स्विच करता है।"
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # अपेक्षित: Ran 25 tests ... OK"
+                )
+            ]
+
+        case .ta:
+            return [
+                HelpDocSection(
+                    id: "universal-m",
+                    icon: "macstudio.fill",
+                    accent: SolarisTheme.amber,
+                    title: "1. கிளஸ்டரில் எந்த M-தொடர் Apple Mac உம் (M1–M12+)",
+                    summary: "Apple Silicon சில்லு (M1 முதல் M12+ வரை — Base, Pro, Max அல்லது Ultra) கொண்ட எந்த Mac உம் (Mac mini, MacBook Air, MacBook Pro, iMac, Mac Studio மற்றும் Mac Pro) சமமான கணிப்பு முனையாகக் கிளஸ்டரில் இணையலாம்.",
+                    bullets: [
+                        "எதிர்காலத் தலைமுறைக் கண்டறிதல்: எதிர்கால M7–M12+ சில்லுகளுக்கும் நினைவக அலைவரிசை, FP16 TFLOPS மற்றும் Thunderbolt தலைமுறை தானாகக் கணிக்கப்படும்.",
+                        "தானியங்கி வரிசை ஒதுக்கீடு: அதிக நினைவக அலைவரிசை கொண்ட Mac (எ.கா. Ultra அல்லது Max) தானாகவே வரிசை 0 (ஒருங்கிணைப்பாளர்) ஆக மாறும்.",
+                        "கலப்புத் தலைமுறைகள்: MacBook Pro M2 Max ஆனது Mac mini M4 அல்லது Mac Studio M5 Max உடன் எளிதாக இணைந்து செயல்படும்.",
+                        "அனைத்து வடிவங்களும் ஆதரிக்கப்படுகின்றன: டெஸ்க்டாப் பணிநிலையங்கள் மற்றும் மடிக்கணினி Macகள் மாதிரி அடுக்குகளைப் பகிர்ந்து கொள்கின்றன."
+                    ],
+                    codeSample: "வரிசை 0 = அதிகபட்ச நினைவக அலைவரிசை (GB/s) -> ஒருங்கிணைப்பாளர் & API நுழைவாயில்\nவரிசை 1..N = எடையிட்ட அடுக்குப் பிரிப்பில் பணியாளர் முனைகள்"
+                ),
+                HelpDocSection(
+                    id: "overview-hazard",
+                    icon: "rectangle.3.group.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "2. 3-தாவல் கிளஸ்டர் மேலோட்டம் & தொழில்துறை எச்சரிக்கைக் கோடுகள்",
+                    summary: "கிளஸ்டர் மேலோட்டம் முழு கிளஸ்டரையும் மூன்று தெளிவான தாவல்களாகப் பிரித்து, பாதுகாப்பு-முக்கிய செயல்திறன் மற்றும் நினைவக மண்டலங்களை 45° மஞ்சள்-கருப்பு எச்சரிக்கைக் கோடுகளால் குறிக்கிறது.",
+                    bullets: [
+                        "தாவல் 1 — உள்ளூர் கிளஸ்டர்: வரிசை 0, பயன்படுத்தக்கூடிய நினைவகத் தொகுப்பு மற்றும் மொத்த அலைவரிசையுடன் அனைத்து உள்ளூர் Thunderbolt 3/4/5 (RDMA/JACCL) & 10GbE Macகளையும் காட்டுகிறது.",
+                        "தாவல் 2 — இணைய கிளஸ்டர்: தொலைநிலை WAN பங்கேற்பாளர்கள் மற்றும் பிராந்திய/உள்ளூர் துணை கிளஸ்டர்களைத் தெளிவாகக் காட்டுகிறது.",
+                        "தாவல் 3 — உள்ளூர் + இணையம்: உள்ளூர் Thunderbolt மையத்தையும் உலகளாவிய WAN வலையமைப்பையும் ஒரே கலப்பினக் காட்சியில் இணைக்கிறது.",
+                        "மஞ்சள்-கருப்பு எச்சரிக்கைக் கோடுகள் (HazardStripesBar & IndustrialHazardBanner): முக்கிய கணிப்பு, RDMA, மாதிரி மற்றும் WAN மண்டலங்களைக் குறிக்கின்றன."
+                    ],
+                    codeSample: "ClusterOverviewScope: .local | .internet | .hybrid\nஎச்சரிக்கைக் கூறுகள்: Theme.swift -> HazardStripesBar & IndustrialHazardBanner"
+                ),
+                HelpDocSection(
+                    id: "memory-safety",
+                    icon: "memorychip.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "3. ஒருங்கிணைந்த நினைவகம் & பாதுகாப்பு வரம்பு (iogpu.wired_limit_mb)",
+                    summary: "Apple Silicon இல் CPU மற்றும் GPU ஒரே இயற்பியல் நினைவகத்தைப் பகிர்கின்றன. AI மாதிரிகளுக்காக ஒருபோதும் 100 % RAM ஐயும் ஒதுக்கக் கூடாது.",
+                    bullets: [
+                        "24 GB RAM வரை: macOS மற்றும் WindowServer க்கு குறைந்தது 4 GB ஒதுக்கப்படும் (எ.கா. 16 GB → 12 GB பயன்படும்).",
+                        "32 GB முதல் 64 GB RAM: இயக்க முறைமைக்காக 6 GB பாதுகாக்கப்படும் (எ.கா. 36 GB → 30 GB பயன்படும்).",
+                        "96 GB+ RAM (Ultra/Max): macOS க்கு 8 GB பாதுகாக்கப்படும் (எ.கா. 128 GB → 120 GB பயன்படும்).",
+                        "ஏற்றுவதற்கு முன், SS-CCC மொத்தத் தேவையை (மாதிரி எடைகள் + KV கேச்) அனைத்து சாதனங்களின் பயன்பாட்டு வரம்போடு சரிபார்க்கிறது."
+                    ],
+                    codeSample: "sudo ./scripts/setup_wired_limit.sh 30720   # 36 GB Mac க்கான எடுத்துக்காட்டு (30 GB பயன்படும்)\nsysctl iogpu.wired_limit_mb"
+                ),
+                HelpDocSection(
+                    id: "network-tb",
+                    icon: "bolt.horizontal.circle.fill",
+                    accent: SolarisTheme.mint,
+                    title: "4. பிணையம், Thunderbolt பாலம் (TB3/4/5) & RDMA (JACCL)",
+                    summary: "SS-CCC கட்டுப்பாட்டுத் தரவு (LAN/Wi-Fi) மற்றும் மாதிரி செயலாக்கத் தரவு (Thunderbolt) ஆகியவற்றை இரண்டு தளங்களாகத் தெளிவாகப் பிரிக்கிறது.",
+                    bullets: [
+                        "கட்டுப்பாட்டுத் தளம் (LAN/Wi-Fi): Bonjour கண்டறிதல், API கோரிக்கைகள், அளவீடு மற்றும் நிலைப் பரிமாற்றம்.",
+                        "தரவுத் தளம் (Thunderbolt 3/4/5): 10.99.1.x வலைப்பின்னலில் புள்ளி-க்கு-புள்ளி பாலம் — உண்மையான 30–37 Gbps (TB4) மற்றும் 90 Gbps வரை (TB5 RDMA).",
+                        "வேகமான GPU ஒத்திசைவு: MLX_METAL_FAST_SYNCH=1 அடுக்கு எல்லைகளில் காத்திருப்பு நேரத்தை ~180 µs இலிருந்து ~4 µs ஆகக் குறைக்கிறது (45× வேகம்).",
+                        "RDMA / JACCL: Thunderbolt 5 முதல் இயல்பாகவே கிடைக்கும்; Thunderbolt 4 இல் விருப்பத்தேர்வாக இயக்கலாம்."
+                    ],
+                    codeSample: "./scripts/setup_tb_network.sh studio   # அல்லது: mini\niperf3 -c 10.99.1.1"
+                ),
+                HelpDocSection(
+                    id: "sharding-loading",
+                    icon: "square.stack.3d.up.fill",
+                    accent: SolarisTheme.amberGlow,
+                    title: "5. எடையிட்ட பிரிப்பு, மாதிரி ஏற்றுதல் & பல்மாதிரி இயக்கம்",
+                    summary: "நிலையான சமப் பிரிப்புக்குப் பதிலாக, SS-CCC ஒவ்வொரு Mac க்கும் அதன் பயன்படுத்தக்கூடிய நினைவகத்திற்கு ஏற்ப சரியான அடுக்குப் பங்கை ஒதுக்குகிறது மற்றும் பல மாதிரிகளை இணையாக நிர்வகிக்கிறது.",
+                    bullets: [
+                        "மாதிரியை யார் ஏற்றுவது? எப்போதும் வரிசை 0 POST /v1/cluster/plan வழியாகத் திட்டத்தை ஒருங்கிணைக்கும்; ஒவ்வொரு பணியாளரும் தனக்கு ஒதுக்கப்பட்ட அடுக்குகளை மட்டுமே ஏற்றும்.",
+                        "ஒரே நேரத்தில் எத்தனை மாதிரிகள்? கூட்டுத்தொகை(எடைகள் + KV கேச்) ≤ பயன்படுத்தக்கூடிய கிளஸ்டர் நினைவகம் வரை எத்தனை மாதிரிகளையும் இணையாக இயக்கலாம்.",
+                        "அடுக்கு சூத்திரம் & KV சுருக்கம்: அடுக்குகள்_i = மொத்தஅடுக்குகள் × (பயன்படும்_i / மொத்த_பயன்படும்); FP16 (~16k), 8-பிட் (~32k) அல்லது 4-பிட் (~64k+ சூழல்).",
+                        "துண்டாக்கப்பட்ட முன்நிரப்பு (--prefill-step-size 512) மற்றும் SSD KV இறக்கம் (oMLX) பெரிய குறியீட்டுத் திட்டங்களில் நினைவக உயர்வைத் தடுக்கின்றன."
+                    ],
+                    codeSample: "--kv-bits 4 --quantized-kv-start 5000 --prefill-step-size 512\nPOST http://127.0.0.1:8000/v1/cluster/plan"
+                ),
+                HelpDocSection(
+                    id: "setup-hybrid",
+                    icon: "globe.europe.africa.fill",
+                    accent: SolarisTheme.mint,
+                    title: "6. அமைப்பு வழிகாட்டி: உள்ளூர் கிளஸ்டர் & கலப்பின உள்ளூர் + இணையம்",
+                    summary: "உள்ளூர் TB/RDMA கிளஸ்டரை அமைத்து உலகளாவிய இணைய WAN வலையமைப்புடன் (Tailscale, WireGuard, ZeroTier அல்லது libp2p QUIC) இணைப்பதற்கான படிப்படியான வழிகாட்டி.",
+                    bullets: [
+                        "படி 1 (உள்ளூர்): ஒவ்வொரு உள்ளூர் Mac இலும் Thunderbolt பாலம் (setup_tb_network.sh) மற்றும் நினைவகப் பாதுகாப்பை (setup_wired_limit.sh) அமைக்கவும்.",
+                        "படி 2 (நுழைவாயில் & மாதிரி): வரிசை 0 இல் FastAPI நுழைவாயில் (:8000) மற்றும் oMLX/Ollama/llama.cpp ஐத் தொடங்கி மாதிரி பணிமனையில் மாதிரியை ஏற்றவும்.",
+                        "படி 3 (இணைய WAN): தொலைநிலை Macகளில் மறைகுறியாக்கப்பட்ட வலையை (Tailscale/WireGuard) இயக்கி அறை ID உடன் இணைய கிளஸ்டரில் சேரவும்.",
+                        "படி 4 (கலப்பின இணைப்பு): ‘உள்ளூர் + இணையத்தை இணை’ என்பதைக் கிளிக் செய்யவும் — உள்ளூர் TB தீவுகள் விரைவான Tier-0 மையமாகவும் WAN முனைகள் கூடுதல் அடுக்குகளாகவும் செயல்படும்."
+                    ],
+                    codeSample: "WebSocket உரையாடல் ரிலே: ws://127.0.0.1:8000/ws/wan-chat\nஇணைப்பு: உள்ளூர் (TB/RDMA Tier-0) + இணைய WAN -> கலப்பின சூப்பர்கிளஸ்டர்"
+                ),
+                HelpDocSection(
+                    id: "audio-party",
+                    icon: "headphones.circle.fill",
+                    accent: SolarisTheme.coral,
+                    title: "7. நேரலை பங்கேற்பாளர் உரையாடல் & கிளஸ்டர் ஆடியோ-பார்ட்டி",
+                    summary: "உரை உரையாடலுக்கு அருகிலேயே, பரவலாக்கப்பட்ட AI குழுக்களுக்காகக் கன்சோல் பார்ட்டி அறைகள் போன்ற முழுமையான ஆடியோ-பார்ட்டியை SS-CCC வழங்குகிறது.",
+                    bullets: [
+                        "நிகழ்நேர குரல்: பிரத்யேக /ws/wan-audio ரிலே வழியாக AVAudioEngine (16 kHz PCM16, Opus-இணக்கம்) பயன்படுத்துகிறது.",
+                        "குரல் பயன்முறைகள்: அழுத்திப் பேசு (PTT) மற்றும் திறந்த மைக் மாற்றம், மைக் ஒலியடக்கம் & கேட்டல் நிறுத்தம்.",
+                        "பங்கேற்பாளர் காட்சி: செயலில் பேசுவோரை நேரலை ஒலி அளவு மீட்டர், முனைப் பங்கு மற்றும் அறை நிலையுடன் காட்டுகிறது.",
+                        "குறைந்தபட்ச அலைவரிசை: குரல் அலைவரிசை சாதாரண WAN அப்லிங்கின் 0.02% க்கும் குறைவாகவே பயன்படுத்துகிறது."
+                    ],
+                    codeSample: "WebSocket ஆடியோ ரிலே: ws://127.0.0.1:8000/ws/wan-audio\nஆடியோ வடிவம்: AVAudioEngine 16 kHz PCM16 (PTT / Open-Mic)"
+                ),
+                HelpDocSection(
+                    id: "science-history",
+                    icon: "chart.xyaxis.line",
+                    accent: SolarisTheme.amber,
+                    title: "8. அறிவியல் ஆய்வகம் (6 தாவல்கள்) & வரலாற்றுப் பதிவு",
+                    summary: "அறிவியல் பகுதி ஆறு சிறப்புத் தாவல்களில் உள்ளூர் TB/RDMA கிளஸ்டர்கள், இணைய WAN கிளஸ்டர்கள் மற்றும் இரண்டின் நேரடி ஒப்பீட்டைப் பகுப்பாய்வு செய்கிறது.",
+                    bullets: [
+                        "தாவல் 1–2 (Roofline & WAN): Williams-Roofline (லாக்-லாக்), TTFT/TPOT, GPipe குமிழி, Petals/SWARM சுருக்கம், N=1..128 அளவிடுதல் & DiLoCo.",
+                        "தாவல் 3–4 (நினைவகம் & ஆற்றல்): டிரான்ஸ்ஃபார்மர் நினைவகச் சமன்பாடு, TokenPowerBench (J/tok, EDP), பிராந்திய மின் கலவை (gCO₂/1M) & மேகக்கணி ஒப்பீடு.",
+                        "தாவல் 5 (சோதனைகள் & ஏற்றுமதி): p50/p95/p99, CI95, SLO குட்புட் கொண்ட N=5/10/20 சோதனைகள் மற்றும் CSV, JSON, LaTeX, BibTeX ஏற்றுமதி.",
+                        "தாவல் 6 (வரலாறு): தனிப்பட்ட நிலைகள் மற்றும் உலகளாவிய அளவீடுகளைத் தானாகவோ கைமுறையாகவோ காலத் தொடராகப் பதிவு செய்கிறது."
+                    ],
+                    codeSample: "பகுப்பாய்வு வரம்பு: உள்ளூர் (TB/RDMA) | இணைய WAN | ஒப்பீடு\nவரலாறு: நிலையைப் பதிவு செய் | உலகளாவியதைப் பதிவு செய் | தானியங்கிப் பதிவு"
+                ),
+                HelpDocSection(
+                    id: "runtimes",
+                    icon: "cpu.fill",
+                    accent: SolarisTheme.mint,
+                    title: "9. இயக்கநேரச் சேவைகள்: MLX, oMLX, Ollama & llama.cpp",
+                    summary: "மாதிரி பணிமனையில், மாதிரிகளைத் தேர்ந்தெடுத்த உள்ளூர் சேவைக்காக நேரடியாகத் தொடங்கலாம், நேரலையில் கண்டறியலாம் அல்லது வடிவங்களுக்கு இடையே மாற்றலாம்.",
+                    bullets: [
+                        "oMLX (போர்ட் 8000): SSD KV கேச் மற்றும் OpenAI & Anthropic API களுடன் இயல்பு macOS MLX சேவை.",
+                        "Ollama (போர்ட் 11434): உள்ளூர் GGUF மாதிரிகளுக்கான பிரபல சேவை; உள்ள மாதிரிகள் நேரலையில் படிக்கப்படும்.",
+                        "llama.cpp (போர்ட் 8080): llama-server வழியாக நேரடி GGUF சேவை.",
+                        "நேரலைக் கண்டறிதல்: SS-CCC இயங்கும் சேவைகளைத் தானாக ஆராய்ந்து கிடைக்கும் மாதிரிகளை உடனே காட்டும்."
+                    ],
+                    codeSample: "uvicorn core.api.gateway:app --host 127.0.0.1 --port 8000\nபோர்ட்கள்: oMLX :8000 | Ollama :11434 | llama.cpp :8080"
+                ),
+                HelpDocSection(
+                    id: "agents-api",
+                    icon: "sparkles.rectangle.stack.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "10. AI முகவர்கள் (1-கிளிக்), மெனு பட்டி & உள்ளூர் APIகள்",
+                    summary: "அனைத்து மேம்பாட்டுக் கருவிகளும் உள்ளூர் இடைமுகம் வழியாக முழு கிளஸ்டரையும் அணுகுகின்றன — மூலக் குறியீடு மேகக்கணிக்கு அனுப்பப்படுவதே இல்லை.",
+                    bullets: [
+                        "1-கிளிக் அமைப்பு: முகவர்கள் & IDEகள் தாவலில் இருந்து OpenCode, Hermes Agent மற்றும் Google Antigravity க்கான கட்டமைப்புகளை உருவாக்குகிறது.",
+                        "பரந்த IDE ஆதரவு: Cursor, Continue, Open WebUI மற்றும் Apple Xcode உடன் தடையின்றி செயல்படுகிறது.",
+                        "மெனு பட்டி பின்னணிப் பயன்முறை: Ollama போல பின்னணியில் முகவர்கள் & IDEகளுக்குத் தொடர்ந்து சேவையாற்ற மேல் மெனு பட்டியில் (⌘⇧M) சுருக்கவும்.",
+                        "API கன்சோல்: தூண்டுதல்கள், தாமதம் மற்றும் செயல்திறனை நேரலையில் சோதிக்கும் உள்ளமைக்கப்பட்ட கன்சோல்."
+                    ],
+                    codeSample: "OpenAI முனையம்:    http://127.0.0.1:8000/v1/chat/completions\nAnthropic முனையம்: http://127.0.0.1:8000/v1/messages"
+                ),
+                HelpDocSection(
+                    id: "updater-ci",
+                    icon: "arrow.triangle.2.circlepath.circle.fill",
+                    accent: SolarisTheme.amber,
+                    title: "11. GitHub புதுப்பிப்பி & தானியங்கி CI பதிப்புக் கட்டுப்பாடு",
+                    summary: "SS-CCC தானாகவே GitHub இல் புதிய நிரல் பதிப்பைக் கண்காணித்து மூல மற்றும் வெளியீட்டு நிறுவல்களைப் புதுப்பித்த நிலையில் வைத்திருக்கும்.",
+                    bullets: [
+                        "தானியங்கி சரிபார்ப்பு: தொடக்கத்திலும் ஒவ்வொரு 30 நிமிடங்களுக்கும் (அல்லது ⌘U) version.json, GitHub Releases மற்றும் main SHA உடன் ஒப்பிடுகிறது.",
+                        "UpdatePromptSheet: மாற்றப் பதிவு மற்றும் கமிட் வேறுபாடுகளைச் செயலியிலேயே நேரடியாகக் காட்டுகிறது.",
+                        "1-கிளிக் புதுப்பிப்பு: git pull + swift build ஐ இயக்கி, பயனர் 'செயலியை இப்போது மறுதொடக்கம் செய்' என்பதைக் கிளிக் செய்யும் வரை காத்திருக்கும்.",
+                        "CI பதிப்புக் கட்டுப்பாடு: main க்கான ஒவ்வொரு தள்ளுதலும் scripts/bump_version.py ஐ இயக்கி vX.Y.Z குறியை அமைக்கும்."
+                    ],
+                    codeSample: "குறுக்குவழிகள்: ⌘U (புதுப்பிப்பு) | ⌘⇧M (மெனு பட்டி) | ⌘? (கையேடு)\nமேனிஃபெஸ்ட்: version.json + .github/workflows/auto-version-control.yml"
+                ),
+                HelpDocSection(
+                    id: "launch-tests",
+                    icon: "checkmark.shield.fill",
+                    accent: SolarisTheme.emerald,
+                    title: "12. தொடக்கம், பிழைத்திருத்தம் & 25-பகுதி சோதனைத் தொகுப்பு",
+                    summary: "ஒரே கட்டளை macOS செயலியைத் தொகுத்து சாளரத்தைத் திறக்கும்; 25 தானியங்கி உலகளாவிய சோதனைகள் அனைத்து அம்சங்களையும் உறுதி செய்கின்றன.",
+                    bullets: [
+                        "செயலியைத் தொடங்கு: ./scripts/run_ssccc.sh Swift தொகுப்பை உருவாக்கி SS-CCC சாளரத்தைத் திறக்கும்.",
+                        "25/25 உலகளாவிய சோதனைகள்: python3 tests/test_global_suite.py Swift உருவாக்கம், 17 மொழிகள், மெனு பட்டி பயன்முறை, 3-தாவல் மேலோட்டம், WAN & APIகளைச் சரிபார்க்கிறது.",
+                        "பிழைத்திருத்தம்: Thunderbolt இணைப்பு இல்லாவிட்டால் ./scripts/setup_tb_network.sh ஐ மீண்டும் இயக்கவும்; நினைவக எச்சரிக்கைக்கு iogpu.wired_limit_mb ஐச் சரிபார்க்கவும்.",
+                        "17 மொழிகள்: இயல்பாக ஆங்கிலத்தில் தொடங்கி DE, EN, FR, ES, PT, RU, JA, ZH, NL, AF, PL, CS, SK, HU, KO, HI மற்றும் TA இடையே நேரலையில் மாறும்."
+                    ],
+                    codeSample: "./scripts/run_ssccc.sh\npython3 tests/test_global_suite.py   # எதிர்பார்ப்பு: Ran 25 tests ... OK"
+                )
+            ]
         }
     }
 }

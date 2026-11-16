@@ -3,7 +3,10 @@
 # ☀️ SonnerStudio Cluster-Case-Companion (SS-CCC)
 
 <img src="docs/images/flags/us.png" width="20" height="16" alt="US"/> <img src="docs/images/flags/gb.png" width="20" height="16" alt="GB"/> <img src="docs/images/flags/ca.png" width="20" height="16" alt="CA"/> **[English](README.md)** · <img src="docs/images/flags/de.png" width="20" height="16" alt="DE"/> <img src="docs/images/flags/at.png" width="20" height="16" alt="AT"/> <img src="docs/images/flags/ch.png" width="20" height="16" alt="CH"/> **[Deutsch](README.de.md)** · <img src="docs/images/flags/fr.png" width="20" height="16" alt="FR"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> <img src="docs/images/flags/ch.png" width="20" height="16" alt="CH"/> **[Français](README.fr.md)** · <img src="docs/images/flags/es.png" width="20" height="16" alt="ES"/> <img src="docs/images/flags/mx.png" width="20" height="16" alt="MX"/> <img src="docs/images/flags/ar.png" width="20" height="16" alt="AR"/> **[Español](README.es.md)**<br/>
-<img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**
+<img src="docs/images/flags/pt.png" width="20" height="16" alt="PT"/> <img src="docs/images/flags/br.png" width="20" height="16" alt="BR"/> **[Português](README.pt.md)** · <img src="docs/images/flags/ru.png" width="20" height="16" alt="RU"/> **[Русский](README.ru.md)** · <img src="docs/images/flags/jp.png" width="20" height="16" alt="JP"/> **[日本語](README.ja.md)** · <img src="docs/images/flags/cn.png" width="20" height="16" alt="CN"/> **[中文](README.zh.md)**<br/>
+<img src="docs/images/flags/nl.png" width="20" height="16" alt="NL"/> <img src="docs/images/flags/be.png" width="20" height="16" alt="BE"/> **[Nederlands](README.nl.md)** · <img src="docs/images/flags/za.png" width="20" height="16" alt="ZA"/> <img src="docs/images/flags/na.png" width="20" height="16" alt="NA"/> **[Afrikaans](README.af.md)** · <img src="docs/images/flags/pl.png" width="20" height="16" alt="PL"/> **[Polski](README.pl.md)** · <img src="docs/images/flags/cz.png" width="20" height="16" alt="CZ"/> **[Čeština](README.cs.md)**<br/>
+<img src="docs/images/flags/sk.png" width="20" height="16" alt="SK"/> **[Slovenčina](README.sk.md)** · <img src="docs/images/flags/hu.png" width="20" height="16" alt="HU"/> **[Magyar](README.hu.md)** · <img src="docs/images/flags/kr.png" width="20" height="16" alt="KR"/> **[한국어](README.ko.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> **[हिन्दी](README.hi.md)** · <img src="docs/images/flags/in.png" width="20" height="16" alt="IN"/> <img src="docs/images/flags/lk.png" width="20" height="16" alt="LK"/> <img src="docs/images/flags/sg.png" width="20" height="16" alt="SG"/> **[தமிழ்](README.ta.md)**
+<br/><a href="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/"><img src="https://hits.sh/github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.svg?view=today-total&style=flat-square&label=%E8%AE%BF%E5%AE%A2%E6%95%B0&color=f59e0b&labelColor=0f172a" alt="访客数"/></a>
 
 *原生 macOS Apple Silicon 集群管理器与分布式 MLX 推理工作室*
 
@@ -80,7 +83,7 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 - **内存安全保护 (`iogpu.wired_limit_mb`):** 每台 Mac 自动预留 4–8 GB 给 macOS 与 WindowServer，防止 OOM 崩溃。
 - **运行时支持:** `MLX` (`mlx.distributed` / `JACCL`)、`oMLX`（端口 `8000`，SSD 分页 KV 缓存）、`Ollama` (`11434`)、`llama.cpp` (`8080`)。
 - **一键集成:** OpenCode、Hermes Agent、Google Antigravity、Cursor、VS Code、Xcode。
-- **8 种语言界面:** English、Deutsch、Français、Español、Português、Русский、日本語、中文。
+- **17 种语言界面:** English、Deutsch、Français、Español、Português、Русский、日本語、中文、Nederlands、Afrikaans、Polski、Čeština、Slovenčina、Magyar、한국어、हिन्दी、தமிழ்、Nederlands、Afrikaans、Polski、Čeština、Slovenčina、Magyar、한국어、हिन्दी、தமிழ்。
 
 ---
 
@@ -88,7 +91,7 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 
 - **多模型协同模式 (Multi-Model-Mode / MMM，第 6 项菜单)：** 在**本地集群**、**互联网 WAN 集群**或**混合集群（本地 + 互联网）**中聚合多个模型的算力（支持 *Parallel Pool*、*Mixture-of-Agents*、*EAGLE-3 / Speculative*、*Tree-MoA Early-Exit* 与 *Ares*），内置 `iogpu.wired_limit_mb` 显存与热/碳感知保护，并支持 **多个 IDE 与智能体框架通过 `:8000/v1` 同时调用**。
 - **安装与自动配置 (`Setup & Provision`，第 10 项菜单)：** 自动发现本地 Thunderbolt/LAN Mac（Bonjour/mDNS）、互联网对等节点（`QUIC Iroh` / `Tailscale`）或混合集群，自动完成 SSH 互信、`iogpu.wired_limit_mb` 与 `mlx.distributed_config` 配置，并执行 **4 种就绪状态检查**（**已就绪 / 未就绪 / 配置不完整 / 未配置**）。
-- **实时遥测、悬停提示 Shorttips 与交互式图文手册：** 支持全界面 8 语言悬停 **Shorttips**、可点击展开图解与高亮发光的 **12 章交互式帮助中心**，以及关闭模拟模式后的 100% 真实实时硬件数据。
+- **实时遥测、悬停提示 Shorttips 与交互式图文手册：** 支持全界面 17 语言悬停 **Shorttips**、可点击展开图解与高亮发光的 **12 章交互式帮助中心**，以及关闭模拟模式后的 100% 真实实时硬件数据。
 
 | 侧边栏菜单 | 核心功能与职责 |
 | :--- | :--- |
@@ -102,7 +105,7 @@ SS-CCC 通过 **Tailscale / WireGuard、ZeroTier、libp2p QUIC 与 DERP 中继**
 | **8. 科学与 Roofline** | 6 标签页科学实验室（真实 SSE/ICMP、MMM 直接评估、Roofline、`N=1..128`、`J/tok`/`CO₂`、历史记录） |
 | **9. API 与控制台** | 测试 OpenAI (`/v1/chat/completions`, `/v1/responses` + MCP)、Ollama (`/api/tags`) 与 **A2A Agent Card** |
 | **10. 安装与自动配置** | 自动发现 Mac、跨节点配置（SSH / `wired_limit` / `mlx.distributed`）与 **4 状态就绪校验** |
-| **11. 帮助与手册** | 可全文搜索的 **12 章 8 语言交互式图文手册** (`⌘?`)（含点击展开图解与发光高亮） |
+| **11. 帮助与手册** | 可全文搜索的 **12 章 17 语言交互式图文手册** (`⌘?`)（含点击展开图解与发光高亮） |
 
 ---
 
@@ -204,7 +207,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 
 ![Thunderbolt 5 RDMA JACCL 与内存安全](docs/images/i18n/ssccc_tb5_rdma_jaccl_zh.jpg)
 
-完整 **12 章交互式图文用户手册**（支持 8 种语言与点击展开图解）已内置于应用的 **帮助与手册** 标签页中。
+完整 **12 章交互式图文用户手册**（支持 17 种语言与点击展开图解）已内置于应用的 **帮助与手册** 标签页中。
 
 ---
 
@@ -345,7 +348,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 - **下一代 MMM（EAGLE-3、Tree-MoA Early-Exit 与自适应置信度路由）：** 在多模型模式中集成 **EAGLE-3** 多层特征融合、**Tree-MoA Early-Exit** 置信度阈值（`50–95%`）与 **Adaptive Confidence Escalation (Ares)**。
 - **现代智能体与网关标准：** 实时预览并导出 **OpenAI `/v1/responses` + MCP**、**MCP Server Registry JSON** 以及 **A2A Agent Card**（`/.well-known/agent.json`）。
 - **热感知与碳感知调度：** 自动降级 `.serious`/`.critical` 热状态节点并优先调度高能效节点。
-- **第 12 阶段 — 集群自动配置（`安装与自动配置`）、就绪检查与全局 Shorttips：** 新增第 11 个侧边栏分类，自动发现并配置本地/WAN/混合集群，在概览与设置页报告 **就绪 / 未就绪 / 配置不完整 / 未配置**，并支持全界面 8 语言悬停 Shorttips、点击展开图文帮助及真实实时数据。
+- **第 12 阶段 — 集群自动配置（`安装与自动配置`）、就绪检查与全局 Shorttips：** 新增第 11 个侧边栏分类，自动发现并配置本地/WAN/混合集群，在概览与设置页报告 **就绪 / 未就绪 / 配置不完整 / 未配置**，并支持全界面 17 语言悬停 Shorttips、点击展开图文帮助及真实实时数据。
 
 ![自动集群配置与就绪状态检查](docs/images/i18n/ssccc_setup_readiness_zh.jpg)
 
@@ -358,7 +361,7 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 │   ├── SSCCCApp.swift              # 主窗口、顶部更新胶囊与 UpdatePromptSheet
 │   ├── Models/
 │   │   ├── ClusterModels.swift     # M1–M12+ 芯片推断、WAN/科学/历史与版本模型
-│   │   └── Localization.swift      # 完整 8 种语言界面与帮助词典 (EN/DE/FR/ES/PT/RU/JA/ZH)
+│   │   └── Localization.swift      # 完整 17 种语言界面与帮助词典 (EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA)
 │   ├── ViewModels/
 │   │   └── ClusterViewModel.swift  # 硬件探测、模型发现、WAN/Audio-Party 与 GitHub 更新器
 │   └── Views/                      # 12 个模块化 SwiftUI 视图 + Theme.swift（11 侧边栏、Setup、交互式帮助、警示条与发光高亮）
@@ -373,13 +376,20 @@ PYTHONPATH=".." uv run uvicorn core.api.gateway:app --host 0.0.0.0 --port 8000
 └── version.json                    # 托管于 GitHub 的更新控制清单
 ```
 
+### 🛰️ 最小化至顶部菜单栏模式（Agents 与 IDE 后台服务，`⌘⇧M`）
+
+- **无缝移入 macOS 顶部菜单栏：** 点击窗口黄色最小化按钮、按下 **`⌘⇧M`** 或点击顶部 **移至菜单栏** 按钮，主窗口即刻隐藏，SS-CCC 将作为 `.accessory` 后台服务静默驻留在 **Ollama** 等托盘图标旁。
+- **直观的菜单栏实时指标：** 弹窗即刻展示 **就绪状态**、**聚合与可用内存 (GB)**、**在线节点数**、**已加载模型与层分配**、**运行时** 及 **MMM 槽位**。
+- **1 键复制端点与已接入 IDE：** 直接复制 **`http://127.0.0.1:8000/v1`** 或 **`http://127.0.0.1:11434`** 供 Cursor、OpenCode、Hermes Agent、Antigravity、VS Code 和 Xcode 使用。
+- **随时秒速还原：** 随时从菜单栏（`⌘⇧M`）或程序坞恢复完整 Studio 主窗口。
+
 ---
 
 ## 🚧 开发状态与诚邀参与
 
 > [!IMPORTANT]
 > **SS-CCC (v1.6+) 已可完整编译运行并通过全部 `25/25` 项自动化测试；异构多节点长时间稳定性压测仍在持续推进。**
-> **已实现并验证：** 英文默认启动与全 **8 种语言** (`EN/DE/FR/ES/PT/RU/JA/ZH`) 覆盖 **全部 11 个界面、子菜单、按钮、表格与深度帮助卡片的完整本地化 (`L10n.tr`)**、本地 Mac 节点卡片的 **CPU、GPU 与神经网络引擎 (ANE) 核心数**显示、**11 项侧边栏模块**（含 **安装与自动配置**）、**3 标签页集群概览**、**黄黑斜纹工业警示条**与 **Solaris 发光高亮**、开放式 M1–M12+ 硬件探测（含 M5 Max/Ultra 与 M6）、真实实时遥测数据（关闭模拟即无虚假数据）、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、**12 章交互式图文帮助中心**、**全界面 8 语言悬停 Shorttips** 以及由 GitHub + CI 驱动的自动更新机制。
+> **已实现并验证：** 英文默认启动与全 **17 种语言** (`EN/DE/FR/ES/PT/RU/JA/ZH/NL/AF/PL/CS/SK/HU/KO/HI/TA/NL/AF/PL/CS/SK/HU/KO/HI/TA`) 覆盖 **全部 11 个界面、子菜单、按钮、表格与深度帮助卡片的完整本地化 (`L10n.tr`)**、本地 Mac 节点卡片的 **CPU、GPU 与神经网络引擎 (ANE) 核心数**显示、**11 项侧边栏模块**（含 **安装与自动配置**）、**3 标签页集群概览**、**黄黑斜纹工业警示条**与 **Solaris 发光高亮**、开放式 M1–M12+ 硬件探测（含 M5 Max/Ultra 与 M6）、真实实时遥测数据（关闭模拟即无虚假数据）、实时模型发现 (oMLX / Ollama / llama.cpp / GGUF)、6 标签页科学实验室、本地 ↔ 互联网 WAN 混合耦合、`AVAudioEngine` 集群 Audio-Party、**12 章交互式图文帮助中心**、**全界面 17 语言悬停 Shorttips** 以及由 GitHub + CI 驱动的自动更新机制。
 
 我们热忱邀请开发者、研究人员与 Apple Silicon 爱好者 **共同参与并推动 SS-CCC 不断完善**：
 - **在您的硬件上实测：** 在 M1–M12+ Mac 上运行 SS-CCC，并分享吞吐量、显存占用及 RDMA/JACCL 稳定性数据。

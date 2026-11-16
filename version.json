@@ -1,13 +1,13 @@
 {
-  "version": "1.6.41",
-  "build": 163,
-  "tag": "v1.6.41",
-  "title": "SS-CCC v1.6.41 — Manual Restart Button Only & Version-Sync Fix",
-  "notes": "• fix(updater): avoid nice(5) priority penalty on app relaunch [skip ci] (955ea09)\n• chore(release): publish v1.6.40 (build 162) with instant restart fix and 2x4 README language rows (c528d3b)\n• chore(release): publish v1.6.39 (build 161) update for 8-language localization and GPU/ANE readout (f8716c4)\n• chore(release): auto-bump v1.6.38 (build 160) [skip ci] (8c830ae)\n• docs(readme): update all 8 READMEs and docs to 25/25 tests and full 8-language/GPU+ANE status (3f72304)",
+  "version": "1.6.42",
+  "build": 164,
+  "tag": "v1.6.42",
+  "title": "SS-CCC v1.6.42 — 17-Language UI, Help Manual, Menu Bar Service Mode & README Visitor Counter",
+  "notes": "• chore(release): publish v1.6.41 (build 163) fixing manual-only restart and duplicate update prompt (b2ef2cc)\n• fix(updater): avoid nice(5) priority penalty on app relaunch [skip ci] (955ea09)\n• chore(release): publish v1.6.40 (build 162) with instant restart fix and 2x4 README language rows (c528d3b)\n• chore(release): publish v1.6.39 (build 161) update for 8-language localization and GPU/ANE readout (f8716c4)\n• chore(release): auto-bump v1.6.38 (build 160) [skip ci] (8c830ae)",
   "mandatory": false,
   "release_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases",
   "download_url": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion/releases/latest",
   "git_repo": "https://github.com/SonnerStudio/SonnerStudio-Cluster-Case-Companion.git",
-  "commit_sha": "955ea09",
-  "updated_at": "2026-11-16T14:11:34Z"
+  "commit_sha": "b2ef2cc",
+  "updated_at": "2026-11-16T15:56:54Z"
 }

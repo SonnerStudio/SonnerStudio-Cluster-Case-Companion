@@ -42,6 +42,20 @@ enum HelpDocDeepDiveCatalog {
         case .ru: return ru
         case .ja: return ja
         case .zh: return zh
+        case .nl, .af, .pl, .cs, .sk, .hu, .ko, .hi, .ta:
+            return de.indices.map { idx in
+                L10n.tr(
+                    lang,
+                    de: de[idx],
+                    en: en.indices.contains(idx) ? en[idx] : de[idx],
+                    fr: fr.indices.contains(idx) ? fr[idx] : de[idx],
+                    es: es.indices.contains(idx) ? es[idx] : de[idx],
+                    pt: pt.indices.contains(idx) ? pt[idx] : de[idx],
+                    ru: ru.indices.contains(idx) ? ru[idx] : de[idx],
+                    ja: ja.indices.contains(idx) ? ja[idx] : de[idx],
+                    zh: zh.indices.contains(idx) ? zh[idx] : de[idx]
+                )
+            }
         }
     }
 
@@ -1748,35 +1762,35 @@ enum HelpDocDeepDiveCatalog {
                 detailedParagraphs: trList(lang,
                     de: [
                         "SS-CCC wird als natives macOS-SwiftUI-Programm über SwiftPM (swift build) oder direkt über das Startskript ./scripts/run_ssccc.sh gestartet. Das Startskript stellt sicher, dass alle Swift-Quelldateien inklusive Theme, ViewModel, allen 11 Ansichten und Ressourcen gebündelt werden.",
-                        "Die integrierte Qualitätssicherung besteht aus kompilierten Swift-Laufzeittests (tests/run_swift_checks.swift) und der Python-Verifikationssuite (tests/test_global_suite.py), die sowohl Hardware-Logik, Lokalisierung in 8 Sprachen als auch UI-Symbole absichert."
+                        "Die integrierte Qualitätssicherung besteht aus kompilierten Swift-Laufzeittests (tests/run_swift_checks.swift) und der Python-Verifikationssuite (tests/test_global_suite.py), die sowohl Hardware-Logik, Lokalisierung in 17 Sprachen als auch UI-Symbole absichert."
                     ],
                     en: [
                         "SS-CCC launches as a native macOS SwiftUI application via SwiftPM (swift build) or ./scripts/run_ssccc.sh, ensuring all models, view models, and 11 views compile together.",
-                        "Quality assurance combines compiled Swift runtime checks (tests/run_swift_checks.swift) with a global Python verification suite (tests/test_global_suite.py) covering M1–M12+ scaling, 8-language parity, WAN monitors, and MMM."
+                        "Quality assurance combines compiled Swift runtime checks (tests/run_swift_checks.swift) with a global Python verification suite (tests/test_global_suite.py) covering M1–M12+ scaling, 17-language parity, WAN monitors, and MMM."
                     ],
                     fr: [
                         "SS-CCC se lance en application macOS native via SwiftPM ou ./scripts/run_ssccc.sh en compilant l'ensemble des 11 vues et modèles.",
-                        "La qualité est vérifiée par des tests Swift compilés (tests/run_swift_checks.swift) et la suite Python (tests/test_global_suite.py) couvrant 8 langues."
+                        "La qualité est vérifiée par des tests Swift compilés (tests/run_swift_checks.swift) et la suite Python (tests/test_global_suite.py) couvrant 17 langues."
                     ],
                     es: [
                         "SS-CCC se inicia como app nativa macOS SwiftUI vía SwiftPM o ./scripts/run_ssccc.sh reuniendo todas las 11 vistas.",
-                        "El aseguramiento de calidad combina tests Swift compilados con la suite Python global y paridad de 8 idiomas."
+                        "El aseguramiento de calidad combina tests Swift compilados con la suite Python global y paridad de 17 idiomas."
                     ],
                     pt: [
                         "O SS-CCC arranca como aplicação nativa SwiftUI via SwiftPM ou ./scripts/run_ssccc.sh compilando as 11 vistas.",
-                        "A qualidade combina testes Swift compilados com a suite global Python para os 8 idiomas."
+                        "A qualidade combina testes Swift compilados com a suite global Python para os 17 idiomas."
                     ],
                     ru: [
                         "SS-CCC запускается как нативное приложение macOS SwiftUI через SwiftPM или ./scripts/run_ssccc.sh, собирая все 11 представлений.",
-                        "Автопроверка включает скомпилированные тесты Swift и глобальный набор тестов Python для всех 8 языков."
+                        "Автопроверка включает скомпилированные тесты Swift и глобальный набор тестов Python для всех 17 языков."
                     ],
                     ja: [
                         "SS-CCC は SwiftPM または ./scripts/run_ssccc.sh を通じて全11画面をバンドルしたネイティブ SwiftUI アプリとして起動します。",
-                        "品質保証は Swift ランタイムテストと 8 言語パリティを網羅するグローバル検証スイートで自動化されています。"
+                        "品質保証は Swift ランタイムテストと 17 言語パリティを網羅するグローバル検証スイートで自動化されています。"
                     ],
                     zh: [
                         "SS-CCC 作为原生 macOS SwiftUI 应用可通过 SwiftPM 或 ./scripts/run_ssccc.sh 启动，完整打包 11 个功能视图与全部资源。",
-                        "内建质量保障结合 Swift 编译期运行时检查与 Python 全局测试套件，覆盖 M1–M12+ 推导、8 语言一致性与 MMM 功能。"
+                        "内建质量保障结合 Swift 编译期运行时检查与 Python 全局测试套件，覆盖 M1–M12+ 推导、17 语言一致性与 MMM 功能。"
                     ]),
                 stepByStep: trList(lang,
                     de: [

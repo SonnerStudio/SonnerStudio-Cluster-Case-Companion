@@ -217,6 +217,48 @@ final class ClusterViewModel: ObservableObject {
     @Published var localGitCommitSHA: String = ""
     private var autoUpdateMonitorTask: Task<Void, Never>? = nil
 
+    // Background Menu Bar Service Mode (minimize to top status bar like Ollama)
+    @Published var minimizeToMenuBar: Bool = UserDefaults.standard.object(forKey: "ssccc_minimize_to_menubar") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(minimizeToMenuBar, forKey: "ssccc_minimize_to_menubar")
+        }
+    }
+    @Published var isMinimizedToMenuBar: Bool = false
+    @Published var menuBarCopiedEndpoint: String = ""
+
+    func minimizeWindowToMenuBar() {
+        isMinimizedToMenuBar = true
+        for window in NSApplication.shared.windows {
+            let cls = window.className
+            if cls.contains("StatusBar") || cls.contains("MenuBar") || cls.contains("Popover") {
+                continue
+            }
+            if window.isMiniaturized {
+                window.deminiaturize(nil)
+            }
+            window.orderOut(nil)
+        }
+        NSApplication.shared.setActivationPolicy(.accessory)
+    }
+
+    func restoreWindowFromMenuBar() {
+        isMinimizedToMenuBar = false
+        NSApplication.shared.setActivationPolicy(.regular)
+        let targetWindow = NSApplication.shared.windows.first(where: {
+            $0.title.contains("SS-CCC") || $0.title.contains("SonnerStudio")
+        }) ?? NSApplication.shared.windows.first(where: {
+            let cls = $0.className
+            return !cls.contains("StatusBar") && !cls.contains("MenuBar") && !cls.contains("Popover")
+        })
+        if let window = targetWindow {
+            if window.isMiniaturized {
+                window.deminiaturize(nil)
+            }
+            window.makeKeyAndOrderFront(nil)
+        }
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+
     static let fallbackReferenceModels: [ModelPreset] = [
         ModelPreset(
             id: "mlx-community/Qwen2.5-32B-Instruct-4bit",
@@ -431,9 +473,22 @@ final class ClusterViewModel: ObservableObject {
         pt: String,
         ru: String,
         ja: String,
-        zh: String
+        zh: String,
+        nl: String? = nil,
+        af: String? = nil,
+        pl: String? = nil,
+        cs: String? = nil,
+        sk: String? = nil,
+        hu: String? = nil,
+        ko: String? = nil,
+        hi: String? = nil,
+        ta: String? = nil
     ) -> String {
-        L10n.tr(language, de: de, en: en, fr: fr, es: es, pt: pt, ru: ru, ja: ja, zh: zh)
+        L10n.tr(
+            language,
+            de: de, en: en, fr: fr, es: es, pt: pt, ru: ru, ja: ja, zh: zh,
+            nl: nl, af: af, pl: pl, cs: cs, sk: sk, hu: hu, ko: ko, hi: hi, ta: ta
+        )
     }
 
     func refreshLocalizedDynamicState() {

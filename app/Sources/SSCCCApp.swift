@@ -1,11 +1,22 @@
 import AppKit
 import SwiftUI
 
+extension Notification.Name {
+    static let sscccRestoreFromMenuBar = Notification.Name("sscccRestoreFromMenuBar")
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
         NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            NotificationCenter.default.post(name: .sscccRestoreFromMenuBar, object: nil)
+        }
+        return true
     }
 }
 
@@ -28,6 +39,14 @@ struct SSCCCApp: App {
                     Task { await vm.checkForGitHubUpdates(userInitiated: true) }
                 }
                 .keyboardShortcut("u", modifiers: [.command])
+                Button(vm.isMinimizedToMenuBar ? vm.t("mb_restore_window") : vm.t("mb_hide_to_bar")) {
+                    if vm.isMinimizedToMenuBar {
+                        vm.restoreWindowFromMenuBar()
+                    } else {
+                        vm.minimizeWindowToMenuBar()
+                    }
+                }
+                .keyboardShortcut("m", modifiers: [.command, .shift])
             }
             CommandGroup(replacing: .help) {
                 Button(vm.tabTitle(.help)) {
@@ -36,6 +55,17 @@ struct SSCCCApp: App {
                 .keyboardShortcut("?", modifiers: [.command])
             }
         }
+
+        MenuBarExtra {
+            SSCCCMenuBarExtraView(vm: vm)
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: vm.clusterReadinessState == .ready ? "sun.max.fill" : "sun.max")
+                Text("SS-CCC · \(Int(vm.totalUsableVramGB))G/\(vm.nodes.count)N")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            }
+        }
+        .menuBarExtraStyle(.window)
     }
 }
 
@@ -129,14 +159,14 @@ struct MainStudioWindow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 12).fill(SolarisTheme.cardBg.opacity(0.84)))
                 .solarisShorttip(L10n.tr(vm.language,
-                    de: "Sprache der gesamten Benutzeroberfläche inkl. Handbuch & Shorttips (8 Sprachen).",
-                    en: "Language for the entire UI including manual & shorttips (8 languages).",
-                    fr: "Langue de toute l'interface, y compris le manuel et les infobulles (8 langues).",
-                    es: "Idioma de toda la interfaz, incluido el manual y los consejos (8 idiomas).",
-                    pt: "Idioma de toda a interface, incluindo manual e dicas rápidas (8 idiomas).",
-                    ru: "Язык всего интерфейса, включая руководство и подсказки (8 языков).",
-                    ja: "マニュアルとショートチップを含む全UIの言語（8言語対応）。",
-                    zh: "整个界面（含手册与提示）的显示语言（支持 8 种语言）。"), id: "sidebar_lang_picker", vm: vm)
+                    de: "Sprache der gesamten Benutzeroberfläche inkl. Handbuch & Shorttips (17 Sprachen).",
+                    en: "Language for the entire UI including manual & shorttips (17 languages).",
+                    fr: "Langue de toute l'interface, y compris le manuel et les infobulles (17 langues).",
+                    es: "Idioma de toda la interfaz, incluido el manual y los consejos (17 idiomas).",
+                    pt: "Idioma de toda a interface, incluindo manual e dicas rápidas (17 idiomas).",
+                    ru: "Язык всего интерфейса, включая руководство и подсказки (17 языков).",
+                    ja: "マニュアルとショートチップを含む全UIの言語（17言語対応）。",
+                    zh: "整个界面（含手册与提示）的显示语言（支持 17 种语言）。"), id: "sidebar_lang_picker", vm: vm)
 
                 // Simulations-Schalter (bis Mac Studio per UPS eintrifft)
                 Button {
@@ -238,6 +268,24 @@ struct MainStudioWindow: View {
                     }
                     .buttonStyle(.plain)
 
+                    Button {
+                        vm.minimizeWindowToMenuBar()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "menubar.dock.rectangle")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(SolarisTheme.amber)
+                            Text(vm.t("mb_btn_minimize"))
+                                .font(.system(size: 12.5, weight: .semibold))
+                                .foregroundColor(SolarisTheme.textPrimary)
+                        }
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(SolarisTheme.cardElevated))
+                    }
+                    .buttonStyle(.plain)
+                    .solarisShorttip(vm.t("mb_btn_minimize_tip"), id: "header_minimize_menubar", vm: vm)
+
                     HStack(spacing: 12) {
                         Circle()
                             .fill(vm.daemonConnected ? SolarisTheme.emerald : SolarisTheme.amber)
@@ -293,6 +341,18 @@ struct MainStudioWindow: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $vm.showUpdatePromptSheet) {
             UpdatePromptSheet(vm: vm)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willMiniaturizeNotification)) { note in
+            guard vm.minimizeToMenuBar,
+                  let window = note.object as? NSWindow,
+                  !(window.className.contains("StatusBar") || window.className.contains("MenuBar") || window.className.contains("Popover"))
+            else { return }
+            DispatchQueue.main.async {
+                vm.minimizeWindowToMenuBar()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .sscccRestoreFromMenuBar)) { _ in
+            vm.restoreWindowFromMenuBar()
         }
     }
 
@@ -666,5 +726,246 @@ private struct UpdatePromptSheet: View {
         .frame(width: 620)
         .background(SolarisTheme.canvasBg)
         .preferredColorScheme(.dark)
+    }
+}
+
+struct SSCCCMenuBarExtraView: View {
+    @ObservedObject var vm: ClusterViewModel
+
+    private var overviewScopeLabel: String {
+        switch vm.overviewScope {
+        case .local: return vm.t("ov_tab_local")
+        case .internet: return vm.t("ov_tab_internet")
+        case .hybrid: return vm.t("ov_tab_hybrid")
+        }
+    }
+
+    private var readinessAccent: Color {
+        switch vm.clusterReadinessState {
+        case .ready: return SolarisTheme.emerald
+        case .incomplete: return SolarisTheme.amber
+        case .notReady: return SolarisTheme.coral
+        case .unconfigured: return SolarisTheme.textSecondary
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(LinearGradient(colors: [SolarisTheme.amber, SolarisTheme.amberGlow], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: "sun.max.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.black)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(vm.t("mb_title"))
+                        .font(.system(size: 13.5, weight: .bold))
+                        .foregroundColor(SolarisTheme.textPrimary)
+                    Text(vm.t("mb_subtitle"))
+                        .font(.system(size: 11))
+                        .foregroundColor(SolarisTheme.textSecondary)
+                }
+                Spacer()
+                Text("v\(AppReleaseMetadata.currentVersion)")
+                    .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(SolarisTheme.cardElevated))
+                    .foregroundColor(SolarisTheme.textSecondary)
+            }
+
+            HazardStripesBar(height: 4, stripeWidth: 8, cornerRadius: 2, opacity: 0.8)
+
+            // Readiness + Service Online Status
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(readinessAccent)
+                        .frame(width: 8, height: 8)
+                    Text(vm.currentReadinessLabel)
+                        .font(.system(size: 11.5, weight: .semibold))
+                        .foregroundColor(readinessAccent)
+                        .lineLimit(1)
+                }
+                Spacer()
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(vm.daemonConnected ? SolarisTheme.emerald : SolarisTheme.amber)
+                        .frame(width: 7, height: 7)
+                    Text(vm.daemonConnected ? vm.t("header_online") : String(format: vm.t("header_preview"), Int(vm.totalPhysicalRamGB)))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(SolarisTheme.textPrimary)
+                        .lineLimit(1)
+                }
+            }
+            .padding(9)
+            .background(RoundedRectangle(cornerRadius: 8).fill(SolarisTheme.cardBg))
+
+            // 2x2 Key Metrics Grid
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                menuMetricTile(
+                    title: vm.t("kpi_memory"),
+                    value: "\(Int(vm.totalPhysicalRamGB)) GB RAM",
+                    sub: "\(Int(vm.totalUsableVramGB)) GB MLX",
+                    accent: SolarisTheme.amber
+                )
+                menuMetricTile(
+                    title: vm.t("kpi_nodes"),
+                    value: "\(vm.nodes.count) Macs",
+                    sub: overviewScopeLabel,
+                    accent: SolarisTheme.mint
+                )
+                menuMetricTile(
+                    title: vm.t("mb_active_model"),
+                    value: vm.selectedModel.displayName,
+                    sub: "\(vm.selectedModel.totalLayers) \(vm.t("ms_layers_unit"))",
+                    accent: SolarisTheme.emerald
+                )
+                menuMetricTile(
+                    title: vm.t("mb_active_runtime"),
+                    value: vm.selectedService.localizedTitle(vm.language),
+                    sub: "MMM: \(vm.mmmActiveSlots.count) Slots",
+                    accent: SolarisTheme.amberGlow
+                )
+            }
+
+            // Agent & IDE Service Endpoints
+            VStack(alignment: .leading, spacing: 6) {
+                Text(vm.t("mb_endpoints_label"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(SolarisTheme.textSecondary)
+
+                HStack(spacing: 6) {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(vm.openCodeBaseURL, forType: .string)
+                        vm.menuBarCopiedEndpoint = vm.openCodeBaseURL
+                    } label: {
+                        Label(vm.t("mb_copy_openai"), systemImage: "doc.on.doc")
+                            .font(.system(size: 11, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(SolarisTheme.cardElevated))
+                            .foregroundColor(SolarisTheme.textPrimary)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString("http://127.0.0.1:11434", forType: .string)
+                        vm.menuBarCopiedEndpoint = "http://127.0.0.1:11434"
+                    } label: {
+                        Label(vm.t("mb_copy_ollama"), systemImage: "doc.on.doc")
+                            .font(.system(size: 11, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(SolarisTheme.cardElevated))
+                            .foregroundColor(SolarisTheme.textPrimary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Text("OpenCode · Hermes · Antigravity · Cursor · VS Code · Xcode")
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundColor(SolarisTheme.mint)
+                    .lineLimit(1)
+
+                if !vm.menuBarCopiedEndpoint.isEmpty {
+                    Text("✓ \(vm.menuBarCopiedEndpoint)")
+                        .font(.system(size: 10.5, weight: .semibold, design: .monospaced))
+                        .foregroundColor(SolarisTheme.emerald)
+                }
+            }
+            .padding(9)
+            .background(RoundedRectangle(cornerRadius: 8).fill(SolarisTheme.cardBg))
+
+            // Minimize-to-menu-bar behavior toggle
+            Toggle(isOn: $vm.minimizeToMenuBar) {
+                Text(vm.t("mb_auto_minimize_toggle"))
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundColor(SolarisTheme.textPrimary)
+            }
+            .toggleStyle(.switch)
+            .controlSize(.small)
+
+            Divider().background(SolarisTheme.borderSubtle)
+
+            // Primary Window + Actions
+            HStack(spacing: 8) {
+                Button {
+                    if vm.isMinimizedToMenuBar {
+                        vm.restoreWindowFromMenuBar()
+                    } else {
+                        vm.minimizeWindowToMenuBar()
+                    }
+                } label: {
+                    Label(
+                        vm.isMinimizedToMenuBar ? vm.t("mb_restore_window") : vm.t("mb_hide_to_bar"),
+                        systemImage: vm.isMinimizedToMenuBar ? "macwindow.on.rectangle" : "menubar.dock.rectangle"
+                    )
+                    .font(.system(size: 12, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(SolarisTheme.amber))
+                    .foregroundColor(.black)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    vm.verifyClusterReadiness()
+                } label: {
+                    Image(systemName: "checkmark.shield.fill")
+                        .font(.system(size: 13))
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(SolarisTheme.cardElevated))
+                        .foregroundColor(SolarisTheme.mint)
+                }
+                .buttonStyle(.plain)
+                .help(vm.t("ov_verify_btn"))
+
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Image(systemName: "power")
+                        .font(.system(size: 13, weight: .semibold))
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(SolarisTheme.cardElevated))
+                        .foregroundColor(SolarisTheme.coral)
+                }
+                .buttonStyle(.plain)
+                .help(vm.t("mb_quit_app"))
+            }
+        }
+        .padding(14)
+        .frame(width: 368)
+        .background(SolarisTheme.canvasBg)
+        .preferredColorScheme(.dark)
+        .onReceive(NotificationCenter.default.publisher(for: .sscccRestoreFromMenuBar)) { _ in
+            vm.restoreWindowFromMenuBar()
+        }
+    }
+
+    private func menuMetricTile(title: String, value: String, sub: String, accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.system(size: 10.5, weight: .medium))
+                .foregroundColor(SolarisTheme.textSecondary)
+                .lineLimit(1)
+            Text(value)
+                .font(.system(size: 12.5, weight: .bold))
+                .foregroundColor(accent)
+                .lineLimit(1)
+            Text(sub)
+                .font(.system(size: 10.5))
+                .foregroundColor(SolarisTheme.textSecondary)
+                .lineLimit(1)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(SolarisTheme.cardBg))
     }
 }
