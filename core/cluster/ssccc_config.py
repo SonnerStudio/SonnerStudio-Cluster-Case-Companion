@@ -38,7 +38,8 @@ DEFAULTS: dict = {
         "context": 131072,
         "max_output": 32768,
         "max_num_seqs": 2,              # gleichzeitige Sequenzen (Speicherschutz)
-        "kv_bits": 8,                   # KV-Cache-Quantisierung (Speicherschutz)
+        "kv_bits": 8,                   # KV-Cache-Quantisierung (Speicherschutz; 0 = aus, ~5 % schneller)
+        "large_prompt": 32768,          # ab hier laufen Anfragen nacheinander
         "port": 8001,
     },
     "verbund": {                        # Verbund-Modus: ein Modell über alle Macs geteilt
@@ -51,6 +52,8 @@ DEFAULTS: dict = {
         "name": "HiDream-O1-Image-Dev",
         "repo": "mlx-community/HiDream-O1-Image-Dev-mlx-bf16",
         "model_dir": "models/HiDream-O1-Image-Dev-bf16",
+        "idle_wait_s": 30,              # Bild erst nach so viel Chat-Leerlauf …
+        "max_wait_s": 300,              # … aber spätestens nach dieser Wartezeit
     },
     "reserve": {                        # Antwort-Reserve auf dem Worker während Bildaufträgen
         "enabled": True,
@@ -59,6 +62,8 @@ DEFAULTS: dict = {
         "name": "Reserve-Modell (Worker)",
     },
     "forward_port": 8090,               # lokale Weiterleitung auf dem Worker -> Gateway
+    "api_key": "",                      # leer = offen im Heimnetz; sonst Schlüssel für alle Clients
+    "tls": {"cert": "", "key": ""},     # optional HTTPS (Zertifikat + Schlüssel als Dateipfade)
 }
 
 

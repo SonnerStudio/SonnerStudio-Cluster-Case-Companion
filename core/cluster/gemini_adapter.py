@@ -158,8 +158,29 @@ async def _openai_stream(req_body: dict):
                     continue
 
 
+class GuardRejected(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 async def _gemini_events(body: dict):
     req = gemini_to_openai(body)
+    guard = _cfg.get("guard")
+    if guard:
+        rejected, _info = guard(req)
+        if rejected is not None:
+            raise GuardRejected(json.loads(rejected.body)["error"]["message"])
+    if _cfg.get("on_start"):
+        _cfg["on_start"]()
+    try:
+        async for ev in _gemini_events_inner(req):
+            yield ev
+    finally:
+        if _cfg.get("on_finish"):
+            _cfg["on_finish"]()
+
+
+async def _gemini_events_inner(req: dict):
     model = _cfg.get("model_name", "ssccc")
     calls: dict = {}
     usage = None

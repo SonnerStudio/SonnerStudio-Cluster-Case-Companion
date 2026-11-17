@@ -184,6 +184,15 @@ final class ClusterViewModel: ObservableObject {
     }
     @Published var setupToolChecks: [ClusterReadinessCheckItem] = []
     @Published var isRunningSetupTool: Bool = false
+    @Published var gwMetrics: GatewayMetrics? = nil
+    @Published var gwModels: [GatewayModelEntry] = []
+    @Published var gwDownload: GatewayDownloadState? = nil
+    @Published var gwMode: String = ""
+    @Published var modeSwitching: Bool = false
+    @Published var imageResults: [GeneratedImage] = []
+    @Published var imageRefs: [URL] = []
+    @Published var imageBusy: Bool = false
+    @Published var imageStatus: String = ""
     @Published var activeShorttipText: String? = nil
     @Published var hoveredShorttipId: String? = nil
 
@@ -818,6 +827,7 @@ final class ClusterViewModel: ObservableObject {
 
         if daemonConnected, let url = URL(string: "\(ClusterViewModel.clusterGatewayBase)/v1/chat/completions") {
             var request = URLRequest(url: url)
+            ClusterViewModel.authorize(&request)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             let body: [String: Any] = [
@@ -1280,6 +1290,7 @@ final class ClusterViewModel: ObservableObject {
         // 1. oMLX / OpenAI-compatible endpoint (:8000)
         if let url = URL(string: "\(ClusterViewModel.clusterGatewayBase)/v1/models") {
             var req = URLRequest(url: url)
+            ClusterViewModel.authorize(&req)
             req.timeoutInterval = 1.5
             if let (data, resp) = try? await URLSession.shared.data(for: req),
                let http = resp as? HTTPURLResponse, http.statusCode == 200,
@@ -1413,6 +1424,7 @@ final class ClusterViewModel: ObservableObject {
     private func isPortReachable(port: Int, path: String) async -> Bool {
         guard let url = URL(string: port == 8000 ? "\(ClusterViewModel.clusterGatewayBase)\(path)" : "http://127.0.0.1:\(port)\(path)") else { return false }
         var req = URLRequest(url: url)
+        if port == 8000 { ClusterViewModel.authorize(&req) }
         req.timeoutInterval = 0.8
         if let (_, resp) = try? await URLSession.shared.data(for: req),
            let http = resp as? HTTPURLResponse, (200..<500).contains(http.statusCode) {
