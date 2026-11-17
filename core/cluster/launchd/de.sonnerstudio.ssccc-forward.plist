@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Lokale Weiterleitung auf dem Worker zum Gateway des Leitrechners. -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>de.sonnerstudio.ssccc-forward</string>
+  <key>ProgramArguments</key><array><string>__SSCCC_HOME__/venv/bin/python</string><string>__SSCCC_HOME__/forward.py</string></array>
+  <key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>__SSCCC_HOME__/forward.log</string>
+  <key>StandardErrorPath</key><string>__SSCCC_HOME__/forward.log</string>
+  <key>EnvironmentVariables</key><dict><key>SSCCC_HOME</key><string>__SSCCC_HOME__</string></dict>
+</dict></plist>
