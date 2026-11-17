@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- SS-CCC auf dem Leitrechner (Gateway bzw. Verbund). __SSCCC_HOME__ ersetzt ssccc_setup.py. -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>de.sonnerstudio.ssccc-verbund</string>
+  <key>ProgramArguments</key><array><string>__SSCCC_HOME__/start_ssccc.sh</string></array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>__SSCCC_HOME__/verbund.log</string>
+  <key>StandardErrorPath</key><string>__SSCCC_HOME__/verbund.log</string>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>/usr/bin:/bin:/usr/sbin:/sbin</string><key>SSCCC_HOME</key><string>__SSCCC_HOME__</string></dict>
+</dict></plist>
