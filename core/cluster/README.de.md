@@ -9,6 +9,20 @@ Alles läuft unter dem **gemeinsamen Pfad `/Users/Shared/ssccc`** (auf jedem Mac
 unabhängig vom Benutzernamen). Rechnerspezifische Werte stehen in
 `/Users/Shared/ssccc/cluster.json` (Vorlage: `cluster.example.json`).
 
+## Ersteinrichtung
+
+```bash
+python3 core/cluster/ssccc_setup.py detect                                   # zweiten Mac finden
+python3 core/cluster/ssccc_setup.py configure --worker-host Mac-mini.local --worker-user <name>
+ssh-copy-id -i ~/.ssh/id_ed25519.pub <name>@Mac-mini.local                  # einmal Passwort eingeben
+python3 core/cluster/ssccc_setup.py apply                                    # alles Automatische einrichten
+python3 core/cluster/ssccc_setup.py check                                    # Bereitschaft prüfen
+```
+
+`apply` installiert Umgebung und Modelle, verteilt die Server-Dateien, richtet die Dienste
+auf beiden Macs ein und verbindet Hermes, OpenCode und Antigravity. Was nur der Mensch tun
+kann (Passwörter, Admin-Rechte, macOS-Freigaben, Kabel), meldet `check` mit genauer Anleitung.
+
 ## Betriebsarten (`cluster.json` → `mode`, oder Datei `/Users/Shared/ssccc/modus`)
 
 | Betriebsart | Leitrechner | Worker | Wofür |
@@ -23,6 +37,7 @@ Verbund 8 Bit 49 Zeichen/s (≈ 11,6 tok/s) · Studio allein 4 Bit 105 · **4 Bi
 
 | Datei | Aufgabe |
 |---|---|
+| `ssccc_setup.py` | **Ersteinrichtung**: `check` (Bereitschaft), `apply` (automatisch einrichten), `detect` (Macs im Netz), `configure` (Worker eintragen); `--json` für die App |
 | `ssccc_config.py` | lädt `cluster.json` + Standardwerte; `python ssccc_config.py env` liefert Shell-Variablen |
 | `ssccc_gateway.py` | Gateway `:8000` im Multi-Model-Mode (Chat-Weiterleitung, Bilder, Reserve, Status) |
 | `gemini_adapter.py` | Gemini-Protokoll (`/v1beta/models/…:streamGenerateContent`) für Google Antigravity |
