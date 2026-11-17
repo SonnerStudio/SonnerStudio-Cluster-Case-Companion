@@ -22,7 +22,12 @@ Legende: `[x]` erledigt · `[~]` in Arbeit · `[ ]` offen
 - [x] Prüfen: `mlx-lm` unterstützt kein MTP (MTP-Gewichte werden beim Laden verworfen), kein Speculative Decoding im Verbundbetrieb
 - [x] Prüfen: `mlx-vlm` 0.8 unterstützt MTP für Qwen3.8 (`mlx-community/Qwen3.8-27B-MTP-8bit` / `-4bit`), verteilt aber nur per Tensor-Parallelität (ungeeignet für LAN und 16-GB-Mini)
 - [x] Qwen3.8-27B-4bit + MTP-Drafter heruntergeladen
-- [~] Messen: Mac Studio allein (mlx-vlm, mit/ohne MTP) gegen Verbund (Referenz: 49 Zeichen/s ≙ 11,6 tok/s)
+- [x] Gemessen (gleicher Prompt, Zeichen/s, da MTP mehrere Token je Paket liefert):
+  | Variante | Zeichen/s | Faktor |
+  |---|---|---|
+  | Verbund, 8 Bit (60/4) | 49 (≙ 11,6 tok/s) | 1,0× |
+  | Mac Studio allein, 4 Bit, mlx-vlm | 105 | 2,1× |
+  | Mac Studio allein, 4 Bit + MTP (4 oder 8 Bit) | 170 | **3,5×** |
 - [ ] Prüfen, ob eine 6-Bit-Variante (z. B. `Qwen3.8-27B-oQ6`, 23,3 GB) mit mlx-vlm + MTP lädt (Qualität nahe 8 Bit, passt allein auf den Studio)
 
 ### 1.2 Architektur-Entscheidung
