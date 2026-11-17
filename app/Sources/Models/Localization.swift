@@ -69,6 +69,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 enum L10n {
     static func tabTitle(_ tab: NavigationTab, _ lang: AppLanguage) -> String {
         switch (tab, lang) {
+        case (.imageStudio, _): return GS.t("tab_image", lang)
         case (.overview, .de): return "Verbund-Übersicht"
         case (.overview, .en): return "Cluster Overview"
         case (.overview, .fr): return "Vue de la grappe"
@@ -271,6 +272,7 @@ enum L10n {
 
     static func tabSubtitle(_ tab: NavigationTab, _ lang: AppLanguage) -> String {
         switch (tab, lang) {
+        case (.imageStudio, _): return GS.t("tab_image_sub", lang)
         case (.overview, .de): return "Verbund-Speicher & Topologie"
         case (.overview, .en): return "Cluster Pool & Topology"
         case (.overview, .fr): return "Mémoire de grappe & Topologie"
@@ -3312,6 +3314,7 @@ enum L10n {
 
     static func tabShorttip(_ tab: NavigationTab, _ lang: AppLanguage) -> String {
         switch tab {
+        case .imageStudio: return GS.t("img_queue_hint", lang)
         case .overview: return text("tip_tab_overview", lang)
         case .devices: return text("tip_tab_devices", lang)
         case .models: return text("tip_tab_models", lang)

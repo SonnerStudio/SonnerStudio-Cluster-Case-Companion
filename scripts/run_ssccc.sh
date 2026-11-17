@@ -18,9 +18,11 @@ unset SSCCC_SKIP_BUILD || true
 SWIFT_REL_FILES=(
   "Models/ClusterModels.swift"
   "Models/Localization.swift"
+  "Models/GatewayStrings.swift"
   "ViewModels/ClusterViewModel.swift"
   "ViewModels/LiveCluster.swift"
   "ViewModels/SetupTool.swift"
+  "ViewModels/GatewayClient.swift"
   "Views/Theme.swift"
   "Views/ClusterOverviewView.swift"
   "Views/DevicesCompareView.swift"
@@ -34,6 +36,8 @@ SWIFT_REL_FILES=(
   "Views/ClusterSetupView.swift"
   "Views/HelpDocDeepDiveContent.swift"
   "Views/HelpDocsView.swift"
+  "Views/ImageStudioView.swift"
+  "Views/GatewayPanels.swift"
   "SSCCCApp.swift"
 )
 

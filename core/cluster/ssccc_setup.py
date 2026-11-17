@@ -9,6 +9,7 @@ Studio M5 Max + Mac mini M4 stecken in den Prüfungen (siehe README.de.md).
   python3 ssccc_setup.py apply [--json] [--only ID,ID] [--skip-models]
                                                  automatisch behebbare Punkte einrichten
   python3 ssccc_setup.py detect [--json]         Macs im Netz (Bonjour/SSH) auflisten
+  python3 ssccc_setup.py secure                  API-Schlüssel erzeugen und alle Programme umstellen
   python3 ssccc_setup.py configure --worker-host H --worker-user U [--worker-name N]
                                                  Worker-Mac eintragen (cluster.json + ~/.ssh/config)
 
@@ -254,7 +255,8 @@ def checks(cfg):
                            "tools": [{"type": "function", "function": {"name": "get_time", "description": "Uhrzeit einer Stadt",
                                       "parameters": {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}}}]})
         r = run(["/usr/bin/curl", "-s", "-m", "300", f"http://127.0.0.1:{port}/v1/chat/completions",
-                 "-H", "Content-Type: application/json", "-d", body], timeout=320)
+                 "-H", "Content-Type: application/json", "-H", f"Authorization: Bearer {cfg.get('api_key', '')}",
+                 "-d", body], timeout=320)
         try:
             tc = json.loads(r.stdout)["choices"][0]["message"].get("tool_calls")
         except Exception:
@@ -262,6 +264,10 @@ def checks(cfg):
         results.append(check("tools", "coordinator", cfg, "Werkzeugaufruf (für Agenten)", "pass" if tc else "fail",
                              f"{tc[0]['function']['name']}({tc[0]['function']['arguments']})" if tc else "kein Werkzeugaufruf",
                              "none", "Modell/Chat-Vorlage prüfen"))
+    results.append(check("api_key", "coordinator", cfg, "Zugriffsschutz (API-Schlüssel)",
+                         "pass" if cfg.get("api_key") else "warn",
+                         "aktiv" if cfg.get("api_key") else "Gateway ist im ganzen Heimnetz ohne Schlüssel erreichbar",
+                         "auto", "ssccc_setup.py secure – erzeugt einen Schlüssel und stellt alle Programme um"))
     if has_worker and worker_ok:
         r = ssh(cfg, f"curl -s -m 8 http://127.0.0.1:{cfg['forward_port']}/health")
         results.append(check("worker_reach", "worker", cfg, "Gateway vom Worker erreichbar", "pass" if '"ok"' in r.stdout else "fail",
@@ -399,10 +405,11 @@ def fix_worker_service(cfg, name):
 
 def fix_clients(cfg, mac):
     base = f"http://127.0.0.1:{cfg['gateway_port']}" if mac == "coordinator" else f"http://127.0.0.1:{cfg['forward_port']}"
+    key = cfg.get("api_key") or "ssccc-lokal"
     step("Programme verbinden", f"{mac_name(mac, cfg)} → {base}/v1")
     ctx = cfg["llm"]["context"]
     hermes = ("H=~/.local/bin/hermes; if [ -x $H ]; then cp ~/.hermes/config.yaml ~/.hermes/config.yaml.bak-ssccc 2>/dev/null; "
-              f"$H config set providers.ssccc.base_url {base}/v1; $H config set providers.ssccc.api_key ssccc-lokal; "
+              f"$H config set providers.ssccc.base_url {base}/v1; $H config set providers.ssccc.api_key {key}; "
               f"$H config set model.provider ssccc; $H config set model.default {cfg['llm']['repo']}; "
               f"$H config set model.base_url {base}/v1; $H config set model.context_length {ctx}; "
               "$H config set image_gen.provider openai; $H config set image_gen.openai.provider ssccc; "
@@ -410,15 +417,18 @@ def fix_clients(cfg, mac):
     opencode = (f"P=~/.config/opencode/opencode.json; [ -f $P ] && {HOME}/venv/bin/python - $P <<'PY'\n"
                 "import json,sys,shutil\np=sys.argv[1]; shutil.copy2(p,p+'.bak-ssccc'); d=json.load(open(p))\n"
                 "d.setdefault('provider',{})['ssccc']={'npm':'@ai-sdk/openai-compatible','name':'SS-CCC',"
-                f"'options':{{'baseURL':'{base}/v1','apiKey':'ssccc-lokal'}},"
+                f"'options':{{'baseURL':'{base}/v1','apiKey':'{key}'}},"
                 f"'models':{{'qwen3.8-27b':{{'name':'{cfg['llm']['display_name']}','tool_call':True,'limit':{{'context':{ctx},'output':{cfg['llm']['max_output']}}}}}}}}}\n"
                 "d['model']='ssccc/qwen3.8-27b'; json.dump(d,open(p,'w'),indent=2,ensure_ascii=False)\nPY")
     agy = ("mkdir -p ~/.local/bin; cat > ~/.local/bin/agy-ssccc <<'SH'\n#!/bin/sh\n"
            "# Antigravity-CLI mit dem lokalen SS-CCC-Modell (normales agy bleibt unverändert)\n"
-           f"export AGY_LLM_GATEWAY_URL=\"{base}\"\nexport AGY_LLM_GATEWAY_API_KEY=ssccc-lokal\n"
+           f"export AGY_LLM_GATEWAY_URL=\"{base}\"\nexport AGY_LLM_GATEWAY_API_KEY={key}\n"
            "export AGY_LLM_GATEWAY_WIRE_PROTOCOL=openai\nexec \"$HOME/.gemini/bin/agy\" \"$@\"\nSH\nchmod +x ~/.local/bin/agy-ssccc")
-    for script in (hermes, opencode, agy):
-        on(mac, cfg, script + " >/dev/null 2>&1", timeout=120)
+    app = (f"mkdir -p {HOME} && printf '%s' '{json.dumps({'gateway': base, 'api_key': cfg.get('api_key', '')})}' > {HOME}/ssccc_app.json")
+    for script in (hermes, opencode, agy, app):
+        # Umleitung um den ganzen Block – an einer Heredoc-Endmarke angehängt, würde
+        # sie die Marke unkenntlich machen (der OpenCode-Teil lief dann nie).
+        on(mac, cfg, "{\n" + script + "\n} >/dev/null 2>&1", timeout=120)
 
 
 def apply(cfg, only=None, skip_models=False):
@@ -444,6 +454,8 @@ def apply(cfg, only=None, skip_models=False):
                 fix_service_gateway(cfg)
             elif r["id"] in ("service_forward", "service_reserve"):
                 fix_worker_service(cfg, r["id"].split("_")[1])
+            elif r["id"] == "api_key":
+                secure(cfg)
             elif r["id"].startswith("client_"):
                 if ("clients", r["role"]) not in done:
                     done.add(("clients", r["role"]))
@@ -455,6 +467,30 @@ def apply(cfg, only=None, skip_models=False):
 
 
 # ── Erkennung / Konfiguration ────────────────────────────────────────────────
+def secure(cfg):
+    """API-Schlüssel erzeugen, Programme auf beiden Macs umstellen, Gateway neu starten."""
+    import secrets
+    key = cfg.get("api_key") or "ssccc-" + secrets.token_urlsafe(24)
+    cj = HOME / "cluster.json"
+    data = json.loads(cj.read_text()) if cj.exists() else {}
+    data["api_key"] = key
+    cj.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+    os.chmod(cj, 0o600 if not worker_ssh(cfg) else 0o644)
+    cfg["api_key"] = key
+    step("API-Schlüssel gesetzt", "in cluster.json (nicht im Repository)")
+    if worker_ssh(cfg):
+        run(["/usr/bin/rsync", "-a", str(cj), f"{worker_ssh(cfg)}:{HOME}/"], timeout=60)
+    for mac in ["coordinator"] + (["worker"] if worker_ssh(cfg) else []):
+        fix_clients(cfg, mac)
+    step("Gateway neu starten", GATEWAY_LABEL)
+    run(["/bin/launchctl", "kickstart", "-k", f"gui/{os.getuid()}/{GATEWAY_LABEL}"])
+    for _ in range(90):
+        if '"llm_ready":true' in run(["/usr/bin/curl", "-s", "-m", "2", f"http://127.0.0.1:{cfg['gateway_port']}/health"]).stdout.replace(" ", ""):
+            break
+        time.sleep(2)
+    emit({"type": "step", "title": "Zugriffsschutz aktiv", "detail": "Hermes, OpenCode, Antigravity und die App nutzen den Schlüssel"})
+
+
 def detect():
     """Macs mit SSH (Entfernte Anmeldung) im lokalen Netz über Bonjour finden."""
     p = subprocess.Popen(["/usr/bin/dns-sd", "-B", "_ssh._tcp", "local."], stdout=subprocess.PIPE, text=True)
@@ -495,7 +531,7 @@ def configure(host, user, name):
 def main():
     global JSON_OUT
     ap = argparse.ArgumentParser(description="SS-CCC Ersteinrichtung")
-    ap.add_argument("command", choices=["check", "apply", "detect", "configure"])
+    ap.add_argument("command", choices=["check", "apply", "detect", "configure", "secure"])
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--only", default="")
     ap.add_argument("--skip-models", action="store_true")
@@ -513,6 +549,9 @@ def main():
         configure(a.worker_host, a.worker_user, a.worker_name)
         return
     _, cfg = load_cfg()
+    if a.command == "secure":
+        secure(cfg)
+        return
     if a.command == "check":
         state = summarize(checks(cfg))
     else:

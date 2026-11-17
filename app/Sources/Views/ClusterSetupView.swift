@@ -26,6 +26,7 @@ struct ClusterSetupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 readinessStatusBannerCard
+                OperatingModeCard(vm: vm)
                 setupVariantAndDiscoveryCard
                 discoveredTargetsCard
                 readinessVerificationCard

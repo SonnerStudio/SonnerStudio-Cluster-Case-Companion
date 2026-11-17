@@ -81,6 +81,7 @@ extension ClusterViewModel {
     func refreshLiveCluster() async {
         guard let url = URL(string: "\(Self.clusterGatewayBase)/ssccc/cluster") else { return }
         var req = URLRequest(url: url)
+        Self.authorize(&req)
         req.timeoutInterval = 4
         guard let (data, resp) = try? await URLSession.shared.data(for: req),
               (resp as? HTTPURLResponse)?.statusCode == 200,

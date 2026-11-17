@@ -80,12 +80,12 @@ extension ClusterViewModel {
             let status: ClusterReadinessCheckStatus = s("status") == "pass" ? .pass : (s("status") == "warn" ? .warn : .fail)
             var remediation = s("remediation")
             if status != .pass {
-                remediation += s("fix") == "auto" ? " — wird von „Automatisch einrichten“ erledigt."
-                    : (s("fix") == "user" ? " — bitte selbst erledigen." : "")
+                remediation = s("fix") == "auto" ? GS.t("fix_auto", language)
+                    : (s("fix") == "user" ? "\(GS.t("fix_user", language)) \(remediation)" : remediation)
             }
             let item = ClusterReadinessCheckItem(
                 id: "tool-\(s("id"))-\(s("role"))",
-                title: "\(s("mac")): \(s("title"))",
+                title: "\(s("mac")): \(GS.checkTitle(s("id"), fallback: s("title"), language))",
                 detail: s("detail"),
                 status: status,
                 remediation: remediation
@@ -93,7 +93,7 @@ extension ClusterViewModel {
             setupToolChecks.removeAll { $0.id == item.id }
             setupToolChecks.append(item)
         case "step":
-            setupStatusMessage = "▶ \(s("title"))" + (s("detail").isEmpty ? "" : ": \(s("detail"))")
+            setupStatusMessage = "▶ \(GS.stepTitle(s("title"), language))" + (s("detail").isEmpty ? "" : ": \(s("detail"))")
             if s("title") == "Abschlussprüfung" { setupToolChecks = [] }
         case "error":
             setupStatusMessage = "⚠︎ \(s("mac")): \(s("detail"))"

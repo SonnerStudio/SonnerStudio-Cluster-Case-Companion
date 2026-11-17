@@ -8,6 +8,7 @@ struct ModelStudioView: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
+                ModelSwitcherCard(vm: vm)
                 SolarisCard {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 4) {

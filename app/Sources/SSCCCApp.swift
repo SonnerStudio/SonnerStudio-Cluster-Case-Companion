@@ -434,6 +434,8 @@ struct MainStudioWindow: View {
                         InternetClusterView(vm: vm)
                     case .multiModelMode:
                         MultiModelModeView(vm: vm)
+                    case .imageStudio:
+                        ImageStudioView(vm: vm)
                     case .agents:
                         AgentIntegrationsView(vm: vm)
                     case .science:
