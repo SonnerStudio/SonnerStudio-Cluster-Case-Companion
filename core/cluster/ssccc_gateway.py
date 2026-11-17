@@ -97,7 +97,12 @@ async def start_llm() -> None:
     global _llm_proc
     _llm_ready.clear()
     cmd = [str(B / "venv-vlm/bin/python"), "-m", "mlx_vlm.server", "--host", "127.0.0.1",
-           "--port", str(LLM_PORT), "--model", LLM_MODEL, "--prefill-step-size", "512"]
+           "--port", str(LLM_PORT), "--model", LLM_MODEL, "--prefill-step-size", "512",
+           # Speicherschutz: wenige gleichzeitige Sequenzen und 8-Bit-KV-Cache. Ohne das
+           # lief der GPU-Speicher bei einer 89k-Token-Anfrage plus parallelen Anfragen
+           # über ("Insufficient Memory") und der Server hing danach.
+           "--max-num-seqs", str(CFG["llm"].get("max_num_seqs", 2)),
+           "--kv-bits", str(CFG["llm"].get("kv_bits", 8))]
     if LLM_DRAFT:
         cmd += ["--draft-model", LLM_DRAFT, "--draft-kind", "mtp"]
     logf = open(B / "llm.log", "a")
@@ -142,6 +147,11 @@ async def stop_llm() -> None:
 async def _startup():
     asyncio.create_task(start_llm())
     asyncio.create_task(_status_loop())
+    try:
+        globals()["_llm_log_pos"] = (B / "llm.log").stat().st_size
+    except OSError:
+        pass
+    asyncio.create_task(_watchdog())
 
 
 @app.on_event("shutdown")
@@ -360,6 +370,40 @@ def _collect_status() -> dict:
             "link": _link_label(),
             "model": LLM_NAME, "image_model": IMG_NAME, "total_layers": 64,
             "endpoint_port": 8000, "nodes": nodes}
+
+
+_llm_log_pos = 0
+_FATAL = ("Insufficient Memory", "OutOfMemory", "generation thread died", "Command buffer execution failed")
+
+
+async def _watchdog():
+    """Neustart, wenn das Sprachmodell abgestürzt ist, aber der Prozess noch läuft.
+
+    mlx-vlm beendet sich bei einem GPU-Speicherfehler nicht, antwortet aber nicht mehr.
+    Das Gateway liest deshalb das Protokoll mit und startet das Modell bei einem
+    schweren Fehler neu (laufende Anfragen gehen verloren, neue funktionieren wieder).
+    """
+    global _llm_log_pos
+    logf = B / "llm.log"
+    while True:
+        await asyncio.sleep(10)
+        try:
+            size = logf.stat().st_size
+            if size < _llm_log_pos:
+                _llm_log_pos = 0
+            if size > _llm_log_pos:
+                with open(logf, "rb") as f:
+                    f.seek(_llm_log_pos)
+                    new = f.read().decode(errors="ignore")
+                _llm_log_pos = size
+                if _llm_ready.is_set() and not _gpu_lock.locked() and any(k in new for k in _FATAL):
+                    log("Sprachmodell meldet schweren Fehler (GPU-Speicher) – automatischer Neustart")
+                    _stats["llm_crash_restarts"] = _stats.get("llm_crash_restarts", 0) + 1
+                    async with _gpu_lock:
+                        await stop_llm()
+                        await start_llm()
+        except Exception as e:  # Wächter darf nie selbst ausfallen
+            log(f"Wächter-Fehler: {e}")
 
 
 async def _status_loop():

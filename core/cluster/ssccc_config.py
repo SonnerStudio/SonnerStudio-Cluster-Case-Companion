@@ -37,6 +37,8 @@ DEFAULTS: dict = {
         "display_name": "SS-CCC Qwen3.8 27B (lokal, MTP)",
         "context": 131072,
         "max_output": 32768,
+        "max_num_seqs": 2,              # gleichzeitige Sequenzen (Speicherschutz)
+        "kv_bits": 8,                   # KV-Cache-Quantisierung (Speicherschutz)
         "port": 8001,
     },
     "verbund": {                        # Verbund-Modus: ein Modell über alle Macs geteilt
