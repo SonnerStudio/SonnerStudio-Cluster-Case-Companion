@@ -195,7 +195,7 @@ struct ClusterSetupView: View {
                     zh: "为所选 Mac 自动配置 SSH 互信、iogpu.wired_limit_mb、mlx.distributed_config 与作用域耦合。"), id: "setup_run_btn", vm: vm)
 
                 Button {
-                    vm.verifyClusterReadiness()
+                    vm.runFullReadinessCheck()
                 } label: {
                     Label(
                         vm.isVerifyingReadiness

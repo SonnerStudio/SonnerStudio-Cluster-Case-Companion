@@ -179,7 +179,11 @@ final class ClusterViewModel: ObservableObject {
     @Published var isRunningClusterSetup: Bool = false
     @Published var isVerifyingReadiness: Bool = false
     @Published var lastReadinessCheckedAt: String = "—"
-    @Published var hasCompletedClusterSetup: Bool = false
+    @Published var hasCompletedClusterSetup: Bool = UserDefaults.standard.bool(forKey: ClusterViewModel.setupCompletedDefaultsKey) {
+        didSet { UserDefaults.standard.set(hasCompletedClusterSetup, forKey: ClusterViewModel.setupCompletedDefaultsKey) }
+    }
+    @Published var setupToolChecks: [ClusterReadinessCheckItem] = []
+    @Published var isRunningSetupTool: Bool = false
     @Published var activeShorttipText: String? = nil
     @Published var hoveredShorttipId: String? = nil
 
@@ -5175,6 +5179,11 @@ final class ClusterViewModel: ObservableObject {
     }
 
     func runAutomaticClusterSetup() {
+        // Echte Einrichtung über core/cluster/ssccc_setup.py (lokaler Verbund / Hybrid)
+        if Self.setupToolPath != nil && clusterSetupVariant != .internet {
+            startSetupTool(apply: true)
+            return
+        }
         isRunningClusterSetup = true
         if discoveredProvisionTargets.isEmpty {
             discoverClusterSetupTargets()
@@ -5300,6 +5309,8 @@ final class ClusterViewModel: ObservableObject {
             )
         )
 
+        // Ergebnisse der ausführlichen Prüfung (ssccc_setup.py) einbeziehen
+        checks.append(contentsOf: setupToolChecks)
         clusterReadinessChecks = checks
 
         // Determine 4-state Readiness Machine
