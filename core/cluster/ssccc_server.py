@@ -228,6 +228,33 @@ if __name__ == "__main__":
 
     _server.APIHandler.do_GET = _do_get_with_status
 
+    # Betriebsart aus der App umschalten (POST /ssccc/mode {"mode": "multimodel"|"verbund"})
+    _orig_do_post = _server.APIHandler.do_POST
+
+    def _do_post_with_mode(self):
+        if self.path.split("?")[0] == "/ssccc/mode":
+            n = int(self.headers.get("content-length") or 0)
+            try:
+                mode = _json.loads(self.rfile.read(n) or b"{}").get("mode", "")
+            except ValueError:
+                mode = ""
+            if mode not in ("multimodel", "verbund"):
+                self.send_response(400)
+                self.end_headers()
+                return
+            open(f"{_B}/modus", "w").write(mode + "\n")
+            body = _json.dumps({"ok": True, "mode": mode, "restart_s": 30}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(body)
+            print(f"[SS-CCC] Betriebsart -> {mode}, Neustart", file=sys.stderr, flush=True)
+            _th.Timer(1.0, lambda: os._exit(1)).start()   # mlx.launch beendet alle Ränge, launchd startet neu
+            return
+        return _orig_do_post(self)
+
+    _server.APIHandler.do_POST = _do_post_with_mode
+
     # mlx.launch würde Optionen wie --host selbst auswerten, daher kommen die
     # Server-Argumente über SSCCC_SERVER_ARGS.
     sys.argv += shlex.split(os.environ.get("SSCCC_SERVER_ARGS", ""))

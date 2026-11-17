@@ -32,7 +32,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import image_queue  # noqa: E402
+import request_guard  # noqa: E402
 import ssccc_config  # noqa: E402
+import telemetry  # noqa: E402
 
 CFG = ssccc_config.load()
 B = Path(CFG["home"])
@@ -86,6 +89,46 @@ _llm_ready = asyncio.Event()
 _gpu_lock = asyncio.Lock()          # exklusiver GPU-Zugriff für Bildaufträge
 _stats = {"images": 0, "last_image_s": None, "llm_starts": 0, "started": time.time()}
 _client = httpx.AsyncClient(timeout=httpx.Timeout(None, connect=10))
+TELEMETRY = telemetry.Telemetry()
+SCHED = image_queue.ImageScheduler(idle_s=float(CFG["image"].get("idle_wait_s", 30)),
+                                   max_wait_s=float(CFG["image"].get("max_wait_s", 300)))
+_batch_images = False               # weitere Bilder warten -> Sprachmodell bleibt entladen
+_large_sem = asyncio.Semaphore(1)   # große Anfragen nacheinander (Speicherschutz)
+API_KEY = str(CFG.get("api_key") or os.environ.get("SSCCC_API_KEY") or "")
+_tokenizer = None
+
+
+def _limits() -> request_guard.Limits:
+    kv = 0.0
+    try:
+        conf = json.loads((Path(LLM_MODEL) / "config.json").read_text())
+        kv = request_guard.kv_bytes_per_token(conf, int(CFG["llm"].get("kv_bits", 8)))
+    except Exception:
+        pass
+    return request_guard.Limits(context=int(CFG["llm"]["context"]),
+                                large_prompt=int(CFG["llm"].get("large_prompt", 32768)),
+                                kv_bytes_per_token=kv)
+
+
+LIMITS = _limits()
+
+
+def _gpu_free_bytes() -> int | None:
+    try:
+        import psutil
+        return int(psutil.virtual_memory().available)
+    except Exception:
+        return None
+
+
+def _load_tokenizer():
+    global _tokenizer
+    try:
+        from transformers import AutoTokenizer
+        _tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL)
+        log("Tokenizer für die Speicherwarnung geladen")
+    except Exception as e:
+        log(f"Tokenizer nicht verfügbar ({e}) – Token werden geschätzt")
 
 
 def log(msg: str) -> None:
@@ -102,7 +145,7 @@ async def start_llm() -> None:
            # lief der GPU-Speicher bei einer 89k-Token-Anfrage plus parallelen Anfragen
            # über ("Insufficient Memory") und der Server hing danach.
            "--max-num-seqs", str(CFG["llm"].get("max_num_seqs", 2)),
-           "--kv-bits", str(CFG["llm"].get("kv_bits", 8))]
+           ] + (["--kv-bits", str(CFG["llm"]["kv_bits"])] if CFG["llm"].get("kv_bits", 8) else [])
     if LLM_DRAFT:
         cmd += ["--draft-model", LLM_DRAFT, "--draft-kind", "mtp"]
     logf = open(B / "llm.log", "a")
@@ -147,6 +190,7 @@ async def stop_llm() -> None:
 async def _startup():
     asyncio.create_task(start_llm())
     asyncio.create_task(_status_loop())
+    asyncio.create_task(asyncio.to_thread(_load_tokenizer))
     try:
         globals()["_llm_log_pos"] = (B / "llm.log").stat().st_size
     except OSError:
@@ -183,6 +227,43 @@ def _run_hidream(prompt: str, w: int, h: int, seed: int, steps: int, refs: list[
     return out
 
 
+async def _image_job(prompt, w, h, n, steps, seed0, fmt, refs, urgent=False, label="Bild"):
+    """Bildauftrag über die Warteschlange: erst Leerlauf abwarten, dann am Stück erzeugen."""
+    global _batch_images
+    waited = await SCHED.wait_turn(urgent=urgent or _batch_images)
+    if waited > 1:
+        log(f"{label}: {waited:.0f} s auf Leerlauf gewartet")
+    async with _gpu_lock:
+        SCHED.running += 1
+        t0 = time.time()
+        if _llm_proc is not None:
+            await stop_llm()
+        data = []
+        try:
+            for i in range(n):
+                log(f"{label} {i + 1}/{n} {w}x{h}" + (f" mit {len(refs)} Referenz(en)" if refs else "") + f": {prompt[:60]!r}")
+                path = await asyncio.to_thread(_run_hidream, prompt, w, h, seed0 + i, steps, refs)
+                item = {"revised_prompt": prompt, "ssccc_file": str(path), "url_path": f"/ssccc/bilder/{path.name}"}
+                if fmt == "url":
+                    item["url"] = f"/ssccc/bilder/{path.name}"
+                else:
+                    item["b64_json"] = base64.b64encode(path.read_bytes()).decode()
+                data.append(item)
+        except Exception as e:
+            log(f"{label}fehler: {e}")
+            raise HTTPException(500, f"{label} fehlgeschlagen: {str(e)[-500:]}")
+        finally:
+            SCHED.running -= 1
+            _stats["images"] += len(data)
+            _stats["last_image_s"] = round(time.time() - t0, 1)
+            TELEMETRY.count("images", len(data))
+            # Warten weitere Bilder, bleibt das Sprachmodell entladen (spart je ~10 s Neuladen)
+            _batch_images = SCHED.waiting > 0
+            if not _batch_images:
+                asyncio.create_task(start_llm())
+    return {"created": int(time.time()), "model": IMG_NAME, "data": data, "queue_wait_s": round(waited, 1)}
+
+
 @app.post("/v1/images/generations")
 async def images_generations(req: Request):
     if not IMG_ENABLED:
@@ -207,29 +288,7 @@ async def images_generations(req: Request):
     steps = int(body.get("steps") or 28)
     seed0 = int(body.get("seed") or int(time.time()) % 100000)
     fmt = body.get("response_format") or "b64_json"
-
-    async with _gpu_lock:
-        t0 = time.time()
-        await stop_llm()
-        data = []
-        try:
-            for i in range(n):
-                log(f"Bild {i + 1}/{n} {w}x{h}: {prompt[:60]!r}")
-                path = await asyncio.to_thread(_run_hidream, prompt, w, h, seed0 + i, steps, [])
-                item = {"revised_prompt": prompt, "ssccc_file": str(path)}
-                if fmt == "url":
-                    item["url"] = f"/ssccc/bilder/{path.name}"
-                else:
-                    item["b64_json"] = base64.b64encode(path.read_bytes()).decode()
-                data.append(item)
-        except Exception as e:
-            log(f"Bildfehler: {e}")
-            raise HTTPException(500, f"Bilderzeugung fehlgeschlagen: {str(e)[-500:]}")
-        finally:
-            _stats["images"] += len(data)
-            _stats["last_image_s"] = round(time.time() - t0, 1)
-            asyncio.create_task(start_llm())
-    return {"created": int(time.time()), "model": IMG_NAME, "data": data}
+    return await _image_job(prompt, w, h, n, steps, seed0, fmt, [], urgent=body.get("priority") == "now")
 
 
 def _save_ref(data: bytes, tmpdir: str, i: int) -> str:
@@ -289,28 +348,8 @@ async def images_edits(req: Request):
             w, h = (int(x) for x in size.split("x"))
         except ValueError:
             w, h = Image.open(refs[0]).size        # Seitenverhältnis der Vorlage
-        async with _gpu_lock:
-            t0 = time.time()
-            await stop_llm()
-            data = []
-            try:
-                for i in range(n):
-                    log(f"Bearbeitung {i + 1}/{n} mit {len(refs)} Referenz(en): {prompt[:60]!r}")
-                    path = await asyncio.to_thread(_run_hidream, prompt, w, h, seed0 + i, steps, refs)
-                    item = {"revised_prompt": prompt, "ssccc_file": str(path)}
-                    if fmt == "url":
-                        item["url"] = f"/ssccc/bilder/{path.name}"
-                    else:
-                        item["b64_json"] = base64.b64encode(path.read_bytes()).decode()
-                    data.append(item)
-            except Exception as e:
-                log(f"Bearbeitungsfehler: {e}")
-                raise HTTPException(500, f"Bildbearbeitung fehlgeschlagen: {str(e)[-500:]}")
-            finally:
-                _stats["images"] += len(data)
-                _stats["last_image_s"] = round(time.time() - t0, 1)
-                asyncio.create_task(start_llm())
-    return {"created": int(time.time()), "model": IMG_NAME, "data": data}
+        return await _image_job(prompt, w, h, n, steps, seed0, fmt, refs,
+                                urgent=body.get("priority") == "now", label="Bearbeitung")
 
 
 @app.get("/ssccc/bilder/{name}")
@@ -469,44 +508,305 @@ async def pick_target(what: str = "Chat") -> tuple[str, str]:
 import gemini_adapter  # noqa: E402
 
 gemini_adapter.configure(pick_target=lambda: pick_target("Antigravity-Anfrage"), client=_client,
-                         log=log, model_name=LLM_NAME)
+                         log=log, model_name=LLM_NAME,
+                         guard=lambda body: guard_request(body, "chat/completions"),
+                         on_start=lambda: SCHED.chat_started(), on_finish=lambda: SCHED.chat_finished())
 app.include_router(gemini_adapter.router)
+
+
+GUARDED_PATHS = ("chat/completions", "responses", "completions", "messages")
+
+
+def guard_request(body: dict, path: str):
+    """Speicherwarnung: (fehler_response | None, info). Passt ggf. max_tokens an."""
+    if not isinstance(body, dict) or not path.startswith(GUARDED_PATHS):
+        return None, {}
+    tokens = request_guard.estimate_tokens(body, _tokenizer)
+    ok, err, info = request_guard.check(body, tokens, LIMITS, _gpu_free_bytes())
+    if not ok:
+        TELEMETRY.count("rejected")
+        log(f"Anfrage abgelehnt (~{tokens} Token): {err['body']['error']['code']}")
+        return JSONResponse(err["body"], status_code=err["status"]), info
+    if info.get("clamped_output"):
+        for key in ("max_tokens", "max_completion_tokens", "max_output_tokens"):
+            if body.get(key):
+                body[key] = info["clamped_output"]
+        TELEMETRY.count("clamped")
+    return None, info
 
 
 @app.api_route("/v1/{path:path}", methods=["GET", "POST"])
 async def proxy(path: str, req: Request):
-    # Hauptmodell nicht verfügbar (Bildauftrag / Neustart): an die Reserve auf dem
-    # Mac mini weiterreichen; ist auch die nicht erreichbar, warten statt fehlschlagen.
-    target, target_model = await pick_target(f"Anfrage /v1/{path}")
     raw = await req.body()
+    body = None
     stream = False
     if raw and req.method == "POST":
         try:
             body = json.loads(raw)
-            if isinstance(body, dict) and "model" in body:
-                body["model"] = target_model       # jeder Name -> geladenes Modell
-            stream = bool(body.get("stream"))
-            raw = json.dumps(body).encode()
         except json.JSONDecodeError:
-            pass
+            body = None
+    # 1) Speicherwarnung vor dem Weiterreichen
+    info = {}
+    if isinstance(body, dict):
+        rejected, info = guard_request(body, path)
+        if rejected is not None:
+            return rejected
+    # 2) Ziel wählen (Hauptmodell, Reserve oder warten)
+    target, target_model = await pick_target(f"Anfrage /v1/{path}")
+    if isinstance(body, dict):
+        if "model" in body:
+            body["model"] = target_model           # jeder Name -> geladenes Modell
+        stream = bool(body.get("stream"))
+        if stream and path.startswith("chat/completions"):
+            body.setdefault("stream_options", {"include_usage": True})
+        raw = json.dumps(body).encode()
     headers = {"Content-Type": req.headers.get("content-type", "application/json")}
-    upstream = _client.build_request(req.method, f"{target}/v1/{path}", content=raw,
-                                     headers=headers, params=req.query_params)
-    r = await _client.send(upstream, stream=True)
+    is_chat = req.method == "POST" and path.startswith(GUARDED_PATHS)
+    large = bool(info.get("large"))
+    if is_chat:
+        SCHED.chat_started()
+    if large:
+        await _large_sem.acquire()                   # große Anfragen nacheinander
+    t0 = time.time()
+
+    def finish(ttft, tokens, ok=True):
+        if large:
+            _large_sem.release()
+        if is_chat:
+            SCHED.chat_finished()
+            TELEMETRY.record(path=path, ttft=ttft, duration=time.time() - t0, tokens=tokens,
+                             prompt_tokens=info.get("prompt_tokens"), target="reserve" if target != LLM_URL else "main", ok=ok)
+
+    try:
+        upstream = _client.build_request(req.method, f"{target}/v1/{path}", content=raw,
+                                         headers=headers, params=req.query_params)
+        r = await _client.send(upstream, stream=True)
+    except Exception:
+        finish(None, 0, ok=False)
+        raise
     if stream:
         async def gen():
-            async for chunk in r.aiter_raw():
-                yield chunk
-            await r.aclose()
+            ttft, tokens, buf = None, 0, b""
+            try:
+                async for chunk in r.aiter_raw():
+                    if is_chat:
+                        buf += chunk
+                        while b"\n" in buf:
+                            line, buf = buf.split(b"\n", 1)
+                            if not line.startswith(b"data:") or line.strip().endswith(b"[DONE]"):
+                                continue
+                            try:
+                                d = json.loads(line[5:])
+                            except ValueError:
+                                continue
+                            if d.get("usage") and d["usage"].get("completion_tokens"):
+                                tokens = d["usage"]["completion_tokens"]
+                            for ch in d.get("choices") or []:
+                                if (ch.get("delta") or {}).get("content") and ttft is None:
+                                    ttft = time.time() - t0
+                                if (ch.get("delta") or {}).get("content") and not d.get("usage"):
+                                    tokens += 1
+                    yield chunk
+            finally:
+                await r.aclose()
+                finish(ttft, tokens, ok=r.status_code == 200)
         return StreamingResponse(gen(), status_code=r.status_code,
                                  media_type=r.headers.get("content-type", "text/event-stream"))
     content = await r.aread()
     await r.aclose()
+    tokens = 0
+    if is_chat:
+        try:
+            tokens = json.loads(content).get("usage", {}).get("completion_tokens", 0)
+        except Exception:
+            pass
+    finish(None, tokens, ok=r.status_code == 200)
     return Response(content, status_code=r.status_code,
                     media_type=r.headers.get("content-type", "application/json"))
+
+
+# ── Verwaltung: Telemetrie, Betriebsart, Modellwechsel ───────────────────────
+@app.get("/ssccc/metrics")
+async def metrics():
+    return dict(TELEMETRY.summary(), queue=SCHED.snapshot(), llm_ready=_llm_ready.is_set(),
+                image_busy=_gpu_lock.locked(), stats=_stats, model=LLM_NAME,
+                limits={"context": LIMITS.context, "large_prompt": LIMITS.large_prompt,
+                        "kv_bytes_per_token": LIMITS.kv_bytes_per_token})
+
+
+@app.post("/ssccc/mode")
+async def set_mode(req: Request):
+    """Betriebsart umschalten (multimodel | verbund). Der Dienst startet danach neu."""
+    mode = (await req.json()).get("mode", "")
+    if mode not in ("multimodel", "verbund"):
+        raise HTTPException(400, "mode muss 'multimodel' oder 'verbund' sein")
+    if mode == "verbund" and not WORKER_SSH:
+        raise HTTPException(400, "Verbund braucht einen Worker-Mac in cluster.json")
+    (B / "modus").write_text(mode + "\n")
+    log(f"Betriebsart wird auf '{mode}' umgestellt – Neustart")
+
+    async def restart():
+        await asyncio.sleep(1)
+        if _llm_proc and _llm_proc.poll() is None:
+            _llm_proc.terminate()
+        os._exit(1)                                  # launchd (KeepAlive) startet neu
+    asyncio.create_task(restart())
+    return {"ok": True, "mode": mode, "restart_s": 30}
+
+
+MODEL_CATALOG = [
+    {"repo": "mlx-community/Qwen3.8-27B-4bit", "draft_repo": "mlx-community/Qwen3.8-27B-MTP-4bit",
+     "label": "Qwen3.8 27B · 4 Bit + MTP", "note": "Standard: schnell (≈170 Zeichen/s auf M5 Max)"},
+    {"repo": "mlx-community/Qwen3.8-27B-oQ6", "draft_repo": "",
+     "label": "Qwen3.8 27B · 6 Bit", "note": "bessere Qualität, deutlich langsamer"},
+    {"repo": "mlx-community/Qwen3.6-35B-A3B-4bit", "draft_repo": "",
+     "label": "Qwen3.6 35B-A3B · 4 Bit (MoE)", "note": "nur 3B aktive Parameter – sehr schnell"},
+    {"repo": "mlx-community/Qwen3.5-9B-4bit", "draft_repo": "",
+     "label": "Qwen3.5 9B · 4 Bit", "note": "klein, für Macs mit 16 GB"},
+]
+_download = {"repo": None, "state": "idle", "done_bytes": 0, "total_bytes": 0, "error": None}
+_size_cache: dict = {}
+
+
+def _repo_size(repo: str) -> int:
+    if repo in _size_cache:
+        return _size_cache[repo]
+    snap = ssccc_config.hf_snapshot(repo)
+    if snap:
+        size = sum(f.stat().st_size for f in Path(snap).iterdir() if f.is_file() or f.is_symlink())
+    else:
+        try:
+            r = httpx.get(f"https://huggingface.co/api/models/{repo}?blobs=true", timeout=15)
+            size = sum(s.get("size", 0) for s in r.json().get("siblings", []))
+        except Exception:
+            size = 0
+    _size_cache[repo] = size
+    return size
+
+
+def _gpu_limit_bytes() -> int:
+    try:
+        mb = int(subprocess.run(["/usr/sbin/sysctl", "-n", "iogpu.wired_limit_mb"], capture_output=True,
+                                text=True, timeout=5).stdout.strip() or 0)
+    except Exception:
+        mb = 0
+    if mb:
+        return mb << 20
+    import psutil
+    return int(psutil.virtual_memory().total * 0.70)
+
+
+def _fits(size: int) -> dict:
+    limit = _gpu_limit_bytes()
+    need = size + int(32768 * max(LIMITS.kv_bytes_per_token, 32768)) + (2 << 30)
+    return {"fits": need <= limit, "need_gb": round(need / 2**30, 1), "limit_gb": round(limit / 2**30, 1)}
+
+
+@app.get("/ssccc/models")
+async def list_models():
+    out = []
+    for m in MODEL_CATALOG:
+        size = await asyncio.to_thread(_repo_size, m["repo"])
+        draft = await asyncio.to_thread(_repo_size, m["draft_repo"]) if m["draft_repo"] else 0
+        out.append(dict(m, size_gb=round((size + draft) / 2**30, 1),
+                        installed=bool(ssccc_config.hf_snapshot(m["repo"])),
+                        active=m["repo"] == CFG["llm"]["repo"], **_fits(size + draft)))
+    return {"current": CFG["llm"]["repo"], "models": out, "download": _download}
+
+
+async def _download_and_switch(repo: str, draft: str):
+    global LLM_MODEL, LLM_DRAFT, LLM_NAME, LIMITS, _tokenizer
+    total = _repo_size(repo) + (_repo_size(draft) if draft else 0)
+    _download.update(repo=repo, state="download", done_bytes=0, total_bytes=total, error=None)
+    env = {**os.environ, "HF_HOME": str(B / "hf"), "HF_HUB_DISABLE_XET": "1"}
+    try:
+        for r_ in [repo] + ([draft] if draft else []):
+            if ssccc_config.hf_snapshot(r_):
+                continue
+            for attempt in range(5):
+                proc = await asyncio.create_subprocess_exec(str(B / "venv/bin/hf"), "download", r_, "--max-workers", "8",
+                                                            env=env, stdout=asyncio.subprocess.DEVNULL,
+                                                            stderr=asyncio.subprocess.DEVNULL)
+                while proc.returncode is None:
+                    await asyncio.sleep(3)
+                    try:
+                        await asyncio.wait_for(proc.wait(), 0.1)
+                    except asyncio.TimeoutError:
+                        pass
+                    blobs = B / "hf/hub/blobs"
+                    now = sum(f.stat().st_size for f in blobs.glob("*") if f.is_file()) if blobs.exists() else 0
+                    _download["done_bytes"] = max(0, min(total, now - _download.get("_base", 0)))
+                if proc.returncode == 0:
+                    break
+        _download["state"] = "switch"
+        data = json.loads((B / "cluster.json").read_text()) if (B / "cluster.json").exists() else {}
+        data.setdefault("llm", {}).update(repo=repo, draft_repo=draft)
+        (B / "cluster.json").write_text(json.dumps(data, indent=2, ensure_ascii=False))
+        CFG["llm"].update(repo=repo, draft_repo=draft)
+        LLM_MODEL = ssccc_config.hf_snapshot(repo)
+        LLM_DRAFT = ssccc_config.hf_snapshot(draft) if draft else ""
+        LLM_NAME = repo
+        LIMITS = _limits()
+        _tokenizer = None
+        async with _gpu_lock:
+            await stop_llm()
+            await start_llm()
+        await asyncio.to_thread(_load_tokenizer)
+        _download.update(state="done")
+        log(f"Sprachmodell gewechselt auf {repo}")
+    except Exception as e:
+        _download.update(state="error", error=str(e)[-300:])
+        log(f"Modellwechsel fehlgeschlagen: {e}")
+
+
+@app.post("/ssccc/models/select")
+async def select_model(req: Request):
+    body = await req.json()
+    repo = body.get("repo", "")
+    entry = next((m for m in MODEL_CATALOG if m["repo"] == repo), None)
+    if not entry:
+        raise HTTPException(400, "Unbekanntes Modell (nur Modelle aus GET /ssccc/models)")
+    if _download["state"] in ("download", "switch"):
+        raise HTTPException(409, "Es läuft bereits ein Modellwechsel")
+    draft = entry["draft_repo"]
+    fit = _fits(await asyncio.to_thread(_repo_size, repo) + (await asyncio.to_thread(_repo_size, draft) if draft else 0))
+    if not fit["fits"] and not body.get("force"):
+        raise HTTPException(409, f"Passt nicht in den GPU-Speicher: ~{fit['need_gb']} GB nötig, {fit['limit_gb']} GB frei")
+    try:
+        blobs = B / "hf/hub/blobs"
+        _download["_base"] = sum(f.stat().st_size for f in blobs.glob("*") if f.is_file()) if blobs.exists() else 0
+    except Exception:
+        _download["_base"] = 0
+    asyncio.create_task(_download_and_switch(repo, draft))
+    return {"ok": True, "repo": repo, **fit}
+
+
+@app.get("/ssccc/models/progress")
+async def model_progress():
+    d = {k: v for k, v in _download.items() if not k.startswith("_")}
+    d["percent"] = round(100 * d["done_bytes"] / d["total_bytes"], 1) if d.get("total_bytes") else None
+    return d
+
+
+# ── Zugriffsschutz (API-Schlüssel) ───────────────────────────────────────────
+@app.middleware("http")
+async def api_key_guard(request: Request, call_next):
+    """Mit gesetztem api_key (cluster.json) braucht jede Anfrage außer /health den Schlüssel:
+    Authorization: Bearer <key>, x-api-key, x-goog-api-key oder ?key=<key>."""
+    if API_KEY and request.url.path != "/health":
+        auth = request.headers.get("authorization", "")
+        given = (auth[7:] if auth.lower().startswith("bearer ") else "") or request.headers.get("x-api-key", "") \
+            or request.headers.get("x-goog-api-key", "") or request.query_params.get("key", "")
+        if given != API_KEY:
+            TELEMETRY.count("unauthorized")
+            return JSONResponse({"error": {"message": "API-Schlüssel fehlt oder ist falsch", "type": "invalid_request_error",
+                                           "code": "invalid_api_key"}}, status_code=401)
+    return await call_next(request)
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=int(CFG["gateway_port"]), log_level="warning")
+    tls = CFG.get("tls") or {}
+    ssl = {"ssl_certfile": tls["cert"], "ssl_keyfile": tls["key"]} if tls.get("cert") and tls.get("key") else {}
+    uvicorn.run(app, host="0.0.0.0", port=int(CFG["gateway_port"]), log_level="warning", **ssl)
