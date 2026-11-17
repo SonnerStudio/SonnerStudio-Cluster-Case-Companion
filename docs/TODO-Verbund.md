@@ -28,17 +28,24 @@ Legende: `[x]` erledigt · `[~]` in Arbeit · `[ ]` offen
   | Verbund, 8 Bit (60/4) | 49 (≙ 11,6 tok/s) | 1,0× |
   | Mac Studio allein, 4 Bit, mlx-vlm | 105 | 2,1× |
   | Mac Studio allein, 4 Bit + MTP (4 oder 8 Bit) | 170 | **3,5×** |
+- [x] Studio allein + MTP ist jetzt Standard (4 Bit, 170 Zeichen/s über das Gateway gemessen)
 - [ ] Prüfen, ob eine 6-Bit-Variante (z. B. `Qwen3.8-27B-oQ6`, 23,3 GB) mit mlx-vlm + MTP lädt (Qualität nahe 8 Bit, passt allein auf den Studio)
 
 ### 1.2 Architektur-Entscheidung
-- [ ] Entscheiden anhand der Messwerte: **A)** ein geteiltes Modell im Verbund (mehr Kapazität) oder **B)** Multi-Model-Mode: Sprachmodell + MTP auf dem Studio, Bildmodell auf dem Mini (mehr Tempo, mehr Fähigkeiten)
-- [ ] Startskript / Autostart auf die gewählte Variante umstellen, Endpunkt `:8000/v1` für alle Clients unverändert lassen
+- [x] Entschieden: **Multi-Model-Mode** – Sprache (Qwen3.8 + MTP) und Bild (HiDream-O1 auf Abruf) auf dem Mac Studio; Mac mini als Reserve
+- [x] Neues Gateway `ssccc_gateway.py` auf `:8000` (Chat-Durchreichung mit Modellnamen-Pinning, Bild-Endpunkt, `/ssccc/cluster`, `/health`)
+- [x] Autostart über `start_ssccc.sh`; Betriebsart in `/Users/Shared/ssccc/modus` (`multimodel` | `verbund`), bisheriger Verbund bleibt umschaltbar
+- [ ] Mac mini sinnvoll nutzen (z. B. kleines Sprachmodell als Antwort-Reserve während Bildaufträgen, Embeddings oder zweiter Bilddienst in Q6)
 
-### 1.3 Bildgenerierung im Verbund
-- [ ] Bildmodell für den Mini wählen (mflux): **Z-Image Turbo** (6B) oder **FLUX.2 Klein** (4B); Alternative **Qwen Image 2.1** (7B, Mehrfach-Referenz)
-- [ ] Platz auf dem Mini schaffen (derzeit ~5,8 GB frei): Modellanteil verkleinern bzw. bei Variante B entfernen
-- [ ] OpenAI-kompatiblen Bilddienst bereitstellen (`POST /v1/images/generations`), Autostart + Selbstheilung wie beim Sprachmodell
-- [ ] Anbinden: Hermes (`image_gen`), OpenCode/Agenten, SS-CCC Multi-Model-Mode (Slot „Bild“), Statusendpunkt `/ssccc/cluster`
+### 1.3 Bildgenerierung
+- [x] Lizenzen geprüft: Qwen-Image 2.1 (Qwen Research License) und Ideogram 4 sind **nicht kommerziell** nutzbar
+- [x] Gewählt: **HiDream-O1-Image-Dev** (MIT-Lizenz, Platz 2 der offenen Modelle bei Artificial Analysis), MLX-Portierung `mlx-community/HiDream-O1-Image-Dev-mlx-bf16` in **BF16** (Q8/Q6 zeigen Raster bei nicht-quadratischen Formaten, Q4 zu dunkel)
+- [x] Gemessen (M5 Max): **2048×2048 in ~48 s** (nativ, beste Qualität, Spitze 19,8 GB), 1024×1024 in ~12 s (Vorschau)
+- [x] Bild „auf Abruf“: Sprachmodell wird für den Auftrag entladen und danach neu gestartet (~7 s); Chat-Anfragen warten statt abzubrechen – getestet
+- [x] `POST /v1/images/generations` (OpenAI-kompatibel): Größe = Seitenverhältnis, Ausgabe nativ ~4 MP; `quality: low` = 1024²-Vorschau; Bilder zusätzlich in `/Users/Shared/ssccc/bilder`
+- [x] Hermes (beide Macs) erzeugt Bilder über `image_gen.openai.provider: ssccc` – getestet (2048×2048)
+- [ ] Bildbearbeitung und Mehrfach-Referenzen (`--ref-images`) als `POST /v1/images/edits` anbieten
+- [ ] SS-CCC Multi-Model-Mode: Slot „Bild“ in der App anzeigen
 
 ### 1.4 Videogenerierung (Bewertung)
 - [x] Recherche: `mlx-video` (Wan 2.2, LTX-2) existiert als Community-Projekt; kleinstes Modell Wan2.2-TI2V-5B (8 Bit) ist für 64-GB-Macs beschrieben
@@ -48,7 +55,7 @@ Legende: `[x]` erledigt · `[~]` in Arbeit · `[ ]` offen
 ### 1.5 Offene Infrastruktur
 - [ ] **Thunderbolt-4/5-Kabel besorgen** (vorhandenes USB-C-Kabel überträgt nur USB 2.0, kein Thunderbolt) und hinten an beiden Macs anschließen
 - [ ] `iogpu.wired_limit_mb` dauerhaft machen (LaunchDaemons liegen bereit, brauchen Admin-Freigabe)
-- [ ] Mini: Hermes-Gateway neu starten (übernimmt Verbund-Konfiguration erst dann)
+- [ ] Mini: Hermes-Gateway neu starten (übernimmt die neue Konfiguration erst dann)
 
 ---
 
@@ -57,7 +64,7 @@ Legende: `[x]` erledigt · `[~]` in Arbeit · `[ ]` offen
 Ziel: Die Schaltfläche **„Automatische Einrichtung“** richtet einen Verbund wirklich ein (statt nur Flags zu setzen) und nutzt alle Erkenntnisse aus der manuellen Einrichtung.
 
 ### 2.1 Server-Teil ins Repository
-- [ ] `ssccc_server.py`, `start_verbund.sh`, `node_info.sh`, `make_rank_shard.py` aus `/Users/Shared/ssccc` nach `core/cluster/` übernehmen und versionieren
+- [ ] `ssccc_gateway.py`, `start_ssccc.sh`, `ssccc_server.py`, `start_verbund.sh`, `node_info.sh`, `make_rank_shard.py` aus `/Users/Shared/ssccc` nach `core/cluster/` übernehmen und versionieren
 - [ ] Statusendpunkt `/ssccc/cluster` dokumentieren (Felder, Prüfwerte)
 
 ### 2.2 Voraussetzungen prüfen und herstellen
