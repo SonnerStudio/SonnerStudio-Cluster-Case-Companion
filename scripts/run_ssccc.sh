@@ -19,6 +19,7 @@ SWIFT_REL_FILES=(
   "Models/ClusterModels.swift"
   "Models/Localization.swift"
   "ViewModels/ClusterViewModel.swift"
+  "ViewModels/LiveCluster.swift"
   "Views/Theme.swift"
   "Views/ClusterOverviewView.swift"
   "Views/DevicesCompareView.swift"

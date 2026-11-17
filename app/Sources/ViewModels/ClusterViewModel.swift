@@ -23,6 +23,10 @@ final class ClusterViewModel: ObservableObject {
     }
     @Published var transportMode: TransportMode = .autoHybrid
     @Published var daemonConnected: Bool = false
+    @Published var liveClusterNodes: [ClusterNodeModel] = []
+    @Published var liveClusterLink: String = ""
+    @Published var liveClusterModel: String = ""
+    @Published var liveNodeHealth: [LiveNodeHealth] = []
     @Published var fastSynchEnabled: Bool = true
 
     @Published var selectedModel: ModelPreset
@@ -319,6 +323,7 @@ final class ClusterViewModel: ObservableObject {
             await checkDaemonHealth()
             await refreshLiveModels()
         }
+        startLiveClusterMonitor()
         if autoUpdateCheckEnabled {
             startAutomaticUpdateMonitor()
         }
@@ -613,6 +618,7 @@ final class ClusterViewModel: ObservableObject {
     }
 
     var nodes: [ClusterNodeModel] {
+        if !liveClusterNodes.isEmpty { return liveClusterNodes }
         let localUsable = AppleSiliconChipFamily.usableVramGB(for: localRamGB)
         let localBandwidth = AppleSiliconChipFamily.inferBandwidth(from: localChipName)
         let localTbGen = AppleSiliconChipFamily.inferThunderboltGen(from: localChipName)
@@ -789,7 +795,7 @@ final class ClusterViewModel: ObservableObject {
     }
 
     func checkDaemonHealth() async {
-        guard let url = URL(string: "http://127.0.0.1:8000/health") else { return }
+        guard let url = URL(string: "\(ClusterViewModel.clusterGatewayBase)/health") else { return }
         do {
             let (_, response) = try await URLSession.shared.data(from: url)
             if let http = response as? HTTPURLResponse, http.statusCode == 200 {
@@ -806,7 +812,7 @@ final class ClusterViewModel: ObservableObject {
         isSendingPrompt = true
         defer { isSendingPrompt = false }
 
-        if daemonConnected, let url = URL(string: "http://127.0.0.1:8000/v1/chat/completions") {
+        if daemonConnected, let url = URL(string: "\(ClusterViewModel.clusterGatewayBase)/v1/chat/completions") {
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1268,7 +1274,7 @@ final class ClusterViewModel: ObservableObject {
         var seenIds = Set<String>()
 
         // 1. oMLX / OpenAI-compatible endpoint (:8000)
-        if let url = URL(string: "http://127.0.0.1:8000/v1/models") {
+        if let url = URL(string: "\(ClusterViewModel.clusterGatewayBase)/v1/models") {
             var req = URLRequest(url: url)
             req.timeoutInterval = 1.5
             if let (data, resp) = try? await URLSession.shared.data(for: req),
@@ -1401,7 +1407,7 @@ final class ClusterViewModel: ObservableObject {
     }
 
     private func isPortReachable(port: Int, path: String) async -> Bool {
-        guard let url = URL(string: "http://127.0.0.1:\(port)\(path)") else { return false }
+        guard let url = URL(string: port == 8000 ? "\(ClusterViewModel.clusterGatewayBase)\(path)" : "http://127.0.0.1:\(port)\(path)") else { return false }
         var req = URLRequest(url: url)
         req.timeoutInterval = 0.8
         if let (_, resp) = try? await URLSession.shared.data(for: req),
@@ -5132,6 +5138,7 @@ final class ClusterViewModel: ObservableObject {
             }
         }
 
+        targets = applyLiveHealth(to: targets)
         discoveredProvisionTargets = targets
         let vTitle = clusterSetupVariant.localizedTitle(language)
         if targets.isEmpty {
