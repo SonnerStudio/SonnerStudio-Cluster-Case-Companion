@@ -234,3 +234,28 @@ def test_prefix_cache_env(gateway):
     assert env["APC_NUM_BLOCKS"] == str(65536 // 16) and env["APC_DISK_ENABLED"] == "0"
     gw.CFG["llm"]["prefix_cache"] = {"enabled": False}
     assert gw._prefix_cache_env() == {"APC_ENABLED": "0"}
+
+
+def test_soften_response_format(gateway):
+    _, _, gw = gateway
+    body = {"messages": [{"role": "system", "content": "Sei kurz."}, {"role": "user", "content": "Titel?"}],
+            "response_format": {"type": "json_schema",
+                                "json_schema": {"name": "t", "schema": {"type": "object",
+                                                                        "properties": {"title": {"type": "string"}}}}}}
+    assert gw.soften_response_format(body) is True
+    assert "response_format" not in body
+    assert body["messages"][0]["content"].startswith("Sei kurz.")
+    assert '"title"' in body["messages"][0]["content"] and len(body["messages"]) == 2
+    plain = {"messages": [{"role": "user", "content": "x"}], "response_format": {"type": "json_object"}}
+    assert gw.soften_response_format(plain) is True and plain["messages"][0]["role"] == "system"
+    text = {"messages": [], "response_format": {"type": "text"}}
+    assert gw.soften_response_format(text) is False and text["response_format"] == {"type": "text"}
+
+
+def test_vlm_server_patches_degrade_gracefully(monkeypatch):
+    """Ohne passendes mlx-vlm startet der Wrapper ohne Korrektur statt abzubrechen."""
+    import sys
+    import vlm_server
+    monkeypatch.setitem(sys.modules, "mlx_vlm", None)
+    assert vlm_server._patch_cold_fallback() is False
+    assert vlm_server._patch_disk_restore_budget() is False

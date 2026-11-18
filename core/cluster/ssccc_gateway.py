@@ -157,7 +157,7 @@ def _kill_stale_llm() -> None:
     try:
         pids = subprocess.run(["lsof", "-ti", f"tcp:{LLM_PORT}", "-sTCP:LISTEN"],
                               capture_output=True, text=True, timeout=5).stdout.split()
-        pids += subprocess.run(["pgrep", "-f", f"mlx_vlm.server .*--port {LLM_PORT}"],
+        pids += subprocess.run(["pgrep", "-f", f"(mlx_vlm[.]server|vlm_server[.]py) .*--port {LLM_PORT}"],
                                capture_output=True, text=True, timeout=5).stdout.split()
     except (OSError, subprocess.SubprocessError):
         return
@@ -174,7 +174,9 @@ async def start_llm() -> None:
     global _llm_proc
     _llm_ready.clear()
     _kill_stale_llm()
-    cmd = [str(B / "venv-vlm/bin/python"), "-m", "mlx_vlm.server", "--host", "127.0.0.1",
+    # vlm_server.py startet mlx_vlm.server mit SS-CCC-Korrekturen (Kaltstart-Rückfall des Prefix-Caches)
+    launcher = [str(B / "vlm_server.py")] if (B / "vlm_server.py").exists() else ["-m", "mlx_vlm.server"]
+    cmd = [str(B / "venv-vlm/bin/python"), *launcher, "--host", "127.0.0.1",
            "--port", str(LLM_PORT), "--model", LLM_MODEL,
            "--prefill-step-size", str(CFG["llm"].get("prefill_step", 1024)),
            # Speicherschutz: wenige gleichzeitige Sequenzen und 8-Bit-KV-Cache. Ohne das
@@ -561,6 +563,33 @@ def guard_request(body: dict, path: str):
     return None, info
 
 
+
+def soften_response_format(body: dict) -> bool:
+    """Wandelt ``response_format`` (JSON/Schema) in eine Anweisung um.
+
+    mlx-vlm lehnt strukturierte Ausgabe bei aktivem MTP (spekulativem Dekodieren)
+    ab („Structured response_format is not supported with speculative decoding“).
+    Clients nutzen sie für Hilfsaufgaben (Titel, Klassifizierung) und bekämen
+    sonst einen Fehler. Das Modell erhält stattdessen die Vorgabe als
+    Systemanweisung."""
+    fmt = body.get("response_format")
+    if not isinstance(fmt, dict) or fmt.get("type") not in ("json_object", "json_schema"):
+        return False
+    body.pop("response_format", None)
+    text = "Antworte ausschließlich mit gültigem JSON, ohne Erklärung und ohne Markdown."
+    schema = (fmt.get("json_schema") or {}).get("schema") if fmt.get("type") == "json_schema" else None
+    if schema:
+        text += " Das JSON muss diesem Schema entsprechen: " + json.dumps(schema, ensure_ascii=False)
+    msgs = body.get("messages")
+    if isinstance(msgs, list):
+        if msgs and isinstance(msgs[0], dict) and msgs[0].get("role") == "system" \
+                and isinstance(msgs[0].get("content"), str):
+            msgs[0] = {**msgs[0], "content": msgs[0]["content"] + "\n\n" + text}
+        else:
+            msgs.insert(0, {"role": "system", "content": text})
+    return True
+
+
 @app.api_route("/v1/{path:path}", methods=["GET", "POST"])
 async def proxy(path: str, req: Request):
     raw = await req.body()
@@ -583,6 +612,8 @@ async def proxy(path: str, req: Request):
         if "model" in body:
             body["model"] = target_model           # jeder Name -> geladenes Modell
         stream = bool(body.get("stream"))
+        if LLM_DRAFT and target == LLM_URL and path.startswith("chat/completions"):
+            soften_response_format(body)
         if stream and path.startswith("chat/completions"):
             body.setdefault("stream_options", {"include_usage": True})
         raw = json.dumps(body).encode()
