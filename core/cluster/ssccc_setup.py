@@ -31,7 +31,7 @@ from pathlib import Path
 REPO_CLUSTER = Path(__file__).resolve().parent
 HOME = Path(os.environ.get("SSCCC_HOME", "/Users/Shared/ssccc"))
 SSH_ALIAS = "ssccc-worker"
-DEPLOY_FILES = ["ssccc_config.py", "ssccc_gateway.py", "gemini_adapter.py", "ssccc_server.py", "forward.py",
+DEPLOY_FILES = ["ssccc_config.py", "ssccc_gateway.py", "ssccc_server.py", "forward.py",
                 "make_rank_shard.py", "node_info.sh", "start_ssccc.sh", "start_verbund.sh"]
 GATEWAY_LABEL = "de.sonnerstudio.ssccc-verbund"
 JSON_OUT = False
@@ -278,11 +278,10 @@ def checks(cfg):
     for mac in macs:
         if mac == "worker" and not worker_ok:
             continue
-        r = on(mac, cfg, "~/.local/bin/hermes config get model.provider 2>/dev/null; grep -c '\"ssccc\"' ~/.config/opencode/opencode.json 2>/dev/null; test -x ~/.local/bin/agy-ssccc && echo agy")
+        r = on(mac, cfg, "~/.local/bin/hermes config get model.provider 2>/dev/null; grep -c '\"ssccc\"' ~/.config/opencode/opencode.json 2>/dev/null")
         out = r.stdout
         for key, title, present in (("hermes", "Hermes", "ssccc" in out.split("\n")[0] if out else False),
-                                    ("opencode", "OpenCode", any(l.strip().isdigit() and int(l) > 0 for l in out.split("\n")[1:2])),
-                                    ("antigravity", "Antigravity (agy-ssccc)", "agy" in out)):
+                                    ("opencode", "OpenCode", any(l.strip().isdigit() and int(l) > 0 for l in out.split("\n")[1:2]))):
             results.append(check(f"client_{key}", mac, cfg, f"{title} an SS-CCC", "pass" if present else "warn",
                                  "verbunden" if present else "nicht verbunden", "auto", f"{title} auf das SS-CCC-Gateway einstellen"))
     return results
@@ -420,12 +419,8 @@ def fix_clients(cfg, mac):
                 f"'options':{{'baseURL':'{base}/v1','apiKey':'{key}'}},"
                 f"'models':{{'qwen3.8-27b':{{'name':'{cfg['llm']['display_name']}','tool_call':True,'limit':{{'context':{ctx},'output':{cfg['llm']['max_output']}}}}}}}}}\n"
                 "d['model']='ssccc/qwen3.8-27b'; json.dump(d,open(p,'w'),indent=2,ensure_ascii=False)\nPY")
-    agy = ("mkdir -p ~/.local/bin; cat > ~/.local/bin/agy-ssccc <<'SH'\n#!/bin/sh\n"
-           "# Antigravity-CLI mit dem lokalen SS-CCC-Modell (normales agy bleibt unverändert)\n"
-           f"export AGY_LLM_GATEWAY_URL=\"{base}\"\nexport AGY_LLM_GATEWAY_API_KEY={key}\n"
-           "export AGY_LLM_GATEWAY_WIRE_PROTOCOL=openai\nexec \"$HOME/.gemini/bin/agy\" \"$@\"\nSH\nchmod +x ~/.local/bin/agy-ssccc")
     app = (f"mkdir -p {HOME} && printf '%s' '{json.dumps({'gateway': base, 'api_key': cfg.get('api_key', '')})}' > {HOME}/ssccc_app.json")
-    for script in (hermes, opencode, agy, app):
+    for script in (hermes, opencode, app):
         # Umleitung um den ganzen Block – an einer Heredoc-Endmarke angehängt, würde
         # sie die Marke unkenntlich machen (der OpenCode-Teil lief dann nie).
         on(mac, cfg, "{\n" + script + "\n} >/dev/null 2>&1", timeout=120)
@@ -488,7 +483,7 @@ def secure(cfg):
         if '"llm_ready":true' in run(["/usr/bin/curl", "-s", "-m", "2", f"http://127.0.0.1:{cfg['gateway_port']}/health"]).stdout.replace(" ", ""):
             break
         time.sleep(2)
-    emit({"type": "step", "title": "Zugriffsschutz aktiv", "detail": "Hermes, OpenCode, Antigravity und die App nutzen den Schlüssel"})
+    emit({"type": "step", "title": "Zugriffsschutz aktiv", "detail": "Hermes, OpenCode und die App nutzen den Schlüssel"})
 
 
 def detect():

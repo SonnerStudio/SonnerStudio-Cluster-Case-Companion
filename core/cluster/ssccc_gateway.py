@@ -10,7 +10,6 @@
   gleichzeitig in den GPU-Speicher) und danach automatisch wieder gestartet.
 - Antwort-Reserve: während eines Bildauftrags beantwortet ein kleineres Modell auf
   dem Worker-Mac Chat-Anfragen; ohne Reserve warten die Anfragen.
-- Gemini-Protokoll (gemini_adapter.py) für Google Antigravity.
 - Status für die SS-CCC-App: GET /ssccc/cluster, GET /health.
 
 Alle rechnerspezifischen Werte kommen aus ssccc_config.py / cluster.json.
@@ -136,11 +135,48 @@ def log(msg: str) -> None:
 
 
 # ── Sprachmodell-Unterprozess ────────────────────────────────────────────────
+def _prefix_cache_env() -> dict:
+    """Präfix-Cache (APC) von mlx-vlm: Agenten schicken bei jedem Schritt dieselben
+    20–45k Token Anweisungen und Verlauf – mit Cache wird nur der neue Teil berechnet."""
+    pc = CFG["llm"].get("prefix_cache") or {}
+    if not pc.get("enabled"):
+        return {"APC_ENABLED": "0"}
+    return {"APC_ENABLED": "1", "APC_DEFAULT_TENANT": "ssccc",
+            "APC_MEMORY_MAX_GB": str(pc.get("memory_gb", 4)),
+            "APC_MEMORY_RESERVE_GB": str(pc.get("reserve_gb", 1)),
+            "APC_NUM_BLOCKS": str(max(2048, int(pc.get("max_tokens", 131072)) // 16)),
+            "APC_DISK_ENABLED": "1" if pc.get("disk_gb", 0) else "0",
+            "APC_DISK_MAX_GB": str(pc.get("disk_gb", 20)),
+            "APC_DISK_PATH": str(B / "apc-cache"),
+            "APC_DISK_NAMESPACE": Path(LLM_MODEL).parent.parent.name or "default"}
+
+
+def _kill_stale_llm() -> None:
+    """Beendet verwaiste Modellserver vom letzten Gateway-Lauf (launchd beendet beim
+    Neustart nur das Gateway, nicht dessen Kindprozess – der hielt sonst Speicher)."""
+    try:
+        pids = subprocess.run(["lsof", "-ti", f"tcp:{LLM_PORT}", "-sTCP:LISTEN"],
+                              capture_output=True, text=True, timeout=5).stdout.split()
+        pids += subprocess.run(["pgrep", "-f", f"mlx_vlm.server .*--port {LLM_PORT}"],
+                               capture_output=True, text=True, timeout=5).stdout.split()
+    except (OSError, subprocess.SubprocessError):
+        return
+    own = {str(_llm_proc.pid)} if _llm_proc else set()
+    for pid in set(pids) - own:
+        try:
+            os.kill(int(pid), 9)
+            log(f"Verwaisten Modellserver beendet (PID {pid})")
+        except (ProcessLookupError, ValueError, PermissionError):
+            pass
+
+
 async def start_llm() -> None:
     global _llm_proc
     _llm_ready.clear()
+    _kill_stale_llm()
     cmd = [str(B / "venv-vlm/bin/python"), "-m", "mlx_vlm.server", "--host", "127.0.0.1",
-           "--port", str(LLM_PORT), "--model", LLM_MODEL, "--prefill-step-size", "512",
+           "--port", str(LLM_PORT), "--model", LLM_MODEL,
+           "--prefill-step-size", str(CFG["llm"].get("prefill_step", 1024)),
            # Speicherschutz: wenige gleichzeitige Sequenzen und 8-Bit-KV-Cache. Ohne das
            # lief der GPU-Speicher bei einer 89k-Token-Anfrage plus parallelen Anfragen
            # über ("Insufficient Memory") und der Server hing danach.
@@ -150,7 +186,7 @@ async def start_llm() -> None:
         cmd += ["--draft-model", LLM_DRAFT, "--draft-kind", "mtp"]
     logf = open(B / "llm.log", "a")
     _llm_proc = subprocess.Popen(cmd, stdout=logf, stderr=subprocess.STDOUT,
-                                 env={**os.environ, "HF_HOME": str(B / "hf")})
+                                 env={**os.environ, "HF_HOME": str(B / "hf"), **_prefix_cache_env()})
     _stats["llm_starts"] += 1
     log(f"Sprachmodell startet (PID {_llm_proc.pid}, MTP={'an' if LLM_DRAFT else 'aus'})")
     # Bereit, sobald das Modell geladen ist (Server antwortet vorher schon mit 503)
@@ -467,8 +503,7 @@ async def health():
 
 @app.get("/v1/models")
 async def models():
-    # Kontextangaben in mehreren üblichen Feldnamen – Antigravity (Gateway-Modus)
-    # braucht sie, sonst bricht es mit "maxMessageTokens must be positive" ab.
+    # Kontextangaben in mehreren üblichen Feldnamen – manche Clients brechen ohne sie ab.
     ctx, out = int(CFG["llm"]["context"]), int(CFG["llm"]["max_output"])
     return {"object": "list", "data": [
         {"id": LLM_NAME, "object": "model", "owned_by": "ss-ccc", "created": int(_stats["started"]),
@@ -503,15 +538,6 @@ async def pick_target(what: str = "Chat") -> tuple[str, str]:
         raise HTTPException(503, "Sprachmodell nicht bereit")
     return LLM_URL, LLM_MODEL
 
-
-# Gemini-Protokoll für Google Antigravity (/v1beta/models/...:streamGenerateContent)
-import gemini_adapter  # noqa: E402
-
-gemini_adapter.configure(pick_target=lambda: pick_target("Antigravity-Anfrage"), client=_client,
-                         log=log, model_name=LLM_NAME,
-                         guard=lambda body: guard_request(body, "chat/completions"),
-                         on_start=lambda: SCHED.chat_started(), on_finish=lambda: SCHED.chat_finished())
-app.include_router(gemini_adapter.router)
 
 
 GUARDED_PATHS = ("chat/completions", "responses", "completions", "messages")
@@ -661,6 +687,10 @@ MODEL_CATALOG = [
      "label": "Qwen3.8 27B · 6 Bit", "note": "bessere Qualität, deutlich langsamer"},
     {"repo": "mlx-community/Qwen3.6-35B-A3B-4bit", "draft_repo": "",
      "label": "Qwen3.6 35B-A3B · 4 Bit (MoE)", "note": "nur 3B aktive Parameter – sehr schnell"},
+    {"repo": "mlx-community/gemma-4-26B-A4B-it-qat-4bit",
+     "draft_repo": "mlx-community/gemma-4-26B-A4B-it-qat-assistant-4bit",
+     "label": "Gemma 4 26B-A4B · 4 Bit QAT + Assistent",
+     "note": "MoE mit 4B aktiven Parametern – sehr schnelle Eingabe, ab 24 GB RAM"},
     {"repo": "mlx-community/Qwen3.5-9B-4bit", "draft_repo": "",
      "label": "Qwen3.5 9B · 4 Bit", "note": "klein, für Macs mit 16 GB"},
 ]
@@ -792,11 +822,11 @@ async def model_progress():
 @app.middleware("http")
 async def api_key_guard(request: Request, call_next):
     """Mit gesetztem api_key (cluster.json) braucht jede Anfrage außer /health den Schlüssel:
-    Authorization: Bearer <key>, x-api-key, x-goog-api-key oder ?key=<key>."""
+    Authorization: Bearer <key>, x-api-key oder ?key=<key>."""
     if API_KEY and request.url.path != "/health":
         auth = request.headers.get("authorization", "")
         given = (auth[7:] if auth.lower().startswith("bearer ") else "") or request.headers.get("x-api-key", "") \
-            or request.headers.get("x-goog-api-key", "") or request.query_params.get("key", "")
+            or request.query_params.get("key", "")
         if given != API_KEY:
             TELEMETRY.count("unauthorized")
             return JSONResponse({"error": {"message": "API-Schlüssel fehlt oder ist falsch", "type": "invalid_request_error",

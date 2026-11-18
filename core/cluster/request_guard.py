@@ -105,12 +105,27 @@ def _error(message: str, code: str, status: int = 400) -> dict:
 
 
 def kv_bytes_per_token(config: dict, kv_bits: int) -> float:
-    """KV-Cache-Bytes je Token aus der Modellkonfiguration (Hybridmodelle: nur volle Attention)."""
+    """KV-Cache-Bytes je Token aus der Modellkonfiguration.
+
+    Nur Schichten mit voller Attention wachsen mit dem Kontext: Hybridmodelle (Qwen 3.8,
+    ``full_attention_interval``) und Gleitfenster-Modelle (Gemma 4, ``layer_types`` mit
+    ``sliding_attention``) zählen nur diese. Gemma 4 nutzt in den globalen Schichten eigene
+    Kopfzahlen (``num_global_key_value_heads``, ``global_head_dim``) und teilt K und V
+    (``attention_k_eq_v``).
+    """
     c = config.get("text_config", config)
     layers = int(c.get("num_hidden_layers", 0))
-    interval = int(c.get("full_attention_interval", 1) or 1)
-    full = layers // interval if interval > 1 else layers
-    kv_heads = int(c.get("num_key_value_heads", c.get("num_attention_heads", 0)))
-    head_dim = int(c.get("head_dim") or (c.get("hidden_size", 0) // max(1, c.get("num_attention_heads", 1))))
+    types = c.get("layer_types") or []
+    if types:
+        full = sum(1 for x in types if x == "full_attention")
+    else:
+        interval = int(c.get("full_attention_interval", 1) or 1)
+        full = layers // interval if interval > 1 else layers
+    full = max(0, full - int(c.get("num_kv_shared_layers", 0) or 0))
+    kv_heads = int(c.get("num_global_key_value_heads") or c.get("num_key_value_heads")
+                   or c.get("num_attention_heads", 0))
+    head_dim = int(c.get("global_head_dim") or c.get("head_dim")
+                   or (c.get("hidden_size", 0) // max(1, c.get("num_attention_heads", 1))))
+    kv_factor = 1 if c.get("attention_k_eq_v") else 2
     bytes_per_val = kv_bits / 8 if kv_bits else 2
-    return full * kv_heads * head_dim * 2 * bytes_per_val
+    return full * kv_heads * head_dim * kv_factor * bytes_per_val

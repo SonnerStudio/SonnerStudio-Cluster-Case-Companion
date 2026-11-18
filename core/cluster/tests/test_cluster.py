@@ -16,7 +16,6 @@ import pytest
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
 
-import gemini_adapter  # noqa: E402
 import image_queue  # noqa: E402
 import request_guard  # noqa: E402
 
@@ -107,58 +106,6 @@ def test_queue_urgent_does_not_wait():
     assert waited < 1 and q.waiting == 0
 
 
-# ── Gemini-Übersetzung (Antigravity) ─────────────────────────────────────────
-def test_gemini_function_response_with_model_role():
-    """Antigravity schickt Werkzeugergebnisse mit Rolle "model" (im Betrieb gefunden)."""
-    body = {"systemInstruction": {"parts": [{"text": "SYS"}]},
-            "contents": [
-                {"role": "user", "parts": [{"text": "Lies notiz.txt"}]},
-                {"role": "model", "parts": [{"functionCall": {"name": "read_file", "args": {"Path": "/x"}, "id": "c1"}}]},
-                {"role": "model", "parts": [{"functionResponse": {"name": "read_file", "id": "c1",
-                                                                   "response": {"output": "Testinhalt"}}}]}],
-            "tools": [{"functionDeclarations": [{"name": "read_file", "parametersJsonSchema": {
-                "$schema": "x", "type": "object", "properties": {"Path": {"type": "string"}}}}]}],
-            "generationConfig": {"maxOutputTokens": 65536, "thinkingConfig": {"includeThoughts": True, "thinkingBudget": -1}}}
-    out = gemini_adapter.gemini_to_openai(body)
-    roles = [m["role"] for m in out["messages"]]
-    assert roles == ["system", "user", "assistant", "tool"]
-    assert out["messages"][2]["tool_calls"][0]["id"] == "c1"
-    assert out["messages"][3]["tool_call_id"] == "c1" and "Testinhalt" in out["messages"][3]["content"]
-    assert "$schema" not in out["tools"][0]["function"]["parameters"]
-    assert out["max_tokens"] == 32768 and out["chat_template_kwargs"]["enable_thinking"] is True
-
-
-def test_gemini_uppercase_schema_types():
-    body = {"contents": [{"role": "user", "parts": [{"text": "hi"}]}],
-            "tools": [{"functionDeclarations": [{"name": "f", "parameters": {"type": "OBJECT",
-                                                                               "properties": {"a": {"type": "STRING"}}}}]}]}
-    p = gemini_adapter.gemini_to_openai(body)["tools"][0]["function"]["parameters"]
-    assert p["type"] == "object" and p["properties"]["a"]["type"] == "string"
-
-
-def test_gemini_stream_events_with_tool_call():
-    async def fake_stream(req):
-        yield {"choices": [{"delta": {"content": "Hallo"}}]}
-        yield {"choices": [{"delta": {"tool_calls": [{"index": 0, "id": "t1", "function": {"name": "f", "arguments": '{"a":'}}]}}]}
-        yield {"choices": [{"delta": {"tool_calls": [{"index": 0, "function": {"arguments": ' 1}'}}]}, "finish_reason": "tool_calls"}],
-               "usage": {"prompt_tokens": 5, "completion_tokens": 3, "total_tokens": 8}}
-
-    gemini_adapter.configure(model_name="test")
-    orig = gemini_adapter._openai_stream
-    gemini_adapter._openai_stream = fake_stream
-    try:
-        async def collect():
-            return [ev async for ev in gemini_adapter._gemini_events({"contents": [{"role": "user", "parts": [{"text": "x"}]}]})]
-        events = asyncio.run(collect())
-    finally:
-        gemini_adapter._openai_stream = orig
-    assert events[0]["candidates"][0]["content"]["parts"][0]["text"] == "Hallo"
-    last = events[-1]
-    assert last["candidates"][0]["finishReason"] == "STOP"
-    assert last["candidates"][0]["content"]["parts"][0]["functionCall"] == {"name": "f", "args": {"a": 1}, "id": "t1"}
-    assert last["usageMetadata"]["totalTokenCount"] == 8
-
-
 # ── Gateway mit gefälschtem Sprachmodell ─────────────────────────────────────
 @pytest.fixture()
 def gateway(tmp_path, monkeypatch):
@@ -187,7 +134,6 @@ def gateway(tmp_path, monkeypatch):
     monkeypatch.setattr(gw, "_watchdog", lambda: asyncio.sleep(0))
     monkeypatch.setattr(gw, "_load_tokenizer", lambda: None)
     gw._client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
-    gw.gemini_adapter.configure(client=gw._client)
     from fastapi.testclient import TestClient
     with TestClient(gw.app) as c:
         yield c, seen, gw
@@ -209,7 +155,7 @@ def test_gateway_rejects_missing_key(gateway):
 
 def test_gateway_accepts_all_key_headers(gateway):
     c, _, _ = gateway
-    for h in (AUTH, {"x-api-key": "geheim"}, {"x-goog-api-key": "geheim"}):
+    for h in (AUTH, {"x-api-key": "geheim"}):
         assert c.get("/v1/models", headers=h).status_code == 200
 
 
@@ -242,21 +188,6 @@ def test_gateway_metrics_count_requests(gateway):
     assert m["counters"]["requests"] >= 1 and m["queue"]["active_chats"] == 0 and "memory" in m
 
 
-def test_gateway_gemini_endpoint(gateway):
-    c, seen, _ = gateway
-
-    async def fake_stream(req):
-        yield {"choices": [{"delta": {"content": "Antwort"}}]}
-    orig = gateway[2].gemini_adapter._openai_stream
-    gateway[2].gemini_adapter._openai_stream = fake_stream
-    try:
-        r = c.post("/v1beta/models/ssccc:streamGenerateContent?alt=sse", headers={"x-goog-api-key": "geheim"},
-                   json={"contents": [{"role": "user", "parts": [{"text": "hi"}]}]})
-    finally:
-        gateway[2].gemini_adapter._openai_stream = orig
-    assert r.status_code == 200 and "Antwort" in r.text
-
-
 def test_gateway_mode_rejects_verbund_without_worker(gateway):
     c, _, _ = gateway
     assert c.post("/ssccc/mode", headers=AUTH, json={"mode": "verbund"}).status_code == 400
@@ -280,3 +211,26 @@ def test_setup_recommended_wired_limit():
     assert ssccc_setup.recommended_wired_mb(16) == 12 * 1024
     assert ssccc_setup.recommended_wired_mb(36) == 30 * 1024
     assert ssccc_setup.recommended_wired_mb(128) == 120 * 1024
+
+
+def test_kv_bytes_gemma4_counts_only_global_layers():
+    cfg = {"text_config": {"num_hidden_layers": 30, "num_key_value_heads": 8, "head_dim": 256,
+                           "num_global_key_value_heads": 2, "global_head_dim": 512,
+                           "attention_k_eq_v": True,
+                           "layer_types": ["sliding_attention"] * 25 + ["full_attention"] * 5}}
+    assert request_guard.kv_bytes_per_token(cfg, 0) == 5 * 2 * 512 * 1 * 2
+
+
+def test_kv_bytes_qwen_hybrid_unchanged():
+    cfg = {"num_hidden_layers": 64, "full_attention_interval": 4, "num_key_value_heads": 4, "head_dim": 256}
+    assert request_guard.kv_bytes_per_token(cfg, 8) == 16 * 4 * 256 * 2 * 1
+
+
+def test_prefix_cache_env(gateway):
+    _, _, gw = gateway
+    gw.CFG["llm"]["prefix_cache"] = {"enabled": True, "memory_gb": 3, "max_tokens": 65536, "disk_gb": 0}
+    env = gw._prefix_cache_env()
+    assert env["APC_ENABLED"] == "1" and env["APC_MEMORY_MAX_GB"] == "3"
+    assert env["APC_NUM_BLOCKS"] == str(65536 // 16) and env["APC_DISK_ENABLED"] == "0"
+    gw.CFG["llm"]["prefix_cache"] = {"enabled": False}
+    assert gw._prefix_cache_env() == {"APC_ENABLED": "0"}

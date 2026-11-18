@@ -1,7 +1,7 @@
 """Lokale Weiterleitung 127.0.0.1:<forward_port> -> SS-CCC-Gateway auf dem Leitrechner.
 
-Antigravity akzeptiert für sein Modell-Gateway unverschlüsseltes http:// nur auf dem
-eigenen Rechner. Diese Weiterleitung macht das Gateway des Leitrechners auf dem
+Manche Clients akzeptieren unverschlüsseltes http:// nur auf dem eigenen Rechner.
+Diese Weiterleitung macht das Gateway des Leitrechners auf dem
 Worker als http://127.0.0.1:<forward_port> erreichbar. Die Adresse wird bei jeder Verbindung per
 IPv4 aufgelöst (über .local würden sonst zuerst tote IPv6-Adressen probiert).
 """
