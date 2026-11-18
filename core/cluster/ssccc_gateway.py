@@ -545,10 +545,26 @@ async def pick_target(what: str = "Chat") -> tuple[str, str]:
 GUARDED_PATHS = ("chat/completions", "responses", "completions", "messages")
 
 
+def apply_default_output(body: dict, path: str) -> bool:
+    """Setzt eine Antwortlänge, wenn der Client keine angibt.
+
+    mlx-vlm begrenzt Antworten ohne Angabe auf 2048 Tokens. Denkende Modelle
+    verbrauchen das oft schon vor der eigentlichen Antwort, sodass Antworten
+    und Zusammenfassungen abgeschnitten werden (finish_reason=length). Die
+    Speicherprüfung kürzt den Wert danach bei Bedarf auf das, was passt."""
+    keys = ("max_tokens", "max_completion_tokens", "max_output_tokens")
+    if any(body.get(k) for k in keys):
+        return False
+    key = "max_output_tokens" if path.startswith("responses") else "max_tokens"
+    body[key] = int(CFG["llm"].get("default_max_tokens", 16384))
+    return True
+
+
 def guard_request(body: dict, path: str):
     """Speicherwarnung: (fehler_response | None, info). Passt ggf. max_tokens an."""
     if not isinstance(body, dict) or not path.startswith(GUARDED_PATHS):
         return None, {}
+    apply_default_output(body, path)
     tokens = request_guard.estimate_tokens(body, _tokenizer)
     ok, err, info = request_guard.check(body, tokens, LIMITS, _gpu_free_bytes())
     if not ok:

@@ -259,3 +259,13 @@ def test_vlm_server_patches_degrade_gracefully(monkeypatch):
     monkeypatch.setitem(sys.modules, "mlx_vlm", None)
     assert vlm_server._patch_cold_fallback() is False
     assert vlm_server._patch_disk_restore_budget() is False
+
+
+def test_default_output_set_when_missing(gateway):
+    _, _, gw = gateway
+    body = {"messages": [{"role": "user", "content": "x"}]}
+    assert gw.apply_default_output(body, "chat/completions") is True and body["max_tokens"] == 16384
+    resp = {"input": "x"}
+    assert gw.apply_default_output(resp, "responses") is True and resp["max_output_tokens"] == 16384
+    given = {"messages": [], "max_tokens": 50}
+    assert gw.apply_default_output(given, "chat/completions") is False and given["max_tokens"] == 50

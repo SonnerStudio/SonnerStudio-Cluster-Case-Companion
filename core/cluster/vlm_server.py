@@ -19,6 +19,31 @@ from __future__ import annotations
 import sys
 
 
+_WS_MARGIN = 2 * 2**30   # Puffer für Aktivierungen und MTP-Entwurf
+
+
+def _cold_fits_working_set(coordinator) -> bool:
+    """Passt ein Kaltstart in den GPU-Arbeitsspeicher, auch wenn das APC-Budget ablehnt?
+
+    Das APC-Budget rechnet mit dem doppelten KV-Bedarf und dem gerade freien
+    System-RAM. Bei ~70k Tokens lehnt es deshalb selbst Kaltstarts ab, obwohl
+    Modell plus Cache weit unter dem GPU-Arbeitsspeicher bleiben. Maßgeblich ist
+    hier der tatsächliche Bedarf (halbe Reserve) gegen den Arbeitsspeicher;
+    macOS lagert dafür notfalls andere Programme aus.
+    """
+    try:
+        import mlx.core as mx
+        need = coordinator.manager.memory_plan.reserve_bytes() // 2
+        ws = int(mx.device_info()["max_recommended_working_set_size"])
+        fits = mx.get_active_memory() + need + _WS_MARGIN <= ws
+        print(f"[ssccc] APC-Budget lehnt ab; tatsächlicher Bedarf {need / 2**30:.1f} GB – "
+              + ("Kaltstart trotzdem zugelassen" if fits else "passt nicht in den Arbeitsspeicher"),
+              flush=True)
+        return fits
+    except Exception:
+        return False
+
+
 def _patch_cold_fallback() -> bool:
     try:
         from mlx_vlm import apc as _apc
@@ -48,7 +73,7 @@ def _patch_cold_fallback() -> bool:
                 prefill_step_size=self._prefill_chunk_size(1),
                 prefix_lengths=[0],
             )
-            if not ok:
+            if not ok and not _cold_fits_working_set(coordinator):
                 return sequences_out, picks
         diag = ""
         try:

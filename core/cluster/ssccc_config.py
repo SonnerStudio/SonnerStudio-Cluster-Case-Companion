@@ -41,6 +41,7 @@ DEFAULTS: dict = {
         "kv_bits": 8,                   # KV-Cache-Quantisierung (Speicherschutz; 0 = aus, ~5 % schneller)
         "large_prompt": 32768,          # ab hier laufen Anfragen nacheinander
         "prefill_step": 1024,           # Token je Eingabe-Schritt (2048 sprengt bei 45k+ Token das Cache-Budget)
+        "default_max_tokens": 16384,    # Antwortlänge, wenn der Client keine angibt
         "prefix_cache": {               # Wiederverwendung gleicher Eingabe-Anfänge (Agenten-Anweisungen)
             "enabled": True,
             "memory_gb": 4,             # im GPU-Speicher
