@@ -16,7 +16,6 @@ import pytest
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
 
-import gemini_adapter  # noqa: E402
 import image_queue  # noqa: E402
 import request_guard  # noqa: E402
 
@@ -107,58 +106,6 @@ def test_queue_urgent_does_not_wait():
     assert waited < 1 and q.waiting == 0
 
 
-# ── Gemini-Übersetzung (Antigravity) ─────────────────────────────────────────
-def test_gemini_function_response_with_model_role():
-    """Antigravity schickt Werkzeugergebnisse mit Rolle "model" (im Betrieb gefunden)."""
-    body = {"systemInstruction": {"parts": [{"text": "SYS"}]},
-            "contents": [
-                {"role": "user", "parts": [{"text": "Lies notiz.txt"}]},
-                {"role": "model", "parts": [{"functionCall": {"name": "read_file", "args": {"Path": "/x"}, "id": "c1"}}]},
-                {"role": "model", "parts": [{"functionResponse": {"name": "read_file", "id": "c1",
-                                                                   "response": {"output": "Testinhalt"}}}]}],
-            "tools": [{"functionDeclarations": [{"name": "read_file", "parametersJsonSchema": {
-                "$schema": "x", "type": "object", "properties": {"Path": {"type": "string"}}}}]}],
-            "generationConfig": {"maxOutputTokens": 65536, "thinkingConfig": {"includeThoughts": True, "thinkingBudget": -1}}}
-    out = gemini_adapter.gemini_to_openai(body)
-    roles = [m["role"] for m in out["messages"]]
-    assert roles == ["system", "user", "assistant", "tool"]
-    assert out["messages"][2]["tool_calls"][0]["id"] == "c1"
-    assert out["messages"][3]["tool_call_id"] == "c1" and "Testinhalt" in out["messages"][3]["content"]
-    assert "$schema" not in out["tools"][0]["function"]["parameters"]
-    assert out["max_tokens"] == 32768 and out["chat_template_kwargs"]["enable_thinking"] is True
-
-
-def test_gemini_uppercase_schema_types():
-    body = {"contents": [{"role": "user", "parts": [{"text": "hi"}]}],
-            "tools": [{"functionDeclarations": [{"name": "f", "parameters": {"type": "OBJECT",
-                                                                               "properties": {"a": {"type": "STRING"}}}}]}]}
-    p = gemini_adapter.gemini_to_openai(body)["tools"][0]["function"]["parameters"]
-    assert p["type"] == "object" and p["properties"]["a"]["type"] == "string"
-
-
-def test_gemini_stream_events_with_tool_call():
-    async def fake_stream(req):
-        yield {"choices": [{"delta": {"content": "Hallo"}}]}
-        yield {"choices": [{"delta": {"tool_calls": [{"index": 0, "id": "t1", "function": {"name": "f", "arguments": '{"a":'}}]}}]}
-        yield {"choices": [{"delta": {"tool_calls": [{"index": 0, "function": {"arguments": ' 1}'}}]}, "finish_reason": "tool_calls"}],
-               "usage": {"prompt_tokens": 5, "completion_tokens": 3, "total_tokens": 8}}
-
-    gemini_adapter.configure(model_name="test")
-    orig = gemini_adapter._openai_stream
-    gemini_adapter._openai_stream = fake_stream
-    try:
-        async def collect():
-            return [ev async for ev in gemini_adapter._gemini_events({"contents": [{"role": "user", "parts": [{"text": "x"}]}]})]
-        events = asyncio.run(collect())
-    finally:
-        gemini_adapter._openai_stream = orig
-    assert events[0]["candidates"][0]["content"]["parts"][0]["text"] == "Hallo"
-    last = events[-1]
-    assert last["candidates"][0]["finishReason"] == "STOP"
-    assert last["candidates"][0]["content"]["parts"][0]["functionCall"] == {"name": "f", "args": {"a": 1}, "id": "t1"}
-    assert last["usageMetadata"]["totalTokenCount"] == 8
-
-
 # ── Gateway mit gefälschtem Sprachmodell ─────────────────────────────────────
 @pytest.fixture()
 def gateway(tmp_path, monkeypatch):
@@ -187,7 +134,6 @@ def gateway(tmp_path, monkeypatch):
     monkeypatch.setattr(gw, "_watchdog", lambda: asyncio.sleep(0))
     monkeypatch.setattr(gw, "_load_tokenizer", lambda: None)
     gw._client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
-    gw.gemini_adapter.configure(client=gw._client)
     from fastapi.testclient import TestClient
     with TestClient(gw.app) as c:
         yield c, seen, gw
@@ -209,7 +155,7 @@ def test_gateway_rejects_missing_key(gateway):
 
 def test_gateway_accepts_all_key_headers(gateway):
     c, _, _ = gateway
-    for h in (AUTH, {"x-api-key": "geheim"}, {"x-goog-api-key": "geheim"}):
+    for h in (AUTH, {"x-api-key": "geheim"}):
         assert c.get("/v1/models", headers=h).status_code == 200
 
 
@@ -240,21 +186,6 @@ def test_gateway_metrics_count_requests(gateway):
     c.post("/v1/chat/completions", headers=AUTH, json={"model": "x", "messages": [{"role": "user", "content": "hi"}]})
     m = c.get("/ssccc/metrics", headers=AUTH).json()
     assert m["counters"]["requests"] >= 1 and m["queue"]["active_chats"] == 0 and "memory" in m
-
-
-def test_gateway_gemini_endpoint(gateway):
-    c, seen, _ = gateway
-
-    async def fake_stream(req):
-        yield {"choices": [{"delta": {"content": "Antwort"}}]}
-    orig = gateway[2].gemini_adapter._openai_stream
-    gateway[2].gemini_adapter._openai_stream = fake_stream
-    try:
-        r = c.post("/v1beta/models/ssccc:streamGenerateContent?alt=sse", headers={"x-goog-api-key": "geheim"},
-                   json={"contents": [{"role": "user", "parts": [{"text": "hi"}]}]})
-    finally:
-        gateway[2].gemini_adapter._openai_stream = orig
-    assert r.status_code == 200 and "Antwort" in r.text
 
 
 def test_gateway_mode_rejects_verbund_without_worker(gateway):

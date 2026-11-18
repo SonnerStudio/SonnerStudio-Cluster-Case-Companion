@@ -2,7 +2,7 @@
 
 Server-Teil des SonnerStudio Verbund-Begleiters: stellt lokale Sprach- und Bildmodelle
 auf einem oder zwei Apple-Silicon-Macs als **OpenAI-kompatible Schnittstelle** bereit
-(`http://<Leitrechner>:8000/v1`) – für Hermes, OpenCode, Antigravity, Cursor, VS Code und
+(`http://<Leitrechner>:8000/v1`) – für Hermes, OpenCode, Cursor, VS Code und
 die SS-CCC-App selbst.
 
 Alles läuft unter dem **gemeinsamen Pfad `/Users/Shared/ssccc`** (auf jedem Mac gleich,
@@ -20,7 +20,7 @@ python3 core/cluster/ssccc_setup.py check                                    # B
 ```
 
 `apply` installiert Umgebung und Modelle, verteilt die Server-Dateien, richtet die Dienste
-auf beiden Macs ein und verbindet Hermes, OpenCode und Antigravity. Was nur der Mensch tun
+auf beiden Macs ein und verbindet Hermes und OpenCode. Was nur der Mensch tun
 kann (Passwörter, Admin-Rechte, macOS-Freigaben, Kabel), meldet `check` mit genauer Anleitung.
 
 ## Betriebsarten (`cluster.json` → `mode`, oder Datei `/Users/Shared/ssccc/modus`)
@@ -40,7 +40,6 @@ Verbund 8 Bit 49 Zeichen/s (≈ 11,6 tok/s) · Studio allein 4 Bit 105 · **4 Bi
 | `ssccc_setup.py` | **Ersteinrichtung**: `check` (Bereitschaft), `apply` (automatisch einrichten), `detect` (Macs im Netz), `configure` (Worker eintragen); `--json` für die App |
 | `ssccc_config.py` | lädt `cluster.json` + Standardwerte; `python ssccc_config.py env` liefert Shell-Variablen |
 | `ssccc_gateway.py` | Gateway `:8000` im Multi-Model-Mode (Chat-Weiterleitung, Bilder, Reserve, Status) |
-| `gemini_adapter.py` | Gemini-Protokoll (`/v1beta/models/…:streamGenerateContent`) für Google Antigravity |
 | `ssccc_server.py` | Verbund-Server: `mlx_lm.server` mit speicher-/bandbreitengewichteter Pipeline-Aufteilung |
 | `start_ssccc.sh` | Start durch den LaunchAgent, wählt die Betriebsart |
 | `start_verbund.sh` | Verbund-Start, ermittelt Adressen live und wählt TB+LAN › TB › LAN › WLAN |
@@ -52,11 +51,10 @@ Verbund 8 Bit 49 Zeichen/s (≈ 11,6 tok/s) · Studio allein 4 Bit 105 · **4 Bi
 
 ## Schnittstellen
 
-- `GET /v1/models` – mit `context_window`, `max_output_tokens` (Antigravity braucht das)
+- `GET /v1/models` – mit `context_window`, `max_output_tokens` (manche Clients brauchen das)
 - `POST /v1/chat/completions`, `/v1/responses` … – an das Sprachmodell (jeder Modellname wird auf das geladene Modell abgebildet)
 - `POST /v1/images/generations` – Bild in nativer Auflösung (~4 MP); `quality: "low"` = 1024²-Vorschau
 - `POST /v1/images/edits` – Bearbeitung / bis zu 3 Referenzbilder (Multipart oder JSON)
-- `POST /v1beta/models/<m>:streamGenerateContent` – Gemini-Format (Antigravity)
 - `GET /ssccc/cluster` – Verbundstatus mit Prüfwerten je Mac (für die App)
 - `GET /health`
 
@@ -64,7 +62,6 @@ Verbund 8 Bit 49 Zeichen/s (≈ 11,6 tok/s) · Studio allein 4 Bit 105 · **4 Bi
 
 - **Hermes:** `providers.ssccc.base_url = http://<Leitrechner>:8000/v1`, `model.provider = ssccc`, `image_gen.provider = openai`, `image_gen.openai.provider = ssccc`
 - **OpenCode:** Provider `@ai-sdk/openai-compatible` mit `baseURL` und `limit.context`
-- **Antigravity (CLI):** `AGY_LLM_GATEWAY_URL`, `AGY_LLM_GATEWAY_WIRE_PROTOCOL=openai` (Befehl `agy-ssccc`). Entfernte Gateways verlangen `https://` → auf dem Worker über `forward.py` (`http://127.0.0.1:8090`). Die Desktop-IDE nutzt bei Google-Anmeldung nur Google-Modelle.
 - **Auf dem Worker** immer `http://127.0.0.1:8090` statt `*.local` verwenden (siehe Stolpersteine).
 
 ## Erfahrungen / Stolpersteine aus der Einrichtung

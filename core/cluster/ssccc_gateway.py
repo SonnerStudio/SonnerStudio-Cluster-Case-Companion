@@ -10,7 +10,6 @@
   gleichzeitig in den GPU-Speicher) und danach automatisch wieder gestartet.
 - Antwort-Reserve: während eines Bildauftrags beantwortet ein kleineres Modell auf
   dem Worker-Mac Chat-Anfragen; ohne Reserve warten die Anfragen.
-- Gemini-Protokoll (gemini_adapter.py) für Google Antigravity.
 - Status für die SS-CCC-App: GET /ssccc/cluster, GET /health.
 
 Alle rechnerspezifischen Werte kommen aus ssccc_config.py / cluster.json.
@@ -504,8 +503,7 @@ async def health():
 
 @app.get("/v1/models")
 async def models():
-    # Kontextangaben in mehreren üblichen Feldnamen – Antigravity (Gateway-Modus)
-    # braucht sie, sonst bricht es mit "maxMessageTokens must be positive" ab.
+    # Kontextangaben in mehreren üblichen Feldnamen – manche Clients brechen ohne sie ab.
     ctx, out = int(CFG["llm"]["context"]), int(CFG["llm"]["max_output"])
     return {"object": "list", "data": [
         {"id": LLM_NAME, "object": "model", "owned_by": "ss-ccc", "created": int(_stats["started"]),
@@ -540,15 +538,6 @@ async def pick_target(what: str = "Chat") -> tuple[str, str]:
         raise HTTPException(503, "Sprachmodell nicht bereit")
     return LLM_URL, LLM_MODEL
 
-
-# Gemini-Protokoll für Google Antigravity (/v1beta/models/...:streamGenerateContent)
-import gemini_adapter  # noqa: E402
-
-gemini_adapter.configure(pick_target=lambda: pick_target("Antigravity-Anfrage"), client=_client,
-                         log=log, model_name=LLM_NAME,
-                         guard=lambda body: guard_request(body, "chat/completions"),
-                         on_start=lambda: SCHED.chat_started(), on_finish=lambda: SCHED.chat_finished())
-app.include_router(gemini_adapter.router)
 
 
 GUARDED_PATHS = ("chat/completions", "responses", "completions", "messages")
@@ -833,11 +822,11 @@ async def model_progress():
 @app.middleware("http")
 async def api_key_guard(request: Request, call_next):
     """Mit gesetztem api_key (cluster.json) braucht jede Anfrage außer /health den Schlüssel:
-    Authorization: Bearer <key>, x-api-key, x-goog-api-key oder ?key=<key>."""
+    Authorization: Bearer <key>, x-api-key oder ?key=<key>."""
     if API_KEY and request.url.path != "/health":
         auth = request.headers.get("authorization", "")
         given = (auth[7:] if auth.lower().startswith("bearer ") else "") or request.headers.get("x-api-key", "") \
-            or request.headers.get("x-goog-api-key", "") or request.query_params.get("key", "")
+            or request.query_params.get("key", "")
         if given != API_KEY:
             TELEMETRY.count("unauthorized")
             return JSONResponse({"error": {"message": "API-Schlüssel fehlt oder ist falsch", "type": "invalid_request_error",
