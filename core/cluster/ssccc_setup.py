@@ -32,7 +32,7 @@ REPO_CLUSTER = Path(__file__).resolve().parent
 HOME = Path(os.environ.get("SSCCC_HOME", "/Users/Shared/ssccc"))
 SSH_ALIAS = "ssccc-worker"
 DEPLOY_FILES = ["ssccc_config.py", "ssccc_gateway.py", "ssccc_server.py", "forward.py",
-                "make_rank_shard.py", "node_info.sh", "start_ssccc.sh", "start_verbund.sh"]
+                "make_rank_shard.py", "vlm_server.py", "node_info.sh", "start_ssccc.sh", "start_verbund.sh"]
 GATEWAY_LABEL = "de.sonnerstudio.ssccc-verbund"
 JSON_OUT = False
 
