@@ -280,3 +280,26 @@ def test_setup_recommended_wired_limit():
     assert ssccc_setup.recommended_wired_mb(16) == 12 * 1024
     assert ssccc_setup.recommended_wired_mb(36) == 30 * 1024
     assert ssccc_setup.recommended_wired_mb(128) == 120 * 1024
+
+
+def test_kv_bytes_gemma4_counts_only_global_layers():
+    cfg = {"text_config": {"num_hidden_layers": 30, "num_key_value_heads": 8, "head_dim": 256,
+                           "num_global_key_value_heads": 2, "global_head_dim": 512,
+                           "attention_k_eq_v": True,
+                           "layer_types": ["sliding_attention"] * 25 + ["full_attention"] * 5}}
+    assert request_guard.kv_bytes_per_token(cfg, 0) == 5 * 2 * 512 * 1 * 2
+
+
+def test_kv_bytes_qwen_hybrid_unchanged():
+    cfg = {"num_hidden_layers": 64, "full_attention_interval": 4, "num_key_value_heads": 4, "head_dim": 256}
+    assert request_guard.kv_bytes_per_token(cfg, 8) == 16 * 4 * 256 * 2 * 1
+
+
+def test_prefix_cache_env(gateway):
+    _, _, gw = gateway
+    gw.CFG["llm"]["prefix_cache"] = {"enabled": True, "memory_gb": 3, "max_tokens": 65536, "disk_gb": 0}
+    env = gw._prefix_cache_env()
+    assert env["APC_ENABLED"] == "1" and env["APC_MEMORY_MAX_GB"] == "3"
+    assert env["APC_NUM_BLOCKS"] == str(65536 // 16) and env["APC_DISK_ENABLED"] == "0"
+    gw.CFG["llm"]["prefix_cache"] = {"enabled": False}
+    assert gw._prefix_cache_env() == {"APC_ENABLED": "0"}

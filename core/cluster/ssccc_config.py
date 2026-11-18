@@ -40,6 +40,14 @@ DEFAULTS: dict = {
         "max_num_seqs": 2,              # gleichzeitige Sequenzen (Speicherschutz)
         "kv_bits": 8,                   # KV-Cache-Quantisierung (Speicherschutz; 0 = aus, ~5 % schneller)
         "large_prompt": 32768,          # ab hier laufen Anfragen nacheinander
+        "prefill_step": 1024,           # Token je Eingabe-Schritt (2048 sprengt bei 45k+ Token das Cache-Budget)
+        "prefix_cache": {               # Wiederverwendung gleicher Eingabe-Anfänge (Agenten-Anweisungen)
+            "enabled": True,
+            "memory_gb": 4,             # im GPU-Speicher
+            "reserve_gb": 1,            # Sicherheitsreserve des Caches
+            "max_tokens": 131072,       # so viele Token Verlauf kann der Cache halten
+            "disk_gb": 20,              # zusätzlich auf der SSD
+        },
         "port": 8001,
     },
     "verbund": {                        # Verbund-Modus: ein Modell über alle Macs geteilt
